@@ -9,9 +9,9 @@
 ;;
 (def db {:classname "org.sqlite.JDBC"
          :subprotocol "sqlite"
-         :subname "/tmp/clojars.db"})
+         :subname "/home/clojars/data/db"})
 
-(def key-file "/tmp/clojars.auth_keys")
+(def key-file "/home/clojars/data/auth_keys")
 (def ssh-options "no-agent-forwarding,no-port-forwarding,no-pty,no-X11-forwarding")
 
 (defn write-key-file [path]
