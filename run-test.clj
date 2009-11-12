@@ -20,6 +20,6 @@
 
 (println "starting nailgun")
 
-(.run (NGServer. (InetAddress/getLocalHost) 8701))
+(.run (NGServer. (InetAddress/getByName "127.0.0.1") 8701))
 
 (println "done")
