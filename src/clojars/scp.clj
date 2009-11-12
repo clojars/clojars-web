@@ -1,4 +1,4 @@
-(ns clojars.nail
+(ns clojars.scp
   (:import (java.io InputStream IOException File OutputStream
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)

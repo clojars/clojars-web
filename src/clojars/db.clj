@@ -20,7 +20,7 @@
      (with-query-results rs ["select user, ssh_key from users"]
        (with-open [f (writer new-file)]
          (doseq [x rs]
-           (.println f (str "command=\"ng clojars.scp " (:user x) 
+           (.println f (str "command=\"ng --nailgun-port 8700 clojars.scp " (:user x) 
                             "\"," ssh-options " " 
                             (.replaceAll (.trim (:ssh_key  x)) 
                                                "[\n\r\0]" ""))))))
