@@ -188,8 +188,9 @@
   (GET "/"
     (html-doc (session :account) nil [:h1 "Hello World"]))
   (ANY "/*"
-    (or (serve-file (params :*))
-        :next))
+       (if-let [f (serve-file (params :*))]
+         [{:headers {"Cache-Control" "max-age=3600"}} f]
+         :next))
   (ANY "*"
     [404 (html-doc (session :account) "Page not found" (not-found-doc))]))
 
