@@ -3,7 +3,7 @@
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
   (:use clojure.contrib.duck-streams)
-  (:require [clojures.maven :as maven])
+  (:require [clojars.maven :as maven])
   (:gen-class
    :methods [#^{:static true}
              [nailMain [com.martiansoftware.nailgun.NGContext] void]]))
