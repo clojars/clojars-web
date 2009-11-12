@@ -186,7 +186,7 @@
     [(session-assoc :account nil)
      (redirect-to "/")])
   (GET "/"
-    (html-doc (session :account) nil [:h1 "Hello World"]))
+    (html-doc (session :account) nil [:h1 "Hello World!"]))
   (ANY "/*"
        (if-let [f (serve-file (params :*))]
          [{:headers {"Cache-Control" "max-age=3600"}} f]

@@ -3,6 +3,7 @@
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
   (:use clojure.contrib.duck-streams)
+  (:require [clojures.maven :as maven])
   (:gen-class
    :methods [#^{:static true}
              [nailMain [com.martiansoftware.nailgun.NGContext] void]]))
@@ -37,24 +38,23 @@
   [#^InputStream in #^OutputStream out n]
   (let [buffer (make-array Byte/TYPE 4096)]
     (loop [bytes 0]
-      (.println System/err (str "xx " bytes "/" n))
       (if (< bytes n)
         (let [size (.read in buffer 0 (min 4096 (- n bytes)))]
-          (.println System/err (str "got " size))
           (if (pos? size)
             (do 
               (.write out buffer 0 size)
-              (recur (+ bytes size)))
-            bytes))
+              (recur (+ bytes size)))                
+            bytes))                
         bytes))))
 
 (defn scp-copy [#^NGContext ctx]
   (let [line #^String (safe-read-line (.in ctx))
         [mode size path] (.split line " " 3)
+        size (Integer/parseInt size)
         fn (File. #^String path)
         suffix (last (.split (.getName fn) "\\."))]
 
-    (when (> (count size) *max-file-size*)
+    (when (> size *max-file-size*)
       (throw (IOException. (str "Upload too large.  Maximum size is "
                                 *max-file-size* " bytes"))))
 
@@ -63,31 +63,56 @@
                                 " files are not supported."))))
 
     (let [f (File/createTempFile "clojars-upload" (str "." suffix))]
+      (.deleteOnExit f)
       (send-okay ctx)
       (with-open [fos (FileOutputStream. f)]
         (let [bytes (copy-limit (.in ctx) fos
-                                (Integer/parseInt size))]
-          (if (= bytes size)
-            f
+                                size)]
+          (if (>= bytes size)
+            {:name (.getName fn), :file f, :size size, :suffix suffix,
+             :mode mode}
             (throw (IOException. (str "Upload truncated.  Expected "
                                       size " bytes but got " bytes)))))))))
 
-(defn nail [#^NGContext ctx]
-  (let [in (.in ctx)
-        err (.err ctx)
-        out (.out ctx)]
-    
-   (doto (.err ctx)
-     (.print (str "Welcome to clojars!\n"))
-     (.flush))
+(defmacro printerr [& strs]
+  `(.println (.err ~'ctx) (str ~@(interleave strs (repeat " ")))))
 
-   (loop [files []]
-     (send-okay ctx)
-     (let [cmd (char (.read in))]
-       (condp = cmd
-         \C (recur (conj files (scp-copy ctx)))
-         ; TODO: will need other commands for maven support
-         (throw (IOException. (str "Unknown scp command: " cmd))))))))
+(defn finish-deploy [#^NGContext ctx, files]
+  (printerr "finish-deploy" files)
+)
+
+
+(defn nail [#^NGContext ctx]
+  (try
+   (let [in (.in ctx)
+         err (.err ctx)
+         out (.out ctx)
+         account (first (.getArgs ctx))]
+    
+     (when-not account
+       (throw (Exception. "I don't know who you are!")))
+
+     (doto (.err ctx)
+       (.println (str "Welcome to clojars, " account "!"))
+       (.flush))
+   
+     (loop [files [], okay true]
+       (when (> (count files) 100)
+         (throw (IOException. "Too many files uploaded at once")))
+
+       (when okay
+         (send-okay ctx))
+
+       (let [cmd (char (.read in))]
+         (condp = cmd
+           (char 0)      (do (recur files false))
+           \C            (recur (conj files (scp-copy ctx)) true)
+           (char 65535)  (finish-deploy ctx files)
+           ;; TODO: will need other commands for maven support
+           (throw (IOException. (str "Unknown scp command: '" (int cmd) "'")))))))
+
+   (catch Throwable t
+     (.printStackTrace t))))
 
 (defn -nailMain [context]
   (nail context))
