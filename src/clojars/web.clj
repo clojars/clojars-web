@@ -82,7 +82,7 @@
       (unordered-list errors)]))
 
 (defn register-form [ & [errors email user ssh-key]]
-  (html
+  (html-doc nil "Register"
    [:h1 "Register"]
    (error-list errors)
    (form-to [:post "/register"]
