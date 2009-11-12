@@ -1,0 +1,145 @@
+
+body {
+    background: #3e653c url(../images/header-bg.png) repeat-x;
+    font-family: "Helvetica Neue", Arial, "Liberation Sans", FreeSans, sans-serif;
+}
+
+.header h1 a {
+    background: url(../images/header.png) no-repeat;
+    height: 160px;
+    display: block;
+    text-indent: -10000px;
+}
+
+.header h2 {
+    display: none;
+}
+
+.article h1 {
+    color: #336;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 30px;
+}
+
+.article h2 {
+    color: #336;
+    margin-bottom: 20px;
+    margin-top: 40px;
+}
+
+
+a {
+    color: #33c;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+p {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 20px;
+}
+
+.article {
+    font-size: 20px;
+
+    width: 860px;
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+
+    background: #dccec7;
+
+    border: 5px solid #a58879;
+
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+}
+
+nav {
+    float: right;
+    display: block;
+    margin-top: 60px;
+    height: 40px;
+
+    margin-right: 10px;
+
+    font-size: 30px;
+    text-align: right;
+}
+
+nav ul {
+    display: inline;
+}
+nav ul li {
+    display: inline;
+}
+
+nav a {
+    color: black;
+    text-decoration: none;
+    padding: 5px;
+}
+
+.search {
+    width: 160px;
+    padding-left: 10px;
+    border: 2px solid #333;
+
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+
+    font-size: 20px;
+}
+
+.error {
+    display: block;
+    border: 2px solid #f66;
+    background: #fdd;
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+ul {
+    list-style: disc;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 20px;
+}
+
+ul li {
+    padding: 0.25em;
+}
+
+label {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+input {
+    font-size: 20px;
+    width: 100%;
+    margin-bottom: 20px;
+    margin-top: 5px;
+}
+
+input[type=submit] {
+    width: auto;
+}
+
+textarea {
+    width: 100%;
+    margin-bottom: 20px;
+    height: 8em;
+    margin-top: 5px;
+}
