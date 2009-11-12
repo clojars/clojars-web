@@ -9,7 +9,10 @@
        "docs" "pages" "images" "js" "css" "maven" "api"
        "download" "create" "new" "upload" "contact" "terms"
        "group" "groups" "browse" "status" "blog" "search"
-       "email" "welcome"})
+       "email" "welcome" "devel" "development" "test" "testing"
+       "prod" "production" "admin" "administrator" "root"
+       "webmaster" "profile" "dashboard" "settings" "options"
+       "index" "files"})
 
 (defn when-ie [& contents]
   (str
