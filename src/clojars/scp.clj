@@ -121,10 +121,10 @@
           (maven/deploy-model jarfile model
                               "file:///home/clojars/repo")
           (db/add-jar (first (.getArgs ctx)) jarmap))
-        (throw (Exception. (str "You need to give me one of: " names))))))
-  (printerr (str "\nSuccess! Your jars are now available from "
-                 "http://clojars.org/" account "/" name))
-  (.flush (.err ctx)))
+        (throw (Exception. (str "You need to give me one of: " names)))))
+    (printerr (str "\nSuccess! Your jars are now available from "
+                   "http://clojars.org/" account "/" name))
+    (.flush (.err ctx))))
 
 (defn nail [#^NGContext ctx]
   (let [old-out System/out]
