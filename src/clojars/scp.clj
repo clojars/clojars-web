@@ -110,7 +110,7 @@
         (do          
           (printerr "\nDeploying" (:name jarmap) (:version jarmap))          
           (maven/deploy-model jarfile model
-            "file:///home/clojars/repo")
+                              "file:///home/clojars/repo")
           (db/add-jar (first (.getArgs ctx)) jarmap))
         (throw (Exception. (str "Couldn't find one of: " names))))))
   (printerr "Success! Your jars are now available from http://clojars.org/")

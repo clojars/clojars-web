@@ -63,15 +63,16 @@
 (defn insert-value-pairs [table coll])
 
 (defn add-jar [account jarmap]
-  (insert-records
-   :jars
-   {:group_name (namespace (:name jarmap))
-    :jar_name   (name (:name jarmap))
-    :version    (:version jarmap)
-    :user       account
-    :created    (Date.)
-    :description (:description jarmap)
-    :homepage   (:homepage jarmap)
-    :authors    (join ", " (.replace "," ""))}))
+  (with-connection db
+   (insert-records
+    :jars
+    {:group_name (namespace (:name jarmap))
+     :jar_name   (name (:name jarmap))
+     :version    (:version jarmap)
+     :user       account
+     :created    (Date.)
+     :description (:description jarmap)
+     :homepage   (:homepage jarmap)
+     :authors    (join ", " (map #(.replace % "," "") (:authors jarmap)))})))
 
 
