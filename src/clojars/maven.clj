@@ -137,7 +137,9 @@
 (defn read-jarspec
   "Reads a jarspec file reurning a seq of jarmaps."
   [file]
-  (map defjar-to-map (filter defjar? (read-vec file))))
+  (map form-to-map 
+       (filter #(and (list %)
+                     (#{'defjar 'defproject} (first %))) (read-vec file))))
 
 (defn read-pom
   "Reads a pom file returning a maven Model object."
