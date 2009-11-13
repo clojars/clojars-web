@@ -80,7 +80,8 @@
     (.setGroupId (:group jarmap))
     (.setArtifactId (:name jarmap))
     (.setVersion (:version jarmap))
-    (.setClassifier (:classifier jarmap)))) 
+    ;(.setClassifier (:classifier jarmap))
+   )) 
 
 (defn make-contributor
   [name]
@@ -94,7 +95,7 @@
     (.setGroupId (:group dj))
     (.setArtifactId (:name dj))
     (.setVersion (:version dj))
-    (.setClassifier (:classifier dj))
+    ;(.setClassifier (:classifier dj))
 
     (.setDescription (:description dj))
     (.setUrl (:homepage dj))
@@ -107,7 +108,8 @@
 
 
 (defn model-to-map [model]
-  {:name (symbol (.getGroupId model) (.getArtifactId model))
+  {:name (.getArtifactId model)
+   :group (.getGroupId model)
    :version (.getVersion model)
    :description (.getDescription model)
    
