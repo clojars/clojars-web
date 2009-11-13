@@ -83,7 +83,6 @@
 (defmethod read-metadata "xml" [f] 
   (let [model (maven/read-pom (:file f))
         jarmap (maven/model-to-map model)]
-    (printerr "reading" f)
     [[model jarmap]]))
 
 ;; TODO: probably want to show an error if the file contains no defjars
@@ -136,3 +135,4 @@
 (defn -nailMain [context]
   (nail context))
 
+;(sorted-set-by compare 1 "a")
