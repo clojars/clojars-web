@@ -4,7 +4,7 @@
   (:import (org.apache.maven.model Model
                                    Dependency
                                    Contributor)
-           (org.apache.maven.model.io.xpp3 MavenXpp3Writer)
+           (org.apache.maven.model.io.xpp3 MavenXpp3Writer MavenXpp3Reader)
            org.apache.maven.artifact.repository.ArtifactRepositoryFactory
            org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout
            org.apache.maven.artifact.factory.ArtifactFactory
@@ -83,6 +83,19 @@
     (.setDependencies (doall (map #(apply make-dependency %)
                                   (partition 2 (:dependencies dj)))))))
 
+
+(defn model-to-map [model]
+  {:name (symbol (.getGroupId model) (.getArtifactId model))
+   :version (.getVersion model)
+   :description (.getDescription model)
+   
+   :homepage (.getUrl model)
+   :authors (vec (map #(.getName %) (.getContributors model)))
+   :dependencies (vec (mapcat (fn [d] [(symbol (.getGroupId d) 
+                                               (.getArtifactId d))
+                                       (.getVersion d)])
+                              (.getDependencies model)))})
+
 (defn model-to-xml 
   "Converts a maven model to a string of XML."
   [model]
@@ -98,6 +111,17 @@
     (with-open [writer (FileWriter. f)]
       (.write (MavenXpp3Writer.) writer model))
     f))
+
+(defn read-jarspec
+  "Reads a jarspec file reurning a seq of jarmaps."
+  [file]
+  (map defjar-to-map (filter defjar? (read-vec file))))
+
+(defn read-pom
+  "Reads a pom file returning a maven Model object."
+  [file]
+  (with-open [reader (ds/reader file)]
+    (.read (MavenXpp3Reader.) reader)))
 
 (defn make-repo
   "Does the crazy factory voodoo necessary to get an ArtifactRepository object."

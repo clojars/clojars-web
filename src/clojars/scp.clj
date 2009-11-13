@@ -77,10 +77,29 @@
 (defmacro printerr [& strs]
   `(.println (.err ~'ctx) (str ~@(interleave strs (repeat " ")))))
 
+
+
+(defmulti read-metadata :suffix)
+(defmethod read-metadata "xml" [f] 
+  (let [model (maven/read-pom (:file f))
+        jarmap (maven/model-to-map model)]
+    (printerr "reading" f)
+    [[model jarmap]]))
+
+;; TODO: probably want to show an error if the file contains no defjars
+(defmethod read-metadata "clj" [f]
+  (for [jarmap (maven/read-jarspec (:file f))]
+    (let [model (maven/make-model jarmap)]
+      [model jarmap])))
+
 (defn finish-deploy [#^NGContext ctx, files]
   (printerr "finish-deploy" files)
-)
-
+  (let [metadata (filter #(#{"xml" "clj"} (:suffix %)) files)
+        jars     (filter #(#{"jar"}       (:suffix %)) files)]
+    (printerr "metadata" (read-metadata (first metadata)))
+    (for [metafile metadata
+          [model jarmap] (read-metadata metafile)]
+      (printerr jarmap))))
 
 (defn nail [#^NGContext ctx]
   (try
