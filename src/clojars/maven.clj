@@ -27,7 +27,7 @@
 (defn read-vec
   "Produces a vector of clojure data structures read from file."
   [file]
-  (with-open [rdr (PushbackReader. (ds/reader "/tmp/jarspec.clj"))]
+  (with-open [rdr (PushbackReader. (ds/reader file))]
    (loop [v []]
      (let [x (read rdr false ::end)]
        (if (not= x ::end)
