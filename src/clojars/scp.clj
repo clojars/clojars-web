@@ -91,46 +91,59 @@
     (let [model (maven/make-model jarmap)]
       [model jarmap])))
 
+(defn jar-name [jarmap]
+  (str (name (:name jarmap)) "-" (:version jarmap) ".jar"))
+
 (defn finish-deploy [#^NGContext ctx, files]
-  (printerr "finish-deploy" files)
   (let [metadata (filter #(#{"xml" "clj"} (:suffix %)) files)
-        jars     (filter #(#{"jar"}       (:suffix %)) files)]
-    (printerr "metadata" (read-metadata (first metadata)))
-    (for [metafile metadata
-          [model jarmap] (read-metadata metafile)]
-      (printerr jarmap))))
+        jars     (filter #(#{"jar"}       (:suffix %)) files)
+        jarfiles (into {} (map (juxt :name :file) jars))]
+
+    (doseq [metafile metadata
+            [model jarmap] (read-metadata metafile)
+            :let [name (jar-name jarmap)]]
+      (if-let [jarfile (jarfiles name)]
+        (do          
+          (printerr "\nDeploying" name "as" (:name jarmap) (:version jarmap))          
+          (maven/deploy-model jarfile model "file:///tmp/repo"))
+        (throw (Exception. (str "Jar not found: " name))))))
+  (printerr "Success!")
+  (.flush (.err ctx)))
 
 (defn nail [#^NGContext ctx]
-  (try
-   (let [in (.in ctx)
-         err (.err ctx)
-         out (.out ctx)
-         account (first (.getArgs ctx))]
+  (let [old-out System/out]
+   (try
+    (System/setOut (.err ctx))
+    (let [in (.in ctx)
+          err (.err ctx)
+          out (.out ctx)
+          account (first (.getArgs ctx))]
     
-     (when-not account
-       (throw (Exception. "I don't know who you are!")))
+      (when-not account
+        (throw (Exception. "I don't know who you are!")))
 
-     (doto (.err ctx)
-       (.println (str "Welcome to clojars, " account "!"))
-       (.flush))
-   
-     (loop [files [], okay true]
-       (when (> (count files) 100)
-         (throw (IOException. "Too many files uploaded at once")))
+      (doto (.err ctx)
+        (.println (str "Welcome to Clojars, " account "!"))
+        (.flush))
+     
+      (loop [files [], okay true]
+        (when (> (count files) 100)
+          (throw (IOException. "Too many files uploaded at once")))
 
-       (when okay
-         (send-okay ctx))
+        (when okay
+          (send-okay ctx))
 
-       (let [cmd (char (.read in))]
-         (condp = cmd
-           (char 0)      (do (recur files false))
-           \C            (recur (conj files (scp-copy ctx)) true)
-           (char 65535)  (finish-deploy ctx files)
-           ;; TODO: will need other commands for maven support
-           (throw (IOException. (str "Unknown scp command: '" (int cmd) "'")))))))
+        (let [cmd (char (.read in))]
+          (condp = cmd
+            (char 0)      (do (recur files false))
+            \C            (recur (conj files (scp-copy ctx)) true)
+            (char 65535)  (finish-deploy ctx files)
+            ;; TODO: will need other commands for maven support
+            (throw (IOException. (str "Unknown scp command: '" (int cmd) "'")))))))
 
-   (catch Throwable t
-     (.printStackTrace t))))
+    (catch Throwable t
+      (.printStackTrace t))
+    (finally (System/setOut old-out)))))
 
 (defn -nailMain [context]
   (nail context))
