@@ -55,8 +55,11 @@
          {:name (name jarname),
           :group (namespace jarname),
           :version version
-          :dependencies (map #(apply form-to-map 'defjar %)
-  (:dependencies options-map))})))
+          :dependencies (for [[n v] (partition 2 (:dependencies
+                                                  options-map))]
+                          {:name (name n)
+                           :group (namespace n)
+                           :version v})})))
 
 ;; leiningen support
 (defmethod form-to-map 'defproject [[dp jarname & options]]
@@ -91,6 +94,7 @@
 (defn make-model
   "Produces a maven Model from a defjar map."
   [dj]
+  (.println System/err (str (:dependencies dj)))
   (doto (Model.)
     (.setGroupId (:group dj))
     (.setArtifactId (:name dj))
@@ -99,12 +103,10 @@
 
     (.setDescription (:description dj))
     (.setUrl (:homepage dj))
-    (.setContributors (doall (map make-contributor (:authors dj))))
+    (.setContributors (vec (map make-contributor (:authors dj))))
 
     (.setPackaging "jar")
-
-    (.setDependencies (doall (map #(apply make-dependency %)
-                                  (:dependencies dj))))))
+    (.setDependencies (vec (map make-dependency (:dependencies dj))))))
 
 
 (defn model-to-map [model]

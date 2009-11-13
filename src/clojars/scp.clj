@@ -79,22 +79,23 @@
   `(.println (.err ~'ctx) (str ~@(interleave strs (repeat " ")))))
 
 (defmulti read-metadata :suffix)
-(defmethod read-metadata "xml" [f] 
+(defmethod read-metadata "xml" [f default-group] 
   (let [model (maven/read-pom (:file f))
         jarmap (maven/model-to-map model)]
     [[model jarmap]]))
 
 ;; TODO: probably want to show an error if the file contains no defjars
-(defmethod read-metadata "clj" [f]
+(defmethod read-metadata "clj" [f default-group]
   (for [jarmap (maven/read-jarspec (:file f))]
-    (let [model (maven/make-model jarmap)]
-      [model jarmap])))
+    (let [jarmap (if (:group jarmap) jarmap (assoc jarmap :group default-group))]
+     (let [model (maven/make-model jarmap)]
+       [model jarmap]))))
 
 (defn jar-names
   "Construct a few possible name variations a jar might have."
   [jarmap]
-  [ (str (name (:name jarmap)) "-" (:version jarmap) ".jar")
-    (str (name (:name jarmap)) ".jar")])
+  [ (str (:name jarmap) "-" (:version jarmap) ".jar")
+    (str (:name jarmap) ".jar")])
 
 (defn finish-deploy [#^NGContext ctx, files]
   (let [account (first (.getArgs ctx))
@@ -104,10 +105,8 @@
         jarfiles (into {} (map (juxt :name :file) jars))]
 
     (doseq [metafile metadata
-            [model jarmap] (read-metadata metafile)
-            :let [names (jar-names jarmap)
-                  jarmap (if (:group jarmap) jarmap 
-                             (assoc jarmap :group act-group))]]
+            [model jarmap] (read-metadata metafile act-group)
+            :let [names (jar-names jarmap)]]
 
       (when (not= (:group jarmap) act-group)
         (throw (Exception.
@@ -123,7 +122,7 @@
           (db/add-jar (first (.getArgs ctx)) jarmap))
         (throw (Exception. (str "You need to give me one of: " names)))))
     (printerr (str "\nSuccess! Your jars are now available from "
-                   "http://clojars.org/" account "/" name))
+                   "http://clojars.org/"))
     (.flush (.err ctx))))
 
 (defn nail [#^NGContext ctx]
