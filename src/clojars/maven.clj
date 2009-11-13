@@ -38,8 +38,10 @@
   (and (list? x)
        (= (first x) 'defjar)))
 
-(defn defjar-to-map [[dj name version & options]]
-  (when-not name
+(defmulti form-to-map first)
+
+(defmethod form-to-map 'defjar [[dj jarname version & options]]
+  (when-not jarname
     (raise :type ::invalid-defjar :missing :name
            :message "defjar requires a name"))
   (when-not version
@@ -48,18 +50,37 @@
   (when-not (even? (count options))
     (raise :type ::invalid-defjar :invalid :options
            :message "defjar requires an even number of options"))
-  (into (apply hash-map options) 
-        {:name name,
-         :version version}))
+  (let [options-map (apply hash-map options)]
+   (into options-map
+         {:name (name jarname),
+          :group (namespace jarname),
+          :version version
+          :dependencies (map #(apply form-to-map 'defjar %)
+  (:dependencies options-map))})))
+
+;; leiningen support
+(defmethod form-to-map 'defproject [[dp jarname & options]]
+  (when-not jarname
+    (raise :type ::invalid-defproject :missing :name
+           :message "defproject requires a name"))
+  (when-not (even? (count options))
+    (raise :type ::invalid-defproject :invalid :options
+           :message "defproject requires an even number of options"))
+  (let [options-map (apply hash-map options)]
+   (into options-map
+         {:name (str jarname),
+          :dependencies (map #(hash-map :group (nth % 0) :name (nth % 1)
+                                        :version (nth % 2)) (:dependencies options-map))})))
 
 (defn make-dependency
   "Constructs a Maven Dependency object.  The jarsym should be
   groupId/artifactId."
-  [jarsym version]
+  [jarmap]
   (doto (Dependency.)
-    (.setGroupId (namespace jarsym))
-    (.setArtifactId (name jarsym))
-    (.setVersion version))) 
+    (.setGroupId (:group jarmap))
+    (.setArtifactId (:name jarmap))
+    (.setVersion (:version jarmap))
+    (.setClassifier (:classifier jarmap)))) 
 
 (defn make-contributor
   [name]
@@ -70,9 +91,10 @@
   "Produces a maven Model from a defjar map."
   [dj]
   (doto (Model.)
-    (.setGroupId (or (namespace (:name dj)) "org.clojars.ato"))
-    (.setArtifactId (name (:name dj)))
+    (.setGroupId (:group dj))
+    (.setArtifactId (:name dj))
     (.setVersion (:version dj))
+    (.setClassifier (:classifier dj))
 
     (.setDescription (:description dj))
     (.setUrl (:homepage dj))
@@ -81,7 +103,7 @@
     (.setPackaging "jar")
 
     (.setDependencies (doall (map #(apply make-dependency %)
-                                  (partition 2 (:dependencies dj)))))))
+                                  (:dependencies dj))))))
 
 
 (defn model-to-map [model]

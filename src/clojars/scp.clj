@@ -15,7 +15,7 @@
 
 (set! *warn-on-reflection* true)
 
-(defn safe-read-line 
+(defn safe-read-line
   ([#^InputStream stream #^StringBuilder builder]
      (when (> (.length builder) *max-line-size*)
        (throw (IOException. "Line too long")))
@@ -78,8 +78,6 @@
 (defmacro printerr [& strs]
   `(.println (.err ~'ctx) (str ~@(interleave strs (repeat " ")))))
 
-
-
 (defmulti read-metadata :suffix)
 (defmethod read-metadata "xml" [f] 
   (let [model (maven/read-pom (:file f))
@@ -99,21 +97,33 @@
     (str (name (:name jarmap)) ".jar")])
 
 (defn finish-deploy [#^NGContext ctx, files]
-  (let [metadata (filter #(#{"xml" "clj"} (:suffix %)) files)
+  (let [account (first (.getArgs ctx))
+        act-group (str "org.clojars." account)
+        metadata (filter #(#{"xml" "clj"} (:suffix %)) files)
         jars     (filter #(#{"jar"}       (:suffix %)) files)
         jarfiles (into {} (map (juxt :name :file) jars))]
 
     (doseq [metafile metadata
             [model jarmap] (read-metadata metafile)
-            :let [names (jar-names jarmap)]]
+            :let [names (jar-names jarmap)
+                  jarmap (if (:group jarmap) jarmap 
+                             (assoc jarmap :group act-group))]]
+
+      (when (not= (:group jarmap) act-group)
+        (throw (Exception.
+                (str "Custom group ids are not supported yet. "
+                     " For now please use "
+                     act-group " instead of " (:group jarmap)))))
+
       (if-let [jarfile (some jarfiles names)]
         (do          
-          (printerr "\nDeploying" (:name jarmap) (:version jarmap))          
+          (printerr "\nDeploying" (:group jarmap) (:name jarmap) (:version jarmap))          
           (maven/deploy-model jarfile model
                               "file:///home/clojars/repo")
           (db/add-jar (first (.getArgs ctx)) jarmap))
-        (throw (Exception. (str "Couldn't find one of: " names))))))
-  (printerr "Success! Your jars are now available from http://clojars.org/")
+        (throw (Exception. (str "You need to give me one of: " names))))))
+  (printerr (str "\nSuccess! Your jars are now available from "
+                 "http://clojars.org/" account "/" name))
   (.flush (.err ctx)))
 
 (defn nail [#^NGContext ctx]

@@ -66,8 +66,8 @@
   (with-connection db
    (insert-records
     :jars
-    {:group_name (namespace (:name jarmap))
-     :jar_name   (name (:name jarmap))
+    {:group_name (:group jarmap)
+     :jar_name   (:name jarmap)
      :version    (:version jarmap)
      :user       account
      :created    (Date.)
