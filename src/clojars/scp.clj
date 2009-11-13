@@ -3,7 +3,8 @@
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
   (:use clojure.contrib.duck-streams)
-  (:require [clojars.maven :as maven])
+  (:require [clojars.maven :as maven]
+            [clojars.db    :as db])
   (:gen-class
    :methods [#^{:static true}
              [nailMain [com.martiansoftware.nailgun.NGContext] void]]))
@@ -91,8 +92,11 @@
     (let [model (maven/make-model jarmap)]
       [model jarmap])))
 
-(defn jar-name [jarmap]
-  (str (name (:name jarmap)) "-" (:version jarmap) ".jar"))
+(defn jar-names
+  "Construct a few possible name variations a jar might have."
+  [jarmap]
+  [ (str (name (:name jarmap)) "-" (:version jarmap) ".jar")
+    (str (name (:name jarmap)) ".jar")])
 
 (defn finish-deploy [#^NGContext ctx, files]
   (let [metadata (filter #(#{"xml" "clj"} (:suffix %)) files)
@@ -101,13 +105,15 @@
 
     (doseq [metafile metadata
             [model jarmap] (read-metadata metafile)
-            :let [name (jar-name jarmap)]]
-      (if-let [jarfile (jarfiles name)]
+            :let [names (jar-names jarmap)]]
+      (if-let [jarfile (some jarfiles names)]
         (do          
-          (printerr "\nDeploying" name "as" (:name jarmap) (:version jarmap))          
-          (maven/deploy-model jarfile model "file:///tmp/repo"))
-        (throw (Exception. (str "Jar not found: " name))))))
-  (printerr "Success!")
+          (printerr "\nDeploying" (:name jarmap) (:version jarmap))          
+          (maven/deploy-model jarfile model
+            "file:///home/clojars/repo")
+          (db/add-jar (first (.getArgs ctx)) jarmap))
+        (throw (Exception. (str "Couldn't find one of: " names))))))
+  (printerr "Success! Your jars are now available from http://clojars.org/")
   (.flush (.err ctx)))
 
 (defn nail [#^NGContext ctx]

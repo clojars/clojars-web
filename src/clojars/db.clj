@@ -1,6 +1,7 @@
 (ns clojars.db
   (:use clojure.contrib.sql
-        clojure.contrib.duck-streams)
+        clojure.contrib.duck-streams
+        [clojure.contrib.str-utils2 :only [join]])
   (:import java.security.MessageDigest
            java.util.Date
            java.io.File))
@@ -58,3 +59,19 @@
    {:email email :user user :password (sha1 password)
     :ssh_key ssh-key})
   (write-key-file key-file))
+
+(defn insert-value-pairs [table coll])
+
+(defn add-jar [account jarmap]
+  (insert-records
+   :jars
+   {:group_name (namespace (:name jarmap))
+    :jar_name   (name (:name jarmap))
+    :version    (:version jarmap)
+    :user       account
+    :created    (Date.)
+    :description (:description jarmap)
+    :homepage   (:homepage jarmap)
+    :authors    (join ", " (.replace "," ""))}))
+
+
