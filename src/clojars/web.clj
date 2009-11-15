@@ -230,12 +230,6 @@
      (do ~body)))
 
 (defroutes clojars-app
-  (GET "/:user/:jarname"
-    (try-account
-     (show-jar account (:route-params request))))
-  (GET "/:user"
-    (try-account
-     (show-user account ((:route-params request) :user))))
   (GET "/profile"
     (with-account
      (profile-form account)))
@@ -256,6 +250,12 @@
   (GET "/"
     (try-account
      (index-page account)))
+  (GET "/:user/:jarname"
+    (try-account
+     (show-jar account (:route-params request))))
+  (GET "/:user"
+    (try-account
+     (show-user account ((:route-params request) :user))))
   (ANY "/*"
        (if-let [f (serve-file (params :*))]
          [{:headers {"Cache-Control" "max-age=3600"}} f]
