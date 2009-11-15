@@ -48,6 +48,16 @@
                            user (sha1 pass)]
     (first rs)))
 
+(defn jars-by-user [user]
+  (with-query-results rs ["select * from jars where user = ?" user]
+    (vec rs)))
+
+(defn find-jar [user jarname]
+  (with-query-results rs [(str "select * from jars where user = ? and "
+                               "jar_name = ?") user jarname]
+    (first rs)))
+
+
 (defn add-user [email user password ssh-key]
   (insert-values :users
     [:email :user :password :ssh_key :created]
@@ -75,4 +85,9 @@
      :homepage   (:homepage jarmap)
      :authors    (join ", " (map #(.replace % "," "") (:authors jarmap)))})))
 
-
+(comment
+  (with-connection db (add-jar "ato" {:name "test" :group "org.clojars.ato" :version "1.0"
+                                      :description "An awesome and non-existent test jar."
+                                      :homepage "http://clojars.org/"
+                                      :authors ["Alex Osborne" "a  little fish"]}))
+)

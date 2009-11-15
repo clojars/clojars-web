@@ -158,16 +158,63 @@
     (do (update-user account email account password ssh-key)
         [(redirect-to "/profile")])))
 
+(defn show-user [account user]
+  (html-doc account (str user "'s jars")
+    [:h1 (str user "'s jars")]
+    (unordered-list 
+     (for [jar (jars-by-user user)]
+       (html (link-to (str "/" (:user jar) "/" (:jar_name jar)) 
+                  (:jar_name jar))
+             " "(:version jar))))))
+
+(defn tag [s]
+  (html [:span {:class "tag"} (h s8)]))
+
+(defn show-jar [account {:keys [user jarname]}]
+  (let [jar (find-jar user jarname)]
+   (html-doc account jarname
+     [:h1 (link-to (str "/" user) (h user)) " / " (h jarname)]
+     (:description jar)
+
+     [:div {:class "useit"}
+      [:h2 "USE IT"]
+      [:h3 "with Leiningen"]
+      [:div {:class "lein"} 
+       [:span
+        "lein add-dep "
+        (h (:group_name jar)) "/" (h (:jar_name jar))
+        " \"" (h (:version jar)) "\"" ]]
+
+      [:h3 "with Maven"]
+      [:div {:class "maven"} 
+       [:pre
+        (tag "<dependency>\n")
+        (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
+        (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
+        (tag "  <version>") (:version jar) (tag "</version>\n")
+        (tag "</dependency>")]]]
+     )))
+
 (defn not-found-doc []
-  [:h1 "Page not found"]
-  [:p "Thundering typhoons!  I think we lost it.  Sorry!"])
+  (html [:h1 "Page not found"]
+        [:p "Thundering typhoons!  I think we lost it.  Sorry!"]))
 
 (defmacro with-account [body]
   `(if-let [~'account (~'session :account)]
      (do ~body)
      (redirect-to "/login")))
 
+(defmacro try-account [body]
+  `(let [~'account (~'session :account)]
+     (do ~body)))
+
 (defroutes clojars-app
+  (GET "/:user/:jarname"
+    (try-account
+     (show-jar account (:route-params request))))
+  (GET "/:user"
+    (try-account
+     (show-user account ((:route-params request) :user))))
   (GET "/profile"
     (with-account
      (profile-form account)))
@@ -201,5 +248,4 @@
 ;(require 'swank.swank)
 ;(swank.swank/start-server "/dev/null" :port 4005)
 
-;(run-server {:port 8000}
-;            "/*" (servlet clojars-app))
+;(run-server {:port 8000} "/*" (servlet clojars-app))
