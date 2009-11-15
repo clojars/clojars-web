@@ -96,6 +96,7 @@
   [dj]
   (.println System/err (str (:dependencies dj)))
   (doto (Model.)
+    (.setModelVersion "4.0.0")
     (.setGroupId (:group dj))
     (.setArtifactId (:name dj))
     (.setVersion (:version dj))

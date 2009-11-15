@@ -168,7 +168,7 @@
              " "(:version jar))))))
 
 (defn tag [s]
-  (html [:span {:class "tag"} (h s8)]))
+  (html [:span {:class "tag"} (h s)]))
 
 (defn show-jar [account {:keys [user jarname]}]
   (let [jar (find-jar user jarname)]
@@ -249,3 +249,4 @@
 ;(swank.swank/start-server "/dev/null" :port 4005)
 
 ;(run-server {:port 8000} "/*" (servlet clojars-app))
+

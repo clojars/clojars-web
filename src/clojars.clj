@@ -1,1 +1,1 @@
-(ns 'clojars)
+(ns clojars)
