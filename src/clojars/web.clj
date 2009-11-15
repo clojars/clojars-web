@@ -208,11 +208,13 @@
         isn't suited for forking or personal projects.  Clojars is
         intended to make distributing code as easy as possibe for
         <strong>everyone</strong>.</p> 
-        <p>But <strong>don't worry</strong>, the plan is to expose things as a Maven and Ivy compatible repository so you can use them if you want to.</p>
+        <p>But <strong>don't worry</strong>, the plan is to expose
+        things as a Maven and Ivy compatible repository so you can use
+        them if you want to.</p>
         <h2>But I <em>hate</em> Maven!</h2>
 
-        <p>I hope to support other tools, such as <a
-        href=\"http://github.com/technomancy/leiningen\">Leiningen</a>"" as well.</p>
+        <p>I hope to support other tools&mdash;such as <a
+        href=\"http://github.com/technomancy/leiningen\">Leiningen</a>""&mdash;as well.</p>
         <h2>Isn't this just a Clojure clone of <a href=\"http://gemcutter.org/\">gemcutter.org</a>?</h2>
         <p>Why mess with a good idea? :-)</p>"))
 
