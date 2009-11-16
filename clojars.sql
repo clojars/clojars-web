@@ -29,6 +29,6 @@ create table deps
 
 create table groups
        (id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
         user TEXT NOT NULL);
         

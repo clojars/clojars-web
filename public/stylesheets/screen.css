@@ -30,7 +30,7 @@ body {
 
 
 a {
-    color: #33c;
+    color: #339;
     text-decoration: none;
 }
 
@@ -52,7 +52,7 @@ p {
     padding-right: 40px;
     padding-top: 20px;
     padding-bottom: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     margin-top: 20px;
 
     background: #dccec7;
@@ -142,4 +142,16 @@ textarea {
     margin-bottom: 20px;
     height: 8em;
     margin-top: 5px;
+}
+
+footer {
+    display: block;
+    text-align: center;
+    color: #ccc;
+    font-weight: bold;
+}
+
+footer a {
+    color: #ccc;
+    margin: 20px;
 }

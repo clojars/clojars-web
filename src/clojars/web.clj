@@ -2,18 +2,6 @@
   (:require [clojure.contrib.sql :as sql])
   (:use compojure clojars.db))
 
-(def *reserved-names* 
-     #{"clojure" "clojars" "clojar" "register" "login"
-       "pages" "logout" "password" "username" "user"
-       "repo" "repos" "jar" "jars" "about" "help" "doc"
-       "docs" "pages" "images" "js" "css" "maven" "api"
-       "download" "create" "new" "upload" "contact" "terms"
-       "group" "groups" "browse" "status" "blog" "search"
-       "email" "welcome" "devel" "development" "test" "testing"
-       "prod" "production" "admin" "administrator" "root"
-       "webmaster" "profile" "dashboard" "settings" "options"
-       "index" "files"})
-
 (defn when-ie [& contents]
   (str
    "<!--[if IE]>"
@@ -53,7 +41,11 @@
       [:div {:class :clear}]]]
     [:div {:class "container_12 article"}
      [:article
-      body]]]))
+      body]]
+    [:footer
+     (link-to "mailto:contact@clojars.org" "contact")
+     (link-to "http://github.com/ato/clojars-web" "code")
+     (link-to "http://wiki.github.com/ato/clojars-web/help" "help")]]))
 
 (defn login-form [ & [error]]
   (html-doc nil "Login"
@@ -119,7 +111,8 @@
                  "Password and confirm password must match")
       (conj-when (or (*reserved-names* user)  ; "I told them we already
                      (and (not= account user) ; got one!" 
-                          (find-user user))) 
+                          (find-user user))
+                     (seq (group-members user))) 
                  "Username is already taken")
       (conj-when (not (re-matches #"[a-z0-9_-]+" user))
                  (str "Usernames must consist only of lowercase "
@@ -132,8 +125,8 @@
   (if-let [errors (validate-profile nil email user password confirm ssh-key)]
     (register-form errors email user ssh-key)
     (do (add-user email user password ssh-key)
-        [(set-session {:user user})
-         (redirect-to "/welcome")])))
+        [(set-session {:account user})
+         (redirect-to "/")])))
 
 (defn profile-form [account & [errors]]
   (let [user (find-user account)]
@@ -181,9 +174,9 @@
       [:h3 "with Leiningen"]
       [:div {:class "lein"} 
        [:span
-        "lein add-dep "
+        "["
         (h (:group_name jar)) "/" (h (:jar_name jar))
-        " \"" (h (:version jar)) "\"" ]]
+        " \"" (h (:version jar)) "\"]" ]]
 
       [:h3 "with Maven"]
       [:div {:class "maven"} 
@@ -218,6 +211,15 @@
         <h2>Isn't this just a Clojure clone of <a href=\"http://gemcutter.org/\">gemcutter.org</a>?</h2>
         <p>Why mess with a good idea? :-)</p>"))
 
+(defn dashboard [account]
+  (html-doc account "Dashboard"
+    [:h1 (str "Dashboard (" (h account) ")")]
+    [:h2 "Your jars"]
+    (unordered-list (map :jar_name (jars-by-user account)))
+    (link-to "/help" "add new jar")
+    [:h2 "Your groups"]
+    (unordered-list (find-groups account))))
+
 (defn not-found-doc []
   (html [:h1 "Page not found"]
         [:p "Thundering typhoons!  I think we lost it.  Sorry!"]))
@@ -237,7 +239,7 @@
      (profile-form account)))
   (POST "/profile"
     (with-account
-     (update-profile account params)))
+      (update-profile account params)))
   (GET "/login"
     (login-form))
   (POST "/login"
@@ -251,13 +253,17 @@
      (redirect-to "/")])
   (GET "/"
     (try-account
-     (index-page account)))
+     (if account
+       (dashboard account)
+       (index-page account))))
   (GET "/:user/:jarname"
     (try-account
      (show-jar account (:route-params request))))
-  (GET "/:user"
-    (try-account
-     (show-user account ((:route-params request) :user))))
+  (GET "/:user"    
+    (if-let [user (find-user ((:route-params request) :user))]
+      (try-account
+       (show-user account (:user user)))
+      :next))
   (ANY "/*"
        (if-let [f (serve-file (params :*))]
          [{:headers {"Cache-Control" "max-age=3600"}} f]

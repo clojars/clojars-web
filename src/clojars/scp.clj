@@ -163,7 +163,8 @@
 
     (catch Throwable t
       (.printStackTrace t)
-      (.flush (.err ctx)))
+      (.flush (.err ctx))
+      (throw t))
     (finally (System/setOut old-out)))))
 
 (defn -nailMain [context]
