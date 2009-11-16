@@ -11,7 +11,7 @@
 
 (def *max-line-size* 4096)
 (def *max-file-size* 10485760)
-(def *allowed-suffixes* #{"clj" "xml" "jar"})
+(def *allowed-suffixes* #{"clj" "xml" "jar" "sha1" "md5"})
 
 (set! *warn-on-reflection* true)
 
@@ -105,6 +105,7 @@
         jarfiles (into {} (map (juxt :name :file) jars))]
 
     (doseq [metafile metadata
+            :when (not= (:name metafile) "maven-metadata.xml")
             [model jarmap] (read-metadata metafile act-group)
             :let [names (jar-names jarmap)]]
 
@@ -116,12 +117,13 @@
 
       (if-let [jarfile (some jarfiles names)]
         (do          
-          (printerr "\nDeploying" (:group jarmap) (:name jarmap) (:version jarmap))          
+          (.println *err* (str "\nDeploying " (:group jarmap) "/"
+                               (:name jarmap) " " (:version jarmap)))          
           (maven/deploy-model jarfile model
                               "file:///home/clojars/repo")
           (db/add-jar (first (.getArgs ctx)) jarmap))
         (throw (Exception. (str "You need to give me one of: " names)))))
-    (printerr (str "\nSuccess! Your jars are now available from "
+    (.println *err* (str "\nSuccess! Your jars are now available from "
                    "http://clojars.org/"))
     (.flush (.err ctx))))
 
@@ -149,18 +151,20 @@
           (send-okay ctx))
 
         (let [cmd (char (.read in))]
+          (.println *err* "got command " cmd)
           (condp = cmd
             (char 0)      (do (recur files false))
             \C            (recur (conj files (scp-copy ctx)) true)
+            \D            (do (safe-read-line in) (recur files true))
+            \T            (do (safe-read-line in) (recur files true))
+            \E            (do (safe-read-line in) (recur files true))
             (char 65535)  (finish-deploy ctx files)
-            ;; TODO: will need other commands for maven support
             (throw (IOException. (str "Unknown scp command: '" (int cmd) "'")))))))
 
     (catch Throwable t
-      (.printStackTrace t))
+      (.printStackTrace t)
+      (.flush (.err ctx)))
     (finally (System/setOut old-out)))))
 
 (defn -nailMain [context]
   (nail context))
-
-;(sorted-set-by compare 1 "a")
