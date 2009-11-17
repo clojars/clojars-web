@@ -39,10 +39,15 @@
                                                "[\n\r\0]" ""))))))
      (.renameTo new-file (File. path)))))
 
-(defn with-db
+(defn db-middleware
   [handler]
   (fn [request]
     (with-connection db (handler request))))
+
+(defmacro with-db
+  [& body]
+  `(with-connection db
+     ~@body))
 
 (defn sha1 [s]
   (when s
@@ -72,10 +77,15 @@
   (with-query-results rs ["select * from jars where user = ?" user]
     (vec rs)))
 
-(defn find-jar [user jarname]
-  (with-query-results rs [(str "select * from jars where user = ? and "
-                               "jar_name = ?") user jarname]
-    (first rs)))
+(defn find-jar 
+  ([jarname]
+     (with-query-results rs [(str "select * from jars where "
+                                  "jar_name = ?") jarname]
+       (first rs)))
+  ([user jarname]
+      (with-query-results rs [(str "select * from jars where user = ? and "
+                                   "jar_name = ?") user jarname]
+        (first rs))))
 
 
 (defn add-user [email user password ssh-key]

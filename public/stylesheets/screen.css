@@ -41,13 +41,12 @@ a:hover {
 p {
     margin-top: 1em;
     margin-bottom: 1em;
-    margin-left: 20px;
 }
 
 .article {
     font-size: 20px;
 
-    width: 860px;
+    width: 660px;
     padding-left: 40px;
     padding-right: 40px;
     padding-top: 20px;
@@ -154,4 +153,33 @@ footer {
 footer a {
     color: #ccc;
     margin: 20px;
+}
+
+.useit h3 {
+    text-align: left;
+    margin-bottom: 20px;
+    color: #777;
+}
+
+.useit div {
+    background: #1f1f1f;
+    color: white;
+    padding: 20px;
+
+    margin-top: 20px;
+    margin-bottom: 20px;
+
+    border: 5px solid #444;
+    
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+}
+
+.useit div .tag {
+    color: #ffcfaf;
+}
+
+.useit div .string {
+    color: #cc9393;
 }

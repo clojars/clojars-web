@@ -167,30 +167,43 @@
 (defn tag [s]
   (html [:span {:class "tag"} (h s)]))
 
-(defn show-jar [account {:keys [user jarname]}]
-  (let [jar (find-jar user jarname)]
-   (html-doc account jarname
-     [:h1 (link-to (str "/" user) (h user)) " / " (h jarname)]
-     (:description jar)
+(defn jar-link [jar]
+  (link-to
+   (if (= (:group_name jar) (:jar_name jar))
+     (str "/" (:jar_name jar))
+     (str "/" (:group_name jar) "/" (:jar_name jar)))
+   (:jar_name jar)))
 
-     [:div {:class "useit"}
-      [:h2 "USE IT"]
-      [:h3 "with Leiningen"]
-      [:div {:class "lein"} 
-       [:span
-        "["
-        (h (:group_name jar)) "/" (h (:jar_name jar))
-        " \"" (h (:version jar)) "\"]" ]]
+(defn group-link [group]
+  (link-to (str "/groups/" group) group))
 
-      [:h3 "with Maven"]
-      [:div {:class "maven"} 
-       [:pre
-        (tag "<dependency>\n")
-        (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
-        (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
-        (tag "  <version>") (:version jar) (tag "</version>\n")
-        (tag "</dependency>")]]]
-     )))
+(defn jar-name [jar]
+  (if (= (:group_name jar) (:jar_name jar))
+    (h (:jar_name jar))
+    (h (str (:group_name jar) "/" (:jar_name jar)))))
+
+(defn show-jar [account jar]  
+  (html-doc account (:jar_name jar)
+    [:h1 (jar-link jar)]
+    (:description jar)
+
+    [:div {:class "useit"}
+     [:div {:class "lein"} 
+      [:h3 "leiningen"]
+      [:pre
+       (tag "[")
+       (jar-name jar)
+       [:span {:class :string} " \"" (h (:version jar)) "\""] (tag "]") ]]
+
+     [:div {:class "maven"} 
+      [:h3 "maven"]
+      [:pre
+       (tag "<dependency>\n")
+       (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
+       (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
+       (tag "  <version>") (:version jar) (tag "</version>\n")
+       (tag "</dependency>")]]]
+    ))
 
 (defn index-page [account]
   (html-doc account nil
@@ -219,10 +232,10 @@
   (html-doc account "Dashboard"
     [:h1 (str "Dashboard (" (h account) ")")]
     [:h2 "Your jars"]
-    (unordered-list (map :jar_name (jars-by-user account)))
-    (link-to "/help" "add new jar")
+    (unordered-list (map jar-link (jars-by-user account)))
+    (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add new jar")
     [:h2 "Your groups"]
-    (unordered-list (find-groups account))))
+    (unordered-list (map group-link (find-groups account)))))
 
 (defn not-found-doc []
   (html [:h1 "Page not found"]
@@ -263,8 +276,15 @@
   (GET "/:user/:jarname"
     (try-account
      (show-jar account (:route-params request))))
+  (GET "/:jarname"
+    (if-let [jar (with-db (find-jar ((:route-params request) :jarname)))]      
+      (if (= (:jar_name jar) (:group_name jar))
+        (try-account
+         (show-jar account jar))
+        :next)
+      :next))
   (GET "/:user"    
-    (if-let [user (find-user ((:route-params request) :user))]
+    (if-let [user (with-db (find-user ((:route-params request) :user)))]
       (try-account
        (show-user account (:user user)))
       :next))
@@ -277,10 +297,17 @@
 
 (decorate clojars-app
           (with-session)
-          (with-db))
+          (db-middleware))
 
 ;(require 'swank.swank)
 ;(swank.swank/start-server "/dev/null" :port 4005)
 
-;(run-server {:port 8000} "/*" (servlet clojars-app))
 
+;(use 'clojure.contrib.repl-utils)
+;(show server)
+;(.stop server)
+
+;(with-db (find-jar "leiningen"))
+
+
+;(def server (run-server {:port 8000} "/*" (servlet clojars-app)))
