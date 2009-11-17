@@ -45,11 +45,13 @@
     [:footer
      (link-to "mailto:contact@clojars.org" "contact")
      (link-to "http://github.com/ato/clojars-web" "code")
-     (link-to "http://wiki.github.com/ato/clojars-web/help" "help")]]))
+     (link-to "http://wiki.github.com/ato/clojars-web" "help")]]))
 
 (defn login-form [ & [error]]
   (html-doc nil "Login"
    [:h1 "Login"]
+   [:p "Don't have an account? "
+    (link-to "/register" "Sign up!")]
   
    (when error
      [:div {:class :error} (str error)])
@@ -87,6 +89,7 @@
      (label :confirm "Confirm password:")
      (password-field :confirm)
      (label :ssh-key "SSH public key:")
+     " ("(link-to "http://wiki.github.com/ato/clojars-web/ssh-keys" "what's this?")")"
      (text-area :ssh-key ssh-key)
      (submit-button "Register"))))
 
@@ -117,7 +120,8 @@
       (conj-when (not (re-matches #"[a-z0-9_-]+" user))
                  (str "Usernames must consist only of lowercase "
                       "letters, numbers, hyphens and underscores."))
-      (conj-when (not (valid-ssh-key? ssh-key))
+      (conj-when (not (or (blank? ssh-key)
+                          (valid-ssh-key? ssh-key)))
                  "Invalid SSH public key")))
 
 (defn register [{email :email, user :user, password :password, 
