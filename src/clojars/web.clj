@@ -258,7 +258,7 @@
 (defn search [account query]
   (html-doc account (str (h query) " - search")
     [:h1 "Search for " (h query)]
-    (unordered-list (map jar-lni ))))
+    (unordered-list (map jar-link ))))
 
 (defn show-user [account user]
   (html-doc account (h (user :user))
