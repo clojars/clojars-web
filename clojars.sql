@@ -2,11 +2,12 @@ create table users
        (id INTEGER PRIMARY KEY AUTOINCREMENT,
         user TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
+        salt TEXT NOT NULL,
         email TEXT NOT NULL,
         ssh_key TEXT NOT NULL,
         created DATE NOT NULL);
 
-create virtual table jars using FTS3
+create table jars
        (id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_name TEXT NOT NULL,
         jar_name TEXT NOT NULL,

@@ -27,6 +27,15 @@
        "webmaster" "profile" "dashboard" "settings" "options"
        "index" "files"})
 
+(let [chars (map char 
+                 (mapcat (fn [[x y]] (range (int x) (inc (int y))))
+                     [[\a \z] [\A \Z] [\0 \9]]))]
+  (defn rand-string
+    "Generates a random string of [A-z0-9] of length n."
+    [n]
+    (apply str (take 16 (map #(nth chars %) 
+                             (repeatedly #(rand (count chars))))))))
+
 (defn write-key-file [path]
   (locking key-file
    (let [new-file (File. (str path ".new"))]
@@ -49,10 +58,10 @@
   `(with-connection db
      ~@body))
 
-(defn sha1 [s]
-  (when s
+(defn sha1 [& s]
+  (when [s (seq s)]
     (let [md (MessageDigest/getInstance "SHA")]
-      (.update md (.getBytes s))
+      (.update md (.getBytes (apply str s)))
       (format "%040x" (java.math.BigInteger. 1 (.digest md))))))
 
 (defn find-user [username]
@@ -68,10 +77,9 @@
     (doall (map :user rs))))
 
 (defn auth-user [user pass]
-  (with-query-results rs ["select * from users where (user = ? or
-                           email = ?) and password = ?" user 
-                           user (sha1 pass)]
-    (first rs)))
+  (with-query-results rs 
+      ["select * from users where (user = ? or email = ?)" user user]
+    (first (filter #(= (:password %) (sha1 (:salt %) pass)) rs))))
 
 (defn jars-by-user [user]
   (with-query-results rs [(str "select * from jars where user = ? "
@@ -103,19 +111,27 @@
 
 
 (defn add-user [email user password ssh-key]
-  (insert-values :users
-    [:email :user :password :ssh_key :created]
-    [email user (sha1 password) ssh-key (Date.)])
-  (insert-values :groups
-    [:name :user]
-    [(str "org.clojars." user) user])
-  (write-key-file key-file))
+  (let [salt (rand-string 16)]
+    (insert-values 
+     :users
+     [:email :user :password :salt :ssh_key :created]
+     [email user (sha1 salt password) salt ssh-key (Date.)])
+    (insert-values 
+     :groups
+     [:name :user]
+     [(str "org.clojars." user) user])
+    (write-key-file key-file)))
 
 (defn update-user [account email user password ssh-key]
-  (update-values :users ["user=?" account]
-   {:email email :user user :password (sha1 password)
-    :ssh_key ssh-key})
-  (write-key-file key-file))
+  (let [salt (rand-string 16)]
+   (update-values 
+    :users ["user=?" account]
+    {:email email 
+     :user user 
+     :salt salt
+     :password (sha1 salt password)
+     :ssh_key ssh-key})
+   (write-key-file key-file)))
 
 (defn add-member [group user]
   (insert-records :groups
@@ -171,9 +187,8 @@
        (or offset 0)]
     (vec rs)))
 
-(comment
-  (alter-meta clojars.db)
 
+(comment
   (with-connection db (add-jar "atotx" {:name "test" :group "test" :version "1.0"
                                       :description "An awesome and non-existent test jar."
                                       :homepage "http://clojars.org/"
