@@ -33,7 +33,7 @@
   (defn rand-string
     "Generates a random string of [A-z0-9] of length n."
     [n]
-    (apply str (take 16 (map #(nth chars %) 
+    (apply str (take n (map #(nth chars %) 
                              (repeatedly #(rand (count chars))))))))
 
 (defn write-key-file [path]
