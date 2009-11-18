@@ -37,7 +37,8 @@
           (unordered-list
            [(link-to "/login" "login")
             (link-to "/register" "register")]))
-        [:input {:value "No search yet" :class :search}]]]
+        (form-to [:get "/search"]
+          [:input {:name "q" :value "No search yet" :class :search}])]]
       [:div {:class :clear}]]]
     [:div {:class "container_12 article"}
      [:article
@@ -97,7 +98,6 @@
   (if test
     (conj coll x)
     coll))
-
 
 (defn valid-ssh-key? [key]
   (re-matches #"(ssh-\w+ \S+|\d+ \d+ \D+).*\s*" key))
@@ -174,6 +174,10 @@
      (str "/" (:group_name jar) "/" (:jar_name jar)))
    (:jar_name jar)))
 
+(defn user-link [user]
+  (link-to (str "/users/" user)
+           user))
+
 (defn group-link [group]
   (link-to (str "/groups/" group) group))
 
@@ -237,6 +241,27 @@
     [:h2 "Your groups"]
     (unordered-list (map group-link (find-groups account)))))
 
+(defn show-group [account group members]
+  (html-doc account (str group " group")
+    [:h1 (str group " group")]
+    [:h2 "Jars"]
+    (unordered-list (map jar-link (jars-by-group group)))
+    [:h2 "Members"]    
+    (unordered-list (map user-link members))
+    (when (some #{account} members)
+      [:div {:class :add-member}
+       (form-to [:post (str "/groups/" group)]
+         (text-field "user")
+         (submit-button "add member"))])))
+
+(defn show-user [account user]
+  (html-doc account (h (user :user))
+    [:h1 (h (user :user))]
+    [:h2 "Jars"]
+    (unordered-list (map jar-link (jars-by-user (user :user))))
+    [:h2 "Groups"]
+    (unordered-list (map group-link (find-groups (user :user))))))
+
 (defn not-found-doc []
   (html [:h1 "Page not found"]
         [:p "Thundering typhoons!  I think we lost it.  Sorry!"]))
@@ -245,6 +270,9 @@
   `(if-let [~'account (~'session :account)]
      (do ~body)
      (redirect-to "/login")))
+
+(defmacro param [kw]
+  `((:route-params ~'request) ~kw))
 
 (defmacro try-account [body]
   `(let [~'account (~'session :account)]
@@ -273,9 +301,17 @@
      (if account
        (dashboard account)
        (index-page account))))
-  (GET "/:user/:jarname"
-    (try-account
-     (show-jar account (:route-params request))))
+  (GET #"/groups/([^/]+)"
+    (let [group ((:route-params request) 0)]
+     (if-let [members (with-db (group-members group))]
+       (try-account
+        (show-group account group members))
+       :next)))
+  (GET "/users/:username"
+    (if-let [user (find-user (param :username))]
+      (try-account
+       (show-user account user))
+      :next))
   (GET "/:jarname"
     (if-let [jar (with-db (find-jar ((:route-params request) :jarname)))]      
       (if (= (:jar_name jar) (:group_name jar))
@@ -310,4 +346,4 @@
 ;(with-db (find-jar "leiningen"))
 
 
-;(def server (run-server {:port 8000} "/*" (servlet clojars-app)))
+(def server (run-server {:port 8000} "/*" (servlet clojars-app)))

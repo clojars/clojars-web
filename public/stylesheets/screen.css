@@ -66,12 +66,12 @@ p {
 nav {
     float: right;
     display: block;
-    margin-top: 60px;
+    margin-top: 50px;
     height: 40px;
 
     margin-right: 10px;
 
-    font-size: 30px;
+    font-size: 20px;
     text-align: right;
 }
 
@@ -80,6 +80,11 @@ nav ul {
 }
 nav ul li {
     display: inline;
+}
+
+nav form {
+    clear: right;
+    margin-top: 10px;
 }
 
 nav a {
@@ -182,4 +187,9 @@ footer a {
 
 .useit div .string {
     color: #cc9393;
+}
+
+.add-member input {
+    width: 200px;
+    margin-right: 10px;
 }

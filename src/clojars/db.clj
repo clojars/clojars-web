@@ -74,7 +74,14 @@
     (first rs)))
 
 (defn jars-by-user [user]
-  (with-query-results rs ["select * from jars where user = ?" user]
+  (with-query-results rs [(str "select * from jars where user = ? "
+                               "group by group_name, jar_name") user]
+    (vec rs)))
+
+(defn jars-by-group [group]
+  (with-query-results rs [(str "select * from jars where "
+                               "group_name = ? group by jar_name")
+                          group]
     (vec rs)))
 
 (defn find-jar 
