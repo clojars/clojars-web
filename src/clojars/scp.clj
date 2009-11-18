@@ -151,7 +151,6 @@
           (send-okay ctx))
 
         (let [cmd (char (.read in))]
-          (.println *err* "got command " cmd)
           (condp = cmd
             (char 0)      (do (recur files false))
             \C            (recur (conj files (scp-copy ctx)) true)
