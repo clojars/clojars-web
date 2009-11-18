@@ -32,4 +32,22 @@ create table groups
        (id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         user TEXT NOT NULL);
+
+--
+-- Search support: quick and dirty, but it works
+--
         
+create virtual table search using fts3
+       (id INTEGER PRIMARY KEY,
+       content text not null,
+       jar_name text not null,
+       group_name text not null);
+
+create trigger update_search insert on jars
+  begin
+    delete from search where jar_name = new.jar_name and group_name = new.group_name;
+    insert into search (id, jar_name, group_name, content) values
+           (new.id, new.jar_name, new.group_name,
+           new.jar_name || ' ' || new.group_name || ' ' || new.version || ' ' || 
+           new.authors || ' ' || new.user || ' ' || new.description);
+  end;

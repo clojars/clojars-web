@@ -38,7 +38,9 @@
            [(link-to "/login" "login")
             (link-to "/register" "register")]))
         (form-to [:get "/search"]
-          [:input {:name "q" :value "No search yet" :class :search}])]]
+          [:input {:name "q" :id "search" :class :search :value
+                   "Search jars..."
+                   :onclick "if (!this.cleared==1) {this.value=''; this.cleared=1;}"}])]]
       [:div {:class :clear}]]]
     [:div {:class "container_12 article"}
      [:article
@@ -258,7 +260,12 @@
 (defn search [account query]
   (html-doc account (str (h query) " - search")
     [:h1 "Search for " (h query)]
-    (unordered-list (map jar-link ))))
+    [:ul
+     (for [jar (search-jars query)]
+       [:li {:class "search-results"} 
+        (jar-link jar) " " (h (:version jar))
+        [:span {:class "desc"} " &mdash; "
+         (h (:description jar))]])]))
 
 (defn show-user [account user]
   (html-doc account (h (user :user))
@@ -369,4 +376,4 @@
 ;(with-db (find-jar "leiningen"))
 
 
-(def server (run-server {:port 8000} "/*" (servlet clojars-app)))
+;(def server (run-server {:port 8000} "/*" (servlet clojars-app)))

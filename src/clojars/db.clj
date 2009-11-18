@@ -34,7 +34,7 @@
     "Generates a random string of [A-z0-9] of length n."
     [n]
     (apply str (take n (map #(nth chars %) 
-                             (repeatedly #(rand (count chars))))))))
+                            (repeatedly #(rand (count chars))))))))
 
 (defn write-key-file [path]
   (locking key-file
@@ -59,7 +59,7 @@
      ~@body))
 
 (defn sha1 [& s]
-  (when [s (seq s)]
+  (when-let [s (seq s)]
     (let [md (MessageDigest/getInstance "SHA")]
       (.update md (.getBytes (apply str s)))
       (format "%040x" (java.math.BigInteger. 1 (.digest md))))))
@@ -95,7 +95,8 @@
 (defn find-canon-jar [jarname]
   (with-query-results rs 
       [(str "select * from jars where "
-            "jar_name = ? and group_name = ?")
+            "jar_name = ? and group_name = ? "
+            "order by created desc limit 1")
        jarname jarname]
     (first rs)))
 
@@ -104,9 +105,10 @@
      (with-query-results rs [(str "select * from jars where "
                                   "jar_name = ?") jarname]
        (first rs)))
-  ([user jarname]
-      (with-query-results rs [(str "select * from jars where user = ? and "
-                                   "jar_name = ?") user jarname]
+  ([group jarname]
+      (with-query-results rs [(str "select * from jars where group_name = ? and "
+                                   "jar_name = ? order by created desc "
+                                   "limit 1") group jarname]
         (first rs))))
 
 
@@ -173,24 +175,22 @@
                                    (:authors jarmap)))}))))
 
 (defn search-jars [query & [offset]]
-  ;; TODO make less stupid ;-)
+  ;; TODO make search less stupid, figure out some relevance ranking
+  ;; scheme, do stopwords etc.
   (with-query-results rs
-      [(str "select * from jars where "
-            "description match ? or "
-            "jar_name like ?"
-;            "group_name match ? or "
-;            "user match ? "
-;            "group by jar_name, group_name"
+      [(str "select jar_name, group_name from search where "
+            "content match ?"
             "limit 20 "
             "offset ?")
-       query query; query query
+       query
        (or offset 0)]
-    (vec rs)))
+    ;; TODO: do something less stupidly slow
+    (vec (map #(find-jar (:group_name %) (:jar_name %)) rs))))
 
 
 (comment
-  (with-connection db (add-jar "atotx" {:name "test" :group "test" :version "1.0"
-                                      :description "An awesome and non-existent test jar."
+  (with-connection db (add-jar "atotx" {:name "test3" :group "test3" :version "1.0"
+                                      :description "An dog awesome and non-existent test jar."
                                       :homepage "http://clojars.org/"
                                       :authors ["Alex Osborne" 
                                                 "a little fish"]}))
