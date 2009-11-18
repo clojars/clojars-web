@@ -84,6 +84,13 @@
                           group]
     (vec rs)))
 
+(defn find-canon-jar [jarname]
+  (with-query-results rs 
+      [(str "select * from jars where "
+            "jar_name = ? and group_name = ?")
+       jarname jarname]
+    (first rs)))
+
 (defn find-jar 
   ([jarname]
      (with-query-results rs [(str "select * from jars where "
@@ -149,7 +156,24 @@
        :authors    (join ", " (map #(.replace % "," "") 
                                    (:authors jarmap)))}))))
 
+(defn search-jars [query & [offset]]
+  ;; TODO make less stupid ;-)
+  (with-query-results rs
+      [(str "select * from jars where "
+            "description match ? or "
+            "jar_name like ?"
+;            "group_name match ? or "
+;            "user match ? "
+;            "group by jar_name, group_name"
+            "limit 20 "
+            "offset ?")
+       query query; query query
+       (or offset 0)]
+    (vec rs)))
+
 (comment
+  (alter-meta clojars.db)
+
   (with-connection db (add-jar "atotx" {:name "test" :group "test" :version "1.0"
                                       :description "An awesome and non-existent test jar."
                                       :homepage "http://clojars.org/"

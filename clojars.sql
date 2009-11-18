@@ -6,7 +6,7 @@ create table users
         ssh_key TEXT NOT NULL,
         created DATE NOT NULL);
 
-create table jars
+create virtual table jars using FTS3
        (id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_name TEXT NOT NULL,
         jar_name TEXT NOT NULL,

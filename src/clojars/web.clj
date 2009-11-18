@@ -255,6 +255,11 @@
          (text-field "user")
          (submit-button "add member"))])))
 
+(defn search [account query]
+  (html-doc account (str (h query) " - search")
+    [:h1 "Search for " (h query)]
+    (unordered-list (map jar-lni ))))
+
 (defn show-user [account user]
   (html-doc account (h (user :user))
     [:h1 (h (user :user))]
@@ -280,6 +285,9 @@
      (do ~body)))
 
 (defroutes clojars-app
+  (GET "/search"
+    (try-account
+     (search account (params :q))))
   (GET "/profile"
     (with-account
      (profile-form account)))
@@ -330,13 +338,11 @@
        (show-user account user))
       :next))
   (GET "/:jarname"
-    (if-let [jar (with-db (find-jar ((:route-params request) :jarname)))]      
-      (if (= (:jar_name jar) (:group_name jar))
-        (try-account
-         (show-jar account jar))
-        :next)
+    (if-let [jar (with-db (find-canon-jar (param :jarname)))]            
+      (try-account
+       (show-jar account jar))
       :next))
-  (GET "/:user"    
+  (GET "/:user"
     (if-let [user (with-db (find-user ((:route-params request) :user)))]
       (try-account
        (show-user account (:user user)))
