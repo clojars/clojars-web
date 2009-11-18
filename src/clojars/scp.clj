@@ -109,11 +109,11 @@
             [model jarmap] (read-metadata metafile act-group)
             :let [names (jar-names jarmap)]]
 
-      (when (not= (:group jarmap) act-group)
-        (throw (Exception.
-                (str "Custom group ids are not supported yet. "
-                     " For now please use "
-                     act-group " instead of " (:group jarmap)))))
+      (comment (when (not= (:group jarmap) act-group)
+         (throw (Exception.
+                 (str "Custom group ids are not supported yet. "
+                      " For now please use "
+                      act-group " instead of " (:group jarmap))))))
 
       (if-let [jarfile (some jarfiles names)]
         (do          
