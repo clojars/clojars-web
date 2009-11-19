@@ -118,7 +118,8 @@
       (if-let [jarfile (some jarfiles names)]
         (do          
           (.println *err* (str "\nDeploying " (:group jarmap) "/"
-                               (:name jarmap) " " (:version jarmap)))          
+                               (:name jarmap) " " (:version jarmap)))
+          (db/add-jar (first (.getArgs ctx)) jarmap true)
           (maven/deploy-model jarfile model
                               "file:///home/clojars/repo")
           (db/add-jar (first (.getArgs ctx)) jarmap))
@@ -161,7 +162,8 @@
             (throw (IOException. (str "Unknown scp command: '" (int cmd) "'")))))))
 
     (catch Throwable t
-      (.printStackTrace t)
+      (.printStackTrace t *err*)
+      (.println (.err ctx) "Something went wrong: "(.getMessage t))
       (.flush (.err ctx))
       (throw t))
     (finally (System/setOut old-out)))))
