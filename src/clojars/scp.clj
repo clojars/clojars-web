@@ -162,7 +162,7 @@
             (throw (IOException. (str "Unknown scp command: '" (int cmd) "'")))))))
 
     (catch Throwable t
-      (.printStackTrace t *err*)
+      ;(.printStackTrace t *err*)
       (.println (.err ctx) (str "Error: " (.getMessage t)))
       (.flush (.err ctx))
       (throw t))

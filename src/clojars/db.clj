@@ -92,6 +92,11 @@
                           group]
     (vec rs)))
 
+(defn recent-jars []
+  (with-query-results rs 
+      [(str "select * from jars group by group_name, jar_name "
+            "order by created desc limit 5")]))
+
 (defn find-canon-jar [jarname]
   (with-query-results rs 
       [(str "select * from jars where "

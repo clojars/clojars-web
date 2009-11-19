@@ -2,6 +2,7 @@
 body {
     background: #3e653c url(../images/header-bg.png) repeat-x;
     font-family: "Helvetica Neue", Arial, "Liberation Sans", FreeSans, sans-serif;
+    line-height: 150%;
 }
 
 .header h1 a {
