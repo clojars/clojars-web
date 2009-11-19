@@ -244,7 +244,7 @@
      (link-to "http://wiki.github.com/ato/clojars-web/tutorial"
               "tutorial") "."]
     [:h2 "Recently pushed jars"]
-    (ordered-list (map jar-link (recent-jars)))))
+    (unordered-list (map jar-link (recent-jars)))))
 
 (defn old-index-page [account]
   (html-doc account nil      
