@@ -188,8 +188,8 @@
     (h (str (:group_name jar) "/" (:jar_name jar)))))
 
 (defn show-jar [account jar]  
-  (html-doc account (:jar_name jar)
-    [:h1 (jar-link jar)]
+  (html-doc account (jar-name jar)
+    [:h1 (jar-name jar)]
     (:description jar)
 
     [:div {:class "useit"}
@@ -204,11 +204,11 @@
       [:h3 "maven"]
       [:pre
        (tag "<dependency>\n")
-       (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
-       (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
-       (tag "  <version>") (:version jar) (tag "</version>\n")
+       (tag "  <groupId>") (h (:group_name jar)) (tag "</groupId>\n")
+       (tag "  <artifactId>") (h (:jar_name jar)) (tag "</artifactId>\n")
+       (tag "  <version>") (h (:version jar)) (tag "</version>\n")
        (tag "</dependency>")]]]
-    ))
+    [:p {:class "uploader"} "Uploaded by " (user-link (:user jar))]))
 
 (defn index-page [account]
   (html-doc account nil

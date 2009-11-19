@@ -181,7 +181,7 @@
   (with-query-results rs
       [(str "select jar_name, group_name from search where "
             "content match ?"
-            "limit 20 "
+            "limit 50 "
             "offset ?")
        query
        (or offset 0)]
