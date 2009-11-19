@@ -163,7 +163,7 @@
 
     (catch Throwable t
       (.printStackTrace t *err*)
-      (.println (.err ctx) "Something went wrong: "(.getMessage t))
+      (.println (.err ctx) (str "Error: " (.getMessage t)))
       (.flush (.err ctx))
       (throw t))
     (finally (System/setOut old-out)))))
