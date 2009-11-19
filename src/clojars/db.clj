@@ -154,7 +154,7 @@
         (throw (Exception. (str "You don't have access to the "
                                 group " group.")))))))
 
-(defn add-jar [account jarmap [check-only]]
+(defn add-jar [account jarmap & [check-only]]
   (when-not (re-matches #"^[a-z0-9-_.]+$" (:name jarmap))
     (throw (Exception. (str "Jar names must consist solely of lowercase "
                             "letters, numbers, hyphens and underscores."))))
