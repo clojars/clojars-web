@@ -157,24 +157,23 @@
     (do (update-user account email account password ssh-key)
         [(redirect-to "/profile")])))
 
-(defn show-user [account user]
-  (html-doc account (str user "'s jars")
-    [:h1 (str user "'s jars")]
-    (unordered-list 
-     (for [jar (jars-by-user user)]
-       (html (link-to (str "/" (:user jar) "/" (:jar_name jar)) 
-                  (:jar_name jar))
-             " "(:version jar))))))
-
-(defn tag [s]
-  (html [:span {:class "tag"} (h s)]))
-
 (defn jar-link [jar]
   (link-to
    (if (= (:group_name jar) (:jar_name jar))
      (str "/" (:jar_name jar))
      (str "/" (:group_name jar) "/" (:jar_name jar)))
-   (:jar_name jar)))
+   (if (= (:group_name jar) (:jar_name jar))
+     (:jar_name jar)
+     (str (:group_name jar) "/" (:jar_name jar)))))
+
+(defn show-user [account user]
+  (html-doc account (str user "'s jars")
+    [:h1 (str user "'s jars")]
+    (unordered-list 
+     (map jar-link (jars-by-user user)))))
+
+(defn tag [s]
+  (html [:span {:class "tag"} (h s)]))
 
 (defn user-link [user]
   (link-to (str "/users/" user)
@@ -340,7 +339,7 @@
                                                  (h (params :user))))))
        :next)))
   (GET "/users/:username"
-    (if-let [user (find-user (param :username))]
+    (if-let [user (with-db (find-user (param :username)))]
       (try-account
        (show-user account user))
       :next))
@@ -349,8 +348,13 @@
       (try-account
        (show-jar account jar))
       :next))
+  (GET #"/([^/]+)/([^/]+)"
+    (if-let [jar (with-db (find-jar (param 0) (param 1)))]            
+      (try-account
+       (show-jar account jar))
+      :next))
   (GET "/:user"
-    (if-let [user (with-db (find-user ((:route-params request) :user)))]
+    (if-let [user (with-db (find-user (param :user)))]
       (try-account
        (show-user account (:user user)))
       :next))
