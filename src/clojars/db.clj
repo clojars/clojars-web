@@ -1,18 +1,12 @@
 (ns clojars.db
-  (:use clojure.contrib.sql
+  (:use [clojars :only [config]]
+        clojure.contrib.sql
         clojure.contrib.duck-streams
         [clojure.contrib.str-utils2 :only [join]])
   (:import java.security.MessageDigest
            java.util.Date
            java.io.File))
-;;
-;; TODO: should move this to a config file
-;;
-(def db {:classname "org.sqlite.JDBC"
-         :subprotocol "sqlite"
-         :subname "/home/clojars/data/db"})
 
-(def key-file "/home/clojars/data/auth_keys")
 (def ssh-options "no-agent-forwarding,no-port-forwarding,no-pty,no-X11-forwarding")
 
 (def *reserved-names* 
@@ -37,7 +31,7 @@
                             (repeatedly #(rand (count chars))))))))
 
 (defn write-key-file [path]
-  (locking key-file
+  (locking (:key-file config)
    (let [new-file (File. (str path ".new"))]
      (with-query-results rs ["select user, ssh_key from users"]
        (with-open [f (writer new-file)]
@@ -51,11 +45,11 @@
 (defn db-middleware
   [handler]
   (fn [request]
-    (with-connection db (handler request))))
+    (with-connection (:db config) (handler request))))
 
 (defmacro with-db
   [& body]
-  `(with-connection db
+  `(with-connection (:db config)
      ~@body))
 
 (defn sha1 [& s]
@@ -122,7 +116,7 @@
      :groups
      [:name :user]
      [(str "org.clojars." user) user])
-    (write-key-file key-file)))
+    (write-key-file (:key-file config))))
 
 (defn update-user [account email user password ssh-key]
   (let [salt (rand-string 16)]
@@ -133,7 +127,7 @@
      :salt salt
      :password (sha1 salt password)
      :ssh_key ssh-key})
-   (write-key-file key-file)))
+   (write-key-file (:key-file config))))
 
 (defn add-member [group user]
   (insert-records :groups
@@ -159,7 +153,7 @@
     (throw (Exception. (str "Jar names must consist solely of lowercase "
                             "letters, numbers, hyphens and underscores."))))
   
-  (with-connection db
+  (with-connection (:db config)
     (transaction
      (when check-only (set-rollback-only))
      (check-and-add-group account (:group jarmap) (:name jarmap))
@@ -190,10 +184,10 @@
 
 
 (comment
-  (with-connection db (add-jar "atotx" {:name "test3" :group "test3" :version "1.0"
+  (with-connection (:db config) (add-jar "atotx" {:name "test3" :group "test3" :version "1.0"
                                       :description "An dog awesome and non-existent test jar."
                                       :homepage "http://clojars.org/"
                                       :authors ["Alex Osborne" 
                                                 "a little fish"]}))
-  (with-connection db (find-user "atotx"))
+  (with-connection (:db config) (find-user "atotx"))
 )

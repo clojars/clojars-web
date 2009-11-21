@@ -3,7 +3,8 @@
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
   (:use clojure.contrib.duck-streams)
-  (:require [clojars.maven :as maven]
+  (:require [clojars]
+            [clojars.maven :as maven]
             [clojars.db    :as db])
   (:gen-class
    :methods [#^{:static true}
@@ -121,7 +122,7 @@
                                (:name jarmap) " " (:version jarmap)))
           (db/add-jar (first (.getArgs ctx)) jarmap true)
           (maven/deploy-model jarfile model
-                              "file:///home/clojars/repo")
+                              (str "file://" clojars.home "/repo"))
           (db/add-jar (first (.getArgs ctx)) jarmap))
         (throw (Exception. (str "You need to give me one of: " names)))))
     (.println *err* (str "\nSuccess! Your jars are now available from "
