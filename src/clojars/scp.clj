@@ -2,9 +2,9 @@
   (:import (java.io InputStream IOException File OutputStream
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
-  (:use clojure.contrib.duck-streams)
-  (:require [clojars]
-            [clojars.maven :as maven]
+  (:use clojure.contrib.duck-streams
+        [clojars :only [config]])
+  (:require [clojars.maven :as maven]
             [clojars.db    :as db])
   (:gen-class
    :methods [#^{:static true}
@@ -43,10 +43,10 @@
       (if (< bytes n)
         (let [size (.read in buffer 0 (min 4096 (- n bytes)))]
           (if (pos? size)
-            (do 
+            (do
               (.write out buffer 0 size)
-              (recur (+ bytes size)))                
-            bytes))                
+              (recur (+ bytes size)))
+            bytes))
         bytes))))
 
 (defn scp-copy [#^NGContext ctx]
@@ -61,7 +61,7 @@
                                 *max-file-size* " bytes"))))
 
     (when-not (*allowed-suffixes* suffix)
-      (throw (IOException. (str "." suffix 
+      (throw (IOException. (str "." suffix
                                 " files are not supported."))))
 
     (let [f (File/createTempFile "clojars-upload" (str "." suffix))]
@@ -71,7 +71,7 @@
         (let [bytes (copy-limit (.in ctx) fos
                                 size)]
           (if (>= bytes size)
-            {:name (.getName fn), :file f, :size size, :suffix suffix,
+            {:name (.getName fn), :file f, :size size, :suffix suffix
              :mode mode}
             (throw (IOException. (str "Upload truncated.  Expected "
                                       size " bytes but got " bytes)))))))))
@@ -80,7 +80,7 @@
   `(.println (.err ~'ctx) (str ~@(interleave strs (repeat " ")))))
 
 (defmulti read-metadata :suffix)
-(defmethod read-metadata "xml" [f default-group] 
+(defmethod read-metadata "xml" [f default-group]
   (let [model (maven/read-pom (:file f))
         jarmap (maven/model-to-map model)]
     [[model jarmap]]))
@@ -89,8 +89,8 @@
 (defmethod read-metadata "clj" [f default-group]
   (for [jarmap (maven/read-jarspec (:file f))]
     (let [jarmap (if (:group jarmap) jarmap (assoc jarmap :group default-group))]
-     (let [model (maven/make-model jarmap)]
-       [model jarmap]))))
+      (let [model (maven/make-model jarmap)]
+        [model jarmap]))))
 
 (defn jar-names
   "Construct a few possible name variations a jar might have."
@@ -111,63 +111,64 @@
             :let [names (jar-names jarmap)]]
 
       (comment (when (not= (:group jarmap) act-group)
-         (throw (Exception.
-                 (str "Custom group ids are not supported yet. "
-                      " For now please use "
-                      act-group " instead of " (:group jarmap))))))
+                 (throw (Exception.
+                         (str "Custom group ids are not supported yet. "
+                              " For now please use "
+                              act-group " instead of " (:group jarmap))))))
 
       (if-let [jarfile (some jarfiles names)]
-        (do          
+        (do
           (.println *err* (str "\nDeploying " (:group jarmap) "/"
                                (:name jarmap) " " (:version jarmap)))
           (db/add-jar (first (.getArgs ctx)) jarmap true)
           (maven/deploy-model jarfile model
-                              (str "file://" clojars.home "/repo"))
+                              (str "file://" (:repo config)))
           (db/add-jar (first (.getArgs ctx)) jarmap))
         (throw (Exception. (str "You need to give me one of: " names)))))
     (.println *err* (str "\nSuccess! Your jars are now available from "
-                   "http://clojars.org/"))
+                         "http://clojars.org/"))
     (.flush (.err ctx))))
 
 (defn nail [#^NGContext ctx]
   (let [old-out System/out]
-   (try
-    (System/setOut (.err ctx))
-    (let [in (.in ctx)
-          err (.err ctx)
-          out (.out ctx)
-          account (first (.getArgs ctx))]
-    
-      (when-not account
-        (throw (Exception. "I don't know who you are!")))
+    (try
+     (System/setOut (.err ctx))
+     (let [in (.in ctx)
+           err (.err ctx)
+           out (.out ctx)
+           account (first (.getArgs ctx))]
 
-      (doto (.err ctx)
-        (.println (str "Welcome to Clojars, " account "!"))
-        (.flush))
-     
-      (loop [files [], okay true]
-        (when (> (count files) 100)
-          (throw (IOException. "Too many files uploaded at once")))
+       (when-not account
+         (throw (Exception. "I don't know who you are!")))
 
-        (when okay
-          (send-okay ctx))
+       (doto (.err ctx)
+         (.println (str "Welcome to Clojars, " account "!"))
+         (.flush))
 
-        (let [cmd (char (.read in))]
-          (condp = cmd
-            (char 0)      (do (recur files false))
-            \C            (recur (conj files (scp-copy ctx)) true)
-            \D            (do (safe-read-line in) (recur files true))
-            \T            (do (safe-read-line in) (recur files true))
-            \E            (do (safe-read-line in) (recur files true))
-            (char 65535)  (finish-deploy ctx files)
-            (throw (IOException. (str "Unknown scp command: '" (int cmd) "'")))))))
+       (loop [files [], okay true]
+         (when (> (count files) 100)
+           (throw (IOException. "Too many files uploaded at once")))
 
-    (catch Throwable t
-      ;(.printStackTrace t *err*)
-      (.println (.err ctx) (str "Error: " (.getMessage t)))
-      (.flush (.err ctx))
-      (throw t))
-    (finally (System/setOut old-out)))))
+         (when okay
+           (send-okay ctx))
+
+         (let [cmd (char (.read in))]
+           (condp = cmd
+             (char 0)      (do (recur files false))
+             \C            (recur (conj files (scp-copy ctx)) true)
+             \D            (do (safe-read-line in) (recur files true))
+             \T            (do (safe-read-line in) (recur files true))
+             \E            (do (safe-read-line in) (recur files true))
+             (char 65535)  (finish-deploy ctx files)
+             (throw (IOException. (str "Unknown scp command: '"
+                                       (int cmd) "'")))))))
+
+     (catch Throwable t
+                                        ;(.printStackTrace t *err*)
+       (.println (.err ctx) (str "Error: " (.getMessage t)))
+       (.flush (.err ctx))
+       (throw t))
+     (finally (System/setOut old-out)))))
 
 (defn -nailMain [context]
   (nail context))
