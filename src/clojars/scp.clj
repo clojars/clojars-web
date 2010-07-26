@@ -11,7 +11,7 @@
              [nailMain [com.martiansoftware.nailgun.NGContext] void]]))
 
 (def *max-line-size* 4096)
-(def *max-file-size* 10485760)
+(def *max-file-size* 20485760)
 (def *allowed-suffixes* #{"clj" "xml" "jar" "sha1" "md5"})
 
 (set! *warn-on-reflection* true)
