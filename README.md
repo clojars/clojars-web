@@ -66,15 +66,15 @@ and run `make` then copy the `ng` executable somewhere like `/usr/local/bin`
 3. Disable password authentication for that user by adding this to
 `/etc/ssh/sshd_config`:
 
-    Match User clojars
-    PasswordAuthentication no
+        Match User clojars
+        PasswordAuthentication no
 
 4. Symlink in the auth_keys file the webapp generates:
 
-    cd /home/clojars
-    mkdir .ssh
-    cd .ssh
-    ln -s ...../clojars-web/data/auth_keys authorized_keys
+        cd /home/clojars
+        mkdir .ssh
+        cd .ssh
+        ln -s ...../clojars-web/data/auth_keys authorized_keys
 
 Mailing lists
 -------------
