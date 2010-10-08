@@ -8,8 +8,8 @@
 
 (defn -main [& [http-port ng-port]]
   (if (not (and http-port ng-port))
-    (.println System/err "Usage: clojars.core http-port nailgun-port")
-    (.println System/err "   eg: clojars.core 8080 8701")
+    (do (.println System/err "Usage: clojars.core http-port nailgun-port")
+        (.println System/err "   eg: clojars.core 8080 8701"))
     (do
       (println "clojars-web: starting jetty on port" http-port)
       (run-server {:port (Integer/parseInt http-port)}
