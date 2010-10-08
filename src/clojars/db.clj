@@ -171,7 +171,7 @@
        :user       account
        :created    (Date.)
        :description (:description jarmap)
-       :homepage   (:homepage jarmap)
+       :homepage   (:url jarmap)
        :authors    (join ", " (map #(.replace % "," "") 
                                    (:authors jarmap)))}))))
 
