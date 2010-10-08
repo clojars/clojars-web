@@ -26,4 +26,4 @@
                (tag "</dependency>")]]
              [:p "Pushed by " (user-link (:user jar)) " on " (java.util.Date. (:created jar))]
              (when-let [homepage (:homepage jar)]
-               [:p (link-to homepage)])]))
+               [:p (link-to homepage (str (h homepage)))])]))

@@ -171,8 +171,8 @@
        :user       account
        :created    (Date.)
        :description (:description jarmap)
-       :homepage   (:url jarmap)
-       :authors    (join ", " (map #(.replace % "," "") 
+       :homepage   (:homepage jarmap)
+       :authors    (join ", " (map #(.replace % "," "")
                                    (:authors jarmap)))}))))
 
 (defn search-jars [query & [offset]]
