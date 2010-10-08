@@ -1,5 +1,5 @@
 {:db {:classname "org.sqlite.JDBC"
       :subprotocol "sqlite"
-      :subname "/home/clojars/data/db"}
- :key-file "/home/clojars/data/auth_keys"
- :repo "/home/clojars/repo"}
+      :subname "data/db"}
+ :key-file "data/auth_keys"
+ :repo "repo"}
