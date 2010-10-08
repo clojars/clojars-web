@@ -18,7 +18,7 @@ Running the webapp
 
 2. Compile with: `lein uberjar`
 
-3. Create an initial sqlite database: `sqlite3 data/db < clojars.sql`
+3. Create an initial sqlite database: `mkdir data; sqlite3 data/db < clojars.sql`
 
 4. Run the webapp: `java -jar clojars-web-*-standalone.jar 8080 8701`
 
