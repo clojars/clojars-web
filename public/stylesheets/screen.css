@@ -196,5 +196,17 @@ footer a {
 }
 
 .desc {
-    color: #333;
+    color: #444;
+    font-size: 90%;
 }
+
+.details {
+    color: #444;
+    font-size: 80%;
+}
+
+.search-results {
+   list-style-type: none;
+   margin-bottom: .4em;
+}
+
