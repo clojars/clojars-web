@@ -48,6 +48,10 @@ create trigger update_search insert on jars
     delete from search where jar_name = new.jar_name and group_name = new.group_name;
     insert into search (id, jar_name, group_name, content) values
            (new.id, new.jar_name, new.group_name,
-           new.jar_name || ' ' || new.group_name || ' ' || new.version || ' ' || 
-           new.authors || ' ' || new.user || ' ' || new.description);
+           new.jar_name || ' ' || 
+           new.group_name || ' ' || 
+           new.version || ' ' || 
+           coalesce(new.authors, '') || ' ' || 
+           new.user || ' ' ||
+           coalesce(new.description, ''));
   end;
