@@ -1,6 +1,8 @@
 (ns clojars.web.jar
   (:use clojars.web.common
-        compojure))
+        hiccup.core
+        hiccup.page-helpers
+        hiccup.form-helpers))
 
 (defn show-jar [account jar]
   (html-doc account (:jar_name jar)

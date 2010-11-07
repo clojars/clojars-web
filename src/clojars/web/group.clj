@@ -1,7 +1,9 @@
 (ns clojars.web.group
   (:use clojars.web.common
         clojars.db
-        compojure))
+        hiccup.core
+        hiccup.page-helpers
+        hiccup.form-helpers))
 
 (defn show-group [account group members & errors]
   (html-doc account (str group " group")

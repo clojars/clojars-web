@@ -1,7 +1,10 @@
 (ns clojars.web.search
   (:use clojars.web.common
         clojars.db
-        compojure))
+        hiccup.core
+        hiccup.page-helpers
+        hiccup.form-helpers
+))
 
 (defn format-date [s]
   (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))

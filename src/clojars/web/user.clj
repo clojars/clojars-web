@@ -1,7 +1,12 @@
 (ns clojars.web.user
-  (:use clojars.db
+  (:use [clojure.string :only [blank?]]
+        clojars.db
         clojars.web.common
-        compojure))
+        hiccup.core
+        hiccup.page-helpers
+        hiccup.form-helpers
+        ring.middleware.session.store
+        ring.util.response))
 
 (defn register-form [ & [errors email user ssh-key]]
   (html-doc nil "Register"
@@ -54,13 +59,13 @@
                           (valid-ssh-key? ssh-key)))
                  "Invalid SSH public key")))
 
-(defn register [{email :email, user :user, password :password
-                 confirm :confirm, ssh-key :ssh-key}]
+(defn register [{email "email", user "user", password "password"
+                 confirm "confirm", ssh-key "ssh-key"}]
   (if-let [errors (validate-profile nil email user password confirm ssh-key)]
     (register-form errors email user ssh-key)
     (do (add-user email user password ssh-key)
-        [(set-session {:account user})
-         (redirect-to "/")])))
+        (let [response (redirect "/")]
+          (assoc-in response [:session :account] (:user user))))))
 
 (defn profile-form [account & [errors]]
   (let [user (find-user account)]
@@ -85,7 +90,7 @@
                                     account password confirm ssh-key)]
     (profile-form account errors)
     (do (update-user account email account password ssh-key)
-        [(redirect-to "/profile")])))
+        [(redirect "/profile")])))
 
 (defn show-user [account user]
   (html-doc account (h (user :user))

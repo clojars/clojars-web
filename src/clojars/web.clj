@@ -2,7 +2,14 @@
   (:require [clojure.contrib.sql :as sql])
   (:use [clojars.db]
         [clojars.web dashboard group jar login search user common]
-        [compojure]))
+        [hiccup.core]
+        [hiccup.page-helpers]
+        [hiccup.form-helpers]
+        [ring.middleware.session]
+        [ring.middleware.session.store]
+        [ring.middleware.file]
+        [ring.util.response]
+        [compojure.core]))
 
 (defn not-found-doc []
   (html [:h1 "Page not found"]
@@ -11,93 +18,88 @@
 (defmacro with-account [body]
   `(if-let [~'account (~'session :account)]
      (do ~body)
-     (redirect-to "/login")))
-
-(defmacro param [kw]
-  `((:route-params ~'request) ~kw))
+     (redirect "/login")))
 
 (defmacro try-account [body]
   `(let [~'account (~'session :account)]
      (do ~body)))
 
-(defroutes clojars-app
-  (GET "/search"
+(defroutes main-routes
+  (GET "/search" {session :session params :params}
     (try-account
-     (search account (params :q))))
-  (GET "/profile"
+     (search account (params "q"))))
+  (GET "/profile" {session :session params :params}
     (with-account
      (profile-form account)))
-  (POST "/profile"
-    (with-account
+  (POST "/profile" {session :session params :params}
+    (with-account 
       (update-profile account params)))
-  (GET "/login"
+  (GET "/login" {params :params}
     (login-form))
-  (POST "/login"
+  (POST "/login" {params :params}
     (login params))
-  (POST "/register"
+  (POST "/register" {params :params}
     (register params))
-  (GET "/register"
+  (GET "/register" {params :params}
     (register-form))
-  (GET "/logout"
-    [(session-assoc :account nil)
-     (redirect-to "/")])
-  (GET "/"
+  (GET "/logout" request
+    (let [response (redirect "/")]
+      (assoc-in response [:session :account] nil)))
+  (GET "/" {session :session params :params}
     (try-account
      (if account
        (dashboard account)
        (index-page account))))
-  (GET #"/groups/([^/]+)"
-    (let [group ((:route-params request) 0)]
-     (if-let [members (with-db (group-members group))]
-       (try-account
-        (show-group account group members))
-       :next)))
-  (POST #"/groups/([^/]+)"
-    (let [group ((:route-params request) 0)]
-     (if-let [members (with-db (group-members group))]
-       (try-account
-        (cond
-          (some #{(params :user)} members)
-          (show-group account group members "They're already a member!")
-          (and (some #{account} members)
-               (find-user (params :user)))
-          (do (add-member group (params :user))
-              (show-group account group
-                          (conj members (params :user))))
-          :else
-          (show-group account group members (str "No such user: "
-                                                 (h (params :user))))))
-       :next)))
-  (GET "/users/:username"
-    (if-let [user (with-db (find-user (param :username)))]
+  (GET ["/groups/:group", :group #"[^/]+"] {session :session {group "group"} :params }
+    (if-let [members (with-db (group-members group))]
       (try-account
-       (show-user account user))
+       (show-group account group members))
       :next))
-  (GET "/:jarname"
-    (if-let [jar (with-db (find-canon-jar (param :jarname)))]
+  (POST ["/groups/:group", :group #"[^/]+"] {session :session {group "group" user "user"} :params }
+    (if-let [members (with-db (group-members group))]
+      (try-account
+       (cond
+        (some #{user} members)
+        (show-group account group members "They're already a member!")
+        (and (some #{account} members)
+             (find-user user))
+        (do (add-member group user)
+            (show-group account group
+                        (conj members user)))
+        :else
+        (show-group account group members (str "No such user: "
+                                               (h user)))))
+      :next))
+  (GET "/users/:username"  {session :session {username "username"} :params}
+    (if-let [user (with-db (find-user username))]
+       (try-account
+        (show-user account user))
+       :next))
+  (GET "/:jarname" {session :session {jarname "jarname"} :params}
+    (if-let [jar (with-db (find-canon-jar jarname))]
       (try-account
        (show-jar account jar))
       :next))
-  (GET #"/([^/]+)/([^/]+)"
-    (if-let [jar (with-db (find-jar (param 0) (param 1)))]
+  (GET ["/:group/:jarname", :group #"[^/]+", :jarname #"[^/]+"]
+       {session :session {group "group" jarname "jarname"} :params}
+    (if-let [jar (with-db (find-jar group jarname))]
       (try-account
        (show-jar account jar))
       :next))
-  (GET "/:user"
-    (if-let [user (with-db (find-user (param :user)))]
+  (GET "/:user" {session :session {user "user"} :params}
+    (if-let [user (with-db (find-user user))]
       (try-account
        (show-user account (:user user)))
       :next))
-  (ANY "/*"
-       (if-let [f (serve-file (params :*))]
-         [{:headers {"Cache-Control" "max-age=3600"}} f]
-         :next))
-  (ANY "*"
-    [404 (html-doc (session :account) "Page not found" (not-found-doc))]))
+  (ANY "*" {session :session}
+    (html-doc (session :account) "Page not found" (not-found-doc))))
 
-(decorate clojars-app
-          (with-session)
-          (db-middleware))
+
+(def clojars-app
+   (-> main-routes
+       wrap-session
+       (wrap-file "public")
+       db-middleware))
 
 ;(require 'swank.swank)
 ;(swank.swank/start-server "/dev/null" :port 4005)

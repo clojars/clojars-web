@@ -13,7 +13,7 @@
      #{"clojure" "clojars" "clojar" "register" "login"
        "pages" "logout" "password" "username" "user"
        "repo" "repos" "jar" "jars" "about" "help" "doc"
-       "docs" "pages" "images" "js" "css" "maven" "api"
+       "docs" "images" "js" "css" "maven" "api"
        "download" "create" "new" "upload" "contact" "terms"
        "group" "groups" "browse" "status" "blog" "search"
        "email" "welcome" "devel" "development" "test" "testing"

@@ -1,10 +1,12 @@
 (ns clojars.web.common
-  (:use compojure))
+  (:use hiccup.core
+        hiccup.page-helpers
+        hiccup.form-helpers))
 
 (defn when-ie [& contents]
   (str
    "<!--[if IE]>"
-   (apply html contents)
+   (html contents)
    "<![endif]-->"))
 
 (defn html-doc [account title & body]
