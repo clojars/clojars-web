@@ -1,4 +1,4 @@
-(defproject clojars-web "0.6.0"
+(defproject clojars-web "0.6.1"
   :main clojars.core
   :dependencies [[org.clojure/clojure "1.2.0"]
                  [org.clojure/clojure-contrib "1.2.0"]
