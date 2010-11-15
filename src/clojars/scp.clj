@@ -152,16 +152,18 @@
          (when okay
            (send-okay ctx))
 
-         (let [cmd (char (.read in))]
-           (condp = cmd
-             (char 0)      (do (recur files false))
-             \C            (recur (conj files (scp-copy ctx)) true)
-             \D            (do (safe-read-line in) (recur files true))
-             \T            (do (safe-read-line in) (recur files true))
-             \E            (do (safe-read-line in) (recur files true))
-             (char 65535)  (finish-deploy ctx files)
-             (throw (IOException. (str "Unknown scp command: '"
-                                       (int cmd) "'")))))))
+         (let [cmd (.read in)]
+           (if (= -1 cmd)
+             (finish-deploy ctx files)
+             (let [cmd (char cmd)]           
+               (condp = cmd
+                   (char 0)      (do (recur files false))
+                   \C            (recur (conj files (scp-copy ctx)) true)
+                   \D            (do (safe-read-line in) (recur files true))
+                   \T            (do (safe-read-line in) (recur files true))
+                   \E            (do (safe-read-line in) (recur files true))
+                   (throw (IOException. (str "Unknown scp command: '"
+                                             (int cmd) "'")))))))))
 
      (catch Throwable t
                                         ;(.printStackTrace t *err*)
