@@ -27,7 +27,7 @@
 (defroutes main-routes
   (GET "/search" {session :session params :params}
     (try-account
-     (search account (params "q"))))
+     (search account params)))
   (GET "/profile" {session :session params :params}
     (with-account
      (profile-form account)))
