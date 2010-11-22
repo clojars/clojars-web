@@ -84,13 +84,13 @@
                        (text-area :ssh-key (user :ssh_key))
                        (submit-button "Update")))))
 
-(defn update-profile [account {email :email, password :password
-                               confirm :confirm, ssh-key :ssh-key}]
+(defn update-profile [account {email "email", password "password"
+                               confirm "confirm", ssh-key "ssh-key"}]
   (if-let [errors (validate-profile account email
                                     account password confirm ssh-key)]
     (profile-form account errors)
     (do (update-user account email account password ssh-key)
-        [(redirect "/profile")])))
+        (redirect "/profile"))))
 
 (defn show-user [account user]
   (html-doc account (h (user :user))
