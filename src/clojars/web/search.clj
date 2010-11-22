@@ -12,6 +12,7 @@
 
 (defn- jar->json [jar]
   (let [m {:jar_name (:jar_name jar)
+           :group_name (:group_name jar)
            :version (:version jar)
            :description (:description jar)}
         created (:created jar)]
