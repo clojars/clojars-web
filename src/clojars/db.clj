@@ -1,8 +1,8 @@
 (ns clojars.db
   (:use [clojars :only [config]]
         clojure.contrib.sql
-        clojure.contrib.duck-streams
-        [clojure.contrib.str-utils2 :only [join]])
+        clojure.contrib.duck-streams)
+  (:require [clojure.string :as str])
   (:import java.security.MessageDigest
            java.util.Date
            java.io.File))
@@ -172,8 +172,13 @@
        :created    (Date.)
        :description (:description jarmap)
        :homepage   (:homepage jarmap)
-       :authors    (join ", " (map #(.replace % "," "")
-                                   (:authors jarmap)))}))))
+       :authors    (str/join ", " (map #(.replace % "," "")
+                                       (:authors jarmap)))}))))
+
+(defn quote-hyphanated
+  "Wraps hyphated-words in double quotes."
+  [s]
+  (str/replace s #"\w+(-\w+)+" "\"$0\""))
 
 (defn search-jars [query & [offset]]
   ;; TODO make search less stupid, figure out some relevance ranking
@@ -183,7 +188,7 @@
             "content match ?"
             "limit 50 "
             "offset ?")
-       query
+       (quote-hyphanated query)
        (or offset 0)]
     ;; TODO: do something less stupidly slow
     (vec (map #(find-jar (:group_name %) (:jar_name %)) rs))))
