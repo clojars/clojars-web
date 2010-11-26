@@ -11,7 +11,7 @@
 
 (def *max-line-size* 4096)
 (def *max-file-size* 20485760)
-(def *allowed-suffixes* #{"clj" "xml" "jar" "sha1" "md5"})
+(def *allowed-suffixes* #{"pom" "xml" "jar" "sha1" "md5"})
 
 (set! *warn-on-reflection* true)
 
@@ -78,18 +78,10 @@
 (defmacro printerr [& strs]
   `(.println (.err ~'ctx) (str ~@(interleave strs (repeat " ")))))
 
-(defmulti read-metadata :suffix)
-(defmethod read-metadata "xml" [f default-group]
+(defn read-metadata [f default-group]
   (let [model (maven/read-pom (:file f))
         jarmap (maven/model-to-map model)]
     [[model jarmap]]))
-
-;; TODO: probably want to show an error if the file contains no defjars
-(defmethod read-metadata "clj" [f default-group]
-  (for [jarmap (maven/read-jarspec (:file f))]
-    (let [jarmap (if (:group jarmap) jarmap (assoc jarmap :group default-group))]
-      (let [model (maven/make-model jarmap)]
-        [model jarmap]))))
 
 (defn jar-names
   "Construct a few possible name variations a jar might have."
@@ -100,7 +92,7 @@
 (defn finish-deploy [#^NGContext ctx, files]
   (let [account (first (.getArgs ctx))
         act-group (str "org.clojars." account)
-        metadata (filter #(#{"xml" "clj"} (:suffix %)) files)
+        metadata (filter #(#{"xml" "pom"} (:suffix %)) files)
         jars     (filter #(#{"jar"}       (:suffix %)) files)
         jarfiles (into {} (map (juxt :name :file) jars))]
 
@@ -108,13 +100,6 @@
             :when (not= (:name metafile) "maven-metadata.xml")
             [model jarmap] (read-metadata metafile act-group)
             :let [names (jar-names jarmap)]]
-
-      (comment (when (not= (:group jarmap) act-group)
-                 (throw (Exception.
-                         (str "Custom group ids are not supported yet. "
-                              " For now please use "
-                              act-group " instead of " (:group jarmap))))))
-
       (if-let [jarfile (some jarfiles names)]
         (do
           (.println *err* (str "\nDeploying " (:group jarmap) "/"
