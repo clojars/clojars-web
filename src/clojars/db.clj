@@ -175,8 +175,8 @@
        :authors    (str/join ", " (map #(.replace % "," "")
                                        (:authors jarmap)))}))))
 
-(defn quote-hyphanated
-  "Wraps hyphated-words in double quotes."
+(defn quote-hyphenated
+  "Wraps hyphenated-words in double quotes."
   [s]
   (str/replace s #"\w+(-\w+)+" "\"$0\""))
 
@@ -188,7 +188,7 @@
             "content match ?"
             "limit 50 "
             "offset ?")
-       (quote-hyphanated query)
+       (quote-hyphenated query)
        (or offset 0)]
     ;; TODO: do something less stupidly slow
     (vec (map #(find-jar (:group_name %) (:jar_name %)) rs))))
