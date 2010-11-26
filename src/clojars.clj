@@ -1,7 +1,7 @@
 (ns clojars
-  (:use [clojure.contrib.duck-streams :only [slurp*]]))
+  (:require [clojure.java.io :as io]))
 
 (def config
-     (read-string (slurp* (.getResourceAsStream
-                           (.getContextClassLoader (Thread/currentThread))
-                           "clojars/config.clj"))))
+  (-> (io/reader (io/resource "clojars/config.clj"))
+      (java.io.PushbackReader.)
+      (read)))

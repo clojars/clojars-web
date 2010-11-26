@@ -1,5 +1,5 @@
 (ns clojars.maven
-  (:require [clojure.contrib.duck-streams :as ds])
+  (:require [clojure.java.io :as io])
   (:use [clojure.contrib.condition :only [raise]])
   (:import (org.apache.maven.model Model
                                    Dependency
@@ -27,7 +27,7 @@
 (defn read-vec
   "Produces a vector of clojure data structures read from file."
   [file]
-  (with-open [rdr (PushbackReader. (ds/reader file))]
+  (with-open [rdr (PushbackReader. (io/reader file))]
    (loop [v []]
      (let [x (read rdr false ::end)]
        (if (not= x ::end)
@@ -149,7 +149,7 @@
 (defn read-pom
   "Reads a pom file returning a maven Model object."
   [file]
-  (with-open [reader (ds/reader file)]
+  (with-open [reader (io/reader file)]
     (.read (MavenXpp3Reader.) reader)))
 
 (defn make-repo

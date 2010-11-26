@@ -1,8 +1,8 @@
 (ns clojars.db
   (:use [clojars :only [config]]
-        clojure.contrib.sql
-        clojure.contrib.duck-streams)
-  (:require [clojure.string :as str])
+        clojure.contrib.sql)
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io])
   (:import java.security.MessageDigest
            java.util.Date
            java.io.File))
@@ -34,7 +34,7 @@
   (locking (:key-file config)
    (let [new-file (File. (str path ".new"))]
      (with-query-results rs ["select user, ssh_key from users"]
-       (with-open [f (writer new-file)]
+       (with-open [f (io/writer new-file)]
          (doseq [x rs]
            (.println f (str "command=\"ng --nailgun-port 8700 clojars.scp " (:user x) 
                             "\"," ssh-options " " 

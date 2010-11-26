@@ -2,10 +2,9 @@
   (:import (java.io InputStream IOException File OutputStream
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
-  (:use clojure.contrib.duck-streams
-        [clojars :only [config]])
-  (:require [clojars.maven :as maven]
-            [clojars.db    :as db])
+  (:use [clojars :only [config]])
+  (:require [clojars.maven   :as maven]
+            [clojars.db      :as db])
   (:gen-class
    :methods [#^{:static true}
              [nailMain [com.martiansoftware.nailgun.NGContext] void]]))
