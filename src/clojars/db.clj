@@ -148,7 +148,7 @@
                             "and full-stops."))))
   (let [members (group-members group)]
     (if (empty? members)
-      (if (or (find-user group) (*reserved-names* group))
+      (if (*reserved-names* group)
         (throw (Exception. (str "The group name " group " is already taken.")))
         (add-member group account))
       (when-not (some #{account} members)
