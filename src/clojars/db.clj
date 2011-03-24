@@ -19,7 +19,7 @@
        "email" "welcome" "devel" "development" "test" "testing"
        "prod" "production" "admin" "administrator" "root"
        "webmaster" "profile" "dashboard" "settings" "options"
-       "index" "files"})
+       "index" "files" "releases" "snapshots"})
 
 (let [chars (map char 
                  (mapcat (fn [[x y]] (range (int x) (inc (int y))))
