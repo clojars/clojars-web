@@ -186,8 +186,9 @@
   ;; scheme, do stopwords etc.
   (with-query-results rs
       [(str "select jar_name, group_name from search where "
-            "content match ?"
-            "limit 50 "
+            "content match ? "
+	    "order by rowid desc "
+            "limit 100 "
             "offset ?")
        (quote-hyphenated query)
        (or offset 0)]
