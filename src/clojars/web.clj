@@ -89,7 +89,7 @@
   (GET "/:user" {session :session {user "user"} :params}
     (if-let [user (with-db (find-user user))]
       (try-account
-       (show-user account (:user user)))
+       (show-user account user))
       :next))
   (ANY "*" {session :session}
     (html-doc (session :account) "Page not found" (not-found-doc))))
