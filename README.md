@@ -74,7 +74,7 @@ and run `make` then copy the `ng` executable somewhere like `/usr/local/bin`
         cd /home/clojars
         mkdir .ssh
         cd .ssh
-        ln -s ...../clojars-web/data/auth_keys authorized_keys
+        ln -s ...../clojars-web/data/authorized_keys authorized_keys
 
 Mailing lists
 -------------
