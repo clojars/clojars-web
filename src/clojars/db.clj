@@ -197,10 +197,10 @@
 
 
 (comment
-  (with-connection (:db config) (add-jar "atotx" {:name "test3" :group "test3" :version "1.0"
-                                      :description "An dog awesome and non-existent test jar."
-                                      :homepage "http://clojars.org/"
-                                      :authors ["Alex Osborne" 
-                                                "a little fish"]}))
-  (with-connection (:db config) (find-user "atotx"))
+  (with-db (add-jar "atotx" {:name "test3" :group "test3" :version "1.0"
+                             :description "An dog awesome and non-existent test jar."
+                             :homepage "http://clojars.org/"
+                             :authors ["Alex Osborne"
+                                       "a little fish"]}))
+  (with-db (find-user "atotx"))
 )
