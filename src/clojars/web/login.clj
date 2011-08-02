@@ -20,6 +20,7 @@
      (text-field :user)
      (label :password "Password:")
      (password-field :password)
+     (link-to "/forgot-password" "Forgot password?") [:br]
      (submit-button "Login"))))
 
 (defn login [{username "user" password "password"}]

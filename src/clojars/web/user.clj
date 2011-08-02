@@ -6,7 +6,8 @@
         hiccup.page-helpers
         hiccup.form-helpers
         ring.middleware.session.store
-        ring.util.response))
+        ring.util.response)
+  (:import [org.apache.commons.mail SimpleEmail]))
 
 (defn register-form [ & [errors email user ssh-key]]
   (html-doc nil "Register"
@@ -99,3 +100,35 @@
     (unordered-list (map jar-link (jars-by-user (user :user))))
     [:h2 "Groups"]
     (unordered-list (map group-link (find-groups (user :user))))))
+
+(defn forgot-password-form []
+  (html-doc nil "Forgot password?"
+    [:h1 "Forgot password?"]
+    (form-to [:post "/forgot-password"]
+      (label :email-or-username "Email or username:")
+      (text-field :email-or-username "")
+      (submit-button "Send new password"))))
+
+;; TODO: move this to another file?
+(defn send-mail [to subject message]
+  (doto (SimpleEmail.)
+    (.setHostName ((clojars/config :mail) :hostname))
+    (.setAuthentication ((clojars/config :mail) :username) ((clojars/config :mail) :password))
+    (.setSslSmtpPort (str ((clojars/config :mail) :port)))
+    (.setSSL ((clojars/config :mail) :ssl))
+    (.setFrom "clojars@pupeno.com" "Clojars")
+    (.addTo to)
+    (.setSubject subject)
+    (.setMsg message)
+    (.send)))
+
+(defn forgot-password [{email-or-username "email-or-username"}]
+  (when-let [user (find-user-by-user-or-email email-or-username)]
+    (let [new-password (rand-string 15)]
+      (update-user (user :user) (user :email) (user :user) new-password (user :ssh_key))
+      (send-mail (user :email)
+        "Password reset for Clojars"
+        (str "Hello,\n\nYour new password for Clojars is: " new-password "\n\nKeep it safe this time."))))
+  (html-doc nil "Forgot password?"
+    [:h1 "Forgot password?"]
+    [:p "If your account was found, you should get an email with a new password soon."]))
