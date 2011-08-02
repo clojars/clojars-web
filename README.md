@@ -12,21 +12,36 @@ to try to run your own copy (for example inside a company).
 Running the webapp
 ------------------
 
-1. Install [Leiningen](http://github.com/technomancy/leiningen) and
-[SQLite3](http://www.sqlite.org/)
-(Debian: `apt-get install sqlite3`). 
+There are several ways to run Clojars depending on what you intend to do with
+it. Regardless of how you run it, you first need to do some setup:
 
-2. Compile with: `lein uberjar`
+1. Install [Leiningen](http://github.com/technomancy/leiningen)
+   * Mac OS X Homebrwe: `brew install leiningen`
+
+2. Install [SQLite3](http://www.sqlite.org/)
+   * Debian: `apt-get install sqlite3`
+   * Mac OS X Homebrew: `brew install sqlite`
 
 3. Create an initial sqlite database: `mkdir data; sqlite3 data/db < clojars.sql`
 
-4. Run the webapp: `java -jar clojars-web-*-standalone.jar 8080 8701`
+To run the application as standlone from the console:
 
-5. Now try hitting `http://localhost:8080/` in your web browser.
+1. Compile with: `lein uberjar`
+
+2. Run the webapp: `java -jar clojars-web-*-standalone.jar 8080 8701`
+
+3. Now try hitting [localhost:8080](http://localhost:8080) in your web browser.
+
+To run the application in auto-reload mode, from the console:
+
+1. Run `lein ring server`
+
+and that's it, it should automatically open a browser in [localhost:3000](http://localhost:3000).
 
 If you'd like to run it out of an editor/IDE environment you can
 probably eval a call to the `-main` function in
 `src/clojars/core.clj`.
+
 
 Test data
 ---------
