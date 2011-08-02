@@ -63,6 +63,10 @@
   (with-query-results rs ["select * from users where user = ?" username]
     (first rs)))
 
+(defn find-user-by-user-or-email [user-or-email]
+  (with-query-results rs ["select * from users where user = ? or email = ?" user-or-email user-or-email]
+    (first rs)))
+
 (defn find-groups [username]
   (with-query-results rs ["select * from groups where user = ?" username]
     (doall (map :name rs))))

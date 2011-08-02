@@ -42,6 +42,10 @@
     (register params))
   (GET "/register" {params :params}
     (register-form))
+  (POST "/forgot-password" {params :params}
+    (forgot-password params))
+  (GET "/forgot-password" {params :params}
+    (forgot-password-form))
   (GET "/logout" request
     (let [response (redirect "/")]
       (assoc-in response [:session :account] nil)))
