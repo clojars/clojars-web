@@ -63,6 +63,10 @@
   (with-query-results rs ["select * from users where user = ?" username]
     (first rs)))
 
+(defn find-user-by-user-or-email [user-or-email]
+  (with-query-results rs ["select * from users where user = ? or email = ?" user-or-email user-or-email]
+    (first rs)))
+
 (defn find-groups [username]
   (with-query-results rs ["select * from groups where user = ?" username]
     (doall (map :name rs))))
@@ -197,10 +201,10 @@
 
 
 (comment
-  (with-connection (:db config) (add-jar "atotx" {:name "test3" :group "test3" :version "1.0"
-                                      :description "An dog awesome and non-existent test jar."
-                                      :homepage "http://clojars.org/"
-                                      :authors ["Alex Osborne" 
-                                                "a little fish"]}))
-  (with-connection (:db config) (find-user "atotx"))
+  (with-db (add-jar "atotx" {:name "test3" :group "test3" :version "1.0"
+                             :description "An dog awesome and non-existent test jar."
+                             :homepage "http://clojars.org/"
+                             :authors ["Alex Osborne"
+                                       "a little fish"]}))
+  (with-db (find-user "atotx"))
 )
