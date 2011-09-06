@@ -3,8 +3,8 @@
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
   (:use [clojars.config :only [config]])
-  (:require [clojars.maven   :as maven]
-            [clojars.db      :as db])
+  (:require [clojars.maven :as maven]
+            [clojars.db :as db])
   (:gen-class
    :methods [#^{:static true}
              [nailMain [com.martiansoftware.nailgun.NGContext] void]]))
@@ -12,8 +12,6 @@
 (def *max-line-size* 4096)
 (def *max-file-size* 20485760)
 (def *allowed-suffixes* #{"pom" "xml" "jar" "sha1" "md5"})
-
-(set! *warn-on-reflection* true)
 
 (defn safe-read-line
   ([#^InputStream stream #^StringBuilder builder]
@@ -67,8 +65,7 @@
       (.deleteOnExit f)
       (send-okay ctx)
       (with-open [fos (FileOutputStream. f)]
-        (let [bytes (copy-limit (.in ctx) fos
-                                size)]
+        (let [bytes (copy-limit (.in ctx) fos size)]
           (if (>= bytes size)
             {:name (.getName fn), :file f, :size size, :suffix suffix
              :mode mode}
@@ -86,8 +83,8 @@
 (defn jar-names
   "Construct a few possible name variations a jar might have."
   [jarmap]
-  [ (str (:name jarmap) "-" (:version jarmap) ".jar")
-    (str (:name jarmap) ".jar")])
+  [(str (:name jarmap) "-" (:version jarmap) ".jar")
+   (str (:name jarmap) ".jar")])
 
 (defn finish-deploy [#^NGContext ctx, files]
   (let [account (first (.getArgs ctx))
@@ -104,10 +101,10 @@
         (do
           (.println *err* (str "\nDeploying " (:group jarmap) "/"
                                (:name jarmap) " " (:version jarmap)))
-          (db/add-jar (first (.getArgs ctx)) jarmap true)
+          (db/add-jar account jarmap true)
           (maven/deploy-model jarfile model
                               (str "file://" (:repo config)))
-          (db/add-jar (first (.getArgs ctx)) jarmap))
+          (db/add-jar account jarmap))
         (throw (Exception. (str "You need to give me one of: " names)))))
     (.println *err* (str "\nSuccess! Your jars are now available from "
                          "http://clojars.org/"))
@@ -139,9 +136,10 @@
          (let [cmd (.read in)]
            (if (= -1 cmd)
              (finish-deploy ctx files)
-             (let [cmd (char cmd)]           
+             (let [cmd (char cmd)]
+               ;; TODO: use core.match
                (condp = cmd
-                   (char 0)      (do (recur files false))
+                   (char 0)      (recur files false)
                    \C            (recur (conj files (scp-copy ctx)) true)
                    \D            (do (safe-read-line in) (recur files true))
                    \T            (do (safe-read-line in) (recur files true))
@@ -150,7 +148,7 @@
                                              (int cmd) "'")))))))))
 
      (catch Throwable t
-                                        ;(.printStackTrace t *err*)
+       ;; (.printStackTrace t *err*)
        (.println (.err ctx) (str "Error: " (.getMessage t)))
        (.flush (.err ctx))
        (throw t))
