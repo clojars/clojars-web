@@ -31,6 +31,7 @@
    :description (.getDescription model)
    :homepage (.getUrl model)
    :authors (vec (map #(.getName %) (.getContributors model)))
+   ;; TODO: doesn't appear to be used anywhere?
    :dependencies (vec (mapcat (fn [d] [(symbol (.getGroupId d)
                                                (.getArtifactId d))
                                        (.getVersion d)])
