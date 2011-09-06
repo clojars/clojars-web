@@ -48,7 +48,7 @@
       (conj-when (blank? password) "Password can't be blank")
       (conj-when (not= password confirm)
                  "Password and confirm password must match")
-      (conj-when (or (*reserved-names* user)  ; "I told them we already
+      (conj-when (or (reserved-names user)    ; "I told them we already
                      (and (not= account user) ; got one!"
                           (find-user user))
                      (seq (group-members user)))
