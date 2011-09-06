@@ -1,5 +1,5 @@
 (ns clojars.db
-  (:use [clojars :only [config]]
+  (:use [clojars.config :only [config]]
         clojure.contrib.sql)
   (:require [clojure.string :as str]
             [clojure.java.io :as io])

@@ -2,7 +2,7 @@
   (:import (java.io InputStream IOException File OutputStream
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
-  (:use [clojars :only [config]])
+  (:use [clojars.config :only [config]])
   (:require [clojars.maven   :as maven]
             [clojars.db      :as db])
   (:gen-class
