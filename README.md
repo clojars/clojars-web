@@ -53,7 +53,7 @@ you can use like this:
     
     wget http://meshy.org/~ato/clojars-test-data.sql.gz
     rm data/db
-    zcat clojars-test-data.sql.gz | sqlite3 data/db
+    gunzip -c clojars-test-data.sql.gz | sqlite3 data/db
 
 If you want all the actual jar files as well you can grab them via
 [rsync](http://github.com/ato/clojars-web/wiki/Data).
