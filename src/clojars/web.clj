@@ -75,7 +75,7 @@
        (try-account
         (show-user account user))
        :next))
-  (GET "/:jarname" {session :session {jarname "jarname"} :params}
+  (GET ["/:jarname", :jarname #"[^/]+"] {session :session {jarname "jarname"} :params}
     (if-let [jar (with-db (find-canon-jar jarname))]
       (try-account
        (show-jar account jar))
