@@ -3,9 +3,8 @@
         clojars.db
         hiccup.core
         hiccup.page-helpers
-        hiccup.form-helpers
-        clojure.contrib.json
-))
+        hiccup.form-helpers)
+  (:require [cheshire.core :as json]))
 
 (defn format-date [s]
   (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
@@ -23,8 +22,8 @@
 (defn json-gen [query]
   (let [results (filter #(not (nil? (:jar_name %)))
                         (search-jars query))]
-    (json-str {:count (count results)
-               :results (map jar->json results)})))
+    (json/generate-string {:count (count results)
+                           :results (map jar->json results)})))
 
 (defn json-search [query]
   {:status 200,
