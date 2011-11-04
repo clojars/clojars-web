@@ -9,6 +9,7 @@
                  [compojure "0.5.2"]
                  [ring/ring-jetty-adapter "0.3.1"]
                  [hiccup "0.3.0"]
+                 [cheshire "2.0.2"]
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.6.17"]
                  [org.apache.commons/commons-email "1.2"]]
