@@ -13,8 +13,7 @@
         [ring.middleware.session :only [wrap-session]]
         [ring.middleware.file :only [wrap-file]]
         [ring.util.response :only [redirect]]
-        [compojure.core :only [defroutes GET POST ANY]])
-  (:require [clojure.contrib.sql :as sql]))
+        [compojure.core :only [defroutes GET POST ANY]]))
 
 (defn not-found-doc []
   (html [:h1 "Page not found"]
