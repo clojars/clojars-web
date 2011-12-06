@@ -4,7 +4,8 @@
         [clojars.web.dashboard :only [dashboard index-page]]
         [clojars.web.search :only [search]]
         [clojars.web.user :only [profile-form update-profile show-user
-                                 register register-form]]
+                                 register register-form
+                                 forgot-password forgot-password-form]]
         [clojars.web.group :only [show-group]]
         [clojars.web.jar :only [show-jar]]
         [clojars.web.common :only [html-doc]]
