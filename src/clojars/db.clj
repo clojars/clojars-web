@@ -53,7 +53,7 @@
 
 (defmacro with-db
   [& body]
-  `(with-connection (:db config)
+  `(sql/with-connection (:db config)
      ~@body))
 
 (defn sha1 [& s]
