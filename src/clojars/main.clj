@@ -1,4 +1,4 @@
-(ns clojars.core
+(ns clojars.main
   (:use [ring.adapter.jetty :only [run-jetty]]
         [clojars.web :only [clojars-app]])
   (:require [clojars.scp])
@@ -8,8 +8,8 @@
 
 (defn -main
   ([]
-     (.println System/err "Usage: clojars.core http-port nailgun-port")
-     (.println System/err "   eg: clojars.core 8080 8701")
+     (.println System/err "Usage: clojars.main http-port nailgun-port")
+     (.println System/err "   eg: clojars.main 8080 8701")
      (System/exit 1))
   ([http-port ng-port]
      (println "clojars-web: starting jetty on port" http-port)
