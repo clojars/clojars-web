@@ -1,4 +1,5 @@
 (defproject clojars-web "0.6.2"
+  :aot [clojars.scp]
   :main clojars.main
   :dependencies [[org.clojure/clojure "1.2.1"]
                  [org.clojure/java.jdbc "0.1.1"]
