@@ -56,7 +56,7 @@
                           (seq (group-members user))))
                  "Username is already taken")
       (conj-when (not (re-matches #"[a-z0-9_-]+" user))
-                 (str "Usernames must consist only of lowercase "
+                 (str "Username must consist only of lowercase "
                       "letters, numbers, hyphens and underscores."))
       (conj-when (not (or (blank? ssh-key)
                           (valid-ssh-key? ssh-key)))
@@ -108,8 +108,11 @@
     [:h1 "Forgot password?"]
     (form-to [:post "/forgot-password"]
       (label :email-or-username "Email or username:")
-      (text-field :email-or-username "")
+      (text-field :email-or-username)
       (submit-button "Send new password"))))
+
+(defn ^{:dynamic true} send-out [email]
+  (.send email))
 
 ;; TODO: move this to another file?
 (defn send-mail [to subject message]
@@ -124,8 +127,8 @@
                (.setSubject subject)
                (.setMsg message))]
     (when (and username password)
-      (.setAuthentication username password))
-    (.send mail)))
+      (.setAuthentication mail username password))
+    (send-out mail)))
 
 (defn forgot-password [{email-or-username "email-or-username"}]
   (when-let [user (find-user-by-user-or-email email-or-username)]

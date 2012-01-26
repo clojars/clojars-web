@@ -15,6 +15,9 @@
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.6.17"]
                  [org.apache.commons/commons-email "1.2"]]
-  :dev-dependencies [[lein-ring "0.4.5"]]
+  :dev-dependencies [[lein-ring "0.4.5"]
+                     [enlive "1.0.0"]
+                     [kerodon "0.0.1-SNAPSHOT"]
+                     [nailgun-shim "0.0.1"]]
   :ring {:handler clojars.web/clojars-app})
 

@@ -1,6 +1,6 @@
 (ns clojars.web
   (:use [clojars.db :only [with-db group-members find-user add-member
-                           find-jar find-canon-jar db-middleware]]
+                           find-jar find-canon-jar]]
         [clojars.web.dashboard :only [dashboard index-page]]
         [clojars.web.search :only [search]]
         [clojars.web.user :only [profile-form update-profile show-user
@@ -84,6 +84,7 @@
        (try-account
         (show-user account user))
        :next))
+
   (GET ["/:jarname", :jarname #"[^/]+"] {session :session {jarname "jarname"} :params}
     (if-let [jar (with-db (find-canon-jar jarname))]
       (try-account
@@ -102,6 +103,11 @@
       :next))
   (ANY "*" {session :session}
     (html-doc (session :account) "Page not found" (not-found-doc))))
+
+(defn db-middleware
+  [handler]
+  (fn [request]
+    (with-db (handler request))))
 
 (def clojars-app
    (-> main-routes

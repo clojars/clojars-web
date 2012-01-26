@@ -99,60 +99,60 @@
             :let [names (jar-names jarmap)]]
       (if-let [jarfile (some jarfiles names)]
         (do
-          (.println *err* (str "\nDeploying " (:group jarmap) "/"
+          (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
                                (:name jarmap) " " (:version jarmap)))
-          (db/add-jar account jarmap true)
-          (maven/deploy-model jarfile model
-                              (str "file://" (:repo config)))
-          (db/add-jar account jarmap))
+          (db/with-db
+            (db/add-jar account jarmap true)
+            (maven/deploy-model jarfile model
+                                (.toString (.toURI (File. (:repo config)))))
+            (db/add-jar account jarmap)))
         (throw (Exception. (str "You need to give me one of: " names)))))
-    (.println *err* (str "\nSuccess! Your jars are now available from "
+    (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
                          "http://clojars.org/"))
     (.flush (.err ctx))))
 
 (defn nail [#^NGContext ctx]
   (let [old-out System/out]
     (try
-     (System/setOut (.err ctx))
-     (let [in (.in ctx)
-           err (.err ctx)
-           out (.out ctx)
-           account (first (.getArgs ctx))]
+      (System/setOut (.err ctx))
+      (let [in (.in ctx)
+            err (.err ctx)
+            account (first (.getArgs ctx))]
 
-       (when-not account
-         (throw (Exception. "I don't know who you are!")))
+        (when-not account
+          (throw (Exception. "I don't know who you are!")))
 
-       (doto (.err ctx)
-         (.println (str "Welcome to Clojars, " account "!"))
-         (.flush))
+        (doto (.err ctx)
+          (.println (str "Welcome to Clojars, " account "!"))
+          (.flush))
 
-       (loop [files [], okay true]
-         (when (> (count files) 100)
-           (throw (IOException. "Too many files uploaded at once")))
+        (loop [files [], okay true]
+          (when (> (count files) 100)
+            (throw (IOException. "Too many files uploaded at once")))
 
-         (when okay
-           (send-okay ctx))
+          (when okay
+            (send-okay ctx))
 
-         (let [cmd (.read in)]
-           (if (= -1 cmd)
-             (finish-deploy ctx files)
-             (let [cmd (char cmd)]
-               ;; TODO: use core.match
-               (condp = cmd
-                   (char 0)      (recur files false)
-                   \C            (recur (conj files (scp-copy ctx)) true)
-                   \D            (do (safe-read-line in) (recur files true))
-                   \T            (do (safe-read-line in) (recur files true))
-                   \E            (do (safe-read-line in) (recur files true))
-                   (throw (IOException. (str "Unknown scp command: '"
-                                             (int cmd) "'")))))))))
+          (let [cmd (.read in)]
+            (if (= -1 cmd)
+              (finish-deploy ctx files)
+              (let [cmd (char cmd)]
+                ;; TODO: use core.match
+                (condp = cmd
+                  (char 0)      (recur files false)
+                  \C            (recur (conj files (scp-copy ctx)) true)
+                  \D            (do (safe-read-line in) (recur files true))
+                  \T            (do (safe-read-line in) (recur files true))
+                  \E            (do (safe-read-line in) (recur files true))
+                  (throw (IOException. (str "Unknown scp command: '"
+                                            (int cmd) "'")))))))))
 
-     (catch Throwable t
-       ;; (.printStackTrace t *err*)
-       (.println (.err ctx) (str "Error: " (.getMessage t)))
-       (.flush (.err ctx))
-       (throw t))
-     (finally (System/setOut old-out)))))
+      (catch Throwable t
+        ;; (.printStackTrace t *err*)
+        (.println (.err ctx) (str "Error: " (.getMessage t)))
+        (.flush (.err ctx))
+        (throw t))
+      (finally (System/setOut old-out)))))
 
 (defn -nailMain [context]
   (nail context))

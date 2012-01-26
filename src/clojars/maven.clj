@@ -21,7 +21,11 @@
 ;; TODO: find out if it's safe to just leave these hanging around like
 ;; this
 (def embedder (doto (Embedder.) (.start)))
-(def container (.getContainer embedder))
+(def container (let [container (.getContainer embedder)]
+                 (-> container
+                     (.getLoggerManager)
+                     (.setThreshold org.codehaus.plexus.logging.Logger/LEVEL_DISABLED))
+                 container))
 
 (defn model-to-map [model]
   {:name (.getArtifactId model)
@@ -94,5 +98,7 @@
 (defn deploy-model [jarfile model repo-path]
   (.deploy
    (.lookup container ArtifactDeployer/ROLE)
-   jarfile (make-artifact model) (make-repo "clojars" repo-path)
+   jarfile
+   (make-artifact model)
+   (make-repo "clojars" repo-path)
    (make-local-repo)))
