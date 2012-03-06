@@ -5,16 +5,9 @@
             [clojars.scp :as scp]
             [clojars.config :as config]))
 
-(defn is= [val]
-  (fn [v2] (test/is (= val v2))))
-
-(defn log [state f]
-  (prn (f state))
-  state)
-
 (defn login-as [state user password]
   (-> state
-      (request :get "/")
+      (visit "/")
       (follow "login")
       (fill-in "Username or email:" user)
       (fill-in "Password:" password)
@@ -25,7 +18,7 @@
      (register-as state user email password password ssh-key))
   ([state user email password confirm ssh-key]
      (-> state
-         (request :get "/")
+         (visit "/")
          (follow "register")
          (fill-in "Email:" email)
          (fill-in "Username:" user)

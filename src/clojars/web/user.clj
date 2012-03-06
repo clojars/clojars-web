@@ -62,8 +62,7 @@
                           (valid-ssh-key? ssh-key)))
                  "Invalid SSH public key")))
 
-(defn register [{email "email", user "user", password "password"
-                 confirm "confirm", ssh-key "ssh-key"}]
+(defn register [{:keys [email user password confirm ssh-key]}]
   (if-let [errors (validate-profile nil email user password confirm ssh-key)]
     (register-form errors email user ssh-key)
     (do (add-user email user password ssh-key)
@@ -87,8 +86,7 @@
                        (text-area :ssh-key (user :ssh_key))
                        (submit-button "Update")))))
 
-(defn update-profile [account {email "email", password "password"
-                               confirm "confirm", ssh-key "ssh-key"}]
+(defn update-profile [account {:keys [email password confirm ssh-key]}]
   (if-let [errors (validate-profile account email
                                     account password confirm ssh-key)]
     (profile-form account errors)
@@ -130,7 +128,7 @@
       (.setAuthentication mail username password))
     (send-out mail)))
 
-(defn forgot-password [{email-or-username "email-or-username"}]
+(defn forgot-password [{:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email email-or-username)]
     (let [new-password (rand-string 15)]
       (update-user (user :user) (user :email) (user :user) new-password (user :ssh_key))

@@ -9,13 +9,13 @@
    :methods [#^{:static true}
              [nailMain [com.martiansoftware.nailgun.NGContext] void]]))
 
-(def *max-line-size* 4096)
-(def *max-file-size* 20485760)
-(def *allowed-suffixes* #{"pom" "xml" "jar" "sha1" "md5"})
+(def max-line-size 4096)
+(def max-file-size 20485760)
+(def allowed-suffixes #{"pom" "xml" "jar" "sha1" "md5"})
 
 (defn safe-read-line
   ([#^InputStream stream #^StringBuilder builder]
-     (when (> (.length builder) *max-line-size*)
+     (when (> (.length builder) max-line-size)
        (throw (IOException. "Line too long")))
 
      (let [c (char (.read stream))]
@@ -53,11 +53,11 @@
         fn (File. #^String path)
         suffix (last (.split (.getName fn) "\\."))]
 
-    (when (> size *max-file-size*)
+    (when (> size max-file-size)
       (throw (IOException. (str "Upload too large.  Maximum size is "
-                                *max-file-size* " bytes"))))
+                                max-file-size " bytes"))))
 
-    (when-not (*allowed-suffixes* suffix)
+    (when-not (allowed-suffixes suffix)
       (throw (IOException. (str "." suffix
                                 " files are not supported."))))
 

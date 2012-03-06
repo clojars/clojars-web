@@ -4,33 +4,30 @@
         clojars.test.integration.steps)
   (:require [clojars.web :as web]
             [clojars.test.test-helper :as help]
-            [net.cgrand.enlive-html :as enlive]))
+            [net.cgrand.enlive-html :as enlive]
+            [net.cgrand.xml :as x]))
 
 (help/use-fixtures)
 
 (deftest user-cant-login-with-bad-user-pass-combo
-  (-> (init :ring-app web/clojars-app)
+  (-> (session web/clojars-app)
       (login-as "fixture@example.org" "password")
-      (validate (status (is= 200))
-                (html #(is (= ["Incorrect username or password."]
-                              (map enlive/text
-                                   (enlive/select % [:article :div.error]))))))))
+      (has (status? 200))
+      (within [:article :div.error]
+              (has (text? "Incorrect username or password.")))))
 
 (deftest user-can-login-and-logout
-  (-> (init :ring-app web/clojars-app)
+  (-> (session web/clojars-app)
       (register-as "fixture" "fixture@example.org" "password" ""))
   (doseq [login ["fixture@example.org" "fixture"]]
-    (-> (init :ring-app web/clojars-app)
+    (-> (session web/clojars-app)
         (login-as login "password")
         (follow-redirect)
-        (validate (status (is= 200))
-                  (html #(is (= ["Dashboard (fixture)"]
-                                (map enlive/text
-                                     (enlive/select % [:article :h1]))))))
+        (has (status? 200))
+        (within [:article :h1]
+                (has (text? "Dashboard (fixture)")))
         (follow "logout")
         (follow-redirect)
-        (validate
-         (status (is= 200))
-         (html #(is (= "login"
-                       (first (map enlive/text
-                                   (enlive/select % [:nav :a]))))))))))
+        (has (status? 200))
+        (within [:nav [:li enlive/first-child] :a]
+                (has (text? "login"))))))

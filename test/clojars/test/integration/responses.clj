@@ -9,8 +9,8 @@
 (help/use-fixtures)
 
 (deftest respond-404
-  (-> (init :ring-app web/clojars-app)
-      (request :get "/nonexistant-route")
-      (validate (status (is= 200))
-                (html #(is (= [["Page not found | Clojars"]]
-                              (map :content (enlive/select % [:title]))))))))
+  (-> (session web/clojars-app)
+      (visit "/nonexistant-route")
+      (has (status? 200)) ;;TODO 404
+      (within [:title]
+              (has (text? "Page not found | Clojars")))))
