@@ -4,9 +4,12 @@
 #*
 home
 data/
+native/
 
 # IntelliJ IDEA (La Clojure) project files
 *.ipr
 *.iws
 *.iml
 
+/.lein-deps-sum
+/.lein-failures

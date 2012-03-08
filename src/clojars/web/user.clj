@@ -7,6 +7,7 @@
         hiccup.form-helpers
         ring.middleware.session.store
         ring.util.response)
+  (:require [clojars.config :as config])
   (:import [org.apache.commons.mail SimpleEmail]))
 
 (defn register-form [ & [errors email user ssh-key]]
@@ -48,7 +49,7 @@
       (conj-when (blank? password) "Password can't be blank")
       (conj-when (not= password confirm)
                  "Password and confirm password must match")
-      (conj-when (or (*reserved-names* user)  ; "I told them we already
+      (conj-when (or (reserved-names user)    ; "I told them we already
                      (and (not= account user) ; got one!"
                           (find-user user))
                      (seq (group-members user)))
@@ -112,10 +113,11 @@
 ;; TODO: move this to another file?
 (defn send-mail [to subject message]
   (doto (SimpleEmail.)
-    (.setHostName ((clojars/config :mail) :hostname))
-    (.setAuthentication ((clojars/config :mail) :username) ((clojars/config :mail) :password))
-    (.setSslSmtpPort (str ((clojars/config :mail) :port)))
-    (.setSSL ((clojars/config :mail) :ssl))
+    (.setHostName ((config/config :mail) :hostname))
+    (.setAuthentication ((config/config :mail) :username)
+                        ((config/config :mail) :password))
+    (.setSslSmtpPort (str ((config/config :mail) :port)))
+    (.setSSL ((config/config :mail) :ssl))
     (.setFrom "clojars@pupeno.com" "Clojars")
     (.addTo to)
     (.setSubject subject)

@@ -1,15 +1,20 @@
 (ns clojars.web
-  (:require [clojure.contrib.sql :as sql])
-  (:use [clojars.db]
-        [clojars.web dashboard group jar login search user common]
-        [hiccup.core]
-        [hiccup.page-helpers]
-        [hiccup.form-helpers]
-        [ring.middleware.session]
-        [ring.middleware.session.store]
-        [ring.middleware.file]
-        [ring.util.response]
-        [compojure.core]))
+  (:use [clojars.db :only [with-db group-members find-user add-member
+                           find-jar find-canon-jar db-middleware]]
+        [clojars.web.dashboard :only [dashboard index-page]]
+        [clojars.web.search :only [search]]
+        [clojars.web.user :only [profile-form update-profile show-user
+                                 register register-form
+                                 forgot-password forgot-password-form]]
+        [clojars.web.group :only [show-group]]
+        [clojars.web.jar :only [show-jar]]
+        [clojars.web.common :only [html-doc]]
+        [clojars.web.login :only [login login-form]]
+        [hiccup.core :only [html h]]
+        [ring.middleware.session :only [wrap-session]]
+        [ring.middleware.file :only [wrap-file]]
+        [ring.util.response :only [redirect]]
+        [compojure.core :only [defroutes GET POST ANY]]))
 
 (defn not-found-doc []
   (html [:h1 "Page not found"]
@@ -17,12 +22,12 @@
 
 (defmacro with-account [body]
   `(if-let [~'account (~'session :account)]
-     (do ~body)
+     ~body
      (redirect "/login")))
 
 (defmacro try-account [body]
   `(let [~'account (~'session :account)]
-     (do ~body)))
+     ~body))
 
 (defroutes main-routes
   (GET "/search" {session :session params :params}
@@ -32,7 +37,7 @@
     (with-account
      (profile-form account)))
   (POST "/profile" {session :session params :params}
-    (with-account 
+    (with-account
       (update-profile account params)))
   (GET "/login" {params :params}
     (login-form))
@@ -98,22 +103,16 @@
   (ANY "*" {session :session}
     (html-doc (session :account) "Page not found" (not-found-doc))))
 
-
 (def clojars-app
    (-> main-routes
        wrap-session
        (wrap-file "public")
        db-middleware))
 
-;(require 'swank.swank)
-;(swank.swank/start-server "/dev/null" :port 4005)
+(comment
+  (require 'swank.swank)
+  (swank.swank/start-repl)
 
-
-;(use 'clojure.contrib.repl-utils)
-;(show server)
-;(.stop server)
-
-;(with-db (find-jar "leiningen"))
-
-
-;(def server (run-server {:port 8000} "/*" (servlet clojars-app)))
+  (with-db (find-jar "leiningen"))
+  (def server (run-server {:port 8000} "/*" (servlet clojars-app)))
+  (.stop server))
