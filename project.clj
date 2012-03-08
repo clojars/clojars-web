@@ -1,4 +1,4 @@
-(defproject clojars-web "0.6.2"
+(defproject clojars-web "0.7.0-SNAPSHOT"
   :aot [clojars.scp]
   :main clojars.main
   :dependencies [[org.clojure/clojure "1.2.1"]
@@ -10,7 +10,8 @@
                  [compojure "0.5.2"]
                  [ring/ring-jetty-adapter "0.3.1"]
                  [hiccup "0.3.0"]
-                 [cheshire "2.0.2"]
+                 [cheshire "2.2.2"]
+                 [org.mindrot/jbcrypt "0.3m"]
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.6.17"]
                  [org.apache.commons/commons-email "1.2"]]
