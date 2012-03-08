@@ -57,6 +57,10 @@
   `(sql/with-connection (:db config)
      ~@body))
 
+(defn bcrypt [s]
+  (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
+
+;; ಠ_ಠ
 (defn sha1 [& s]
   (when-let [s (seq s)]
     (let [md (MessageDigest/getInstance "SHA")]
@@ -79,14 +83,15 @@
   (sql/with-query-results rs ["select * from groups where name like ?" group]
     (doall (map :user rs))))
 
-(defn authed? [given-password user]
-  (or (BCrypt/checkpw given-password (:password user))
-      (= (:password user) (sha1 (:salt user) given-password))))
+(defn authed? [plaintext user]
+  (or (try (BCrypt/checkpw plaintext (:password user))
+           (catch java.lang.IllegalArgumentException _))
+      (= (:password user) (sha1 (:salt user) plaintext))))
 
-(defn auth-user [user given-password]
+(defn auth-user [user plaintext]
   (sql/with-query-results rs
       ["select * from users where (user = ? or email = ?)" user user]
-    (first (filter (partial authed? given-password) rs))))
+    (first (filter (partial authed? plaintext) rs))))
 
 (defn jars-by-user [user]
   (sql/with-query-results rs [(str "select * from jars where user = ? "
@@ -125,24 +130,23 @@
         (first rs))))
 
 (defn add-user [email user password ssh-key]
-  (let [salt (rand-string 16)]
-    (sql/insert-values :users
-                       [:email :user :password :salt :ssh_key :created]
-                       [email user (sha1 salt password) salt ssh-key (Date.)])
-    (sql/insert-values :groups
-                       [:name :user]
-                       [(str "org.clojars." user) user])
-    (write-key-file (:key-file config))))
+  (sql/insert-values :users
+                     ;; TODO: remove salt field
+                     [:email :user :password :salt :ssh_key :created]
+                     [email user (bcrypt password) "" ssh-key (Date.)])
+  (sql/insert-values :groups
+                     [:name :user]
+                     [(str "org.clojars." user) user])
+  (write-key-file (:key-file config)))
 
 (defn update-user [account email user password ssh-key]
-  (let [salt (rand-string 16)]
-   (sql/update-values :users ["user=?" account]
-                      {:email email
-                       :user user
-                       :salt salt
-                       :password (sha1 salt password)
-                       :ssh_key ssh-key})
-   (write-key-file (:key-file config))))
+  (sql/update-values :users ["user=?" account]
+                     {:email email
+                      :user user
+                      :salt ""
+                      :password (bcrypt password)
+                      :ssh_key ssh-key})
+  (write-key-file (:key-file config)))
 
 (defn add-member [group user]
   (sql/insert-records :groups {:name group :user user}))
@@ -206,4 +210,4 @@
                       :description "An dog awesome and non-existent test jar."
                       :homepage "http://clojars.org/"
                       :authors ["Alex Osborne" "a little fish"]}))
-  (with-db (find-user "atotx")))
+  (with-db (find-user "tech3")))

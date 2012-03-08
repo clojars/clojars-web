@@ -3,6 +3,7 @@
       :subname "data/db"}
  :key-file "data/authorized_keys"
  :repo "data/repo"
+ :bcrypt-work-factor 12
  :mail {:hostname "smtp.gmail.com"
         :username "clojars@pupeno.com"
         :password "fuuuuuu"
