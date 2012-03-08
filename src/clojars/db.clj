@@ -5,7 +5,8 @@
             [clojure.java.jdbc :as sql])
   (:import java.security.MessageDigest
            java.util.Date
-           java.io.File))
+           java.io.File
+           org.mindrot.jbcrypt.BCrypt))
 
 (def ^{:private true} ssh-options
   "no-agent-forwarding,no-port-forwarding,no-pty,no-X11-forwarding")
@@ -78,10 +79,14 @@
   (sql/with-query-results rs ["select * from groups where name like ?" group]
     (doall (map :user rs))))
 
-(defn auth-user [user pass]
+(defn authed? [given-password user]
+  (or (BCrypt/checkpw given-password (:password user))
+      (= (:password user) (sha1 (:salt user) given-password))))
+
+(defn auth-user [user given-password]
   (sql/with-query-results rs
       ["select * from users where (user = ? or email = ?)" user user]
-    (first (filter #(= (:password %) (sha1 (:salt %) pass)) rs))))
+    (first (filter (partial authed? given-password) rs))))
 
 (defn jars-by-user [user]
   (sql/with-query-results rs [(str "select * from jars where user = ? "
