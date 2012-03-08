@@ -2,7 +2,7 @@
   :aot [clojars.scp]
   :main clojars.main
   :dependencies [[org.clojure/clojure "1.2.1"]
-                 [org.clojure/java.jdbc "0.1.1"]
+                 [org.clojure/java.jdbc "0.1.3"]
                  [org.apache.maven/maven-ant-tasks "2.0.10"]
                  [org.apache.maven/maven-artifact-manager "2.2.1"]
                  [org.apache.maven/maven-model "2.2.1"]
