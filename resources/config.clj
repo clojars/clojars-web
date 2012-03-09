@@ -2,7 +2,7 @@
       :subprotocol "sqlite"
       :subname "data/db"}
  :key-file "data/authorized_keys"
- :repo "data/repo"
+ :repo "/home/clojars/repo"
  :bcrypt-work-factor 12
  :mail {:hostname "smtp.gmail.com"
         :username "clojars@pupeno.com"
