@@ -26,5 +26,9 @@
 (defn login [{username "user" password "password"}]
   (if-let [user (auth-user username password)]
     (let [response (redirect "/")]
+      ;; presence of salt indicates sha1'd password, so re-hash to bcrypt
+      (when (not (empty? (:salt user "")))
+        (update-user (:user user) (:email user) (:user user)
+                     password (:ssh_key user)))
       (assoc-in response [:session :account] (:user user)))
     (login-form "Incorrect username or password.")))
