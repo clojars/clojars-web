@@ -1,4 +1,4 @@
-(defproject clojars-web "0.6.4"
+(defproject clojars-web "0.7.0-SNAPSHOT"
   :aot [clojars.scp]
   :main clojars.main
   :dependencies [[org.clojure/clojure "1.2.1"]
