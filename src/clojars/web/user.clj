@@ -112,17 +112,19 @@
 
 ;; TODO: move this to another file?
 (defn send-mail [to subject message]
-  (doto (SimpleEmail.)
-    (.setHostName ((config/config :mail) :hostname))
-    (.setAuthentication ((config/config :mail) :username)
-                        ((config/config :mail) :password))
-    (.setSslSmtpPort (str ((config/config :mail) :port)))
-    (.setSSL ((config/config :mail) :ssl))
-    (.setFrom "clojars@pupeno.com" "Clojars")
-    (.addTo to)
-    (.setSubject subject)
-    (.setMsg message)
-    (.send)))
+  (let [{:keys [hostname username password port ssl from]} (config/config :mail)
+        mail (doto (SimpleEmail.)
+               (.setHostName hostname)
+               (.setSslSmtpPort (str port))
+               (.setSmtpPort port)
+               (.setSSL ssl)
+               (.setFrom from "Clojars")
+               (.addTo to)
+               (.setSubject subject)
+               (.setMsg message))]
+    (when (and username password)
+      (.setAuthentication username password))
+    (.send mail)))
 
 (defn forgot-password [{email-or-username "email-or-username"}]
   (when-let [user (find-user-by-user-or-email email-or-username)]
