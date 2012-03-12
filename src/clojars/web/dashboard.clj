@@ -21,13 +21,8 @@
      (link-to
       "http://github.com/technomancy/leiningen/blob/master/README.md"
       "Leiningen")
-     " and "
-     (link-to
-      "http://github.com/ninjudd/cake"
-      "Cake")
-     " but you can use it with other build tools like "
-     (link-to "http://maven.apache.org/" "Maven") " or "
-     (link-to "http://ant.apache.org/ivy/" "Ivy") " as well."
+     ", but you can use it with other build tools like "
+     (link-to "http://maven.apache.org/" "Maven") " as well."
      [:div {:class "maven"}
       [:h3 "maven repository"]
       [:pre
