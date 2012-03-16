@@ -99,7 +99,7 @@
             :let [names (jar-names jarmap)]]
       (if-let [jarfile (some jarfiles names)]
         (do
-          (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
+          (.println *err* (str "\nDeploying " (:group jarmap) "/"
                                (:name jarmap) " " (:version jarmap)))
           (db/with-db
             (db/add-jar account jarmap true)
@@ -107,7 +107,7 @@
                                 (.toString (.toURI (File. (:repo config)))))
             (db/add-jar account jarmap)))
         (throw (Exception. (str "You need to give me one of: " names)))))
-    (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
+    (.println *err* (str "\nSuccess! Your jars are now available from "
                          "http://clojars.org/"))
     (.flush (.err ctx))))
 

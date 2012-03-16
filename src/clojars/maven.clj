@@ -21,11 +21,7 @@
 ;; TODO: find out if it's safe to just leave these hanging around like
 ;; this
 (def embedder (doto (Embedder.) (.start)))
-(def container (let [container (.getContainer embedder)]
-                 (-> container
-                     (.getLoggerManager)
-                     (.setThreshold org.codehaus.plexus.logging.Logger/LEVEL_DISABLED))
-                 container))
+(def container (.getContainer embedder))
 
 (defn model-to-map [model]
   {:name (.getArtifactId model)
