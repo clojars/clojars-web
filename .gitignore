@@ -6,6 +6,7 @@ lib/
 home
 data/
 native/
+target/
 
 # IntelliJ IDEA (La Clojure) project files
 *.ipr
