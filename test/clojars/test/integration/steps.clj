@@ -53,5 +53,7 @@
     (set! (.in shim) in)
     (set! (.out shim) out)
     (.setArgs shim (into-array [user]))
-    (scp/nail shim)
+    (try
+      (scp/nail shim)
+      (catch Exception e))
     (.toString bytes)))
