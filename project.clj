@@ -16,7 +16,7 @@
                  [org.xerial/sqlite-jdbc "3.6.17"]
                  [org.apache.commons/commons-email "1.2"]]
   :dev-dependencies [[lein-ring "0.6.2"]
-                     [kerodon "0.0.2"]
+                     [kerodon "0.0.4"]
                      [nailgun-shim "0.0.1"]]
   :ring {:handler clojars.web/clojars-app})
 

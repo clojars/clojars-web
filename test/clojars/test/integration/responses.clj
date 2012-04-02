@@ -1,6 +1,7 @@
 (ns clojars.test.integration.responses
   (:use clojure.test
         kerodon.core
+        kerodon.test
         clojars.test.integration.steps)
   (:require [clojars.web :as web]
             [clojars.test.test-helper :as help]
