@@ -23,7 +23,7 @@
      (link-to "/forgot-password" "Forgot password?") [:br]
      (submit-button "Login"))))
 
-(defn login [{username "user" password "password"}]
+(defn login [{username :user password :password}]
   (if-let [user (auth-user username password)]
     (let [response (redirect "/")]
       ;; presence of salt indicates sha1'd password, so re-hash to bcrypt

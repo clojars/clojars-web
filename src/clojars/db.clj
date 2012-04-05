@@ -34,6 +34,9 @@
   [n]
   (apply str (repeatedly n #(rand-nth constituent-chars))))
 
+(defn ^:dynamic get-time []
+  (Date.))
+
 (defn write-key-file [path]
   (locking (:key-file config)
    (let [new-file (File. (str path ".new"))]
@@ -47,15 +50,13 @@
                             "\n")))))
      (.renameTo new-file (File. path)))))
 
-(defn db-middleware
-  [handler]
-  (fn [request]
-    (sql/with-connection (:db config) (handler request))))
-
 (defmacro with-db
   [& body]
-  `(sql/with-connection (:db config)
-     ~@body))
+  ;;TODO does connection sharing break something when deployed?
+  `(if (sql/find-connection)
+     (do ~@body)
+     (sql/with-connection (:db config)
+       ~@body)))
 
 (defn bcrypt [s]
   (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
@@ -90,7 +91,7 @@
 
 (defn auth-user [user plaintext]
   (sql/with-query-results rs
-      ["select * from users where (user = ? or email = ?)" user user]
+    ["select * from users where (user = ? or email = ?)" user user]
     (first (filter (partial authed? plaintext) rs))))
 
 (defn jars-by-user [user]
@@ -100,15 +101,15 @@
 
 (defn jars-by-group [group]
   (sql/with-query-results rs [(str "select * from jars where "
-                               "group_name = ? group by jar_name")
-                          group]
+                                   "group_name = ? group by jar_name")
+                              group]
     (vec rs)))
 
 (defn recent-jars []
   (sql/with-query-results rs
       [(str "select * from jars group by group_name, jar_name "
             "order by created desc limit 5")]
-    (vec rs)))
+      (vec rs)))
 
 (defn find-canon-jar [jarname]
   (sql/with-query-results rs
@@ -116,24 +117,25 @@
             "jar_name = ? and group_name = ? "
             "order by created desc limit 1")
        jarname jarname]
-    (first rs)))
+      (first rs)))
 
 (defn find-jar
   ([jarname]
-     (sql/with-query-results rs [(str "select * from jars where "
-                                  "jar_name = ?") jarname]
+     (sql/with-query-results rs
+       [(str "select * from jars where jar_name = ?") jarname]
        (first rs)))
   ([group jarname]
-      (sql/with-query-results rs [(str "select * from jars where group_name = ? and "
-                                   "jar_name = ? order by created desc "
-                                   "limit 1") group jarname]
-        (first rs))))
+     (sql/with-query-results rs
+       [(str "select * from jars where group_name = ? and "
+             "jar_name = ? order by created desc "
+             "limit 1") group jarname]
+       (first rs))))
 
 (defn add-user [email user password ssh-key]
   (sql/insert-values :users
                      ;; TODO: remove salt field
                      [:email :user :password :salt :ssh_key :created]
-                     [email user (bcrypt password) "" ssh-key (Date.)])
+                     [email user (bcrypt password) "" ssh-key (get-time)])
   (sql/insert-values :groups
                      [:name :user]
                      [(str "org.clojars." user) user])
@@ -169,9 +171,7 @@
   (when-not (re-matches #"^[a-z0-9-_.]+$" (:name jarmap))
     (throw (Exception. (str "Jar names must consist solely of lowercase "
                             "letters, numbers, hyphens and underscores."))))
-
-  (sql/with-connection (:db config)
-    (sql/transaction
+  (sql/transaction
      (when check-only (sql/set-rollback-only))
      (check-and-add-group account (:group jarmap) (:name jarmap))
      (sql/insert-records :jars
@@ -179,11 +179,11 @@
                           :jar_name   (:name jarmap)
                           :version    (:version jarmap)
                           :user       account
-                          :created    (Date.)
+                          :created    (get-time)
                           :description (:description jarmap)
                           :homepage   (:homepage jarmap)
                           :authors    (str/join ", " (map #(.replace % "," "")
-                                                          (:authors jarmap)))}))))
+                                                          (:authors jarmap)))})))
 
 (defn quote-hyphenated
   "Wraps hyphenated-words in double quotes."
@@ -196,7 +196,7 @@
   (sql/with-query-results rs
       [(str "select jar_name, group_name from search where "
             "content match ? "
-	    "order by rowid desc "
+            "order by rowid desc "
             "limit 100 "
             "offset ?")
        (quote-hyphenated query)

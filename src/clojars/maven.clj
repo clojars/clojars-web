@@ -94,5 +94,7 @@
 (defn deploy-model [jarfile model repo-path]
   (.deploy
    (.lookup container ArtifactDeployer/ROLE)
-   jarfile (make-artifact model) (make-repo "clojars" repo-path)
+   jarfile
+   (make-artifact model)
+   (make-repo "clojars" repo-path)
    (make-local-repo)))
