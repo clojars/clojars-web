@@ -1,9 +1,9 @@
 (ns clojars.web.dashboard
   (:use clojars.web.common
         clojars.db
-        hiccup.core
         hiccup.page-helpers
-        hiccup.form-helpers))
+        hiccup.form-helpers
+        hiccup.core))
 
 (defn index-page [account]
   (html-doc account nil

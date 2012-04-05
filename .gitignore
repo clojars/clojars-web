@@ -1,7 +1,8 @@
 *.class
-*.jar
 *.swp
-#*
+\#*
+\.#*
+lib/
 home
 data/
 native/

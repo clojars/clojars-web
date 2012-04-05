@@ -10,8 +10,7 @@
    "<![endif]-->"))
 
 (defn html-doc [account title & body]
-  (html
-   "<!DOCTYPE html>"
+  (html5
    [:html {:lang :en}
     [:head
      [:meta {:charset "utf-8"}]

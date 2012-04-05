@@ -1,0 +1,3 @@
+language: clojure
+before_script: 
+  - "mkdir data && sqlite3 data/test_db < clojars.sql"
