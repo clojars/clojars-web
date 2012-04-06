@@ -99,22 +99,21 @@
             :let [names (jar-names jarmap)]]
       (if-let [jarfile (some jarfiles names)]
         (do
-          (.println *err* (str "\nDeploying " (:group jarmap) "/"
-                               (:name jarmap) " " (:version jarmap)))
+          (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
+                                    (:name jarmap) " " (:version jarmap)))
           (db/with-db
             (db/add-jar account jarmap true)
             (maven/deploy-model jarfile model
                                 (.toString (.toURI (File. (:repo config)))))
             (db/add-jar account jarmap)))
         (throw (Exception. (str "You need to give me one of: " names)))))
-    (.println *err* (str "\nSuccess! Your jars are now available from "
-                         "http://clojars.org/"))
+    (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
+                              "http://clojars.org/"))
     (.flush (.err ctx))))
 
 (defn nail [#^NGContext ctx]
   (let [old-out System/out]
     (try
-      (System/setOut (.err ctx))
       (let [in (.in ctx)
             err (.err ctx)
             account (first (.getArgs ctx))]
@@ -122,7 +121,7 @@
         (when-not account
           (throw (Exception. "I don't know who you are!")))
 
-        (doto (.err ctx)
+        (doto err
           (.println (str "Welcome to Clojars, " account "!"))
           (.flush))
 
@@ -151,8 +150,7 @@
         ;; (.printStackTrace t *err*)
         (.println (.err ctx) (str "Error: " (.getMessage t)))
         (.flush (.err ctx))
-        (throw t))
-      (finally (System/setOut old-out)))))
+        (throw t)))))
 
 (defn -nailMain [context]
   (nail context))

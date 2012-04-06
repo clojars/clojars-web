@@ -183,9 +183,7 @@
 (deftest user-can-register-and-scp
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-    (is (= ;TODO: issue #22
-           ;"Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
-           "Welcome to Clojars, dantheman!\n[INFO] Retrieving previous metadata from clojars\n[INFO] repository metadata for: 'artifact fake:test' could not be found on repository: clojars, so will be created\n[INFO] Uploading repository metadata for: 'artifact fake:test'\n[INFO] Uploading project information for test 0.0.1\n";"Welcome to Clojars, dantheman!\n\nDeploying fake/test
+    (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
            (scp valid-ssh-key "test.jar" "test.pom")))
   (-> (session web/clojars-app)
       (visit "/groups/fake")
@@ -211,9 +209,7 @@
         (fill-in "Confirm password:" "password")
         (fill-in "SSH public key:" new-ssh-key)
         (press "Update"))
-    (is (= ;TODO: issue #22
-           ;"Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
-           "Welcome to Clojars, dantheman!\n[INFO] Retrieving previous metadata from clojars\n[INFO] repository metadata for: 'artifact fake:test' could not be found on repository: clojars, so will be created\n[INFO] Uploading repository metadata for: 'artifact fake:test'\n[INFO] Uploading project information for test 0.0.1\n";"Welcome to Clojars, dantheman!\n\nDeploying fake/test
+    (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
            (scp new-ssh-key "test.jar" "test.pom")))
     (is (thrown? Exception (scp valid-ssh-key "test.jar" "test.pom")))))
 
@@ -230,6 +226,12 @@
       (press "Update"))
   (is (thrown? Exception (scp valid-ssh-key "test.jar" "test.pom"))))
 
+(deftest scp-wants-filenames-in-specific-format
+  (-> (session web/clojars-app)
+      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+  (is (= "Welcome to Clojars, dantheman!\nError: You need to give me one of: [\"test-0.0.1.jar\" \"test.jar\"]\n"
+         (scp valid-ssh-key "fake.jar" "test.pom"))))
+
 (deftest user-can-not-scp-to-group-they-are-not-a-member-of
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
@@ -237,9 +239,8 @@
   (let [ssh-key (str valid-ssh-key "1")]
     (-> (session web/clojars-app)
         (register-as "fixture" "fixture@example.org" "password" ssh-key))
-    (is (thrown-with-msg? Exception
-          #"You don't have access to the fake group."
-          (scp ssh-key "test.jar" "test.pom")))))
+    (is (= "Welcome to Clojars, fixture!\n\nDeploying fake/test 0.0.1\nError: You don't have access to the fake group.\n"
+           (scp ssh-key "test.jar" "test.pom")))))
 
 (deftest member-can-add-user-to-group
   (-> (session web/clojars-app)
