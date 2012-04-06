@@ -1,13 +1,13 @@
 (ns clojars.web
   (:use [clojars.db :only [with-db group-members find-user add-member
-                           find-jar find-canon-jar]]
+                           find-jar recent-versions count-versions]]
         [clojars.web.dashboard :only [dashboard index-page]]
         [clojars.web.search :only [search]]
         [clojars.web.user :only [profile-form update-profile show-user
                                  register register-form
                                  forgot-password forgot-password-form]]
         [clojars.web.group :only [show-group]]
-        [clojars.web.jar :only [show-jar]]
+        [clojars.web.jar :only [show-jar show-versions]]
         [clojars.web.common :only [html-doc]]
         [clojars.web.login :only [login login-form]]
         [hiccup.core :only [html h]]
@@ -84,16 +84,59 @@
        (try-account
         (show-user account user))
        :next))
-  (GET ["/:jarname", :jarname #"[^/]+"] {session :session {jarname :jarname} :params}
-    (if-let [jar (with-db (find-canon-jar jarname))]
+  (GET ["/:jarname", :jarname #"[^/]+"]
+       {session :session {jarname :jarname} :params}
+    (if-let [jar (with-db (find-jar jarname jarname))]
       (try-account
-       (show-jar account jar))
+       (show-jar account
+                 jar
+                 (recent-versions jarname jarname 5)
+                 (count-versions jarname jarname)))
       :next))
-  (GET ["/:group/:jarname", :group #"[^/]+", :jarname #"[^/]+"]
+    (GET ["/:jarname/versions"
+        :jarname #"[^/]+" :group #"[^/]+"]
+       {session :session {jarname :jarname} :params}
+    (if-let [jar (with-db (find-jar jarname jarname))]
+      (try-account
+       (show-versions account jar (recent-versions jarname jarname)))
+      :next))
+  (GET ["/:jarname/versions/:version"
+        :jarname #"[^/]+" :version #"[^/]+"]
+       {session :session
+        {version :version jarname :jarname} :params}
+    (if-let [jar (with-db (find-jar jarname jarname version))]
+      (try-account
+       (show-jar account
+                 jar
+                 (recent-versions jarname jarname 5)
+                 (count-versions jarname jarname)))
+      :next))
+  (GET ["/:group/:jarname", :jarname #"[^/]+" :group #"[^/]+"]
        {session :session {group :group jarname :jarname} :params}
     (if-let [jar (with-db (find-jar group jarname))]
       (try-account
-       (show-jar account jar))
+       (show-jar account
+                 jar
+                 (recent-versions group jarname 5)
+                 (count-versions group jarname)))
+      :next))
+  (GET ["/:group/:jarname/versions"
+        :jarname #"[^/]+" :group #"[^/]+"]
+       {session :session {group :group jarname :jarname} :params}
+    (if-let [jar (with-db (find-jar group jarname))]
+      (try-account
+       (show-versions account jar (recent-versions group jarname)))
+      :next))
+  (GET ["/:group/:jarname/versions/:version"
+        :jarname #"[^/]+" :group #"[^/]+" :version #"[^/]+"]
+       {session :session
+        {version :version group :group jarname :jarname} :params}
+    (if-let [jar (with-db (find-jar group jarname version))]
+      (try-account
+       (show-jar account
+                 jar
+                 (recent-versions group jarname 5)
+                 (count-versions group jarname)))
       :next))
   (GET "/:user" {session :session {user :user} :params}
     (if-let [user (with-db (find-user user))]
@@ -118,6 +161,6 @@
   (require 'swank.swank)
   (swank.swank/start-repl)
 
-  (with-db (find-jar "leiningen"))
+  (with-db (find-jar "leiningen" "leiningen"))
   (def server (run-server {:port 8000} "/*" (servlet clojars-app)))
   (.stop server))

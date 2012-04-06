@@ -4,7 +4,10 @@
         hiccup.page-helpers
         hiccup.form-helpers))
 
-(defn show-jar [account jar]
+(defn url-for [jar]
+  (str (jar-url jar) "/versions/" (:version jar)))
+
+(defn show-jar [account jar recent-versions count]
   (html-doc account (:jar_name jar)
             [:h1 (jar-link jar)]
             (:description jar)
@@ -28,4 +31,23 @@
                (tag "</dependency>")]]
              [:p "Pushed by " (user-link (:user jar)) " on " (java.util.Date. (:created jar))]
              (when-let [homepage (:homepage jar)]
-               [:p (link-to homepage (str (h homepage)))])]))
+               [:p (link-to homepage (str (h homepage)))])
+             [:div {:class "versions"}
+              [:h3 "recent versions"]
+              [:ul
+               (for [v recent-versions]
+                 [:li (link-to (url-for (assoc jar
+                                          :version (:version v)))
+                               (:version v))])]
+              [:p (link-to (str (jar-url jar) "/versions")
+                           (str "show all versions (" count " total)"))]]]))
+
+(defn show-versions [account jar versions]
+  (html-doc account (str "all versions of "(jar-str jar))
+            [:h1 "all versions of "(jar-str jar)]
+            [:div {:class "versions"}
+             [:ul
+              (for [v versions]
+                [:li (link-to (url-for (assoc jar
+                                         :version (:version v)))
+                              (:version v))])]]))

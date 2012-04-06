@@ -61,14 +61,18 @@
 (defn tag [s]
   (html [:span {:class "tag"} (h s)]))
 
+(defn jar-url [jar]
+  (if (= (:group_name jar) (:jar_name jar))
+    (str "/" (:jar_name jar))
+    (str "/" (:group_name jar) "/" (:jar_name jar))))
+
+(defn jar-str [jar]
+  (if (= (:group_name jar) (:jar_name jar))
+    (:jar_name jar)
+    (str (:group_name jar) "/" (:jar_name jar))))
+
 (defn jar-link [jar]
-  (link-to
-   (if (= (:group_name jar) (:jar_name jar))
-     (str "/" (:jar_name jar))
-     (str "/" (:group_name jar) "/" (:jar_name jar)))
-   (if (= (:group_name jar) (:jar_name jar))
-     (:jar_name jar)
-     (str (:group_name jar) "/" (:jar_name jar)))))
+  (link-to (jar-url jar) (jar-str jar)))
 
 (defn user-link [user]
   (link-to (str "/users/" user)

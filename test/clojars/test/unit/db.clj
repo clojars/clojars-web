@@ -106,8 +106,6 @@
     (binding [db/get-time (fn [] (java.sql.Timestamp. ms))]
       (is (db/add-jar "test-user" jarmap))
       (are [x] (submap result x)
-           (db/find-canon-jar name)
-           (db/find-jar name)
            (db/find-jar name name)
            (first (db/jars-by-group name))
            (first (db/jars-by-user "test-user"))))))
@@ -121,11 +119,29 @@
                 :group_name name }]
     (binding [db/get-time (fn [] (java.sql.Timestamp. 0))]
       (is (db/add-jar "test-user" jarmap))
-          (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
-            (is (db/add-jar "test-user" (assoc jarmap :version "2")))))
+      (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
+        (is (db/add-jar "test-user" (assoc jarmap :version "2")))))
     (let [jars (db/jars-by-group name)]
       (dorun (map #(is (submap %1 %2)) [result] jars))
       (is (= 1 (count jars))))))
+
+(deftest jars-with-multiple-versions
+  (let [name "tester"
+        jarmap {:name name :group name :version "1" }]
+    (binding [db/get-time (fn [] (java.sql.Timestamp. 0))]
+      (is (db/add-jar "test-user" jarmap)))
+    (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
+      (is (db/add-jar "test-user" (assoc jarmap :version "2"))))
+    (binding [db/get-time (fn [] (java.sql.Timestamp. 2))]
+      (is (db/add-jar "test-user" (assoc jarmap :version "3"))))
+    (binding [db/get-time (fn [] (java.sql.Timestamp. 3))]
+      (is (db/add-jar "test-user" (assoc jarmap :version "4-SNAPSHOT"))))
+    (is (= 4 (db/count-versions name name)))
+    (is (= ["4-SNAPSHOT" "3" "2" "1"]
+           (map :version (db/recent-versions name name))))
+    (is (= ["4-SNAPSHOT"] (map :version (db/recent-versions name name 1))))
+    (is (= "4-SNAPSHOT" (:version (db/find-jar name name))))
+    (is (= "4-SNAPSHOT" (:version (db/find-jar name name "4-SNAPSHOT"))))))
 
 (deftest jars-by-group-returns-all-jars-in-group
   (let [name "tester"
@@ -287,3 +303,4 @@
                 (db/recent-jars)))))
 
 ;; TODO: search tests?
+;; TODO: recent-versions
