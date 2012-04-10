@@ -140,7 +140,7 @@
     (is (= ["4-SNAPSHOT" "3" "2" "1"]
            (map :version (db/recent-versions name name))))
     (is (= ["4-SNAPSHOT"] (map :version (db/recent-versions name name 1))))
-    (is (= "4-SNAPSHOT" (:version (db/find-jar name name))))
+    (is (= "3" (:version (db/find-jar name name))))
     (is (= "4-SNAPSHOT" (:version (db/find-jar name name "4-SNAPSHOT"))))))
 
 (deftest jars-by-group-returns-all-jars-in-group

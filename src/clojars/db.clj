@@ -132,12 +132,18 @@
 
 (defn find-jar
   ([group jarname]
-     (sql/with-query-results rs
+     (or (sql/with-query-results rs
            [(str "select * from jars where group_name = ? and "
-                 "jar_name = ?"
+                 "jar_name = ? and version not like '%-SNAPSHOT'"
                  " order by created desc limit 1")
             group jarname]
-           (first rs)))
+           (first rs))
+         (sql/with-query-results rs
+           [(str "select * from jars where group_name = ? and "
+                 "jar_name = ? and version like '%-SNAPSHOT'"
+                 " order by created desc limit 1")
+            group jarname]
+           (first rs))))
   ([group jarname version]
      (sql/with-query-results rs
        [(str "select * from jars where group_name = ? and "
