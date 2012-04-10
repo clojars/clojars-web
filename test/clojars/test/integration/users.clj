@@ -7,9 +7,17 @@
             [clojars.test.test-helper :as help]
             [net.cgrand.enlive-html :as enlive]
             [clojure.java.io :as io]
-            [clojars.config :as config]))
+            [clojars.config :as config]
+            [cemerick.pomegranate.aether :as aether]))
 
 (help/use-fixtures)
+
+(defn delete-recursive
+  [dir]
+  (when (.isDirectory dir)
+    (doseq [file (.listFiles dir)]
+      (delete-recursive file)))
+  (.delete dir))
 
 (deftest user-can-register
   (-> (session web/clojars-app)
@@ -183,7 +191,6 @@
 (deftest user-can-register-and-scp
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-
     (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
            (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))
   (-> (session web/clojars-app)
@@ -191,12 +198,20 @@
       (has (status? 200))
       (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
               (has (text? "dantheman"))))
-  ;;TODO: (use pomegranate to)? verify scp'd file can be a dependency
-  ;;in the mean time here is a simple test to see something was added
-  ;;to the repo
   (is (= 6
          (count
-          (.list (io/file (:repo config/config) "fake" "test" "0.0.1"))))))
+          (.list (io/file (:repo config/config) "fake" "test" "0.0.1")))))
+  (let [local-repo (io/file (System/getProperty "java.io.tmpdir")
+                            "clojars-test-tmp")]
+    (delete-recursive local-repo)
+    (is (= {'[fake/test "0.0.1"] nil}
+           (aether/resolve-dependencies
+            :coordinates '[[fake/test "0.0.1"]]
+            :repositories {"local" (-> (:repo config/config)
+                                       io/file
+                                       .toURI
+                                       .toString)}
+            :local-repo local-repo)))))
 
 (deftest user-can-update-and-scp
   (-> (session web/clojars-app)
