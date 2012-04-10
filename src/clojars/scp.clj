@@ -112,7 +112,8 @@
                                          (:version jarmap)]
                            :jar-file jarfile
                            :pom-file (:file metafile)
-                           :repository {"local" (file-repo (:repo config))})
+                           :repository {"local" (file-repo (:repo config))}
+                           :transfer-listener :stdout)
             (db/add-jar account jarmap)))
         (throw (Exception. (str "You need to give me one of: " names)))))
     (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
