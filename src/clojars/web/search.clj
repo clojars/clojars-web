@@ -52,7 +52,7 @@
            [:td (format-date created)])]])]))
 
 (defn search [account params]
-  (let [q (params "q")]
-    (if (= (params "format") "json")
+  (let [q (params :q)]
+    (if (= (params :format) "json")
       (json-search q)
       (html-search account q))))
