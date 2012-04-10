@@ -1,10 +1,8 @@
 (defproject clojars-web "0.7.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojure/java.jdbc "0.1.3"]
-                 [org.apache.maven/maven-ant-tasks "2.0.10"]
-                 [org.apache.maven/maven-artifact-manager "2.2.1"]
-                 [org.apache.maven/maven-model "2.2.1"]
-                 [org.apache.maven/maven-project "2.2.1"]
+                 [org.apache.maven/maven-model "3.0.4"]
+                 [com.cemerick/pomegranate "0.0.10"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.2"]
                  [hiccup "0.3.8"]
