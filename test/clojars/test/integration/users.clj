@@ -183,8 +183,9 @@
 (deftest user-can-register-and-scp
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+
     (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
-           (scp valid-ssh-key "test.jar" "test.pom")))
+           (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))
   (-> (session web/clojars-app)
       (visit "/groups/fake")
       (has (status? 200))
@@ -210,8 +211,8 @@
         (fill-in "SSH public key:" new-ssh-key)
         (press "Update"))
     (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
-           (scp new-ssh-key "test.jar" "test.pom")))
-    (is (thrown? Exception (scp valid-ssh-key "test.jar" "test.pom")))))
+           (scp new-ssh-key "test.jar" "test-0.0.1/test.pom")))
+    (is (thrown? Exception (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))))
 
 (deftest user-can-remove-key-and-scp-fails
   (-> (session web/clojars-app)
@@ -224,23 +225,24 @@
       (fill-in "Confirm password:" "password")
       (fill-in "SSH public key:" "")
       (press "Update"))
-  (is (thrown? Exception (scp valid-ssh-key "test.jar" "test.pom"))))
+  (is (thrown? Exception (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom"))))
 
 (deftest scp-wants-filenames-in-specific-format
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
   (is (= "Welcome to Clojars, dantheman!\nError: You need to give me one of: [\"test-0.0.1.jar\" \"test.jar\"]\n"
-         (scp valid-ssh-key "fake.jar" "test.pom"))))
+         (scp valid-ssh-key "fake.jar" "test-0.0.1/test.pom"))))
 
 (deftest user-can-not-scp-to-group-they-are-not-a-member-of
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-  (scp valid-ssh-key "test.jar" "test.pom")
+  (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")
   (let [ssh-key (str valid-ssh-key "1")]
     (-> (session web/clojars-app)
         (register-as "fixture" "fixture@example.org" "password" ssh-key))
     (is (= "Welcome to Clojars, fixture!\n\nDeploying fake/test 0.0.1\nError: You don't have access to the fake group.\n"
-           (scp ssh-key "test.jar" "test.pom")))))
+           (scp ssh-key "test.jar" "test-0.0.1/test.pom")))))
+
 
 (deftest member-can-add-user-to-group
   (-> (session web/clojars-app)
@@ -271,21 +273,3 @@
       (visit "/users/dantheman")
       (within [:article :h1]
               (has (text? "dantheman")))))
-
-(deftest jars-can-be-viewed
-  (-> (session web/clojars-app)
-      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-  (scp valid-ssh-key "test.jar" "test.pom")
-  (-> (session web/clojars-app)
-      (visit "/fake/test")
-      (within [:article :h1]
-              (has (text? "fake/test")))))
-
-(deftest canonical-jars-can-be-viewed
-  (-> (session web/clojars-app)
-      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-  (scp valid-ssh-key "fake.jar" "fake.pom")
-  (-> (session web/clojars-app)
-      (visit "/fake")
-      (within [:article :h1]
-              (has (text? "fake")))))

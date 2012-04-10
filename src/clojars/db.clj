@@ -105,30 +105,45 @@
                               group]
     (vec rs)))
 
-(defn recent-jars []
-  (sql/with-query-results rs
-      [(str "select * from jars group by group_name, jar_name "
-            "order by created desc limit 5")]
-      (vec rs)))
-
-(defn find-canon-jar [jarname]
-  (sql/with-query-results rs
-      [(str "select * from jars where "
-            "jar_name = ? and group_name = ? "
-            "order by created desc limit 1")
-       jarname jarname]
-      (first rs)))
-
-(defn find-jar
-  ([jarname]
-     (sql/with-query-results rs
-       [(str "select * from jars where jar_name = ?") jarname]
-       (first rs)))
+(defn recent-versions
   ([group jarname]
      (sql/with-query-results rs
+       [(str "select distinct version from jars where group_name = ? "
+             "and jar_name = ? order by created desc ") group jarname]
+       (vec rs)))
+    ([group jarname num]
+     (sql/with-query-results rs
+       [(str "select distinct version from jars where group_name = ? "
+             "and jar_name = ? order by created desc "
+             "limit ?") group jarname num]
+       (vec rs))))
+
+(defn count-versions [group jarname]
+  (sql/with-query-results rs
+    [(str "select count(distinct version) from jars where group_name = ? "
+          "and jar_name = ?") group jarname]
+    ((first rs) (keyword "count(distinct version)"))))
+
+(defn recent-jars []
+  (sql/with-query-results rs
+    [(str "select * from jars group by group_name, jar_name "
+          "order by created desc limit 5")]
+    (vec rs)))
+
+(defn find-jar
+  ([group jarname]
+     (sql/with-query-results rs
+           [(str "select * from jars where group_name = ? and "
+                 "jar_name = ?"
+                 " order by created desc limit 1")
+            group jarname]
+           (first rs)))
+  ([group jarname version]
+     (sql/with-query-results rs
        [(str "select * from jars where group_name = ? and "
-             "jar_name = ? order by created desc "
-             "limit 1") group jarname]
+             "jar_name = ? and version = ?"
+             " order by created desc limit 1")
+        group jarname version]
        (first rs))))
 
 (defn add-user [email user password ssh-key]
@@ -167,23 +182,37 @@
         (throw (Exception. (str "You don't have access to the "
                                 group " group.")))))))
 
+(defn- add-jar-helper [account jarmap]
+  (check-and-add-group account (:group jarmap) (:name jarmap))
+  (sql/insert-records :jars
+                      {:group_name (:group jarmap)
+                       :jar_name   (:name jarmap)
+                       :version    (:version jarmap)
+                       :user       account
+                       :created    (get-time)
+                       :description (:description jarmap)
+                       :homepage   (:homepage jarmap)
+                       :authors    (str/join ", " (map #(.replace % "," "")
+                                                       (:authors jarmap)))}))
+
+(defn- using-savepoints-rollback [f]
+  ;;Required for tests as clojure.java.jdbc
+  ;;doesn't handle rolling back nested transactions
+  ;;Also sqlite driver doesn't support .setSavepoint
+  (sql/do-commands "SAVEPOINT s")
+  (try
+    (f)
+    (finally
+     (sql/do-commands "ROLLBACK TO s"))))
+
 (defn add-jar [account jarmap & [check-only]]
   (when-not (re-matches #"^[a-z0-9-_.]+$" (:name jarmap))
     (throw (Exception. (str "Jar names must consist solely of lowercase "
                             "letters, numbers, hyphens and underscores."))))
-  (sql/transaction
-     (when check-only (sql/set-rollback-only))
-     (check-and-add-group account (:group jarmap) (:name jarmap))
-     (sql/insert-records :jars
-                         {:group_name (:group jarmap)
-                          :jar_name   (:name jarmap)
-                          :version    (:version jarmap)
-                          :user       account
-                          :created    (get-time)
-                          :description (:description jarmap)
-                          :homepage   (:homepage jarmap)
-                          :authors    (str/join ", " (map #(.replace % "," "")
-                                                          (:authors jarmap)))})))
+  (sql/transaction (if check-only
+                     (using-savepoints-rollback (partial add-jar-helper
+                                                         account jarmap))
+                     (add-jar-helper account jarmap))))
 
 (defn quote-hyphenated
   "Wraps hyphenated-words in double quotes."
