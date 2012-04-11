@@ -2,7 +2,7 @@
   (import java.io.File)
   (:require [clojars.db :as db]
             [clojars.config :as config]
-            [clojure.java.jdbc :as sql]
+            [korma.db :as sql]
             [clojure.test :as test]
             [clojure.java.io :as io]))
 
@@ -17,15 +17,11 @@ Raise an exception if any deletion fails unless silently is true."
     (io/delete-file f)))
 
 (defn use-fixtures []
-  (test/use-fixtures :once
-                     (fn [f]
-                       (db/with-db (f))))
-
   (test/use-fixtures :each
                      (fn [f]
                        (let [file (File. (:repo config/config))]
                          (when (.exists file)
                            (delete-file-recursively file)))
                        (sql/transaction
-                        (sql/set-rollback-only)
+                        (sql/rollback)
                         (f)))))

@@ -1,5 +1,7 @@
 (ns clojars.db
-  (:use [clojars.config :only [config]])
+  (:use [clojars.config :only [config]]
+        korma.db
+        korma.core)
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql])
@@ -50,14 +52,6 @@
                             "\n")))))
      (.renameTo new-file (File. path)))))
 
-(defmacro with-db
-  [& body]
-  ;;TODO does connection sharing break something when deployed?
-  `(if (sql/find-connection)
-     (do ~@body)
-     (sql/with-connection (:db config)
-       ~@body)))
-
 (defn bcrypt [s]
   (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
 
@@ -68,21 +62,26 @@
       (.update md (.getBytes (apply str s)))
       (format "%040x" (java.math.BigInteger. 1 (.digest md))))))
 
+(defdb mydb (:db config))
+(defentity users)
+(defentity groups)
+(defentity jars)
+
+(defn bcrypt [s]
+  (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
+
 (defn find-user [username]
-  (sql/with-query-results rs ["select * from users where user = ?" username]
-    (first rs)))
+  (first (select users (where {:user username}))))
 
 (defn find-user-by-user-or-email [user-or-email]
-  (sql/with-query-results rs ["select * from users where user = ? or email = ?" user-or-email user-or-email]
-    (first rs)))
+  (first (select users (where (or {:user user-or-email}
+                                  {:email user-or-email})))))
 
 (defn find-groups [username]
-  (sql/with-query-results rs ["select * from groups where user = ?" username]
-    (doall (map :name rs))))
+  (map :name (select groups (fields :name) (where {:user username}))))
 
 (defn group-members [group]
-  (sql/with-query-results rs ["select * from groups where name like ?" group]
-    (doall (map :user rs))))
+  (map :user (select groups (fields :user) (where {:name group}))))
 
 (defn authed? [plaintext user]
   (or (try (BCrypt/checkpw plaintext (:password user))
@@ -90,89 +89,100 @@
       (= (:password user) (sha1 (:salt user) plaintext))))
 
 (defn auth-user [user plaintext]
-  (sql/with-query-results rs
-    ["select * from users where (user = ? or email = ?)" user user]
-    (first (filter (partial authed? plaintext) rs))))
+  (first (filter (partial authed? plaintext)
+                 (select users (where (or {:user user}
+                                          {:email user}))))))
 
 (defn jars-by-user [user]
-  (sql/with-query-results rs [(str "select * from jars where user = ? "
-                               "group by group_name, jar_name") user]
-    (vec rs)))
+  (select jars
+          (where {:user user})
+          (group :group_name :jar_name)))
 
-(defn jars-by-group [group]
-  (sql/with-query-results rs [(str "select * from jars where "
-                                   "group_name = ? group by jar_name")
-                              group]
-    (vec rs)))
+(defn jars-by-group [group-name]
+  (select jars
+          (where {:group_name group-name})
+          (group :jar_name)))
 
 (defn recent-versions
   ([group jarname]
-     (sql/with-query-results rs
-       [(str "select distinct version from jars where group_name = ? "
-             "and jar_name = ? order by created desc ") group jarname]
-       (vec rs)))
-    ([group jarname num]
-     (sql/with-query-results rs
-       [(str "select distinct version from jars where group_name = ? "
-             "and jar_name = ? order by created desc "
-             "limit ?") group jarname num]
-       (vec rs))))
+     (select jars
+             (modifier "distinct")
+             (fields :version)
+             (where {:group_name group
+                     :jar_name jarname})
+             (order :created :desc)))
+  ([group jarname num]
+     (select jars
+             (modifier "distinct")
+             (fields :version)
+             (where {:group_name group
+                     :jar_name jarname})
+             (order :created :desc)
+             (limit num))))
 
 (defn count-versions [group jarname]
-  (sql/with-query-results rs
-    [(str "select count(distinct version) from jars where group_name = ? "
-          "and jar_name = ?") group jarname]
-    ((first rs) (keyword "count(distinct version)"))))
+  (-> (exec-raw [(str "select count(distinct version) count from jars"
+                      " where group_name = ? and jar_name = ?")
+                 [group jarname]] :results)
+      first
+      :count))
 
 (defn recent-jars []
-  (sql/with-query-results rs
-    [(str "select * from jars group by group_name, jar_name "
-          "order by created desc limit 5")]
-    (vec rs)))
+  (select jars
+          (group :group_name :jar_name)
+          (order :created :desc)
+          (limit 5)))
 
 (defn find-jar
   ([group jarname]
-     (or (sql/with-query-results rs
-           [(str "select * from jars where group_name = ? and "
-                 "jar_name = ? and version not like '%-SNAPSHOT'"
-                 " order by created desc limit 1")
-            group jarname]
-           (first rs))
-         (sql/with-query-results rs
-           [(str "select * from jars where group_name = ? and "
-                 "jar_name = ? and version like '%-SNAPSHOT'"
-                 " order by created desc limit 1")
-            group jarname]
-           (first rs))))
+     (or (first (select jars
+                        (where (and {:group_name group
+                                     :jar_name jarname}
+                                    (raw "version not like '%-SNAPSHOT'")))
+                        (order :created :desc)
+                        (limit 1)))
+         (first (select jars
+                        (where (and {:group_name group
+                                     :jar_name jarname
+                                     :version [like "%-SNAPSHOT"]}))
+                        (order :created :desc)
+                        (limit 1)))))
   ([group jarname version]
-     (sql/with-query-results rs
-       [(str "select * from jars where group_name = ? and "
-             "jar_name = ? and version = ?"
-             " order by created desc limit 1")
-        group jarname version]
-       (first rs))))
+     (first (select jars
+                    (where (and {:group_name group
+                                 :jar_name jarname
+                                 :version version}))
+                    (order :created :desc)
+                    (limit 1)))))
 
 (defn add-user [email user password ssh-key]
-  (sql/insert-values :users
-                     ;; TODO: remove salt field
-                     [:email :user :password :salt :ssh_key :created]
-                     [email user (bcrypt password) "" ssh-key (get-time)])
-  (sql/insert-values :groups
-                     [:name :user]
-                     [(str "org.clojars." user) user])
+  (insert users
+          (values {:email email
+                   :user user
+                   :password (bcrypt password)
+                   :ssh_key ssh-key
+                   :created (get-time)
+                   ;;TODO: remove salt field
+                   :salt ""}))
+  (insert groups
+          (values {:name (str "org.clojars." user)
+                   :user user}))
   (write-key-file (:key-file config)))
 
 (defn update-user [account email user password ssh-key]
-  (sql/update-values :users ["user=?" account]
-                     {:email email
-                      :user user
-                      :salt ""
-                      :password (bcrypt password)
-                      :ssh_key ssh-key})
+  (update users
+          (set-fields {:email email
+                       :user user
+                       :salt ""
+                       :password (bcrypt password)
+                       :ssh_key ssh-key})
+          (where {:user account}))
   (write-key-file (:key-file config)))
 
 (defn add-member [group user]
-  (sql/insert-records :groups {:name group :user user}))
+  (insert groups
+          (values {:name group
+                   :user user})))
 
 (defn check-and-add-group [account group jar]
   (when-not (re-matches #"^[a-z0-9-_.]+$" group)
@@ -190,35 +200,45 @@
 
 (defn- add-jar-helper [account jarmap]
   (check-and-add-group account (:group jarmap) (:name jarmap))
-  (sql/insert-records :jars
-                      {:group_name (:group jarmap)
-                       :jar_name   (:name jarmap)
-                       :version    (:version jarmap)
-                       :user       account
-                       :created    (get-time)
-                       :description (:description jarmap)
-                       :homepage   (:homepage jarmap)
-                       :authors    (str/join ", " (map #(.replace % "," "")
-                                                       (:authors jarmap)))}))
+  (insert jars
+          (values {:group_name (:group jarmap)
+                   :jar_name   (:name jarmap)
+                   :version    (:version jarmap)
+                   :user       account
+                   :created    (get-time)
+                   :description (:description jarmap)
+                   :homepage   (:homepage jarmap)
+                   :authors    (str/join ", " (map #(.replace % "," "")
+                                                   (:authors jarmap)))})))
 
 (defn- using-savepoints-rollback [f]
   ;;Required for tests as clojure.java.jdbc
   ;;doesn't handle rolling back nested transactions
   ;;Also sqlite driver doesn't support .setSavepoint
-  (sql/do-commands "SAVEPOINT s")
+  (exec-raw ["SAVEPOINT s"])
   (try
     (f)
     (finally
-     (sql/do-commands "ROLLBACK TO s"))))
+     (exec-raw ["ROLLBACK TO s"]))))
 
 (defn add-jar [account jarmap & [check-only]]
   (when-not (re-matches #"^[a-z0-9-_.]+$" (:name jarmap))
     (throw (Exception. (str "Jar names must consist solely of lowercase "
                             "letters, numbers, hyphens and underscores."))))
-  (sql/transaction (if check-only
-                     (using-savepoints-rollback (partial add-jar-helper
-                                                         account jarmap))
-                     (add-jar-helper account jarmap))))
+  ;; TODO remove when fixed in korma
+  ;; Work around for korma generating a different
+  ;; connection for nested transactions
+  (if (sql/find-connection)
+    (sql/transaction
+     (if check-only
+       (using-savepoints-rollback
+        (partial add-jar-helper account jarmap))
+       (add-jar-helper account jarmap)))
+    (transaction
+     (if check-only
+       (using-savepoints-rollback
+        (partial add-jar-helper account jarmap))
+       (add-jar-helper account jarmap)))))
 
 (defn quote-hyphenated
   "Wraps hyphenated-words in double quotes."
@@ -228,21 +248,13 @@
 (defn search-jars [query & [offset]]
   ;; TODO make search less stupid, figure out some relevance ranking
   ;; scheme, do stopwords etc.
-  (sql/with-query-results rs
-      [(str "select jar_name, group_name from search where "
-            "content match ? "
-            "order by rowid desc "
-            "limit 100 "
-            "offset ?")
-       (quote-hyphenated query)
-       (or offset 0)]
+  (let [r (exec-raw [(str "select jar_name, group_name from search where "
+                          "content match ? "
+                          "order by rowid desc "
+                          "limit 100 "
+                          "offset ?")
+                     [(quote-hyphenated query)
+                      (or offset 0)]]
+                    :results)]
     ;; TODO: do something less stupidly slow
-    (vec (map #(find-jar (:group_name %) (:jar_name %)) rs))))
-
-(comment
-  (with-db
-    (add-jar "atotx" {:name "test3" :group "test3" :version "1.0"
-                      :description "An dog awesome and non-existent test jar."
-                      :homepage "http://clojars.org/"
-                      :authors ["Alex Osborne" "a little fish"]}))
-  (with-db (find-user "tech3")))
+    (vec (map #(find-jar (:group_name %) (:jar_name %)) r))))

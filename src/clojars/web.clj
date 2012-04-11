@@ -1,5 +1,5 @@
 (ns clojars.web
-  (:use [clojars.db :only [with-db group-members find-user add-member
+  (:use [clojars.db :only [group-members find-user add-member
                            find-jar recent-versions count-versions]]
         [clojars.web.dashboard :only [dashboard index-page]]
         [clojars.web.search :only [search]]
@@ -62,12 +62,12 @@
        (dashboard account)
        (index-page account))))
   (GET ["/groups/:group", :group #"[^/]+"] {session :session {group :group} :params }
-    (if-let [members (with-db (group-members group))]
+    (if-let [members (group-members group)]
       (try-account
        (show-group account group members))
       :next))
   (POST ["/groups/:group", :group #"[^/]+"] {session :session {group :group user :user} :params }
-    (if-let [members (with-db (group-members group))]
+    (if-let [members (group-members group)]
       (try-account
        (cond
         (some #{user} members)
@@ -82,13 +82,13 @@
                                                (h user)))))
       :next))
   (GET "/users/:username"  {session :session {username :username} :params}
-    (if-let [user (with-db (find-user username))]
+    (if-let [user (find-user username)]
        (try-account
         (show-user account user))
        :next))
   (GET ["/:jarname", :jarname #"[^/]+"]
        {session :session {jarname :jarname} :params}
-    (if-let [jar (with-db (find-jar jarname jarname))]
+    (if-let [jar (find-jar jarname jarname)]
       (try-account
        (show-jar account
                  jar
@@ -98,7 +98,7 @@
     (GET ["/:jarname/versions"
         :jarname #"[^/]+" :group #"[^/]+"]
        {session :session {jarname :jarname} :params}
-    (if-let [jar (with-db (find-jar jarname jarname))]
+    (if-let [jar (find-jar jarname jarname)]
       (try-account
        (show-versions account jar (recent-versions jarname jarname)))
       :next))
@@ -106,7 +106,7 @@
         :jarname #"[^/]+" :version #"[^/]+"]
        {session :session
         {version :version jarname :jarname} :params}
-    (if-let [jar (with-db (find-jar jarname jarname version))]
+    (if-let [jar (find-jar jarname jarname version)]
       (try-account
        (show-jar account
                  jar
@@ -115,7 +115,7 @@
       :next))
   (GET ["/:group/:jarname", :jarname #"[^/]+" :group #"[^/]+"]
        {session :session {group :group jarname :jarname} :params}
-    (if-let [jar (with-db (find-jar group jarname))]
+    (if-let [jar (find-jar group jarname)]
       (try-account
        (show-jar account
                  jar
@@ -125,7 +125,7 @@
   (GET ["/:group/:jarname/versions"
         :jarname #"[^/]+" :group #"[^/]+"]
        {session :session {group :group jarname :jarname} :params}
-    (if-let [jar (with-db (find-jar group jarname))]
+    (if-let [jar  (find-jar group jarname)]
       (try-account
        (show-versions account jar (recent-versions group jarname)))
       :next))
@@ -133,7 +133,7 @@
         :jarname #"[^/]+" :group #"[^/]+" :version #"[^/]+"]
        {session :session
         {version :version group :group jarname :jarname} :params}
-    (if-let [jar (with-db (find-jar group jarname version))]
+    (if-let [jar (find-jar group jarname version)]
       (try-account
        (show-jar account
                  jar
@@ -141,7 +141,7 @@
                  (count-versions group jarname)))
       :next))
   (GET "/:user" {session :session {user :user} :params}
-    (if-let [user (with-db (find-user user))]
+    (if-let [user (find-user user)]
       (try-account
        (show-user account user))
       :next))
@@ -150,22 +150,16 @@
                              "Page not found"
                              (not-found-doc)))))
 
-(defn db-middleware
-  [handler]
-  (fn [request]
-    (with-db (handler request))))
-
 (def clojars-app
   (site
    (-> main-routes
        (wrap-resource "public")
-       (wrap-file-info)
-       db-middleware)))
+       (wrap-file-info))))
 
 (comment
   (require 'swank.swank)
   (swank.swank/start-repl)
 
-  (with-db (find-jar "leiningen" "leiningen"))
+  (find-jar "leiningen" "leiningen")
   (def server (run-server {:port 8000} "/*" (servlet clojars-app)))
   (.stop server))

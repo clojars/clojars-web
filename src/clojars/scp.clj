@@ -105,7 +105,6 @@
         (do
           (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
                                     (:name jarmap) " " (:version jarmap)))
-          (db/with-db
             (db/add-jar account jarmap true)
             (aether/deploy :coordinates [(keyword (:group jarmap)
                                                   (:name jarmap))
@@ -114,7 +113,7 @@
                            :pom-file (:file metafile)
                            :repository {"local" (file-repo (:repo config))}
                            :transfer-listener :stdout)
-            (db/add-jar account jarmap)))
+            (db/add-jar account jarmap))
         (throw (Exception. (str "You need to give me one of: " names)))))
     (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
                               "http://clojars.org/"))

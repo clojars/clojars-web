@@ -1,6 +1,5 @@
 (defproject clojars-web "0.7.2-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.3.0"]
-                 [org.clojure/java.jdbc "0.1.3"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
@@ -10,6 +9,7 @@
                  [ring/ring-jetty-adapter "1.0.2"]
                  [hiccup "0.3.8"]
                  [cheshire "2.2.2"]
+                 [korma "0.3.0-beta10"]
                  [org.mindrot/jbcrypt "0.3m"]
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.6.17"]
