@@ -4,7 +4,8 @@
            com.martiansoftware.nailgun.NGContext)
   (:use [clojars.config :only [config]])
   (:require [clojars.maven :as maven]
-            [clojars.db :as db])
+            [clojars.db :as db]
+            [cemerick.pomegranate.aether :as aether])
   (:gen-class
    :methods [#^{:static true}
              [nailMain [com.martiansoftware.nailgun.NGContext] void]]))
@@ -86,6 +87,9 @@
   [(str (:name jarmap) "-" (:version jarmap) ".jar")
    (str (:name jarmap) ".jar")])
 
+(defn file-repo [path]
+  (.toString (.toURI (File. path))))
+
 (defn finish-deploy [#^NGContext ctx, files]
   (let [account (first (.getArgs ctx))
         act-group (str "org.clojars." account)
@@ -103,8 +107,13 @@
                                     (:name jarmap) " " (:version jarmap)))
           (db/with-db
             (db/add-jar account jarmap true)
-            (maven/deploy-model jarfile model
-                                (.toString (.toURI (File. (:repo config)))))
+            (aether/deploy :coordinates [(keyword (:group jarmap)
+                                                  (:name jarmap))
+                                         (:version jarmap)]
+                           :jar-file jarfile
+                           :pom-file (:file metafile)
+                           :repository {"local" (file-repo (:repo config))}
+                           :transfer-listener :stdout)
             (db/add-jar account jarmap)))
         (throw (Exception. (str "You need to give me one of: " names)))))
     (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
