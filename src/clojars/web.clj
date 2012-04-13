@@ -12,7 +12,7 @@
         [clojars.web.login :only [login login-form]]
         [hiccup.core :only [html h]]
         [ring.middleware.file :only [wrap-file]]
-        [ring.util.response :only [redirect]]
+        [ring.util.response :only [redirect status response]]
         [compojure.core :only [defroutes GET POST ANY]]
         [compojure.handler :only [site]]))
 
@@ -144,7 +144,10 @@
        (show-user account user))
       :next))
   (ANY "*" {session :session}
-    (html-doc (session :account) "Page not found" (not-found-doc))))
+       (-> (response (html-doc (session :account)
+                               "Page not found"
+                               (not-found-doc)))
+           (status 404))))
 
 (defn db-middleware
   [handler]

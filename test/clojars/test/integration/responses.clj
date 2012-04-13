@@ -12,6 +12,6 @@
 (deftest respond-404
   (-> (session web/clojars-app)
       (visit "/nonexistant-route")
-      (has (status? 200)) ;;TODO 404
+      (has (status? 404))
       (within [:title]
               (has (text? "Page not found | Clojars")))))
