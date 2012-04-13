@@ -32,15 +32,14 @@
              [:p "Pushed by " (user-link (:user jar)) " on " (java.util.Date. (:created jar))]
              (when-let [homepage (:homepage jar)]
                [:p (link-to homepage (str (h homepage)))])
-             [:div {:class "versions"}
               [:h3 "recent versions"]
-              [:ul
+              [:ul#versions
                (for [v recent-versions]
                  [:li (link-to (url-for (assoc jar
                                           :version (:version v)))
                                (:version v))])]
-              [:p (link-to (str (jar-url jar) "/versions")
-                           (str "show all versions (" count " total)"))]]]))
+             [:p (link-to (str (jar-url jar) "/versions")
+                          (str "show all versions (" count " total)"))]]))
 
 (defn show-versions [account jar versions]
   (html-doc account (str "all versions of "(jar-str jar))

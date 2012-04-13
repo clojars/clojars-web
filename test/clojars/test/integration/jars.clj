@@ -21,7 +21,7 @@
               (has (text? "fake/test")))
       (within [:.lein :pre]
               (has (text? "[fake/test \"0.0.2\"]")))
-      (within [:.versions :ul]
+      (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))
       (follow "show all versions (3 total)")
       (within [:.versions :ul]
@@ -53,7 +53,7 @@
               (has (text? "fake")))
       (within [:.lein :pre]
               (has (text? "[fake \"0.0.2\"]")))
-      (within [:.versions :ul]
+      (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
 
 (deftest specific-versions-can-be-viewed
@@ -69,7 +69,7 @@
               (has (text? "fake/test")))
       (within [:.lein :pre]
               (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
-      (within [:.versions :ul]
+      (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
 
 (deftest specific-canonical-versions-can-be-viewed
@@ -85,5 +85,5 @@
               (has (text? "fake")))
       (within [:.lein :pre]
               (has (text? "[fake \"0.0.1\"]")))
-      (within [:.versions :ul]
+      (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
