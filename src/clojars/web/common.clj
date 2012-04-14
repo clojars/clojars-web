@@ -66,22 +66,18 @@
     (str "/" (:jar_name jar))
     (str "/" (:group_name jar) "/" (:jar_name jar))))
 
-(defn jar-str [jar]
-  (if (= (:group_name jar) (:jar_name jar))
-    (:jar_name jar)
-    (str (:group_name jar) "/" (:jar_name jar))))
-
-(defn jar-link [jar]
-  (link-to (jar-url jar) (jar-str jar)))
-
-(defn user-link [user]
-  (link-to (str "/users/" user)
-           user))
-
-(defn group-link [group]
-  (link-to (str "/groups/" group) group))
-
 (defn jar-name [jar]
   (if (= (:group_name jar) (:jar_name jar))
     (h (:jar_name jar))
     (h (str (:group_name jar) "/" (:jar_name jar)))))
+
+(defn jar-link [jar]
+  (link-to (jar-url jar) (jar-name jar)))
+
+(defn user-link [username]
+  (link-to (str "/users/" username) username))
+
+(defn group-link [groupname]
+  (link-to (str "/groups/" groupname) groupname))
+
+

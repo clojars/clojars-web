@@ -1,5 +1,5 @@
 (ns clojars.web
-  (:use [clojars.db :only [group-members find-user add-member
+  (:use [clojars.db :only [group-membernames find-user add-member
                            find-jar recent-versions count-versions]]
         [clojars.web.dashboard :only [dashboard index-page]]
         [clojars.web.search :only [search]]
@@ -33,118 +33,120 @@
 
 (defroutes main-routes
   (GET "/search" {session :session params :params}
-    (try-account
-     (search account params)))
-  (GET "/profile" {session :session params :params}
-    (with-account
-     (profile-form account)))
-  (POST "/profile" {session :session params :params}
-    (with-account
-      (update-profile account params)))
-  (GET "/login" {params :params}
-    (login-form))
-  (POST "/login" {params :params}
-    (login params))
-  (POST "/register" {params :params}
-    (register params))
-  (GET "/register" {params :params}
-    (register-form))
-  (POST "/forgot-password" {params :params}
-    (forgot-password params))
-  (GET "/forgot-password" {params :params}
-    (forgot-password-form))
-  (GET "/logout" request
-    (let [response (redirect "/")]
-      (assoc-in response [:session :account] nil)))
-  (GET "/" {session :session params :params}
-    (try-account
-     (if account
-       (dashboard account)
-       (index-page account))))
-  (GET ["/groups/:group", :group #"[^/]+"] {session :session {group :group} :params }
-    (if-let [members (group-members group)]
-      (try-account
-       (show-group account group members))
-      :next))
-  (POST ["/groups/:group", :group #"[^/]+"] {session :session {group :group user :user} :params }
-    (if-let [members (group-members group)]
-      (try-account
-       (cond
-        (some #{user} members)
-        (show-group account group members "They're already a member!")
-        (and (some #{account} members)
-             (find-user user))
-        (do (add-member group user)
-            (show-group account group
-                        (conj members user)))
-        :else
-        (show-group account group members (str "No such user: "
-                                               (h user)))))
-      :next))
-  (GET "/users/:username"  {session :session {username :username} :params}
-    (if-let [user (find-user username)]
        (try-account
-        (show-user account user))
-       :next))
+        (search account params)))
+  (GET "/profile" {session :session params :params}
+       (with-account
+         (profile-form account)))
+  (POST "/profile" {session :session params :params}
+        (with-account
+          (update-profile account params)))
+  (GET "/login" {params :params}
+       (login-form))
+  (POST "/login" {params :params}
+        (login params))
+  (POST "/register" {params :params}
+        (register params))
+  (GET "/register" {params :params}
+       (register-form))
+  (POST "/forgot-password" {params :params}
+        (forgot-password params))
+  (GET "/forgot-password" {params :params}
+       (forgot-password-form))
+  (GET "/logout" request
+       (let [response (redirect "/")]
+         (assoc-in response [:session :account] nil)))
+  (GET "/" {session :session params :params}
+       (try-account
+        (if account
+          (dashboard account)
+          (index-page account))))
+  (GET ["/groups/:groupname", :groupname #"[^/]+"]
+       {session :session {groupname :groupname} :params }
+       (if-let [membernames (group-membernames groupname)]
+         (try-account
+          (show-group account groupname membernames))
+         :next))
+  (POST ["/groups/:groupname", :groupname #"[^/]+"]
+        {session :session {groupname :groupname username :user} :params }
+        (if-let [membernames (group-membernames groupname)]
+          (try-account
+           (cond
+            (some #{username} membernames)
+            (show-group account groupname membernames "They're already a member!")
+            (and (some #{account} membernames)
+                 (find-user username))
+            (do (add-member groupname username)
+                (show-group account groupname
+                            (conj membernames username)))
+            :else
+            (show-group account groupname membernames (str "No such user: "
+                                                           (h username)))))
+          :next))
+  (GET "/users/:username"  {session :session {username :username} :params}
+       (if-let [user (find-user username)]
+         (try-account
+          (show-user account user))
+         :next))
   (GET ["/:jarname", :jarname #"[^/]+"]
        {session :session {jarname :jarname} :params}
-    (if-let [jar (find-jar jarname jarname)]
-      (try-account
-       (show-jar account
-                 jar
-                 (recent-versions jarname jarname 5)
-                 (count-versions jarname jarname)))
-      :next))
-    (GET ["/:jarname/versions"
+       (if-let [jar (find-jar jarname jarname)]
+         (try-account
+          (show-jar account
+                    jar
+                    (recent-versions jarname jarname 5)
+                    (count-versions jarname jarname)))
+         :next))
+  (GET ["/:jarname/versions"
         :jarname #"[^/]+" :group #"[^/]+"]
        {session :session {jarname :jarname} :params}
-    (if-let [jar (find-jar jarname jarname)]
-      (try-account
-       (show-versions account jar (recent-versions jarname jarname)))
-      :next))
+       (if-let [jar (find-jar jarname jarname)]
+         (try-account
+          (show-versions account jar (recent-versions jarname jarname)))
+         :next))
   (GET ["/:jarname/versions/:version"
         :jarname #"[^/]+" :version #"[^/]+"]
        {session :session
         {version :version jarname :jarname} :params}
-    (if-let [jar (find-jar jarname jarname version)]
-      (try-account
-       (show-jar account
-                 jar
-                 (recent-versions jarname jarname 5)
-                 (count-versions jarname jarname)))
-      :next))
-  (GET ["/:group/:jarname", :jarname #"[^/]+" :group #"[^/]+"]
-       {session :session {group :group jarname :jarname} :params}
-    (if-let [jar (find-jar group jarname)]
-      (try-account
-       (show-jar account
-                 jar
-                 (recent-versions group jarname 5)
-                 (count-versions group jarname)))
-      :next))
-  (GET ["/:group/:jarname/versions"
-        :jarname #"[^/]+" :group #"[^/]+"]
-       {session :session {group :group jarname :jarname} :params}
-    (if-let [jar  (find-jar group jarname)]
-      (try-account
-       (show-versions account jar (recent-versions group jarname)))
-      :next))
-  (GET ["/:group/:jarname/versions/:version"
-        :jarname #"[^/]+" :group #"[^/]+" :version #"[^/]+"]
+       (if-let [jar (find-jar jarname jarname version)]
+         (try-account
+          (show-jar account
+                    jar
+                    (recent-versions jarname jarname 5)
+                    (count-versions jarname jarname)))
+         :next))
+  (GET ["/:groupname/:jarname", :jarname #"[^/]+" :groupname #"[^/]+"]
+       {session :session {groupname :groupname jarname :jarname} :params}
+       (if-let [jar (find-jar groupname jarname)]
+         (try-account
+          (show-jar account
+                    jar
+                    (recent-versions groupname jarname 5)
+                    (count-versions groupname jarname)))
+         :next))
+  (GET ["/:groupname/:jarname/versions"
+        :jarname #"[^/]+" :groupname #"[^/]+"]
+       {session :session {groupname :groupname jarname :jarname} :params}
+       (if-let [jar  (find-jar groupname jarname)]
+         (try-account
+          (show-versions account jar (recent-versions groupname jarname)))
+         :next))
+  (GET ["/:groupname/:jarname/versions/:version"
+        :jarname #"[^/]+" :groupname #"[^/]+" :version #"[^/]+"]
        {session :session
-        {version :version group :group jarname :jarname} :params}
-    (if-let [jar (find-jar group jarname version)]
-      (try-account
-       (show-jar account
-                 jar
-                 (recent-versions group jarname 5)
-                 (count-versions group jarname)))
-      :next))
-  (GET "/:user" {session :session {user :user} :params}
-    (if-let [user (find-user user)]
-      (try-account
-       (show-user account user))
-      :next))
+        {version :version groupname :groupname jarname :jarname} :params}
+       (if-let [jar (find-jar groupname jarname version)]
+         (try-account
+          (show-jar account
+                    jar
+                    (recent-versions groupname jarname 5)
+                    (count-versions groupname jarname)))
+         :next))
+  (GET "/:username" {session :session {username :username} :params}
+       (if-let [user (find-user username)]
+         (try-account
+          (show-user account user))
+         :next))
   (ANY "*" {session :session}
        (not-found (html-doc (session :account)
                              "Page not found"

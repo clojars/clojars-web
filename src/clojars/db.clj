@@ -73,57 +73,57 @@
 (defn find-user [username]
   (first (select users (where {:user username}))))
 
-(defn find-user-by-user-or-email [user-or-email]
-  (first (select users (where (or {:user user-or-email}
-                                  {:email user-or-email})))))
+(defn find-user-by-user-or-email [username-or-email]
+  (first (select users (where (or {:user username-or-email}
+                                  {:email username-or-email})))))
 
-(defn find-groups [username]
+(defn find-groupnames [username]
   (map :name (select groups (fields :name) (where {:user username}))))
 
-(defn group-members [group]
-  (map :user (select groups (fields :user) (where {:name group}))))
+(defn group-membernames [groupname]
+  (map :user (select groups (fields :user) (where {:name groupname}))))
 
 (defn authed? [plaintext user]
   (or (try (BCrypt/checkpw plaintext (:password user))
            (catch java.lang.IllegalArgumentException _))
       (= (:password user) (sha1 (:salt user) plaintext))))
 
-(defn auth-user [user plaintext]
+(defn auth-user [username-or-email plaintext]
   (first (filter (partial authed? plaintext)
-                 (select users (where (or {:user user}
-                                          {:email user}))))))
+                 (select users (where (or {:user username-or-email}
+                                          {:email username-or-email}))))))
 
-(defn jars-by-user [user]
+(defn jars-by-username [username]
   (select jars
-          (where {:user user})
+          (where {:user username})
           (group :group_name :jar_name)))
 
-(defn jars-by-group [group-name]
+(defn jars-by-groupname [groupname]
   (select jars
-          (where {:group_name group-name})
+          (where {:group_name groupname})
           (group :jar_name)))
 
 (defn recent-versions
-  ([group jarname]
+  ([groupname jarname]
      (select jars
              (modifier "distinct")
              (fields :version)
-             (where {:group_name group
+             (where {:group_name groupname
                      :jar_name jarname})
              (order :created :desc)))
-  ([group jarname num]
+  ([groupname jarname num]
      (select jars
              (modifier "distinct")
              (fields :version)
-             (where {:group_name group
+             (where {:group_name groupname
                      :jar_name jarname})
              (order :created :desc)
              (limit num))))
 
-(defn count-versions [group jarname]
+(defn count-versions [groupname jarname]
   (-> (exec-raw [(str "select count(distinct version) count from jars"
                       " where group_name = ? and jar_name = ?")
-                 [group jarname]] :results)
+                 [groupname jarname]] :results)
       first
       :count))
 
@@ -134,72 +134,74 @@
           (limit 5)))
 
 (defn find-jar
-  ([group jarname]
+  ([groupname jarname]
      (or (first (select jars
-                        (where (and {:group_name group
+                        (where (and {:group_name groupname
                                      :jar_name jarname}
                                     (raw "version not like '%-SNAPSHOT'")))
                         (order :created :desc)
                         (limit 1)))
          (first (select jars
-                        (where (and {:group_name group
+                        (where (and {:group_name groupname
                                      :jar_name jarname
                                      :version [like "%-SNAPSHOT"]}))
                         (order :created :desc)
                         (limit 1)))))
-  ([group jarname version]
+  ([groupname jarname version]
      (first (select jars
-                    (where (and {:group_name group
+                    (where (and {:group_name groupname
                                  :jar_name jarname
                                  :version version}))
                     (order :created :desc)
                     (limit 1)))))
 
-(defn add-user [email user password ssh-key]
+(defn add-user [email username password ssh-key]
   (insert users
           (values {:email email
-                   :user user
+                   :user username
                    :password (bcrypt password)
                    :ssh_key ssh-key
                    :created (get-time)
                    ;;TODO: remove salt field
                    :salt ""}))
   (insert groups
-          (values {:name (str "org.clojars." user)
-                   :user user}))
+          (values {:name (str "org.clojars." username)
+                   :user username}))
   (write-key-file (:key-file config)))
 
-(defn update-user [account email user password ssh-key]
+(defn update-user [account email username password ssh-key]
   (update users
           (set-fields {:email email
-                       :user user
+                       :user username
                        :salt ""
                        :password (bcrypt password)
                        :ssh_key ssh-key})
           (where {:user account}))
   (write-key-file (:key-file config)))
 
-(defn add-member [group user]
+(defn add-member [groupname username]
   (insert groups
-          (values {:name group
-                   :user user})))
+          (values {:name groupname
+                   :user username})))
 
-(defn check-and-add-group [account group jar]
-  (when-not (re-matches #"^[a-z0-9-_.]+$" group)
+(defn check-and-add-group [account groupname]
+  (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)
     (throw (Exception. (str "Group names must consist of lowercase "
                             "letters, numbers, hyphens, underscores "
                             "and full-stops."))))
-  (let [members (group-members group)]
+  (let [members (group-membernames groupname)]
     (if (empty? members)
-      (if (reserved-names group)
-        (throw (Exception. (str "The group name " group " is already taken.")))
-        (add-member group account))
+      (if (reserved-names groupname)
+        (throw (Exception. (str "The group name "
+                                groupname
+                                " is already taken.")))
+        (add-member groupname account))
       (when-not (some #{account} members)
         (throw (Exception. (str "You don't have access to the "
-                                group " group.")))))))
+                                groupname " group.")))))))
 
 (defn- add-jar-helper [account jarmap]
-  (check-and-add-group account (:group jarmap) (:name jarmap))
+  (check-and-add-group account (:group jarmap))
   (insert jars
           (values {:group_name (:group jarmap)
                    :jar_name   (:name jarmap)

@@ -44,7 +44,7 @@
   (html-doc account "Dashboard"
     [:h1 (str "Dashboard (" (h account) ")")]
     [:h2 "Your jars"]
-    (unordered-list (map jar-link (jars-by-user account)))
+    (unordered-list (map jar-link (jars-by-username account)))
     (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add new jar")
     [:h2 "Your groups"]
-    (unordered-list (map group-link (find-groups account)))))
+    (unordered-list (map group-link (find-groupnames account)))))

@@ -66,9 +66,9 @@
     ;;TODO: What should be done about the key-file?
     (is (db/add-user email name password ssh-key))
     (is (= ["testuser"]
-           (db/group-members (str "org.clojars." name))))
+           (db/group-membernames (str "org.clojars." name))))
     (is (= ["org.clojars.testuser"]
-           (db/find-groups name)))))
+           (db/find-groupnames name)))))
 
 (deftest users-can-be-added-to-groups
   (let [email "test@example.com"
@@ -79,9 +79,9 @@
     (is (db/add-user email name password ssh-key))
     (is (db/add-member "test-group" name))
     (is (= ["testuser"]
-           (db/group-members "test-group")))
+           (db/group-membernames "test-group")))
     (is (some #{"test-group"}
-              (db/find-groups name)))))
+              (db/find-groupnames name)))))
 
 ;;TODO: Tests below should have the users added first.
 ;;Currently user unenforced foreign keys are by name
@@ -107,8 +107,8 @@
       (is (db/add-jar "test-user" jarmap))
       (are [x] (submap result x)
            (db/find-jar name name)
-           (first (db/jars-by-group name))
-           (first (db/jars-by-user "test-user"))))))
+           (first (db/jars-by-groupname name))
+           (first (db/jars-by-username "test-user"))))))
 
 (deftest jars-by-group-only-returns-most-recent-version
   (let [name "tester"
@@ -121,7 +121,7 @@
       (is (db/add-jar "test-user" jarmap))
       (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
         (is (db/add-jar "test-user" (assoc jarmap :version "2")))))
-    (let [jars (db/jars-by-group name)]
+    (let [jars (db/jars-by-groupname name)]
       (dorun (map #(is (submap %1 %2)) [result] jars))
       (is (= 1 (count jars))))))
 
@@ -160,7 +160,7 @@
       (is (db/add-jar "test-user2" (assoc jarmap :name "tester3"))))
     (binding [db/get-time (fn [] (java.sql.Timestamp. 3))]
       (is (db/add-jar "test-user2" (assoc jarmap :group "tester-group"))))
-    (let [jars (db/jars-by-group name)]
+    (let [jars (db/jars-by-groupname name)]
       (dorun (map #(is (submap %1 %2))
                   [result
                    (assoc result :jar_name "tester2")
@@ -179,7 +179,7 @@
       (is (db/add-jar "test-user" jarmap))
           (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
             (is (db/add-jar "test-user" (assoc jarmap :version "2")))))
-    (let [jars (db/jars-by-user "test-user")]
+    (let [jars (db/jars-by-username "test-user")]
       (dorun (map #(is (submap %1 %2)) [result] jars))
       (is (= 1 (count jars))))))
 
@@ -201,7 +201,7 @@
       (is (db/add-jar "test-user2" (assoc jarmap :name "tester3"))))
     (binding [db/get-time (fn [] (java.sql.Timestamp. 3))]
       (is (db/add-jar "test-user" (assoc jarmap :group "tester-group"))))
-    (let [jars (db/jars-by-user "test-user")]
+    (let [jars (db/jars-by-username "test-user")]
       (dorun (map #(is (submap %1 %2))
                   [result
                    (assoc result :jar_name "tester2")
@@ -257,11 +257,11 @@
 
 (deftest add-jar-creates-single-member-group-for-user
     (let [jarmap {:name "jar-name" :version "1" :group "group-name"}]
-      (is (empty? (db/group-members "group-name")))
+      (is (empty? (db/group-membernames "group-name")))
       (db/add-jar "test-user" jarmap)
-      (is (= ["test-user"] (db/group-members "group-name")))
+      (is (= ["test-user"] (db/group-membernames "group-name")))
       (is (= ["group-name"]
-             (db/find-groups "test-user")))))
+             (db/find-groupnames "test-user")))))
 
 (deftest recent-jars-returns-5-most-recent-jars-only-most-recent-version
   (let [name "tester"

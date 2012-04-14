@@ -16,14 +16,14 @@
    (when error
      [:div {:class :error} (str error)])
    (form-to [:post "/login"]
-     (label :user "Username or email:")
-     (text-field :user)
+     (label :username "Username or email:")
+     (text-field :username)
      (label :password "Password:")
      (password-field :password)
      (link-to "/forgot-password" "Forgot password?") [:br]
      (submit-button "Login"))))
 
-(defn login [{username :user password :password}]
+(defn login [{username :username password :password}]
   (if-let [user (auth-user username password)]
     (let [response (redirect "/")]
       ;; presence of salt indicates sha1'd password, so re-hash to bcrypt

@@ -10,7 +10,7 @@
   (:require [clojars.config :as config])
   (:import [org.apache.commons.mail SimpleEmail]))
 
-(defn register-form [ & [errors email user ssh-key]]
+(defn register-form [ & [errors email username ssh-key]]
   (html-doc nil "Register"
             [:h1 "Register"]
             (error-list errors)
@@ -18,8 +18,8 @@
                      (label :email "Email:")
                      [:input {:type :email :name :email :id
                               :email :value email}]
-                     (label :user "Username:")
-                     (text-field :user user)
+                     (label :username "Username:")
+                     (text-field :username username)
                      (label :password "Password:")
                      (password-field :password)
                      (label :confirm "Confirm password:")
@@ -42,32 +42,32 @@
 (defn validate-profile
   "Validates a profile, returning nil if it's okay, otherwise a list
   of errors."
-  [account email user password confirm ssh-key]
+  [account email username password confirm ssh-key]
   (-> nil
       (conj-when (blank? email) "Email can't be blank")
-      (conj-when (blank? user) "Username can't be blank")
+      (conj-when (blank? username) "Username can't be blank")
       (conj-when (blank? password) "Password can't be blank")
       (conj-when (not= password confirm)
                  "Password and confirm password must match")
       (conj-when (and (nil? account) ; only check username on register
-                      (or (reserved-names user)  ; "I told them we already
-                          (and (not= account user) ; got one!"
-                               (find-user user))
-                          (seq (group-members user))))
+                      (or (reserved-names username)  ; "I told them we already
+                          (and (not= account username) ; got one!"
+                               (find-user username))
+                          (seq (group-membernames username))))
                  "Username is already taken")
-      (conj-when (not (re-matches #"[a-z0-9_-]+" user))
+      (conj-when (not (re-matches #"[a-z0-9_-]+" username))
                  (str "Username must consist only of lowercase "
                       "letters, numbers, hyphens and underscores."))
       (conj-when (not (or (blank? ssh-key)
                           (valid-ssh-key? ssh-key)))
                  "Invalid SSH public key")))
 
-(defn register [{:keys [email user password confirm ssh-key]}]
-  (if-let [errors (validate-profile nil email user password confirm ssh-key)]
-    (register-form errors email user ssh-key)
-    (do (add-user email user password ssh-key)
+(defn register [{:keys [email username password confirm ssh-key]}]
+  (if-let [errors (validate-profile nil email username password confirm ssh-key)]
+    (register-form errors email username ssh-key)
+    (do (add-user email username password ssh-key)
         (let [response (redirect "/")]
-          (assoc-in response [:session :account] user)))))
+          (assoc-in response [:session :account] username)))))
 
 (defn profile-form [account & [errors]]
   (let [user (find-user account)]
@@ -97,9 +97,9 @@
   (html-doc account (h (user :user))
     [:h1 (h (user :user))]
     [:h2 "Jars"]
-    (unordered-list (map jar-link (jars-by-user (user :user))))
+    (unordered-list (map jar-link (jars-by-username (user :user))))
     [:h2 "Groups"]
-    (unordered-list (map group-link (find-groups (user :user))))))
+    (unordered-list (map group-link (find-groupnames (user :user))))))
 
 (defn forgot-password-form []
   (html-doc nil "Forgot password?"

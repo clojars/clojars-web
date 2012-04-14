@@ -42,8 +42,8 @@
                           (str "show all versions (" count " total)"))]]))
 
 (defn show-versions [account jar versions]
-  (html-doc account (str "all versions of "(jar-str jar))
-            [:h1 "all versions of "(jar-str jar)]
+  (html-doc account (str "all versions of "(jar-name jar))
+            [:h1 "all versions of "(jar-name jar)]
             [:div {:class "versions"}
              [:ul
               (for [v versions]
