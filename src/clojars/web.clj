@@ -11,7 +11,8 @@
         [clojars.web.common :only [html-doc]]
         [clojars.web.login :only [login login-form]]
         [hiccup.core :only [html h]]
-        [ring.middleware.file :only [wrap-file]]
+        [ring.middleware.file-info :only [wrap-file-info]]
+        [ring.middleware.resource :only [wrap-resource]]
         [ring.util.response :only [redirect status response]]
         [compojure.core :only [defroutes GET POST ANY]]
         [compojure.handler :only [site]]))
@@ -157,7 +158,8 @@
 (def clojars-app
   (site
    (-> main-routes
-       (wrap-file "public")
+       (wrap-resource "public")
+       (wrap-file-info)
        db-middleware)))
 
 (comment
