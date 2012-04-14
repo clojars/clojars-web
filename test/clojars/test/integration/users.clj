@@ -23,11 +23,9 @@
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" "")
       (follow-redirect)
-      ;;TODO: should the user already be signed in?
       (has (status? 200))
-      ;; (within [:article :h1]
-      ;;         (has (text? "Dashboard (dantheman)")))
-      ))
+      (within [:article :h1]
+              (has (text? "Dashboard (dantheman)")))))
 
 (deftest bad-registration-info-should-show-error
   (-> (session web/clojars-app)
@@ -95,9 +93,7 @@
 
 (deftest user-can-update-info
   (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password" ""))
-  (-> (session web/clojars-app)
-      (login-as "fixture" "password")
+      (register-as "fixture" "fixture@example.org" "password" "")
       (follow-redirect)
       (follow "profile")
       (fill-in "Email:" "fixture2@example.org")
@@ -119,7 +115,6 @@
 (deftest bad-update-info-should-show-error
   (-> (session web/clojars-app)
       (register-as "fixture" "fixture@example.org" "password" "")
-      (login-as "fixture" "password")
       (follow-redirect)
       (follow "profile")
       (has (status? 200))
@@ -191,8 +186,8 @@
 (deftest user-can-register-and-scp
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-    (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
-           (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))
+  (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
+         (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))
   (-> (session web/clojars-app)
       (visit "/groups/fake")
       (has (status? 200))
@@ -231,15 +226,14 @@
 
 (deftest user-can-remove-key-and-scp-fails
   (-> (session web/clojars-app)
-      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-  (-> (session web/clojars-app)
-      (login-as "dantheman" "password")
+      (register-as "dantheman" "test@example.org" "password" valid-ssh-key)
       (follow-redirect)
       (follow "profile")
       (fill-in "Password:" "password")
       (fill-in "Confirm password:" "password")
       (fill-in "SSH public key:" "")
       (press "Update"))
+
   (is (thrown? Exception (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom"))))
 
 (deftest scp-wants-filenames-in-specific-format
@@ -264,7 +258,6 @@
       (register-as "fixture" "fixture@example.org" "password" ""))
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" "")
-      (login-as "dantheman" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#user] "fixture")
       (press "add member")
@@ -275,7 +268,6 @@
 (deftest user-must-exist-to-be-added-to-group
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" "")
-      (login-as "dantheman" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#user] "fixture")
       (press "add member")

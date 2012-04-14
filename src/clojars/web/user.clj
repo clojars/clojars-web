@@ -67,7 +67,7 @@
     (register-form errors email user ssh-key)
     (do (add-user email user password ssh-key)
         (let [response (redirect "/")]
-          (assoc-in response [:session :account] (:user user))))))
+          (assoc-in response [:session :account] user)))))
 
 (defn profile-form [account & [errors]]
   (let [user (find-user account)]
