@@ -116,11 +116,11 @@
 (defn send-mail [to subject message]
   (let [{:keys [hostname username password port ssl from]} (config/config :mail)
         mail (doto (SimpleEmail.)
-               (.setHostName hostname)
-               (.setSslSmtpPort (str port))
-               (.setSmtpPort port)
-               (.setSSL ssl)
-               (.setFrom from "Clojars")
+               (.setHostName (or hostname "localhost"))
+               (.setSslSmtpPort (str (or port 25)))
+               (.setSmtpPort (or port 25))
+               (.setSSL (or ssl false))
+               (.setFrom (or from "noreply@clojars.org") "Clojars")
                (.addTo to)
                (.setSubject subject)
                (.setMsg message))]
