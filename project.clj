@@ -1,6 +1,7 @@
 (defproject clojars-web "0.7.0-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojure/java.jdbc "0.1.3"]
+                 [org.clojure/tools.cli "0.2.1"]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
                   [org.codehaus.plexus/plexus-utils]]

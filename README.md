@@ -16,21 +16,25 @@ There are several ways to run Clojars depending on what you intend to do with
 it. Regardless of how you run it, you first need to do some setup:
 
 1. Install [Leiningen](http://github.com/technomancy/leiningen)
-   * Mac OS X Homebrwe: `brew install leiningen`
+   * Mac OS X Homebrew: `brew install leiningen`
 
 2. Install [SQLite3](http://www.sqlite.org/)
    * Debian: `apt-get install sqlite3`
    * Mac OS X Homebrew: `brew install sqlite`
 
-3. Create an initial sqlite database: `mkdir data; sqlite3 data/db < clojars.sql`
+3. Create an initial sqlite database: `mkdir data; sqlite3 data/dev_db < clojars.sql`
 
-To run the application as standlone from the console:
+To run the application using Leinigen 2:
+
+1. Run the webapp: `lein run` (see `--help` for options)
+
+2. Now try hitting [localhost:8080](http://localhost:8080) in your web browser.
+
+To build a standalone jar for deploying to a server:
 
 1. Compile with: `lein uberjar`
 
-2. Run the webapp: `java -jar clojars-web-*-standalone.jar 8080 8701`
-
-3. Now try hitting [localhost:8080](http://localhost:8080) in your web browser.
+2. Run the webapp: `java -jar target/clojars-web-*-standalone.jar`
 
 To run the application in auto-reload mode, from the console:
 
@@ -40,8 +44,34 @@ and that's it, it should automatically open a browser in [localhost:3000](http:/
 
 If you'd like to run it out of an editor/IDE environment you can
 probably eval a call to the `-main` function in
-`src/clojars/core.clj`.
+`src/clojars/main.clj`.
 
+Configuration
+-------------
+
+All options are available as command-line switches.  Additionally some
+can be set using environment variables.  See `lein run -h` for the
+full list.
+
+Options may be read from a file using the `-f` switch, setting the
+`CONFIG_FILE` environment variable or by putting a file named
+`config.clj` on the classpath.  The config file should be a bare
+Clojure map:
+
+    {:db {:classname "org.sqlite.JDBC"
+	  :subprotocol "sqlite"
+	  :subname "data/dev_db"}
+     :key-file "data/dev_authorized_keys"
+     :repo "data/dev_repo"
+     :bcrypt-work-factor 12
+     :mail {:hostname "localhost"
+	    :from "noreply@clojars.org"
+	    :ssl false}}
+
+The classpath option can be used with Leiningen 2 profiles.  When
+running out of a source checkout using `lein run` the configuration
+will be read from `dev-resources/config.clj`.  When running automated
+tests with `lein test` then `test-resources/config.clj` is used.
 
 Test data
 ---------
@@ -84,12 +114,14 @@ and run `make` then copy the `ng` executable somewhere like `/usr/local/bin`
         Match User clojars
         PasswordAuthentication no
 
-4. Symlink in the auth_keys file the webapp generates:
+4. Symlink in the authorized_keys file the webapp generates:
 
         cd /home/clojars
         mkdir .ssh
         cd .ssh
         ln -s ...../clojars-web/data/authorized_keys authorized_keys
+
+5. When running the webapp enable the nailgun server: `--nailgun-port 8700`
 
 Mailing lists
 -------------

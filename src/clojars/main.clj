@@ -1,22 +1,28 @@
 (ns clojars.main
   (:use [ring.adapter.jetty :only [run-jetty]]
-        [clojars.web :only [clojars-app]])
+        [clojars.web :only [clojars-app]]
+        [clojars.config :only [config configure]])
   (:require [clojars.scp])
   (:import com.martiansoftware.nailgun.NGServer
            java.net.InetAddress)
   (:gen-class))
 
-(defn -main
-  ([]
-     (.println System/err "Usage: clojars.main http-port nailgun-port")
-     (.println System/err "   eg: clojars.main 8080 8701")
-     (System/exit 1))
-  ([http-port ng-port]
-     (println "clojars-web: starting jetty on port" http-port)
-     (run-jetty clojars-app {:port (Integer/parseInt http-port) :join? false})
-     (println "clojars-web: starting nailgun on 127.0.0.1 port " ng-port)
-     (.run (NGServer. (InetAddress/getByName "127.0.0.1")
-                      (Integer/parseInt ng-port)))))
+(defn start-jetty []
+  (when-let [port (:port config)]
+    (println "clojars-web: starting jetty on" (str "http://" (:bind config) ":" port))
+    (run-jetty clojars-app {:host (:bind config)
+                            :port port
+                            :join? false})))
+
+(defn start-nailgun []
+  (when-let [port (:nailgun-port config)]
+    (println "clojars-web: starting nailgun on" (str (:nailgun-bind config) ":" port))
+    (.run (NGServer. (InetAddress/getByName (:nailgun-bin config)) port))))
+
+(defn -main [& args]
+  (configure args)
+  (start-jetty)
+  (start-nailgun))
 
 ; (defonce server (run-jetty #'clojars-app {:port 8080 :join? false}))
 
