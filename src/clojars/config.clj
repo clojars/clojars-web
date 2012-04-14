@@ -50,14 +50,14 @@
 
 (def env-vars
   [["CONFIG_FILE" :config-file]
-   ["PORT" :port #(Integer. %)]
+   ["PORT" :port #(Integer/parseInt %)]
    ["BIND" :bind]
    ["DATABASE_URL" :db]
    ["MAIL_URL" :mail parse-mail-uri]
    ["REPO" :repo]
    ["KEY_FILE" :key-file]
    ["NAILGUN_BIND" :nailgun-bind]
-   ["NAILGUN_PORT" :nailgun-port #(Integer. %)]])
+   ["NAILGUN_PORT" :nailgun-port #(Integer/parseInt %)]])
 
 (defn parse-env []
   (reduce
@@ -72,17 +72,17 @@
        ["-h" "--help" "Show this help text and exit" :flag true]
        ["-f" "Read configuration map from a file" :name :config-file]
        ["-p" "--port" "Port to listen on for web requests"
-        :parse-fn #(Integer. %) :default (:port defaults)]
+        :parse-fn #(Integer/parseInt %) :default (:port defaults)]
        ["-b" "--bind" "Address to bind to for web requests"
         :default (:address defaults)]
        ["--db" "Database URL like sqlite:data/db"]
        ["--mail" "SMTP URL like smtps://user:pass@host:port?from=me@example.org"]
        ["--repo" "Path to store jar files in"]
        ["--key-file" "SSH authorized_keys file to write to"]
-       ["--nailgun-port" "Listen port for nailgun (for scp)" :parse-fn #(Integer. %)]
+       ["--nailgun-port" "Listen port for nailgun (for scp)" :parse-fn #(Integer/parseInt %)]
        ["--nailgun-bind" "Bind address for nailgun" :default (:nailgun-bind defaults)]
        ["--bcrypt-work-factor" "Difficulty factor for bcrypt password hashing"
-        :parse-fn #(Integer. %) :default (:bcrypt-work-factor defaults)]))
+        :parse-fn #(Integer/parseInt %) :default (:bcrypt-work-factor defaults)]))
 
 (defn parse-file [f]
   (read-string (slurp (io/file f))))
