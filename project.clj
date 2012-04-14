@@ -1,4 +1,4 @@
-(defproject clojars-web "0.7.0-SNAPSHOT"
+(defproject clojars-web "0.7.0"
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojure/java.jdbc "0.1.3"]
                  [org.clojure/tools.cli "0.2.1"]
