@@ -13,7 +13,9 @@
                  [org.mindrot/jbcrypt "0.3m"]
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.6.17"]
-                 [org.apache.commons/commons-email "1.2"]]
+                 [org.apache.commons/commons-email "1.2"]
+                 [net.cgrand/regex "1.0.1"]
+                 [clj-time "0.3.8"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.4"]
                                    [nailgun-shim "0.0.1"]]}}
