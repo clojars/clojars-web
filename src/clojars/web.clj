@@ -15,7 +15,8 @@
         [ring.middleware.resource :only [wrap-resource]]
         [ring.util.response :only [redirect status response]]
         [compojure.core :only [defroutes GET POST ANY]]
-        [compojure.handler :only [site]]))
+        [compojure.handler :only [site]]
+        [compojure.route :only [not-found]]))
 
 (defn not-found-doc []
   (html [:h1 "Page not found"]
@@ -145,10 +146,9 @@
        (show-user account user))
       :next))
   (ANY "*" {session :session}
-       (-> (response (html-doc (session :account)
-                               "Page not found"
-                               (not-found-doc)))
-           (status 404))))
+       (not-found (html-doc (session :account)
+                             "Page not found"
+                             (not-found-doc)))))
 
 (defn db-middleware
   [handler]
