@@ -115,4 +115,5 @@
       (println "Some options can be set using these environment variables:")
       (println (str/join " " (map first env-vars)))
       (System/exit 0))
-    (alter-var-root #'config (fn [_] options))))
+    (alter-var-root #'config (fn [_] options))
+    args))
