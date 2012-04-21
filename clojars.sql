@@ -33,6 +33,16 @@ create table groups
         name TEXT NOT NULL,
         user TEXT NOT NULL);
 
+create table stats
+       (id INTEGER PRIMARY KEY AUTOINCREMENT,
+        group_name TEXT,
+        jar_name TEXT,
+        version TEXT,
+	period TEXT,
+	downloads INTEGER NOT NULL);
+
+create unique index stats_idx on stats (group_name, jar_name, version, period); 
+
 --
 -- Search support: quick and dirty, but it works
 --

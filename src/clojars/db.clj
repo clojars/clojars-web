@@ -66,6 +66,7 @@
 (defentity users)
 (defentity groups)
 (defentity jars)
+(defentity stats)
 
 (defn bcrypt [s]
   (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
@@ -260,3 +261,13 @@
                     :results)]
     ;; TODO: do something less stupidly slow
     (vec (map #(find-jar (:group_name %) (:jar_name %)) r))))
+
+(defn update-stat [groupname jarname version period downloads]
+  (let [keymap {:group_name groupname
+                :jar_name jarname
+                :version version
+                :period period}]    
+    (if-let [row (first (select stats (where keymap)))]
+      (update stats (set-fields {:downloads (+ (:downloads row) downloads)})
+              (where {:id (:id row)}))
+      (insert stats (values (assoc keymap :downloads downloads))))))

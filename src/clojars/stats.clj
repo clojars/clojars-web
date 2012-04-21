@@ -2,7 +2,8 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [net.cgrand.regex :as re]
-            [clj-time.format :as timef]))
+            [clj-time.format :as timef]
+            [clojars.db :as db]))
 
 (def time-clf (timef/formatter "dd/MMM/YYYY:HH:mm:ss Z"))
 
@@ -60,7 +61,8 @@
      {:status (parse-long (:status m))
       :method (:method m)
       :size (parse-long (:size m))
-      :time (when (:time m) (timef/parse time-clf (:time m)))})))
+      :time (when (:time m) (try (timef/parse time-clf (:time m))
+                                 (catch IllegalArgumentException e)))})))
 
 (defn valid-download? [m]
   (and m
@@ -68,13 +70,31 @@
        (= (:method m) "GET")
        (= (:ext m) "jar")))
 
+(def as-year-month (partial timef/unparse (timef/formatters :year-month)))
+
+(defn compute-stats [logfile]
+  (with-open [rdr (io/reader logfile)]
+   (->> (line-seq rdr)
+        (map parse-clf)
+        (filter valid-download?)
+        (map (juxt :group :name :version (comp as-year-month :time)))
+        (frequencies))))
+
+(defn process-log [logfile]
+  (doseq [[[groupname jarname version month] downloads] (compute-stats logfile)]
+    (db/update-stat groupname jarname version month downloads)
+    (db/update-stat groupname jarname version nil downloads)
+    (db/update-stat groupname jarname nil nil downloads)
+    (db/update-stat groupname jarname nil month downloads)
+    (db/update-stat nil nil nil nil downloads)))
+
 (comment
   ;; top 10 most downloaded jars
   (with-open [rdr (io/reader "clojars.access.log")]
    (->> (line-seq rdr)
         (map parse-clf)
         (filter valid-download?)
-        (map (juxt :group :name))
+        (map (juxt :group :name :version ))
         (frequencies)
         (sort-by val)
         (reverse)
