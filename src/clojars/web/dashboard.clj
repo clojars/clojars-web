@@ -18,9 +18,7 @@
        (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]
 
      "It's the " [:strong "default repository"] " for "
-     (link-to
-      "http://github.com/technomancy/leiningen/blob/master/README.md"
-      "Leiningen")
+     (link-to "http://leiningen.org" "Leiningen")
      ", but you can use it with other build tools like "
      (link-to "http://maven.apache.org/" "Maven") " as well."
      [:div {:class "maven"}
