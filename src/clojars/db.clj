@@ -57,13 +57,6 @@
 (defn bcrypt [s]
   (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
 
-;; ಠ_ಠ
-(defn sha1 [& s]
-  (when-let [s (seq s)]
-    (let [md (MessageDigest/getInstance "SHA")]
-      (.update md (.getBytes (apply str s)))
-      (format "%040x" (java.math.BigInteger. 1 (.digest md))))))
-
 (defdb mydb (:db config))
 (defentity users)
 (defentity groups)
@@ -87,8 +80,7 @@
 
 (defn authed? [plaintext user]
   (or (try (BCrypt/checkpw plaintext (:password user))
-           (catch java.lang.IllegalArgumentException _))
-      (= (:password user) (sha1 (:salt user) plaintext))))
+           (catch java.lang.IllegalArgumentException _))))
 
 (defn auth-user [username-or-email plaintext]
   (first (filter (partial authed? plaintext)

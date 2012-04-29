@@ -1,6 +1,6 @@
 (ns clojars.web.login
   (:require [clojars.web.common :refer [html-doc]]
-            [clojars.db :refer [auth-user update-user]]
+            [clojars.db :refer [auth-user]]
             [hiccup.page-helpers :refer [link-to]]
             [hiccup.form-helpers :refer [form-to label text-field
                                          password-field submit-button]]
@@ -25,9 +25,5 @@
 (defn login [{username :username password :password}]
   (if-let [user (auth-user username password)]
     (let [response (redirect "/")]
-      ;; presence of salt indicates sha1'd password, so re-hash to bcrypt
-      (when (not (empty? (:salt user "")))
-        (update-user (:user user) (:email user) (:user user)
-                     password (:ssh_key user)))
       (assoc-in response [:session :account] (:user user)))
     (login-form "Incorrect username or password.")))
