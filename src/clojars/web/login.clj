@@ -6,24 +6,18 @@
                                          password-field submit-button]]
             [ring.util.response :refer [redirect]]))
 
-(defn login-form [ & [error]]
+(defn login-form [{:keys [login_failed username]}]
   (html-doc nil "Login"
    [:h1 "Login"]
    [:p "Don't have an account? "
     (link-to "/register" "Sign up!")]
 
-   (when error
-     [:div {:class :error} (str error)])
+   (when login_failed
+     [:div {:class :error} "Incorrect username or password."])
    (form-to [:post "/login"]
      (label :username "Username or email:")
-     (text-field :username)
+     (text-field :username username)
      (label :password "Password:")
      (password-field :password)
      (link-to "/forgot-password" "Forgot password?") [:br]
      (submit-button "Login"))))
-
-(defn login [{username :username password :password}]
-  (if-let [user (auth-user username password)]
-    (let [response (redirect "/")]
-      (assoc-in response [:session :account] (:user user)))
-    (login-form "Incorrect username or password.")))

@@ -62,9 +62,6 @@
 (defentity groups)
 (defentity jars)
 
-(defn bcrypt [s]
-  (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
-
 (defn find-user [username]
   (first (select users (where {:user username}))))
 

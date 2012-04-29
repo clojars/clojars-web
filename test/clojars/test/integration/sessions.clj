@@ -13,6 +13,7 @@
 (deftest user-cant-login-with-bad-user-pass-combo
   (-> (session web/clojars-app)
       (login-as "fixture@example.org" "password")
+      (follow-redirect)
       (has (status? 200))
       (within [:article :div.error]
               (has (text? "Incorrect username or password.")))))

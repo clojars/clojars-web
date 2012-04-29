@@ -1,6 +1,7 @@
 (ns clojars.web
   (:require [clojars.db :refer [group-membernames find-user add-member
-                                find-jar recent-versions count-versions]]
+                                find-jar recent-versions count-versions
+                                find-user-by-user-or-email]]
             [clojars.web.dashboard :refer [dashboard index-page]]
             [clojars.web.search :refer [search]]
             [clojars.web.user :refer [profile-form update-profile show-user
@@ -9,27 +10,28 @@
             [clojars.web.group :refer [show-group]]
             [clojars.web.jar :refer [show-jar show-versions]]
             [clojars.web.common :refer [html-doc]]
-            [clojars.web.login :refer [login login-form]]
+            [clojars.web.login :refer [login-form]]
             [hiccup.core :refer [html h]]
             [ring.middleware.file-info :refer [wrap-file-info]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [redirect status response]]
             [compojure.core :refer [defroutes GET POST ANY]]
             [compojure.handler :refer [site]]
-            [compojure.route :refer [not-found]]))
+            [compojure.route :refer [not-found]]
+            [cemerick.friend :as friend]
+            [cemerick.friend.credentials :as creds]
+            [cemerick.friend.workflows :as workflows]))
 
 (defn not-found-doc []
   (html [:h1 "Page not found"]
         [:p "Thundering typhoons!  I think we lost it.  Sorry!"]))
 
 (defmacro with-account [body]
-  `(if-let [~'account (~'session :account)]
-     ~body
-     (redirect "/login")))
+  `(friend/authenticated (try-account ~body)))
 
 (defmacro try-account [body]
-  `(let [~'account (~'session :account)]
-     ~body))
+  `(let [~'account (:username (friend/current-authentication))]
+         ~body))
 
 (defroutes main-routes
   (GET "/search" {session :session params :params}
@@ -42,20 +44,14 @@
         (with-account
           (update-profile account params)))
   (GET "/login" {params :params}
-       (login-form))
-  (POST "/login" {params :params}
-        (login params))
-  (POST "/register" {params :params}
-        (register params))
+       (login-form params))
   (GET "/register" {params :params}
        (register-form))
   (POST "/forgot-password" {params :params}
         (forgot-password params))
   (GET "/forgot-password" {params :params}
        (forgot-password-form))
-  (GET "/logout" request
-       (let [response (redirect "/")]
-         (assoc-in response [:session :account] nil)))
+  (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))
   (GET "/" {session :session params :params}
        (try-account
         (if account
@@ -149,12 +145,28 @@
          :next))
   (ANY "*" {session :session}
        (not-found (html-doc (session :account)
-                             "Page not found"
-                             (not-found-doc)))))
+                            "Page not found"
+                            (not-found-doc)))))
+
+(defn registration [{:keys [uri request-method params]}]
+  (when (and (= uri "/register")
+             (= request-method :post))
+    (register params)))
 
 (def clojars-app
   (site
    (-> main-routes
+       (friend/authenticate
+        {:credential-fn
+         (partial creds/bcrypt-credential-fn
+                  (fn [id]
+                    (when-let [{:keys [user password]}
+                               (find-user-by-user-or-email id)]
+                      {:username user :password password})))
+         :workflows [(workflows/interactive-form)
+                     registration]
+         :login-uri "/login"
+         :default-landing-uri "/"})
        (wrap-resource "public")
        (wrap-file-info))))
 
