@@ -1,6 +1,6 @@
 (ns clojars.test.unit.web.common
-  (:use clojure.test)
-  (:require [clojars.web.common :as common]))
+  (:require [clojars.web.common :as common]
+            [clojure.test :refer :all]))
 
 ;;TODO: more helper tests
 

@@ -1,10 +1,12 @@
 (ns clojars.db
-  (:use [clojars.config :only [config]]
-        korma.db
-        korma.core)
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql])
+            [clojure.java.jdbc :as sql]
+            [clojars.config :refer [config]]
+            [korma.db :refer [defdb transaction]]
+            [korma.core :refer [defentity select group fields order
+                                modifier exec-raw where limit values
+                                raw insert update set-fields]])
   (:import java.security.MessageDigest
            java.util.Date
            java.io.File

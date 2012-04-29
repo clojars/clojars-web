@@ -1,8 +1,8 @@
 (ns clojars.main
-  (:use [ring.adapter.jetty :only [run-jetty]]
-        [clojars.web :only [clojars-app]]
-        [clojars.config :only [config configure]])
-  (:require [clojars.scp])
+  (:require [clojars.scp]
+            [ring.adapter.jetty :refer [run-jetty]]
+            [clojars.web :refer [clojars-app]]
+            [clojars.config :refer [config configure]])
   (:import com.martiansoftware.nailgun.NGServer
            java.net.InetAddress)
   (:gen-class))

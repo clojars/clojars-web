@@ -1,9 +1,9 @@
 (ns clojars.test.integration.users
-  (:use clojure.test
-        kerodon.core
-        kerodon.test
-        clojars.test.integration.steps)
-  (:require [clojars.web :as web]
+  (:require [clojure.test :refer :all]
+            [kerodon.core :refer :all]
+            [kerodon.test :refer :all]
+            [clojars.test.integration.steps :refer :all]
+            [clojars.web :as web]
             [clojars.test.test-helper :as help]
             [net.cgrand.enlive-html :as enlive]
             [clojure.java.io :as io]
@@ -251,7 +251,6 @@
         (register-as "fixture" "fixture@example.org" "password" ssh-key))
     (is (= "Welcome to Clojars, fixture!\n\nDeploying fake/test 0.0.1\nError: You don't have access to the fake group.\n"
            (scp ssh-key "test.jar" "test-0.0.1/test.pom")))))
-
 
 (deftest member-can-add-user-to-group
   (-> (session web/clojars-app)

@@ -1,11 +1,10 @@
 (ns clojars.web.login
-  (:use clojars.web.common
-        clojars.db
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers
-        ring.middleware.session.store
-        ring.util.response))
+  (:require [clojars.web.common :refer [html-doc]]
+            [clojars.db :refer [auth-user update-user]]
+            [hiccup.page-helpers :refer [link-to]]
+            [hiccup.form-helpers :refer [form-to label text-field
+                                         password-field submit-button]]
+            [ring.util.response :refer [redirect]]))
 
 (defn login-form [ & [error]]
   (html-doc nil "Login"

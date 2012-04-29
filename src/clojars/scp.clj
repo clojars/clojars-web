@@ -2,8 +2,8 @@
   (:import (java.io InputStream IOException File OutputStream
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
-  (:use [clojars.config :only [config]])
-  (:require [clojars.maven :as maven]
+  (:require [clojars.config :refer [config]]
+            [clojars.maven :as maven]
             [clojars.db :as db]
             [cemerick.pomegranate.aether :as aether])
   (:gen-class

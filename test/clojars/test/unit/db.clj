@@ -1,8 +1,8 @@
 (ns clojars.test.unit.db
-  (:use clojure.test)
   (:require [clojars.db :as db]
             [clojure.java.jdbc :as jdbc]
-            [clojars.test.test-helper :as help]))
+            [clojars.test.test-helper :as help]
+            [clojure.test :refer :all]))
 
 (help/use-fixtures)
 

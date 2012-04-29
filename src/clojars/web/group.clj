@@ -1,9 +1,8 @@
 (ns clojars.web.group
-  (:use clojars.web.common
-        clojars.db
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers))
+  (:require [clojars.web.common :refer [html-doc jar-link user-link error-list]]
+            [clojars.db :refer [jars-by-groupname]]
+            [hiccup.page-helpers :refer [unordered-list]]
+            [hiccup.form-helpers :refer [form-to text-field submit-button]]))
 
 (defn show-group [account groupname membernames & errors]
   (html-doc account (str groupname " group")

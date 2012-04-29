@@ -1,13 +1,18 @@
 (ns clojars.web.user
-  (:use [clojure.string :only [blank?]]
-        clojars.db
-        clojars.web.common
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers
-        ring.middleware.session.store
-        ring.util.response)
-  (:require [clojars.config :as config])
+  (:require [clojars.config :as config]
+            [clojars.db :refer [find-user group-membernames add-user
+                                reserved-names update-user jars-by-username
+                                find-groupnames find-user-by-user-or-email
+                                rand-string]]
+            [clojars.web.common :refer [html-doc error-list jar-link
+                                        group-link]]
+            [clojure.string :refer [blank?]]
+            [hiccup.core :refer [h]]
+            [hiccup.page-helpers :refer [link-to unordered-list]]
+            [hiccup.form-helpers :refer [form-to label text-field
+                                         password-field text-area
+                                         submit-button]]
+            [ring.util.response :refer [redirect]])
   (:import [org.apache.commons.mail SimpleEmail]))
 
 (defn register-form [ & [errors email username ssh-key]]

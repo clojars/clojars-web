@@ -1,22 +1,22 @@
 (ns clojars.web
-  (:use [clojars.db :only [group-membernames find-user add-member
-                           find-jar recent-versions count-versions]]
-        [clojars.web.dashboard :only [dashboard index-page]]
-        [clojars.web.search :only [search]]
-        [clojars.web.user :only [profile-form update-profile show-user
-                                 register register-form
-                                 forgot-password forgot-password-form]]
-        [clojars.web.group :only [show-group]]
-        [clojars.web.jar :only [show-jar show-versions]]
-        [clojars.web.common :only [html-doc]]
-        [clojars.web.login :only [login login-form]]
-        [hiccup.core :only [html h]]
-        [ring.middleware.file-info :only [wrap-file-info]]
-        [ring.middleware.resource :only [wrap-resource]]
-        [ring.util.response :only [redirect status response]]
-        [compojure.core :only [defroutes GET POST ANY]]
-        [compojure.handler :only [site]]
-        [compojure.route :only [not-found]]))
+  (:require [clojars.db :refer [group-membernames find-user add-member
+                                find-jar recent-versions count-versions]]
+            [clojars.web.dashboard :refer [dashboard index-page]]
+            [clojars.web.search :refer [search]]
+            [clojars.web.user :refer [profile-form update-profile show-user
+                                      register register-form
+                                      forgot-password forgot-password-form]]
+            [clojars.web.group :refer [show-group]]
+            [clojars.web.jar :refer [show-jar show-versions]]
+            [clojars.web.common :refer [html-doc]]
+            [clojars.web.login :refer [login login-form]]
+            [hiccup.core :refer [html h]]
+            [ring.middleware.file-info :refer [wrap-file-info]]
+            [ring.middleware.resource :refer [wrap-resource]]
+            [ring.util.response :refer [redirect status response]]
+            [compojure.core :refer [defroutes GET POST ANY]]
+            [compojure.handler :refer [site]]
+            [compojure.route :refer [not-found]]))
 
 (defn not-found-doc []
   (html [:h1 "Page not found"]

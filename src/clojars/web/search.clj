@@ -1,10 +1,8 @@
 (ns clojars.web.search
-  (:use clojars.web.common
-        clojars.db
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers)
-  (:require [cheshire.core :as json]))
+  (:require [clojars.web.common :refer [html-doc jar-link user-link]]
+            [clojars.db :refer [search-jars]]
+            [hiccup.core :refer [h]]
+            [cheshire.core :as json]))
 
 (defn format-date [s]
   (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))

@@ -1,7 +1,7 @@
 (ns clojars.test.unit.stats
-  (:use clojure.test)
   (:require [clojars.stats :as stats]
-            [clj-time.core :as time]))
+            [clj-time.core :as time]
+            [clojure.test :refer :all]))
 
 (deftest parse-path
   (is (= {:name "haddock"

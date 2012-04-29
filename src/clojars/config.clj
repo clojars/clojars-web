@@ -1,6 +1,6 @@
 (ns clojars.config
-  (:use     [clojure.tools.cli :only [cli]])
-  (:require [clojure.java.io :as io]
+  (:require [clojure.tools.cli :refer [cli]]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [ring.util.codec :as codec]))
 

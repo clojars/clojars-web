@@ -1,8 +1,8 @@
 (ns clojars.web.jar
-  (:use clojars.web.common
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers))
+  (:require [clojars.web.common :refer [html-doc jar-link group-link
+                                        tag jar-url jar-name user-link]]
+            [hiccup.core :refer [h]]
+            [hiccup.page-helpers :refer [link-to]]))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))

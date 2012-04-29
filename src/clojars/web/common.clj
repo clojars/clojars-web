@@ -1,7 +1,8 @@
 (ns clojars.web.common
-  (:use hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers))
+  (:require [hiccup.core :refer [html h]]
+            [hiccup.page-helpers :refer [html5 include-css include-js
+                                         link-to unordered-list]]
+            [hiccup.form-helpers :refer [form-to]]))
 
 (defn when-ie [& contents]
   (str

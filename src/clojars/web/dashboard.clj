@@ -1,9 +1,8 @@
 (ns clojars.web.dashboard
-  (:use clojars.web.common
-        clojars.db
-        hiccup.page-helpers
-        hiccup.form-helpers
-        hiccup.core))
+  (:require [clojars.web.common :refer [html-doc jar-link group-link tag]]
+            [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
+            [hiccup.core :refer [h]]
+            [hiccup.page-helpers :refer [unordered-list link-to]]))
 
 (defn index-page [account]
   (html-doc account nil
