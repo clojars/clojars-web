@@ -12,13 +12,6 @@
 
 (help/use-fixtures)
 
-(defn delete-recursive
-  [dir]
-  (when (.isDirectory dir)
-    (doseq [file (.listFiles dir)]
-      (delete-recursive file)))
-  (.delete dir))
-
 (deftest user-can-register
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" "")
@@ -198,7 +191,7 @@
           (.list (io/file (:repo config/config) "fake" "test" "0.0.1")))))
   (let [local-repo (io/file (System/getProperty "java.io.tmpdir")
                             "clojars-test-tmp")]
-    (delete-recursive local-repo)
+    (help/delete-file-recursively local-repo)
     (is (= {'[fake/test "0.0.1"] nil}
            (aether/resolve-dependencies
             :coordinates '[[fake/test "0.0.1"]]

@@ -1,9 +1,8 @@
 (ns clojars.db
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql]
             [clojars.config :refer [config]]
-            [korma.db :refer [defdb transaction]]
+            [korma.db :refer [defdb transaction rollback]]
             [korma.core :refer [defentity select group fields order
                                 modifier exec-raw where limit values
                                 raw insert update set-fields]])
@@ -41,19 +40,6 @@
 (defn ^:dynamic get-time []
   (Date.))
 
-(defn write-key-file [path]
-  (locking (:key-file config)
-   (let [new-file (File. (str path ".new"))]
-     (sql/with-query-results rs ["select user, ssh_key from users"]
-       (with-open [f (io/writer new-file)]
-         (doseq [{:keys [user ssh_key]} rs]
-           (.write f (str "command=\"ng --nailgun-port 8700 clojars.scp " user
-                            "\"," ssh-options " "
-                            (.replaceAll (.trim ssh_key)
-                                         "[\n\r\0]" "")
-                            "\n")))))
-     (.renameTo new-file (File. path)))))
-
 (defn bcrypt [s]
   (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
 
@@ -61,6 +47,18 @@
 (defentity users)
 (defentity groups)
 (defentity jars)
+
+(defn write-key-file [path]
+  (locking (:key-file config)
+    (let [new-file (File. (str path ".new"))]
+      (with-open [f (io/writer new-file)]
+        (doseq [{:keys [user ssh_key]} (select users (fields :user :ssh_key))]
+          (.write f (str "command=\"ng --nailgun-port 8700 clojars.scp " user
+                         "\"," ssh-options " "
+                         (.replaceAll (.trim ssh_key)
+                                      "[\n\r\0]" "")
+                         "\n"))))
+      (.renameTo new-file (File. path)))))
 
 (defn find-user [username]
   (first (select users (where {:user username}))))
@@ -204,34 +202,15 @@
                    :authors    (str/join ", " (map #(.replace % "," "")
                                                    (:authors jarmap)))})))
 
-(defn- using-savepoints-rollback [f]
-  ;;Required for tests as clojure.java.jdbc
-  ;;doesn't handle rolling back nested transactions
-  ;;Also sqlite driver doesn't support .setSavepoint
-  (exec-raw ["SAVEPOINT s"])
-  (try
-    (f)
-    (finally
-     (exec-raw ["ROLLBACK TO s"]))))
-
 (defn add-jar [account jarmap & [check-only]]
   (when-not (re-matches #"^[a-z0-9-_.]+$" (:name jarmap))
     (throw (Exception. (str "Jar names must consist solely of lowercase "
                             "letters, numbers, hyphens and underscores."))))
-  ;; TODO remove when fixed in korma
-  ;; Work around for korma generating a different
-  ;; connection for nested transactions
-  (if (sql/find-connection)
-    (sql/transaction
-     (if check-only
-       (using-savepoints-rollback
-        (partial add-jar-helper account jarmap))
-       (add-jar-helper account jarmap)))
-    (transaction
-     (if check-only
-       (using-savepoints-rollback
-        (partial add-jar-helper account jarmap))
-       (add-jar-helper account jarmap)))))
+  (transaction
+   (if check-only
+     (do (rollback)
+         (add-jar-helper account jarmap))
+     (add-jar-helper account jarmap))))
 
 (defn quote-hyphenated
   "Wraps hyphenated-words in double quotes."
