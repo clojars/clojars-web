@@ -2,6 +2,7 @@
   (:require [clojars.db :refer [group-membernames find-user add-member
                                 find-jar recent-versions count-versions
                                 find-user-by-user-or-email]]
+            [clojars.config :refer [config]]
             [clojars.web.dashboard :refer [dashboard index-page]]
             [clojars.web.search :refer [search]]
             [clojars.web.user :refer [profile-form update-profile show-user
@@ -15,12 +16,14 @@
             [ring.middleware.file-info :refer [wrap-file-info]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [redirect status response]]
-            [compojure.core :refer [defroutes GET POST ANY]]
+            [compojure.core :refer [defroutes GET POST PUT ANY context]]
             [compojure.handler :refer [site]]
             [compojure.route :refer [not-found]]
             [cemerick.friend :as friend]
             [cemerick.friend.credentials :as creds]
-            [cemerick.friend.workflows :as workflows]))
+            [cemerick.friend.workflows :as workflows]
+            [clojure.java.io :as io]
+            [clojure.string :as string]))
 
 (defn not-found-doc []
   (html [:h1 "Page not found"]
@@ -33,7 +36,35 @@
   `(let [~'account (:username (friend/current-authentication))]
          ~body))
 
+(defn save-to-file [sent-file body]
+  (-> sent-file
+      .getParentFile
+      .mkdirs)
+  (with-open [wrtr (io/writer sent-file)]
+    (.write wrtr (slurp body))))
+
+(defroutes repo-routes
+  (PUT ["/:group/:artifact/:file"
+        :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
+       {body :body {:keys [group artifact file]} :params}
+       (with-account
+         (if (some #{account}
+                   (group-membernames (string/replace group "/" ".")))
+           (do (save-to-file (io/file (config :repo) group artifact file) body)
+               {:status 201 :headers {} :body nil})
+           (friend/throw-unauthorized friend/*identity*))))
+  (PUT ["/:group/:artifact/:version/:file"
+        :group #".+" :artifact #"[^/]+" :version #"[^/]+" :file #"[^/]+"]
+       {body :body {:keys [group artifact version file]} :params}
+       (with-account
+         (if (some #{account}
+                   (group-membernames (string/replace group "/" ".")))
+           (do (save-to-file (io/file (config :repo) group artifact version file) body)
+               {:status 201 :headers {} :body nil})
+           (friend/throw-unauthorized friend/*identity*)))))
+
 (defroutes main-routes
+  (context "/repo" request repo-routes)
   (GET "/search" {session :session params :params}
        (try-account
         (search account params)))
@@ -164,7 +195,8 @@
                                (find-user-by-user-or-email id)]
                       {:username user :password password})))
          :workflows [(workflows/interactive-form)
-                     registration]
+                     registration
+                     (workflows/http-basic)]
          :login-uri "/login"
          :default-landing-uri "/"})
        (wrap-resource "public")

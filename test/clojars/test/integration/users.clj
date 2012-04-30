@@ -189,17 +189,15 @@
   (is (= 6
          (count
           (.list (io/file (:repo config/config) "fake" "test" "0.0.1")))))
-  (let [local-repo (io/file (System/getProperty "java.io.tmpdir")
-                            "clojars-test-tmp")]
-    (help/delete-file-recursively local-repo)
-    (is (= {'[fake/test "0.0.1"] nil}
-           (aether/resolve-dependencies
-            :coordinates '[[fake/test "0.0.1"]]
-            :repositories {"local" (-> (:repo config/config)
-                                       io/file
-                                       .toURI
-                                       .toString)}
-            :local-repo local-repo)))))
+  (help/delete-file-recursively help/local-repo)
+  (is (= {'[fake/test "0.0.1"] nil}
+         (aether/resolve-dependencies
+          :coordinates '[[fake/test "0.0.1"]]
+          :repositories {"local" (-> (:repo config/config)
+                                     io/file
+                                     .toURI
+                                     .toString)}
+          :local-repo help/local-repo))))
 
 (deftest user-can-update-and-scp
   (-> (session web/clojars-app)

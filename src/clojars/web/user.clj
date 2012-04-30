@@ -12,7 +12,7 @@
             [hiccup.form-helpers :refer [form-to label text-field
                                          password-field text-area
                                          submit-button]]
-            [ring.util.response :refer [redirect]]
+            [ring.util.response :refer [response redirect]]
             [cemerick.friend :as friend])
   (:import [org.apache.commons.mail SimpleEmail]))
 
@@ -70,7 +70,7 @@
 
 (defn register [{:keys [email username password confirm ssh-key]}]
   (if-let [errors (validate-profile nil email username password confirm ssh-key)]
-    {:status 200 :headers {} :body (register-form errors email username ssh-key)}
+    (response (register-form errors email username ssh-key))
     (do (add-user email username password ssh-key)
         (vary-meta {:identity username :username username}
                    merge
