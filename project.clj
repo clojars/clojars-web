@@ -4,16 +4,7 @@
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
                   [org.codehaus.plexus/plexus-utils]]
-
-                 ;; TODO remove exclusions when updated
-                 ;; Fix pomegranate http deploy
-                 [com.cemerick/pomegranate "0.0.11"
-                  :exclusions
-                  [[org.apache.maven.wagon/wagon-http]
-                   [org.apache.maven.wagon/wagon-provider-api]]]
-                 [org.apache.maven.wagon/wagon-http "2.2"]
-                 [org.apache.maven.wagon/wagon-provider-api "2.2"]
-
+                 [com.cemerick/pomegranate "0.0.12"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.2"]
                  [hiccup "0.3.8"]

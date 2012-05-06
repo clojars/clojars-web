@@ -20,3 +20,6 @@
   [file]
   (with-open [reader (io/reader file)]
     (.read (MavenXpp3Reader.) reader)))
+
+
+(def pom-to-map (comp model-to-map read-pom))

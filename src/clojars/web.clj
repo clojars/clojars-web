@@ -3,6 +3,8 @@
                                 find-jar recent-versions count-versions
                                 find-user-by-user-or-email]]
             [clojars.config :refer [config]]
+            [clojars.auth :refer [with-account try-account]]
+            [clojars.repo :as repo]
             [clojars.web.dashboard :refer [dashboard index-page]]
             [clojars.web.search :refer [search]]
             [clojars.web.user :refer [profile-form update-profile show-user
@@ -29,42 +31,8 @@
   (html [:h1 "Page not found"]
         [:p "Thundering typhoons!  I think we lost it.  Sorry!"]))
 
-(defmacro with-account [body]
-  `(friend/authenticated (try-account ~body)))
-
-(defmacro try-account [body]
-  `(let [~'account (:username (friend/current-authentication))]
-         ~body))
-
-(defn save-to-file [sent-file body]
-  (-> sent-file
-      .getParentFile
-      .mkdirs)
-  (with-open [wrtr (io/writer sent-file)]
-    (.write wrtr (slurp body))))
-
-(defroutes repo-routes
-  (PUT ["/:group/:artifact/:file"
-        :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
-       {body :body {:keys [group artifact file]} :params}
-       (with-account
-         (if (some #{account}
-                   (group-membernames (string/replace group "/" ".")))
-           (do (save-to-file (io/file (config :repo) group artifact file) body)
-               {:status 201 :headers {} :body nil})
-           (friend/throw-unauthorized friend/*identity*))))
-  (PUT ["/:group/:artifact/:version/:file"
-        :group #".+" :artifact #"[^/]+" :version #"[^/]+" :file #"[^/]+"]
-       {body :body {:keys [group artifact version file]} :params}
-       (with-account
-         (if (some #{account}
-                   (group-membernames (string/replace group "/" ".")))
-           (do (save-to-file (io/file (config :repo) group artifact version file) body)
-               {:status 201 :headers {} :body nil})
-           (friend/throw-unauthorized friend/*identity*)))))
-
 (defroutes main-routes
-  (context "/repo" request repo-routes)
+  (context "/repo" request repo/routes)
   (GET "/search" {session :session params :params}
        (try-account
         (search account params)))

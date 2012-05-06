@@ -76,11 +76,6 @@
 (defmacro printerr [& strs]
   `(.println (.err ~'ctx) (str ~@(interleave strs (repeat " ")))))
 
-(defn read-metadata [f default-group]
-  (let [model (maven/read-pom (:file f))
-        jarmap (maven/model-to-map model)]
-    [[model jarmap]]))
-
 (defn jar-names
   "Construct a few possible name variations a jar might have."
   [jarmap]
@@ -99,8 +94,8 @@
 
     (doseq [metafile metadata
             :when (not= (:name metafile) "maven-metadata.xml")
-            [model jarmap] (read-metadata metafile act-group)
-            :let [names (jar-names jarmap)]]
+            :let [jarmap (maven/pom-to-map (:file metafile))
+                  names (jar-names jarmap)]]
       (if-let [jarfile (some jarfiles names)]
         (do
           (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"

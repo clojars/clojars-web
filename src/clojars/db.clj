@@ -189,18 +189,32 @@
         (throw (Exception. (str "You don't have access to the "
                                 groupname " group.")))))))
 
-(defn- add-jar-helper [account jarmap]
-  (check-and-add-group account (:group jarmap))
+(defn- add-jar-helper [account {:keys [group name version
+                                       description homepage authors]}]
+  (check-and-add-group account group)
   (insert jars
-          (values {:group_name (:group jarmap)
-                   :jar_name   (:name jarmap)
-                   :version    (:version jarmap)
+          (values {:group_name group
+                   :jar_name   name
+                   :version    version
                    :user       account
                    :created    (get-time)
-                   :description (:description jarmap)
-                   :homepage   (:homepage jarmap)
+                   :description description
+                   :homepage   homepage
                    :authors    (str/join ", " (map #(.replace % "," "")
-                                                   (:authors jarmap)))})))
+                                                   authors))})))
+
+(defn update-jar [account {:keys [group name version
+                                  description homepage authors]}]
+  (update jars
+          (set-fields {:user       account
+                       :created    (get-time)
+                       :description description
+                       :homepage   homepage
+                       :authors    (str/join ", " (map #(.replace % "," "")
+                                                       authors))})
+          (where {:group_name group
+                  :jar_name   name
+                  :version    version})))
 
 (defn add-jar [account jarmap & [check-only]]
   (when-not (re-matches #"^[a-z0-9-_.]+$" (:name jarmap))

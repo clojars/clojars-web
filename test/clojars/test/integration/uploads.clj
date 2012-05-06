@@ -47,7 +47,7 @@
 
 (deftest user-can-register-and-deploy
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+      (register-as "dantheman" "test@example.org" "password" ""))
   (help/delete-file-recursively help/local-repo)
   (help/delete-file-recursively help/local-repo2)
   (aether/deploy
@@ -69,37 +69,37 @@
       (has (status? 200))
       (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
               (has (text? "dantheman")))
-      (doto prn)
-      (follow "test")))
+      (follow "org.clojars.dantheman/test")))
 
-;; (deftest user-can-deploy-to-new-group
-;;   (-> (session clojars-app)
-;;       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-;;   (help/delete-file-recursively help/local-repo)
-;;   (help/delete-file-recursively help/local-repo2)
-;;   (aether/deploy
-;;    :coordinates '[fake/test "1.0.0"]
-;;    :jar-file (io/file (io/resource "test.jar"))
-;;    :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-;;    :repository {"test" {:url (str "http://localhost:" test-port "/repo")
-;;                         :username "dantheman"
-;;                         :password "password"}}
-;;    :local-repo help/local-repo)
-;;   (is (= '{[fake/test "1.0.0"] nil}
-;;          (aether/resolve-dependencies
-;;           :coordinates '[[fake/test "1.0.0"]]
-;;           :repositories {"test" {:url
-;;                                  (str "http://localhost:" test-port "/repo")}}
-;;           :local-repo help/local-repo2)))
-;;   (-> (session clojars-app)
-;;       (visit "/groups/fake")
-;;       (has (status? 200))
-;;       (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
-;;               (has (text? "dantheman")))
-;;       (doto prn)
-;;       (follow "test")))
+(deftest user-can-deploy-to-new-group
+   (-> (session clojars-app)
+       (register-as "dantheman" "test@example.org" "password" ""))
+   (help/delete-file-recursively help/local-repo)
+   (help/delete-file-recursively help/local-repo2)
+   (aether/deploy
+    :coordinates '[fake/test "1.0.0"]
+    :jar-file (io/file (io/resource "test.jar"))
+    :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+    :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+                         :username "dantheman"
+                         :password "password"}}
+    :local-repo help/local-repo)
+   (is (= '{[fake/test "1.0.0"] nil}
+          (aether/resolve-dependencies
+           :coordinates '[[fake/test "1.0.0"]]
+           :repositories {"test" {:url
+                                  (str "http://localhost:" test-port "/repo")}}
+           :local-repo help/local-repo2)))
+   (-> (session clojars-app)
+       (visit "/groups/fake")
+       (has (status? 200))
+       (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
+               (has (text? "dantheman")))
+       (follow "fake/test")
+       (within [:article [:p (enlive/nth-of-type 2)]]
+               (has (text? "https://example.org")))))
 
-(deftest user-cannot-deploy-to-other-users-groups
+(deftest user-cannot-deploy-to-groups-without-permission
   (-> (session clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
   (-> (session clojars-app)
@@ -124,8 +124,7 @@
          :local-repo help/local-repo))))
 
 (deftest bad-login-cannot-deploy
-  (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-        #"Unauthorized"
+  (is (thrown? org.sonatype.aether.deployment.DeploymentException
         (aether/deploy
          :coordinates '[fake/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
