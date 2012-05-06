@@ -9,32 +9,13 @@
             [clojure.java.io :as io]
             [cemerick.pomegranate.aether :as aether]
             [ring.adapter.jetty :as jetty]
-            [ring.util.codec :as codec]
-            [ring.util.response :as response]
             [net.cgrand.enlive-html :as enlive]))
-
 
 (declare test-port)
 
-(defn wrap-file-at [app dir prefix]
-  (fn [req]
-    (if-not (= :get (:request-method req))
-      (app req)
-      (let [path (codec/url-decode (:uri req))]
-        (if (.startsWith path prefix)
-          (or (response/file-response
-               (.substring path (count prefix))
-               {:root dir})
-              (app req))
-          (app req))))))
-
-(def test-app
-  (-> #'clojars-app
-      (wrap-file-at (config :repo) "/repo")))
-
 (defn- run-test-app
   [f]
-  (let [server (jetty/run-jetty test-app {:port 0 :join? false})
+  (let [server (jetty/run-jetty #'clojars-app {:port 0 :join? false})
         port (-> server .getConnectors first .getLocalPort)]
     (with-redefs [test-port port]
       (try

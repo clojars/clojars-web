@@ -167,6 +167,7 @@
                      (workflows/http-basic)]
          :login-uri "/login"
          :default-landing-uri "/"})
+       (repo/wrap-file-at (config :repo) "/repo")
        (wrap-resource "public")
        (wrap-file-info))))
 

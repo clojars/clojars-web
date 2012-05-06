@@ -5,15 +5,16 @@
             [clojars.maven :as maven]
             [compojure.core :refer [defroutes PUT ANY]]
             [clojure.java.io :as io]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [ring.util.codec :as codec]
+            [ring.util.response :as response])
   (:import java.io.StringReader))
 
 (defn save-to-file [sent-file body]
   (-> sent-file
       .getParentFile
       .mkdirs)
-  (with-open [wrtr (io/writer sent-file)]
-    (.write wrtr body)))
+  (spit sent-file body))
 
 (defroutes routes
   (PUT ["/:group/:artifact/:file"
@@ -53,3 +54,15 @@
               (save-to-file (io/file (config :repo) group artifact version file)
                             contents))
             {:status 201 :headers {} :body nil})))))
+
+(defn wrap-file-at [app dir prefix]
+  (fn [req]
+    (if-not (= :get (:request-method req))
+      (app req)
+      (let [path (codec/url-decode (:uri req))]
+        (if (.startsWith path prefix)
+          (or (response/file-response
+               (.substring path (count prefix))
+               {:root dir})
+              (app req))
+          (app req))))))
