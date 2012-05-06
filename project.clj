@@ -16,7 +16,7 @@
                  [org.apache.commons/commons-email "1.2"]
                  [net.cgrand/regex "1.0.1"]
                  [clj-time "0.3.8"]
-                 [com.cemerick/friend "0.0.7"]]
+                 [com.cemerick/friend "0.0.8"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.4"]
                                    [nailgun-shim "0.0.1"]]}

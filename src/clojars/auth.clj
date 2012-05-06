@@ -10,7 +10,7 @@
      ~body))
 
 (defmacro authorized! [group & body]
-  `(if (or (some #{~'account} (group-membernames ~group))
-           (empty? (group-membernames ~group)))
-     (do ~@body)
-     (friend/throw-unauthorized friend/*identity*)))
+  `(let [names# (group-membernames ~group)]
+     (if (or (some #{~'account} names#) (empty? names#))
+       (do ~@body)
+       (friend/throw-unauthorized friend/*identity*))))

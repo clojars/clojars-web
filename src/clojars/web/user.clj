@@ -13,7 +13,8 @@
                                          password-field text-area
                                          submit-button]]
             [ring.util.response :refer [response redirect]]
-            [cemerick.friend :as friend])
+            [cemerick.friend :as friend]
+            [cemerick.friend.workflows :as workflow])
   (:import [org.apache.commons.mail SimpleEmail]))
 
 (defn register-form [ & [errors email username ssh-key]]
@@ -72,11 +73,7 @@
   (if-let [errors (validate-profile nil email username password confirm ssh-key)]
     (response (register-form errors email username ssh-key))
     (do (add-user email username password ssh-key)
-        (vary-meta {:identity username :username username}
-                   merge
-                   {::friend/workflow :registration
-                    :type ::friend/auth
-                    ::friend/redirect-on-auth? true}))))
+        (workflow/make-auth {:identity username :username username}))))
 
 (defn profile-form [account & [errors]]
   (let [user (find-user account)]
