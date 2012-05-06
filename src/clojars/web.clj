@@ -3,12 +3,13 @@
                                 find-jar recent-versions count-versions
                                 find-user-by-user-or-email]]
             [clojars.config :refer [config]]
-            [clojars.auth :refer [with-account try-account]]
+            [clojars.auth :refer [with-account try-account authorized!]]
             [clojars.repo :as repo]
+            [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
             [clojars.web.search :refer [search]]
             [clojars.web.user :refer [profile-form update-profile show-user
-                                      register register-form
+                                      register-form
                                       forgot-password forgot-password-form]]
             [clojars.web.group :refer [show-group]]
             [clojars.web.jar :refer [show-jar show-versions]]
@@ -51,6 +52,7 @@
   (GET "/forgot-password" {params :params}
        (forgot-password-form))
   (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))
+
   (GET "/" {session :session params :params}
        (try-account
         (if account
@@ -66,17 +68,18 @@
         {session :session {groupname :groupname username :user} :params }
         (if-let [membernames (group-membernames groupname)]
           (try-account
-           (cond
-            (some #{username} membernames)
-            (show-group account groupname membernames "They're already a member!")
-            (and (some #{account} membernames)
-                 (find-user username))
-            (do (add-member groupname username)
-                (show-group account groupname
-                            (conj membernames username)))
-            :else
-            (show-group account groupname membernames (str "No such user: "
-                                                           (h username)))))
+           (authorized!
+            groupname
+            (cond
+             (some #{username} membernames)
+             (show-group account groupname membernames "They're already a member!")
+             (find-user username)
+             (do (add-member groupname username)
+                 (show-group account groupname
+                             (conj membernames username)))
+             :else
+             (show-group account groupname membernames (str "No such user: "
+                                                            (h username))))))
           :next))
   (GET "/users/:username"  {session :session {username :username} :params}
        (if-let [user (find-user username)]
@@ -147,11 +150,6 @@
                             "Page not found"
                             (not-found-doc)))))
 
-(defn registration [{:keys [uri request-method params]}]
-  (when (and (= uri "/register")
-             (= request-method :post))
-    (register params)))
-
 (def clojars-app
   (site
    (-> main-routes
@@ -163,18 +161,10 @@
                                (find-user-by-user-or-email id)]
                       {:username user :password password})))
          :workflows [(workflows/interactive-form)
-                     registration
+                     registration/workflow
                      (workflows/http-basic)]
          :login-uri "/login"
          :default-landing-uri "/"})
        (repo/wrap-file-at (:repo config) "/repo")
        (wrap-resource "public")
        (wrap-file-info))))
-
-(comment
-  (require 'swank.swank)
-  (swank.swank/start-repl)
-
-  (find-jar "leiningen" "leiningen")
-  (def server (run-server {:port 8000} "/*" (servlet clojars-app)))
-  (.stop server))
