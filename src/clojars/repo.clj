@@ -10,11 +10,11 @@
             [ring.util.response :as response])
   (:import java.io.StringReader))
 
-(defn save-to-file [sent-file body]
+(defn save-to-file [sent-file input]
   (-> sent-file
       .getParentFile
       .mkdirs)
-  (spit sent-file body))
+  (io/copy input sent-file))
 
 (defroutes routes
   (PUT ["/:group/:artifact/:file"
@@ -24,7 +24,7 @@
          (authorized!
           (string/replace group "/" ".")
           (save-to-file (io/file (config :repo) group artifact file)
-                        (slurp body))
+                        body)
           {:status 201 :headers {} :body nil})))
   (PUT ["/:group/:artifact/:version/:file"
         :group #".+" :artifact #"[^/]+" :version #"[^/]+" :file #"[^/]+"]
@@ -33,8 +33,8 @@
          (with-account
            (authorized!
             (string/replace group "/" ".")
-            (let [contents (slurp body)]
-              (if (.endsWith file ".pom")
+            (if (.endsWith file ".pom")
+              (let [contents (slurp body)]
                 (if (find-jar groupname artifact version)
                   (update-jar account
                               (merge
@@ -47,12 +47,15 @@
                                     {:group groupname
                                      :name  artifact
                                      :version version})))
+                (save-to-file (io/file (config :repo) group artifact version file)
+                              contents))
+              (do
                 (when-not (find-jar groupname artifact version)
                   (add-jar account  {:group groupname
                                      :name  artifact
-                                     :version version})))
-              (save-to-file (io/file (config :repo) group artifact version file)
-                            contents))
+                                     :version version}))
+                (save-to-file (io/file (config :repo) group artifact version file)
+                              body)))
             {:status 201 :headers {} :body nil})))))
 
 (defn wrap-file-at [app dir prefix]
