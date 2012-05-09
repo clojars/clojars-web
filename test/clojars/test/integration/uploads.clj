@@ -114,3 +114,19 @@
                               :username "guest"
                               :password "password"}}
          :local-repo help/local-repo))))
+
+(deftest deploy-requires-lowercase
+  (-> (session clojars-app)
+      (register-as "dantheman" "test@example.org" "password" ""))
+  (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+        #"Forbidden"
+        (aether/deploy
+         :coordinates '[faKE/test "1.0.0"]
+         :jar-file (io/file (io/resource "test.jar"))
+         :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+         :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+                              :username "dantheman"
+                              :password "password"}}
+         :local-repo help/local-repo)
+        )))
+

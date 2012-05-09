@@ -1,5 +1,5 @@
 (ns clojars.repo
-  (:require [clojars.auth :refer [with-account authorized!]]
+  (:require [clojars.auth :refer [with-account require-authorization authorized?]]
             [clojars.db :refer [find-jar add-jar update-jar]]
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
@@ -16,12 +16,37 @@
       .mkdirs)
   (io/copy input sent-file))
 
+(defn handle-versioned-file [account groupname group artifact version file body]
+  (if (.endsWith file ".pom")
+    (let [contents (slurp body)]
+      (if (find-jar groupname artifact version)
+        (update-jar account
+                    (merge
+                     (maven/pom-to-map (StringReader. contents))
+                     {:group groupname
+                      :name  artifact
+                      :version version}))
+        (add-jar account (merge
+                          (maven/pom-to-map (StringReader. contents))
+                          {:group groupname
+                           :name  artifact
+                           :version version})))
+      (save-to-file (io/file (config :repo) group artifact version file)
+                    contents))
+    (do
+      (when-not (find-jar groupname artifact version)
+        (add-jar account  {:group groupname
+                           :name  artifact
+                           :version version}))
+      (save-to-file (io/file (config :repo) group artifact version file)
+                    body))))
+
 (defroutes routes
   (PUT ["/:group/:artifact/:file"
         :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
        {body :body {:keys [group artifact file]} :params}
        (with-account
-         (authorized!
+         (require-authorization
           (string/replace group "/" ".")
           (save-to-file (io/file (config :repo) group artifact file)
                         body)
@@ -31,32 +56,20 @@
        {body :body {:keys [group artifact version file]} :params}
        (let [groupname (string/replace group "/" ".")]
          (with-account
-           (authorized!
-            (string/replace group "/" ".")
-            (if (.endsWith file ".pom")
-              (let [contents (slurp body)]
-                (if (find-jar groupname artifact version)
-                  (update-jar account
-                              (merge
-                               (maven/pom-to-map (StringReader. contents))
-                               {:group groupname
-                                :name  artifact
-                                :version version}))
-                  (add-jar account (merge
-                                    (maven/pom-to-map (StringReader. contents))
-                                    {:group groupname
-                                     :name  artifact
-                                     :version version})))
-                (save-to-file (io/file (config :repo) group artifact version file)
-                              contents))
+           (require-authorization
+            groupname
+            (try
               (do
-                (when-not (find-jar groupname artifact version)
-                  (add-jar account  {:group groupname
-                                     :name  artifact
-                                     :version version}))
-                (save-to-file (io/file (config :repo) group artifact version file)
-                              body)))
-            {:status 201 :headers {} :body nil})))))
+                (handle-versioned-file account
+                                       groupname
+                                       group
+                                       artifact
+                                       version
+                                       file
+                                       body)
+                {:status 201 :headers {} :body nil})
+              (catch Exception e
+                {:status 403 :headers {} :body (.getMessage e)})))))))
 
 (defn wrap-file-at [app dir prefix]
   (fn [req]

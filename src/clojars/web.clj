@@ -3,7 +3,8 @@
                                 find-jar recent-versions count-versions
                                 find-user-by-user-or-email]]
             [clojars.config :refer [config]]
-            [clojars.auth :refer [with-account try-account authorized!]]
+            [clojars.auth :refer [with-account try-account require-authorization
+                                  authorized?]]
             [clojars.repo :as repo]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
@@ -68,7 +69,7 @@
         {session :session {groupname :groupname username :user} :params }
         (if-let [membernames (group-membernames groupname)]
           (try-account
-           (authorized!
+           (require-authorization
             groupname
             (cond
              (some #{username} membernames)

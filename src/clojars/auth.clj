@@ -9,8 +9,11 @@
   `(let [~'account (:username (friend/current-authentication))]
      ~body))
 
-(defmacro authorized! [group & body]
-  `(let [names# (group-membernames ~group)]
-     (if (or (some #{~'account} names#) (empty? names#))
+(defn authorized? [account group]
+  (let [names# (group-membernames group)]
+    (or (some #{account} names#) (empty? names#))))
+
+(defmacro require-authorization [group & body]
+  `(if (authorized? ~'account ~group)
        (do ~@body)
-       (friend/throw-unauthorized friend/*identity*))))
+       (friend/throw-unauthorized friend/*identity*)))
