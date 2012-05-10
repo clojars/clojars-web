@@ -3,8 +3,7 @@
                                 find-jar recent-versions count-versions
                                 find-user-by-user-or-email]]
             [clojars.config :refer [config]]
-            [clojars.auth :refer [with-account try-account require-authorization
-                                  authorized?]]
+            [clojars.auth :refer [with-account try-account require-authorization]]
             [clojars.repo :as repo]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
