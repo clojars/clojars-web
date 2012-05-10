@@ -4,6 +4,7 @@
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [compojure.core :refer [defroutes PUT ANY]]
+            [compojure.route :refer [not-found]]
             [clojure.java.io :as io]
             [clojure.string :as string]
             [ring.util.codec :as codec]
@@ -27,7 +28,8 @@
                         body)
           {:status 201 :headers {} :body nil})))
   (PUT ["/:group/:artifact/:version/:file"
-        :group #".+" :artifact #"[^/]+" :version #"[^/]+" :file #"[^/]+"]
+        :group #".+" :artifact #"[^/]+" :version #"[^/]+"
+        :file #"[^/]+(\.pom|\.jar|\.sha)$"]
        {body :body {:keys [group artifact version file]} :params}
        (let [groupname (string/replace group "/" ".")]
          (with-account
@@ -55,7 +57,8 @@
                                   body))))
               {:status 201 :headers {} :body nil}
               (catch Exception e
-                {:status 403 :headers {} :body (.getMessage e)})))))))
+                {:status 403 :headers {} :body (.getMessage e)}))))))
+  (not-found "Page not found"))
 
 (defn wrap-file [app dir]
   (fn [req]

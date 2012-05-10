@@ -127,6 +127,9 @@
          :repository {"test" {:url (str "http://localhost:" test-port "/repo")
                               :username "dantheman"
                               :password "password"}}
-         :local-repo help/local-repo)
-        )))
+         :local-repo help/local-repo))))
 
+(deftest put-on-html-fails
+  (-> (session clojars-app)
+      (visit "/repo/group/artifact/1.0.0/injection.html" :request-method :put)
+      (has (status? 404))))
