@@ -33,7 +33,6 @@
         [:p "Thundering typhoons!  I think we lost it.  Sorry!"]))
 
 (defroutes main-routes
-  (context "/repo" request repo/routes)
   (GET "/search" {session :session params :params}
        (try-account
         (search account params)))
@@ -150,7 +149,21 @@
                             "Page not found"
                             (not-found-doc)))))
 
-(def clojars-app
+(defroutes repo-routes
+  (context "/repo" request
+           (-> repo/routes
+               (friend/authenticate
+                {:credential-fn
+                 (partial creds/bcrypt-credential-fn
+                          (fn [id]
+                            (when-let [{:keys [user password]}
+                                       (find-user-by-user-or-email id)]
+                              {:username user :password password})))
+                 :workflows [(workflows/http-basic :realm "clojars")]
+                 :unauthorized-handler (partial workflows/http-basic-deny "clojars")})
+               (repo/wrap-file (:repo config)))))
+
+(def site-app
   (site
    (-> main-routes
        (friend/authenticate
@@ -161,10 +174,18 @@
                                (find-user-by-user-or-email id)]
                       {:username user :password password})))
          :workflows [(workflows/interactive-form)
-                     registration/workflow
-                     (workflows/http-basic)]
+                     registration/workflow]
          :login-uri "/login"
-         :default-landing-uri "/"})
-       (repo/wrap-file-at (:repo config) "/repo")
+         :default-landing-uri "/"
+         :unauthorized-handler
+         (fn [r]
+           (-> (redirect "/login")
+               (assoc-in [:session ::friend/unauthorized-uri] (:uri r))))})
        (wrap-resource "public")
        (wrap-file-info))))
+
+(def clojars-app
+  (fn [{:keys [uri] :as r}]
+    (if (.startsWith uri "/repo/")
+      (repo-routes r)
+      (site-app r))))

@@ -57,14 +57,10 @@
               (catch Exception e
                 {:status 403 :headers {} :body (.getMessage e)})))))))
 
-(defn wrap-file-at [app dir prefix]
+(defn wrap-file [app dir]
   (fn [req]
     (if-not (= :get (:request-method req))
       (app req)
-      (let [path (codec/url-decode (:uri req))]
-        (if (.startsWith path prefix)
-          (or (response/file-response
-               (.substring path (count prefix))
-               {:root dir})
-              (app req))
-          (app req))))))
+      (let [path (codec/url-decode (:path-info req))]
+        (or (response/file-response path {:root dir})
+            (app req))))))
