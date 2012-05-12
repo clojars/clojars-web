@@ -144,6 +144,7 @@
          (try-account
           (show-user account user))
          :next))
+  (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
   (ANY "*" {session :session}
        (not-found (html-doc (session :account)
                             "Page not found"
