@@ -29,7 +29,7 @@
           {:status 201 :headers {} :body nil})))
   (PUT ["/:group/:artifact/:version/:file"
         :group #".+" :artifact #"[^/]+" :version #"[^/]+"
-        :file #"[^/]+(\.pom|\.jar|\.sha)$"]
+        :file #"[^/]+(\.pom|\.jar|\.sha1|\.md5)$"]
        {body :body {:keys [group artifact version file]} :params}
        (let [groupname (string/replace group "/" ".")]
          (with-account

@@ -39,6 +39,13 @@
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo)
+  (is (= 6
+         (count (.list (clojure.java.io/file (:repo config)
+                                           "org"
+                                           "clojars"
+                                           "dantheman"
+                                           "test"
+                                           "1.0.0")))))
   (is (= '{[org.clojars.dantheman/test "1.0.0"] nil}
          (aether/resolve-dependencies
           :coordinates '[[org.clojars.dantheman/test "1.0.0"]]
