@@ -15,8 +15,8 @@
       (login-as "fixture@example.org" "password")
       (follow-redirect)
       (has (status? 200))
-      (within [:article :div.error]
-              (has (text? "Incorrect username or password.")))))
+      (within [:article :div :p.error]
+              (has (text? "Incorrect username and/or password.")))))
 
 (deftest user-can-login-and-logout
   (-> (session web/clojars-app)
