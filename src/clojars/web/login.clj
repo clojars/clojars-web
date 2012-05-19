@@ -1,6 +1,5 @@
 (ns clojars.web.login
   (:require [clojars.web.common :refer [html-doc]]
-            [clojars.db :refer [auth-user]]
             [hiccup.page-helpers :refer [link-to]]
             [hiccup.form-helpers :refer [form-to label text-field
                                          password-field submit-button]]

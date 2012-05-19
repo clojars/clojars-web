@@ -40,6 +40,9 @@
 (defn ^:dynamic get-time []
   (Date.))
 
+(defn bcrypt [s]
+  (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
+
 (defdb mydb (:db config))
 (defentity users)
 (defentity groups)
