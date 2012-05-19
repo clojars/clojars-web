@@ -153,4 +153,33 @@
                                                  "UTF-8"))
                                      "UTF-8"))}
              :body "Bad jar")
+      (has (status? 400))
+      (visit "/repo/group/..%2F..%2Fasdf/1.0.0/test.jar" :request-method :put
+             :headers {"authorization"
+                       (str "Basic "
+                            (String. (base64/encode
+                                      (.getBytes "dantheman:password"
+                                                 "UTF-8"))
+                                     "UTF-8"))}
+             :body "Bad jar")
+      (has (status? 400))
+      (visit "/repo/group/artifact/..%2F..%2F..%2F1.0.0/test.jar"
+             :request-method :put
+             :headers {"authorization"
+                       (str "Basic "
+                            (String. (base64/encode
+                                      (.getBytes "dantheman:password"
+                                                 "UTF-8"))
+                                     "UTF-8"))}
+             :body "Bad jar")
+      (has (status? 400))
+      (visit "/repo/group/artifact/1.0.0/..%2F..%2F..%2F..%2F/test.jar"
+             :request-method :put
+             :headers {"authorization"
+                       (str "Basic "
+                            (String. (base64/encode
+                                      (.getBytes "dantheman:password"
+                                                 "UTF-8"))
+                                     "UTF-8"))}
+             :body "Bad jar")
       (has (status? 400))))
