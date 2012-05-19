@@ -4,7 +4,9 @@
         korma.core)
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql])
+            [clojure.java.jdbc :as sql]
+            [clj-time.format :as timef]
+            [clj-time.core :as time])
   (:import java.security.MessageDigest
            java.util.Date
            java.io.File
@@ -23,7 +25,7 @@
     "email" "welcome" "devel" "development" "test" "testing"
     "prod" "production" "admin" "administrator" "root"
     "webmaster" "profile" "dashboard" "settings" "options"
-    "index" "files" "releases" "snapshots"})
+    "index" "files" "releases" "snapshots" "stats"})
 
 (def ^{:private true} constituent-chars
   (->> [[\a \z] [\A \Z] [\0 \9]]
@@ -121,18 +123,67 @@
              (order :created :desc)
              (limit num))))
 
-(defn count-versions [groupname jarname]
-  (-> (exec-raw [(str "select count(distinct version) count from jars"
-                      " where group_name = ? and jar_name = ?")
-                 [groupname jarname]] :results)
+(defn count-users []
+  (:count (first (select users (aggregate (count :id) :count)))))
+
+(defn count-jars []
+  (-> (exec-raw ["select count(distinct jar_name||group_name) count from jars"] :results)
       first
       :count))
+
+(defn count-versions
+  ([groupname jarname]
+     (-> (exec-raw [(str "select count(distinct version) count from jars"
+                         " where group_name = ? and jar_name = ?")
+                    [groupname jarname]] :results)
+         first
+         :count))
+  ([]
+     (-> (exec-raw [(str "select count(distinct jar_name||group_name||version)"
+                         " count from jars")] :results)
+         first
+         :count)))
 
 (defn recent-jars []
   (select jars
           (group :group_name :jar_name)
           (order :created :desc)
           (limit 5)))
+
+(defn this-month []
+  (timef/unparse (timef/formatters :year-month) (time/now)))
+
+(defn popular-jars [& [period start end]]
+  (select stats
+          (where {:version nil
+                  :jar_name [not= nil]
+                  :group_name [not= nil]
+                  :period period})
+          (order :downloads :desc)
+          (offset (or start 0))
+          (limit (or end 10))))
+
+(defn downloads-per-month
+  ([] (select stats
+              (where {:jar_name nil
+                      :group_name nil
+                      :version nil
+                      :period [not= nil]})
+              (order :period)))
+  ([groupname jarname version]
+     (select stats
+             (fields :period :downloads)
+             (where {:jar_name jarname
+                     :group_name groupname
+                     :version version
+                     :period [not= nil]})
+             (order :period))))
+
+(defn uploads-per-month []  
+  (select jars
+          (fields [(raw "strftime('%Y-%m',created/1000,'unixepoch')") :period])
+          (aggregate (count :id) :uploads :period)
+          (order :period)))
 
 (defn find-jar
   ([groupname jarname]

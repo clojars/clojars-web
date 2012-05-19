@@ -8,8 +8,9 @@
                                  forgot-password forgot-password-form]]
         [clojars.web.group :only [show-group]]
         [clojars.web.jar :only [show-jar show-versions]]
-        [clojars.web.common :only [html-doc]]
+        [clojars.web.common :only [html-doc try-account]]
         [clojars.web.login :only [login login-form]]
+        [clojars.web.stats :only [stats-routes]]
         [hiccup.core :only [html h]]
         [ring.middleware.file-info :only [wrap-file-info]]
         [ring.middleware.resource :only [wrap-resource]]
@@ -27,11 +28,8 @@
      ~body
      (redirect "/login")))
 
-(defmacro try-account [body]
-  `(let [~'account (~'session :account)]
-     ~body))
-
 (defroutes main-routes
+  stats-routes
   (GET "/search" {session :session params :params}
        (try-account
         (search account params)))
@@ -154,7 +152,7 @@
 
 (def clojars-app
   (site
-   (-> main-routes
+   (-> #'main-routes
        (wrap-resource "public")
        (wrap-file-info))))
 
