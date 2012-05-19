@@ -40,9 +40,6 @@
 (defn ^:dynamic get-time []
   (Date.))
 
-(defn bcrypt [s]
-  (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
-
 (defdb mydb (:db config))
 (defentity users)
 (defentity groups)
@@ -72,15 +69,6 @@
 
 (defn group-membernames [groupname]
   (map :user (select groups (fields :user) (where {:name groupname}))))
-
-(defn authed? [plaintext user]
-  (or (try (BCrypt/checkpw plaintext (:password user))
-           (catch java.lang.IllegalArgumentException _))))
-
-(defn auth-user [username-or-email plaintext]
-  (first (filter (partial authed? plaintext)
-                 (select users (where (or {:user username-or-email}
-                                          {:email username-or-email}))))))
 
 (defn jars-by-username [username]
   (select jars

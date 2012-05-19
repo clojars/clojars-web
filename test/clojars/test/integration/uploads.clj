@@ -9,7 +9,8 @@
             [clojure.java.io :as io]
             [cemerick.pomegranate.aether :as aether]
             [ring.adapter.jetty :as jetty]
-            [net.cgrand.enlive-html :as enlive]))
+            [net.cgrand.enlive-html :as enlive]
+            [clojure.data.codec.base64 :as base64]))
 
 (declare test-port)
 
@@ -139,4 +140,17 @@
 (deftest put-on-html-fails
   (-> (session clojars-app)
       (visit "/repo/group/artifact/1.0.0/injection.html" :request-method :put)
-      (has (status? 404))))
+      (has (status? 400))))
+
+(deftest put-using-dotdot-fails
+  (-> (session clojars-app)
+      (register-as "dantheman" "test@example.org" "password" "")
+      (visit "/repo/../artifact/1.0.0/test.jar" :request-method :put
+             :headers {"authorization"
+                       (str "Basic "
+                            (String. (base64/encode
+                                      (.getBytes "dantheman:password"
+                                                 "UTF-8"))
+                                     "UTF-8"))}
+             :body "Bad jar")
+      (has (status? 400))))
