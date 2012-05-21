@@ -24,9 +24,7 @@
             [compojure.route :refer [not-found]]
             [cemerick.friend :as friend]
             [cemerick.friend.credentials :as creds]
-            [cemerick.friend.workflows :as workflows]
-            [clojure.java.io :as io]
-            [clojure.string :as string]))
+            [cemerick.friend.workflows :as workflows]))
 
 (defn not-found-doc []
   (html [:h1 "Page not found"]
