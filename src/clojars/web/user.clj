@@ -12,8 +12,7 @@
             [hiccup.form-helpers :refer [form-to label text-field
                                          password-field text-area
                                          submit-button]]
-            [ring.util.response :refer [redirect]]
-            [cemerick.friend :as friend])
+            [ring.util.response :refer [response redirect]])
   (:import [org.apache.commons.mail SimpleEmail]))
 
 (defn register-form [ & [errors email username ssh-key]]
@@ -67,16 +66,6 @@
       (conj-when (not (or (blank? ssh-key)
                           (valid-ssh-key? ssh-key)))
                  "Invalid SSH public key")))
-
-(defn register [{:keys [email username password confirm ssh-key]}]
-  (if-let [errors (validate-profile nil email username password confirm ssh-key)]
-    {:status 200 :headers {} :body (register-form errors email username ssh-key)}
-    (do (add-user email username password ssh-key)
-        (vary-meta {:identity username :username username}
-                   merge
-                   {::friend/workflow :registration
-                    :type ::friend/auth
-                    ::friend/redirect-on-auth? true}))))
 
 (defn profile-form [account & [errors]]
   (let [user (find-user account)]

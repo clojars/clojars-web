@@ -15,3 +15,8 @@
       (has (status? 404))
       (within [:title]
               (has (text? "Page not found | Clojars")))))
+
+(deftest respond-405-for-puts
+  (-> (session web/clojars-app)
+      (visit "/nonexistant-route" :request-method :put)
+      (has (status? 405))))

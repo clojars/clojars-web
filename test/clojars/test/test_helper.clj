@@ -7,6 +7,11 @@
             [clojure.java.io :as io]
             [clojure.java.jdbc :as jdbc]))
 
+(def local-repo (io/file (System/getProperty "java.io.tmpdir")
+                         "clojars" "test" "local-repo"))
+(def local-repo2 (io/file (System/getProperty "java.io.tmpdir")
+                         "clojars" "test" "local-repo2"))
+
 (defn delete-file-recursively
   "Delete file f. If it's a directory, recursively delete all its contents."
   [f]
