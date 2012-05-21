@@ -42,11 +42,11 @@
    :local-repo help/local-repo)
   (is (= 6
          (count (.list (clojure.java.io/file (:repo config)
-                                           "org"
-                                           "clojars"
-                                           "dantheman"
-                                           "test"
-                                           "1.0.0")))))
+                                             "org"
+                                             "clojars"
+                                             "dantheman"
+                                             "test"
+                                             "1.0.0")))))
   (is (= '{[org.clojars.dantheman/test "1.0.0"] nil}
          (aether/resolve-dependencies
           :coordinates '[[org.clojars.dantheman/test "1.0.0"]]
@@ -58,7 +58,9 @@
       (has (status? 200))
       (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
               (has (text? "dantheman")))
-      (follow "org.clojars.dantheman/test")))
+      (follow "org.clojars.dantheman/test")
+      (within [:article [:p (enlive/nth-of-type 2)]]
+              (has (text? "https://example.org")))))
 
 (deftest user-can-deploy-to-new-group
    (-> (session clojars-app)
