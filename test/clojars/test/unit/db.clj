@@ -9,7 +9,7 @@
 (defn submap [s m]
   (every? (fn [[k v]] (= (m k) v)) s))
 
-(deftest added-users-can-be-found-and-authenticated
+(deftest added-users-can-be-found
   (let [email "test@example.com"
         name "testuser"
         password "password"
@@ -22,15 +22,12 @@
                        x)
            (db/find-user name)
            (db/find-user-by-user-or-email name)
-           (db/find-user-by-user-or-email email)
-           (db/auth-user name password)
-           (db/auth-user email password))))
+           (db/find-user-by-user-or-email email))))
 
-(deftest user-does-not-exist-and-cannot-be-authenticated
-  (is (not (db/find-user-by-user-or-email "test2@example.com")))
-  (is (not (db/auth-user "test2@example.com" "anything"))))
+(deftest user-does-not-exist
+  (is (not (db/find-user-by-user-or-email "test2@example.com"))))
 
-(deftest updated-users-can-be-found-and-authenticated
+(deftest updated-users-can-be-found
   (let [email "test@example.com"
         name "testuser"
         password "password"
@@ -53,9 +50,7 @@
                          x)
              (db/find-user name2)
              (db/find-user-by-user-or-email name2)
-             (db/find-user-by-user-or-email email2)
-             (db/auth-user name2 password2)
-             (db/auth-user email2 password2)))
+             (db/find-user-by-user-or-email email2)))
       (is (not (db/find-user name))))))
 
 (deftest added-users-are-added-only-to-their-org-clojars-group

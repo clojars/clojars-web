@@ -2,10 +2,14 @@
   (:require [clojars.db :refer [group-membernames find-user add-member
                                 find-jar recent-versions count-versions
                                 find-user-by-user-or-email]]
+            [clojars.config :refer [config]]
+            [clojars.auth :refer [with-account try-account require-authorization]]
+            [clojars.repo :as repo]
+            [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
             [clojars.web.search :refer [search]]
             [clojars.web.user :refer [profile-form update-profile show-user
-                                      register register-form
+                                      register-form
                                       forgot-password forgot-password-form]]
             [clojars.web.group :refer [show-group]]
             [clojars.web.jar :refer [show-jar show-versions]]
@@ -15,7 +19,7 @@
             [ring.middleware.file-info :refer [wrap-file-info]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [redirect status response]]
-            [compojure.core :refer [defroutes GET POST ANY]]
+            [compojure.core :refer [defroutes GET POST PUT ANY context]]
             [compojure.handler :refer [site]]
             [compojure.route :refer [not-found]]
             [cemerick.friend :as friend]
@@ -25,13 +29,6 @@
 (defn not-found-doc []
   (html [:h1 "Page not found"]
         [:p "Thundering typhoons!  I think we lost it.  Sorry!"]))
-
-(defmacro with-account [body]
-  `(friend/authenticated (try-account ~body)))
-
-(defmacro try-account [body]
-  `(let [~'account (:username (friend/current-authentication))]
-         ~body))
 
 (defroutes main-routes
   (GET "/search" {session :session params :params}
@@ -52,6 +49,7 @@
   (GET "/forgot-password" {params :params}
        (forgot-password-form))
   (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))
+
   (GET "/" {session :session params :params}
        (try-account
         (if account
@@ -67,17 +65,18 @@
         {session :session {groupname :groupname username :user} :params }
         (if-let [membernames (group-membernames groupname)]
           (try-account
-           (cond
-            (some #{username} membernames)
-            (show-group account groupname membernames "They're already a member!")
-            (and (some #{account} membernames)
-                 (find-user username))
-            (do (add-member groupname username)
-                (show-group account groupname
-                            (conj membernames username)))
-            :else
-            (show-group account groupname membernames (str "No such user: "
-                                                           (h username)))))
+           (require-authorization
+            groupname
+            (cond
+             (some #{username} membernames)
+             (show-group account groupname membernames "They're already a member!")
+             (find-user username)
+             (do (add-member groupname username)
+                 (show-group account groupname
+                             (conj membernames username)))
+             :else
+             (show-group account groupname membernames (str "No such user: "
+                                                            (h username))))))
           :next))
   (GET "/users/:username"  {session :session {username :username} :params}
        (if-let [user (find-user username)]
@@ -143,37 +142,41 @@
          (try-account
           (show-user account user))
          :next))
+  (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
   (ANY "*" {session :session}
        (not-found (html-doc (session :account)
                             "Page not found"
                             (not-found-doc)))))
 
-(defn registration [{:keys [uri request-method params]}]
-  (when (and (= uri "/register")
-             (= request-method :post))
-    (register params)))
-
-(def clojars-app
-  (site
-   (-> main-routes
-       (friend/authenticate
-        {:credential-fn
-         (partial creds/bcrypt-credential-fn
-                  (fn [id]
-                    (when-let [{:keys [user password]}
-                               (find-user-by-user-or-email id)]
-                      {:username user :password password})))
-         :workflows [(workflows/interactive-form)
-                     registration]
-         :login-uri "/login"
-         :default-landing-uri "/"})
-       (wrap-resource "public")
-       (wrap-file-info))))
-
-(comment
-  (require 'swank.swank)
-  (swank.swank/start-repl)
-
-  (find-jar "leiningen" "leiningen")
-  (def server (run-server {:port 8000} "/*" (servlet clojars-app)))
-  (.stop server))
+(defroutes clojars-app
+  (context "/repo" _
+           (-> repo/routes
+               (friend/authenticate
+                {:credential-fn
+                 (partial creds/bcrypt-credential-fn
+                          (fn [id]
+                            (when-let [{:keys [user password]}
+                                       (find-user-by-user-or-email id)]
+                              {:username user :password password})))
+                 :workflows [(workflows/http-basic :realm "clojars")]
+                 :unauthorized-handler
+                 (partial workflows/http-basic-deny "clojars")})
+               (repo/wrap-file (:repo config))))
+  (site (-> main-routes
+      (friend/authenticate
+       {:credential-fn
+        (partial creds/bcrypt-credential-fn
+                 (fn [id]
+                   (when-let [{:keys [user password]}
+                              (find-user-by-user-or-email id)]
+                     {:username user :password password})))
+        :workflows [(workflows/interactive-form)
+                    registration/workflow]
+        :login-uri "/login"
+        :default-landing-uri "/"
+        :unauthorized-handler
+        (fn [r]
+          (-> (redirect "/login")
+              (assoc-in [:session ::friend/unauthorized-uri] (:uri r))))})
+      (wrap-resource "public")
+      (wrap-file-info))))

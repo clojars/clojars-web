@@ -4,7 +4,7 @@
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
                   [org.codehaus.plexus/plexus-utils]]
-                 [com.cemerick/pomegranate "0.0.10"]
+                 [com.cemerick/pomegranate "0.0.12"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.2"]
                  [hiccup "0.3.8"]
@@ -16,10 +16,12 @@
                  [org.apache.commons/commons-email "1.2"]
                  [net.cgrand/regex "1.0.1"]
                  [clj-time "0.3.8"]
-                 [com.cemerick/friend "0.0.7"]]
+                 [com.cemerick/friend "0.0.8"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.4"]
-                                   [nailgun-shim "0.0.1"]]}}
+                                   [nailgun-shim "0.0.1"]]}
+             :dev {:dependencies [[kerodon "0.0.4"]
+                                  [nailgun-shim "0.0.1"]]}}
   :plugins [[lein-ring "0.6.3"]]
   :ring {:handler clojars.web/clojars-app}
   :aot [clojars.scp]
