@@ -10,7 +10,6 @@
                  [hiccup "0.3.8"]
                  [cheshire "2.2.2"]
                  [korma "0.3.0-beta10"]
-                 [org.mindrot/jbcrypt "0.3m"]
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.6.17"]
                  [org.apache.commons/commons-email "1.2"]
