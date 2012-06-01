@@ -3,7 +3,8 @@
                                 find-jar recent-versions count-versions
                                 find-user-by-user-or-email]]
             [clojars.config :refer [config]]
-            [clojars.auth :refer [with-account try-account require-authorization]]
+            [clojars.auth :refer [with-account try-account require-authorization
+                                  get-user]]
             [clojars.repo :as repo]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
@@ -154,29 +155,23 @@
                (friend/authenticate
                 {:credential-fn
                  (partial creds/bcrypt-credential-fn
-                          (fn [id]
-                            (when-let [{:keys [user password]}
-                                       (find-user-by-user-or-email id)]
-                              {:username user :password password})))
+                          get-user)
                  :workflows [(workflows/http-basic :realm "clojars")]
                  :unauthorized-handler
                  (partial workflows/http-basic-deny "clojars")})
                (repo/wrap-file (:repo config))))
   (site (-> main-routes
-      (friend/authenticate
-       {:credential-fn
-        (partial creds/bcrypt-credential-fn
-                 (fn [id]
-                   (when-let [{:keys [user password]}
-                              (find-user-by-user-or-email id)]
-                     {:username user :password password})))
-        :workflows [(workflows/interactive-form)
-                    registration/workflow]
-        :login-uri "/login"
-        :default-landing-uri "/"
-        :unauthorized-handler
-        (fn [r]
-          (-> (redirect "/login")
-              (assoc-in [:session ::friend/unauthorized-uri] (:uri r))))})
-      (wrap-resource "public")
-      (wrap-file-info))))
+            (friend/authenticate
+             {:credential-fn
+              (partial creds/bcrypt-credential-fn
+                       get-user)
+              :workflows [(workflows/interactive-form)
+                          registration/workflow]
+              :login-uri "/login"
+              :default-landing-uri "/"
+              :unauthorized-handler
+              (fn [r]
+                (-> (redirect "/login")
+                    (assoc-in [:session ::friend/unauthorized-uri] (:uri r))))})
+            (wrap-resource "public")
+            (wrap-file-info))))
