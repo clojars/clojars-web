@@ -8,7 +8,7 @@ you're trying to run your own repository though.
 Architecture
 ------------
 
-![diagram](https://raw.github.com/ato/clojars-web/master/doc/architecture.png)
+![diagram](https://raw.github.com/ato/clojars-web/master/architecture.png)
 
 There's a user "clojars" which runs all the clojars webapp bits.  The
 repository lives in `/home/clojars/repo`.
