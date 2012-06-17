@@ -207,10 +207,27 @@
                   :jar_name   name
                   :version    version})))
 
+(defn- validate [x re message]
+  (when-not (re-matches re x)
+    (throw (Exception. (str message " (" re ")")))))
+
 (defn add-jar [account jarmap & [check-only]]
-  (when-not (re-matches #"^[a-z0-9-_.]+$" (:name jarmap))
-    (throw (Exception. (str "Jar names must consist solely of lowercase "
-                            "letters, numbers, hyphens and underscores."))))
+  ;; We're on purpose *at least* as restrictive as the recommendations on
+  ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
+  ;; If you want loosen these please include in your proposal the
+  ;; ramifications on usability, security and compatiblity with filesystems,
+  ;; OSes, URLs and tools.
+  (validate (:name jarmap) #"^[a-z0-9_.-]+$"
+            (str "Jar names must consist solely of lowercase "
+                 "letters, numbers, hyphens and underscores."))
+  ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
+  ;; bar one broken non-ascii exception only these characters have been used.
+  ;; Even if we manage to support obscure characters some filesystems do not
+  ;; and some tools fail to escape URLs properly.  So to keep things nice and
+  ;; compatible for everyone let's lock it down.
+  (validate (:version jarmap) #"^[a-zA-Z0-9_.+-]+$"
+            (str "Version strings must consist solely of letters, "
+                 "numbers, dots, pluses, hyphens and underscores."))
   (transaction
    (if check-only
      (do (rollback)
