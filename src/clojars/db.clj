@@ -208,8 +208,8 @@
                   :version    version})))
 
 (defn add-jar [account jarmap & [check-only]]
-  (when-not (re-matches #"^[a-zA-Z0-9-_.]+$" (:name jarmap))
-    (throw (Exception. (str "Jar names must consist solely of "
+  (when-not (re-matches #"^[a-z0-9-_.]+$" (:name jarmap))
+    (throw (Exception. (str "Jar names must consist solely of lowercase "
                             "letters, numbers, hyphens and underscores."))))
   (transaction
    (if check-only
