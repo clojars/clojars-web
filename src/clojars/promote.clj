@@ -29,6 +29,7 @@
 
 (defn unpromoted? [blockers info]
   ;; TODO implement
+  ;; should we add a flag to the DB or check S3 directly?
   blockers)
 
 (defn blockers [file]
@@ -48,3 +49,20 @@
         (signed? jar)
         (signed? pom)
         (unpromoted? info))))
+
+(defonce queue (ArrayBlockingQueue.))
+
+(defn- deploy-to-s3 [file]
+  ;; TODO: implement
+  )
+
+(defn promote [file]
+  (when (empty? (blockers file))
+    (deploy-to-s3 file)))
+
+(defn start []
+  (.start (Thread. #(promote (.take queue)))))
+
+;; TODO: probably worth periodically queueing all non-promoted
+;; releases into here to catch things that fall through the cracks,
+;; say if the JVM is restarted before emptying this queue.

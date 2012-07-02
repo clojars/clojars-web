@@ -3,6 +3,7 @@
             [clojars.db :refer [find-jar add-jar update-jar]]
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
+            [clojars.promote :as promote]
             [compojure.core :refer [defroutes PUT ANY]]
             [compojure.route :refer [not-found]]
             [clojure.java.io :as io]
@@ -27,10 +28,10 @@
           (save-to-file (io/file (config :repo) group artifact file)
                         body)
           {:status 201 :headers {} :body nil})))
-  (PUT ["/:group/:artifact/:version/:file"
+  (PUT ["/:group/:artifact/:version/:filename"
         :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
-        :file #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
-       {body :body {:keys [group artifact version file]} :params}
+        :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
+       {body :body {:keys [group artifact version filename]} :params}
        (let [groupname (string/replace group "/" ".")]
          (with-account
            (require-authorization
@@ -38,23 +39,22 @@
             (try
               (let [info {:group groupname
                           :name  artifact
-                          :version version}]
-                (if (.endsWith file ".pom")
+                          :version version}
+                    file (io/file (config :repo) group
+                                  artifact version filename)]
+                (if (.endsWith filename ".pom")
                   (let [contents (slurp body)
                         pom-info (merge (maven/pom-to-map
                                          (StringReader. contents)) info)]
                     (if (find-jar groupname artifact version)
                       (update-jar account pom-info)
                       (add-jar account pom-info))
-                    (save-to-file (io/file (config :repo) group
-                                           artifact version file)
-                                  contents))
+                    (save-to-file file contents))
                   (do
                     (when-not (find-jar groupname artifact version)
                       (add-jar account info))
-                    (save-to-file (io/file (config :repo) group
-                                           artifact version file)
-                                  body))))
+                    (save-to-file file body))))
+              (.offer (promote/queue) file)
               {:status 201 :headers {} :body nil}
               (catch Exception e
                 {:status 403 :headers {} :body (.getMessage e)}))))))
