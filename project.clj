@@ -20,7 +20,8 @@
                     :dependencies [[kerodon "0.0.4"]
                                    [nailgun-shim "0.0.1"]]}
              :dev {:dependencies [[kerodon "0.0.4"]
-                                  [nailgun-shim "0.0.1"]]}}
+                                  [nailgun-shim "0.0.1"]]
+                   :resource-paths ["local-resources"]}}
   :plugins [[lein-ring "0.6.3"]]
   :ring {:handler clojars.web/clojars-app}
   :aot [clojars.scp]

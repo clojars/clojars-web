@@ -15,3 +15,4 @@ target/
 
 /.lein-deps-sum
 /.lein-failures
+/local-resources
