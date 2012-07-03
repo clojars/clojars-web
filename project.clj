@@ -4,7 +4,8 @@
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
                   [org.codehaus.plexus/plexus-utils]]
-                 [com.cemerick/pomegranate "0.0.12"]
+                 [com.cemerick/pomegranate "0.0.13"]
+                 [s3-wagon-private "1.0.0"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.2"]
                  [hiccup "0.3.8"]

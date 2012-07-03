@@ -4,6 +4,8 @@
             [clojure.java.io :as io]
             [clojars.maven :as maven]))
 
+;; TODO: need to seed the test repo for these tests now
+
 (deftest test-snapshot-blockers
   (is (= ["Snapshot versions cannot be promoted"
           "Missing file hooke-1.2.0-SNAPSHOT.jar"

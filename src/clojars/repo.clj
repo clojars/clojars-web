@@ -53,10 +53,11 @@
                   (do
                     (when-not (find-jar groupname artifact version)
                       (add-jar account info))
-                    (save-to-file file body))))
-              (.offer (promote/queue) file)
+                    (save-to-file file body)))
+                (.offer promote/queue info))
               {:status 201 :headers {} :body nil}
               (catch Exception e
+                (.printStackTrace e)
                 {:status 403 :headers {} :body (.getMessage e)}))))))
   (PUT "*" _ {:status 400 :headers {}})
   (not-found "Page not found"))

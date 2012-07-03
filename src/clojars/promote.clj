@@ -1,8 +1,10 @@
 (ns clojars.promote
   (:require [clojars.config :refer [config]]
             [clojars.maven :as maven]
-            [clojure.java.io :as io])
-  (:import (java.util.concurrent ArrayBlockingQueue)))
+            [clojure.java.io :as io]
+            [cemerick.pomegranate.aether :as aether])
+  (:import (java.util.concurrent LinkedBlockingQueue)
+           (org.springframework.aws.maven SimpleStorageServiceWagon)))
 
 (defn file-for [group artifact version extension]
   (let [filename (format "%s-%s.%s" artifact version extension)]
@@ -28,16 +30,16 @@
   blockers)
 
 (defn unpromoted? [blockers info]
-  ;; TODO implement
-  ;; should we add a flag to the DB or check S3 directly?
+  ;; TODO: check DB, needs migration
   blockers)
 
-(defn blockers [file]
-  (let [{:keys [group name version] :as info} (maven/pom-to-map file)
-        jar (file-for group name version "jar")
-        pom (file-for group name version "pom")]
+(defn blockers [{:keys [group name version]}]
+  (let [jar (file-for group name version "jar")
+        pom (file-for group name version "pom")
+        info (try (maven/pom-to-map pom)
+                  (catch Exception _ {}))]
     (-> []
-        (check-version (:version info))
+        (check-version version)
         (check-file jar)
         (check-file pom)
 
@@ -50,15 +52,31 @@
         (signed? pom)
         (unpromoted? info))))
 
-(defonce queue (ArrayBlockingQueue.))
+(def releases {:url "s3://clojars/releases/"
+               :username (config :releases-access-key)
+               :passphrase (config :releases-secret-key)})
 
-(defn- deploy-to-s3 [file]
-  ;; TODO: implement
-  )
+(aether/register-wagon-factory! "s3" (constantly (SimpleStorageServiceWagon.)))
 
-(defn promote [file]
-  (when (empty? (blockers file))
-    (deploy-to-s3 file)))
+(defn- add-coords [{:keys [group name version classifier] :as info}
+                   files extension]
+  ;; TODO: classifier?
+  (assoc files [(symbol group name) version :extension extension]
+         (file-for group name version extension)))
+
+(defn- deploy-to-s3 [info]
+  (let [files (reduce (partial add-coords info) {}
+                      ["jar" "jar.asc" "pom" "pom.asc"])]
+    (aether/deploy-artifacts :artifacts (keys files)
+                             :files files
+                             :transfer-listener :stdout
+                             :repository {"releases" releases})))
+
+(defn promote [info]
+  (when (empty? (blockers info))
+    (deploy-to-s3 info)))
+
+(defonce queue (LinkedBlockingQueue.))
 
 (defn start []
   (.start (Thread. #(promote (.take queue)))))
