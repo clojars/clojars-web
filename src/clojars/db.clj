@@ -196,6 +196,12 @@
 
 (defn update-jar [account {:keys [group name version
                                   description homepage authors]}]
+  (let [[{:keys [promoted_at]}] (select jars (fields :promoted_at)
+                                        (where {:group_name group
+                                                :jar_name name
+                                                :version version}))]
+    (when promoted_at
+      (throw (Exception. "Already promoted."))))
   (update jars
           (set-fields {:user       account
                        :created    (get-time)

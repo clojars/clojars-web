@@ -2,7 +2,9 @@
   (:require [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [clojure.java.io :as io]
-            [cemerick.pomegranate.aether :as aether])
+            [cemerick.pomegranate.aether :as aether]
+            [clojars.db :as db]
+            [korma.core :refer [select fields where update set-fields]])
   (:import (java.util.concurrent LinkedBlockingQueue)
            (org.springframework.aws.maven SimpleStorageServiceWagon)))
 
@@ -29,15 +31,21 @@
   ;; TODO: implement
   blockers)
 
-(defn unpromoted? [blockers info]
-  ;; TODO: check DB, needs migration
-  blockers)
+(defn unpromoted? [blockers {:keys [group name version]}]
+  (let [[{:keys [promoted_at]}] (select db/jars (fields :promoted_at)
+                                        (where {:group_name group
+                                                :jar_name name
+                                                :version version}))]
+    (if promoted_at
+      (conj blockers "Already promoted.")
+      blockers)))
 
 (defn blockers [{:keys [group name version]}]
   (let [jar (file-for group name version "jar")
         pom (file-for group name version "pom")
         info (try (maven/pom-to-map pom)
                   (catch Exception _ {}))]
+    ;; TODO: convert this to a lazy seq for cheaper qualification checks
     (-> []
         (check-version version)
         (check-file jar)
@@ -72,9 +80,14 @@
                              :transfer-listener :stdout
                              :repository {"releases" releases})))
 
-(defn promote [info]
-  (when (empty? (blockers info))
-    (deploy-to-s3 info)))
+(defn promote [{:keys [group name version] :as info}]
+  (sql/transaction
+   (when (empty? (blockers info))
+     (println "Promoting" info)
+     (update db/jars
+             (set-fields {:promoted_at (java.util.Date.)})
+             (where {:group_name group :jar_name name :version version}))
+     (deploy-to-s3 info))))
 
 (defonce queue (LinkedBlockingQueue.))
 
