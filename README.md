@@ -22,7 +22,7 @@ it. Regardless of how you run it, you first need to do some setup:
    * Debian: `apt-get install sqlite3`
    * Mac OS X Homebrew: `brew install sqlite`
 
-3. Create an initial sqlite database: `mkdir data; sqlite3 data/dev_db < clojars.sql`
+3. Run the DB migrations: `lein run -m clojars.db.migrate`
 
 To run the application using Leinigen 2:
 
