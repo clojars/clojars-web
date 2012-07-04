@@ -2,6 +2,7 @@
   (:require [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [clojure.java.io :as io]
+            [clojure.java.shell :as sh]
             [cemerick.pomegranate.aether :as aether]
             [clojars.db :as db]
             [korma.core :refer [select fields where update set-fields]])
@@ -27,9 +28,27 @@
     blockers
     (conj blockers (str "Missing " (name field)))))
 
+(declare check-signature)
+
+(defn- fetch-key [signature err]
+  (if (re-find #"Can't check signature: public key not found" err)
+    (let [key (second (re-find #"using \w+ key ID (.+)" err))
+          {:keys [exit]} (sh/sh "gpg" "--recv-keys" key)]
+      (if (zero? exit)
+        (check-signature signature)))))
+
+(defn- check-signature [signature]
+  (let [err (java.io.StringWriter.)
+        out (java.io.StringWriter.)
+        {:keys [exit]} (binding [*err* (java.io.PrintWriter. err), *out* out]
+                         (sh/sh "gpg" "--verify" (str signature)))]
+    (or (zero? exit)
+        (fetch-key signature (str err)))))
+
 (defn signed? [blockers file]
-  ;; TODO: implement
-  blockers)
+  (if (check-signature (str file ".asc"))
+    blockers
+    (conj blockers (str file " is not signed."))))
 
 (defn unpromoted? [blockers {:keys [group name version]}]
   (let [[{:keys [promoted_at]}] (select db/jars (fields :promoted_at)
@@ -81,13 +100,17 @@
                              :repository {"releases" releases})))
 
 (defn promote [{:keys [group name version] :as info}]
-  (sql/transaction
-   (when (empty? (blockers info))
-     (println "Promoting" info)
-     (update db/jars
-             (set-fields {:promoted_at (java.util.Date.)})
-             (where {:group_name group :jar_name name :version version}))
-     (deploy-to-s3 info))))
+  (sql/with-connection (config :db)
+    (sql/transaction
+     (let [blockers (blockers info)]
+       (if (empty? blockers)
+         (do
+           (println "Promoting" info)
+           (update db/jars
+                   (set-fields {:promoted_at (java.util.Date.)})
+                   (where {:group_name group :jar_name name :version version}))
+           (deploy-to-s3 info))
+         blockers)))))
 
 (defonce queue (LinkedBlockingQueue.))
 
