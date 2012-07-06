@@ -15,7 +15,7 @@
    [:html {:lang :en}
     [:head
      [:link {:type "application/opensearchdescription+xml" 
-	      :href (resolve-uri "opensearch.xml")
+	      :href "/opensearch.xml"
 	      :rel "search"}] 
      [:meta {:charset "utf-8"}]
      [:title

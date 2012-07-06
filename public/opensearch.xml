@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?> 
-    <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"> 
-    <ShortName>Clojars</ShortName> 
-    <Description>Search Clojars.org</Description> 
-    <InputEncoding>UTF-8</InputEncoding> 
-    <Url type="text/html" method="GET" template="http://clojars.org/search?q={searchTerms}"/> 
-    <SearchForm>http://clojars.org/</SearchForm>
-</OpenSearchDescription> 
-
