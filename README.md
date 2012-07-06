@@ -73,6 +73,14 @@ running out of a source checkout using `lein run` the configuration
 will be read from `dev-resources/config.clj`.  When running automated
 tests with `lein test` then `test-resources/config.clj` is used.
 
+How To Test
+-----------
+
+```sh
+$ mkdir data; sqlite3 data/test_db < clojars.sql`
+$ lein test
+```
+
 Test data
 ---------
 
@@ -80,7 +88,7 @@ If you'd like to hack on the UI or search it might be useful to have
 production-like metadata.  I've put up a production database dump
 (with password hashes and email addresses stripped of course) which
 you can use like this:
-    
+
     wget http://meshy.org/~ato/clojars-test-data.sql.gz
     rm data/db
     gunzip -c clojars-test-data.sql.gz | sqlite3 data/db
