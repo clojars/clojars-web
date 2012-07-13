@@ -8,6 +8,9 @@
    :version (.getVersion model)
    :description (.getDescription model)
    :homepage (.getUrl model)
+   :url (.getUrl model)
+   :licenses (.getLicenses model)
+   :scm (.getScm model)
    :authors (vec (map #(.getName %) (.getContributors model)))
    ;; TODO: doesn't appear to be used anywhere?
    :dependencies (vec (mapcat (fn [d] [(symbol (.getGroupId d)
@@ -20,6 +23,5 @@
   [file]
   (with-open [reader (io/reader file)]
     (.read (MavenXpp3Reader.) reader)))
-
 
 (def pom-to-map (comp model-to-map read-pom))

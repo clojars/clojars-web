@@ -2,6 +2,7 @@
   (:require [clojars.scp]
             [ring.adapter.jetty :refer [run-jetty]]
             [clojars.web :refer [clojars-app]]
+            [clojars.promote :as promote]
             [clojars.config :refer [config configure]])
   (:import com.martiansoftware.nailgun.NGServer
            java.net.InetAddress)
@@ -21,6 +22,7 @@
 
 (defn -main [& args]
   (configure args)
+  (promote/start)
   (start-jetty)
   (start-nailgun))
 
