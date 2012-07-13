@@ -5,6 +5,7 @@
             [clojure.java.shell :as sh]
             [cemerick.pomegranate.aether :as aether]
             [clojars.db :as db]
+            [clojure.java.jdbc :as sql]
             [korma.core :refer [select fields where update set-fields]])
   (:import (java.util.concurrent LinkedBlockingQueue)
            (org.springframework.aws.maven SimpleStorageServiceWagon)))
@@ -115,7 +116,11 @@
 (defonce queue (LinkedBlockingQueue.))
 
 (defn start []
-  (.start (Thread. #(promote (.take queue)))))
+  (.start (Thread. #(loop []
+                      (try (promote (.take queue))
+                           (catch Exception e
+                             (.printStackTrace e)))
+                      (recur)))))
 
 ;; TODO: probably worth periodically queueing all non-promoted
 ;; releases into here to catch things that fall through the cracks,
