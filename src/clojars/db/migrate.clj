@@ -1,5 +1,6 @@
 (ns clojars.db.migrate
   (:require [clojure.java.jdbc :as sql]
+            [clojure.java.io :as io]
             [clojars.config :refer [config]])
   (:import (java.sql Timestamp)))
 
@@ -22,7 +23,12 @@
                      [(str (:name (meta migration)))
                       (Timestamp. (System/currentTimeMillis))]))
 
+(defn- ensure-db-directory-exists [db]
+  (when-not (.exists (io/file db))
+    (.mkdirs (.getParentFile (io/file db)))))
+
 (defn migrate [& migrations]
+  (ensure-db-directory-exists (:subname (config :db)))
   (sql/with-connection (config :db)
     (try (sql/create-table "migrations"
                            [:name :varchar "NOT NULL"]
