@@ -73,13 +73,6 @@ running out of a source checkout using `lein run` the configuration
 will be read from `dev-resources/config.clj`.  When running automated
 tests with `lein test` then `test-resources/config.clj` is used.
 
-How To Test
------------
-
-```sh
-$ mkdir data; sqlite3 data/test_db < clojars.sql`
-$ lein test
-```
 
 Test data
 ---------
