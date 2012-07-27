@@ -47,12 +47,13 @@
                  [:li (link-to (url-for (assoc jar
                                           :version (:version v)))
                                (:version v))])]
-             (if-let [dependencies (:dependencies (jar-to-pom-map jar))]
-               (list
-               [:h3 "dependencies"]
-               [:ul#dependencies
-                (for [d (apply hash-map dependencies)]
-                  [:li (stringify-namespaced-keyword (first d))])]))
+             (let [dependencies (:dependencies (jar-to-pom-map jar))]
+               (if-not (empty? dependencies)
+                 (list
+                 [:h3 "dependencies"]
+                 [:ul#dependencies
+                  (for [d (apply hash-map dependencies)]
+                    [:li (stringify-namespaced-keyword (first d))])])))
 
              [:p (link-to (str (jar-url jar) "/versions")
                           (str "show all versions (" count " total)"))]]))
