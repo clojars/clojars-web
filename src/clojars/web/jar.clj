@@ -2,10 +2,19 @@
   (:require [clojars.web.common :refer [html-doc jar-link group-link
                                         tag jar-url jar-name user-link]]
             [hiccup.core :refer [h]]
-            [hiccup.page-helpers :refer [link-to]]))
+            [hiccup.page-helpers :refer [link-to]]
+            [clojars.promote :refer [file-for]]
+            [clojars.maven :refer [pom-to-map]]))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
+
+(defn jar-to-pom-map [jar]
+  (let [pom-file (apply file-for (conj ((juxt :group_name :jar_name :version) jar) "pom"))]
+    (pom-to-map (str pom-file))))
+
+(defn stringify-namespaced-keyword [k]
+  (clojure.string/join "/" ((juxt namespace name) k)))
 
 (defn show-jar [account jar recent-versions count]
   (html-doc account (:jar_name jar)
@@ -38,6 +47,13 @@
                  [:li (link-to (url-for (assoc jar
                                           :version (:version v)))
                                (:version v))])]
+             (if-let [dependencies (:dependencies (jar-to-pom-map jar))]
+               (list
+               [:h3 "dependencies"]
+               [:ul#dependencies
+                (for [d (apply hash-map dependencies)]
+                  [:li (stringify-namespaced-keyword (first d))])]))
+
              [:p (link-to (str (jar-url jar) "/versions")
                           (str "show all versions (" count " total)"))]]))
 
