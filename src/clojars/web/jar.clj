@@ -53,7 +53,9 @@
                  [:h3 "dependencies"]
                  [:ul#dependencies
                   (for [d (apply hash-map dependencies)]
-                    [:li (stringify-namespaced-keyword (first d))])])))
+                    [:li (link-to
+                           (jar-url {:group_name (namespace (first d)) :jar_name (name (first d))})
+                           (stringify-namespaced-keyword (first d)))])])))
 
              [:p (link-to (str (jar-url jar) "/versions")
                           (str "show all versions (" count " total)"))]]))
