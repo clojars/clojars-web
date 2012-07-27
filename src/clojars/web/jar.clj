@@ -11,7 +11,7 @@
 
 (defn jar-to-pom-map [jar]
   (let [pom-file (apply file-for (conj ((juxt :group_name :jar_name :version) jar) "pom"))]
-    (pom-to-map (str pom-file))))
+    (if (.exists pom-file) (pom-to-map (str pom-file)))))
 
 (defn stringify-namespaced-keyword [k]
   (clojure.string/join "/" ((juxt namespace name) k)))

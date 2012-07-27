@@ -96,7 +96,5 @@
   (scp valid-ssh-key "fake.jar" "fake-0.0.2/fake.pom")
   (-> (session web/clojars-app)
       (visit "/fake")
-      (within [:article :h1]
-              (has (text? "fake")))
       (within [:ul#dependencies]
                (has (text? "org.clojure/clojureorg.clojurer/clojure")))))
