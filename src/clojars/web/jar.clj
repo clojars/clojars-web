@@ -13,9 +13,6 @@
   (let [pom-file (apply file-for (conj ((juxt :group_name :jar_name :version) jar) "pom"))]
     (if (.exists pom-file) (pom-to-map (str pom-file)))))
 
-(defn stringify-namespaced-keyword [k]
-  (clojure.string/join "/" ((juxt namespace name) k)))
-
 (defn show-jar [account jar recent-versions count]
   (html-doc account (:jar_name jar)
             [:h1 (jar-link jar)]
@@ -52,10 +49,8 @@
                  (list
                  [:h3 "dependencies"]
                  [:ul#dependencies
-                  (for [d (apply hash-map dependencies)]
-                    [:li (link-to
-                           (jar-url {:group_name (namespace (first d)) :jar_name (name (first d))})
-                           (stringify-namespaced-keyword (first d)))])])))
+                  (for [d dependencies]
+                    [:li (link-to (url-for d) (jar-name d))])])))
 
              [:p (link-to (str (jar-url jar) "/versions")
                           (str "show all versions (" count " total)"))]]))

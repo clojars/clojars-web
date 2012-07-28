@@ -12,10 +12,11 @@
    :licenses (.getLicenses model)
    :scm (.getScm model)
    :authors (vec (map #(.getName %) (.getContributors model)))
-   :dependencies (vec (mapcat (fn [d] [(keyword (.getGroupId d)
-                                               (.getArtifactId d))
-                                       (.getVersion d)])
-                              (.getDependencies model)))})
+   :dependencies (vec (map
+                        (fn [d] {:group_name (.getGroupId d)
+                                 :jar_name (.getArtifactId d)
+                                 :version (.getVersion d)})
+                        (.getDependencies model))) })
 
 (defn read-pom
   "Reads a pom file returning a maven Model object."
