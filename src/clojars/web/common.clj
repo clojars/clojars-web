@@ -51,7 +51,7 @@
      [:article
       body]]
     [:footer
-     (link-to "mailto:contact@clojars.org" "contact")
+     (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
      (link-to "http://github.com/ato/clojars-web" "code")
      (link-to "http://wiki.github.com/ato/clojars-web" "help")]]))
 
