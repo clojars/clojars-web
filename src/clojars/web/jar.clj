@@ -4,10 +4,17 @@
             [hiccup.core :refer [h]]
             [hiccup.page-helpers :refer [link-to]]
             [clojars.promote :refer [file-for]]
-            [clojars.maven :refer [pom-to-map]]))
+            [clojars.maven :refer [pom-to-map]]
+            [clojars.db :refer [find-jar]]
+            [ring.util.codec :refer [url-encode]]))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
+
+(defn maven-jar-url [jar]
+ (str "http://search.maven.org/#"
+   (url-encode (apply format "artifactdetails|%s|%s|%s|jar"
+        ((juxt :group_name :jar_name :version) jar)))))
 
 (defn jar-to-pom-map [jar]
   (let [pom-file (apply file-for (conj ((juxt :group_name :jar_name :version) jar) "pom"))]
@@ -50,7 +57,9 @@
                  [:h3 "dependencies"]
                  [:ul#dependencies
                   (for [d dependencies]
-                    [:li (link-to (url-for d) (jar-name d))])])))
+                    [:li (link-to
+                           (if (find-jar (:group_name d) (:jar_name d)) (url-for d) (maven-jar-url d))
+                           (jar-name d))])])))
 
              [:p (link-to (str (jar-url jar) "/versions")
                           (str "show all versions (" count " total)"))]]))
