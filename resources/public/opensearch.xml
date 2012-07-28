@@ -4,7 +4,7 @@
     <Description>Search Clojars.org</Description>
     <InputEncoding>UTF-8</InputEncoding>
     <OutputEncoding>UTF-8</OutputEncoding>
-    <Url type="text/html" rel="results" template="http://clojars.org/search?q={searchTerms}"/>
-    <SearchForm>http://clojars.org/</SearchForm>
+    <Url type="text/html" rel="results" template="https://clojars.org/search?q={searchTerms}"/>
+    <SearchForm>https://clojars.org/</SearchForm>
 </OpenSearchDescription>
 
