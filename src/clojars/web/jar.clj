@@ -3,8 +3,7 @@
                                         tag jar-url jar-name user-link]]
             [hiccup.core :refer [h]]
             [hiccup.page-helpers :refer [link-to]]
-            [clojars.promote :refer [file-for]]
-            [clojars.maven :refer [pom-to-map]]
+            [clojars.maven :refer [jar-to-pom-map]]
             [clojars.db :refer [find-jar jar-exists]]
             [ring.util.codec :refer [url-encode]]))
 
@@ -15,10 +14,6 @@
  (str "http://search.maven.org/#"
    (url-encode (apply format "artifactdetails|%s|%s|%s|jar"
         ((juxt :group_name :jar_name :version) jar)))))
-
-(defn jar-to-pom-map [jar]
-  (let [pom-file (apply file-for (conj ((juxt :group_name :jar_name :version) jar) "pom"))]
-    (if (.exists pom-file) (pom-to-map (str pom-file)))))
 
 (defn show-jar [account jar recent-versions count]
   (html-doc account (:jar_name jar)
