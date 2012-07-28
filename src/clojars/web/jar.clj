@@ -5,7 +5,7 @@
             [hiccup.page-helpers :refer [link-to]]
             [clojars.promote :refer [file-for]]
             [clojars.maven :refer [pom-to-map]]
-            [clojars.db :refer [find-jar]]
+            [clojars.db :refer [find-jar jar-exists]]
             [ring.util.codec :refer [url-encode]]))
 
 (defn url-for [jar]
@@ -58,7 +58,7 @@
                  [:ul#dependencies
                   (for [d dependencies]
                     [:li (link-to
-                           (if (find-jar (:group_name d) (:jar_name d)) (url-for d) (maven-jar-url d))
+                           (if (jar-exists (:group_name d) (:jar_name d)) (url-for d) (maven-jar-url d))
                            (jar-name d))])])))
 
              [:p (link-to (str (jar-url jar) "/versions")
