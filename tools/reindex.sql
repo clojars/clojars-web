@@ -11,12 +11,13 @@
 begin;
 delete from search;
 insert into search (id, jar_name, group_name, content) 
-   select new.id, new.jar_name, new.group_name,
-          new.jar_name || ' ' || 
-          new.group_name || ' ' || 
-          new.version || ' ' || 
-          coalesce(new.authors, '') || ' ' || 
-          new.user || ' ' ||
-          coalesce(new.description, '')
-   from jars new;
+   select id, jar_name, group_name,
+          jar_name || ' ' || 
+          group_name || ' ' || 
+          version || ' ' || 
+          coalesce(authors, '') || ' ' || 
+          user || ' ' ||
+          coalesce(description, '')
+   from jars
+   group by group_name, jar_name;
 commit;
