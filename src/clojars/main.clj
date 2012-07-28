@@ -22,7 +22,7 @@
 
 (defn -main [& args]
   (configure args)
-  (promote/start)
+  ;; (promote/start)
   (start-jetty)
   (start-nailgun))
 

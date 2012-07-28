@@ -71,6 +71,7 @@
         (check-file jar)
         (check-file pom)
 
+        ;; TODO: check contents, not just presence
         (check-field info :description)
         (check-field info :url)
         (check-field info :licenses)
