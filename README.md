@@ -2,12 +2,11 @@ Clojars web interface
 =====================
 
 This is the source code for the [Clojars](http://clojars.org/) jar
-repository.  If you're looking for user documentation, try the
-[wiki](http://github.com/ato/clojars-web/wiki/_pages).
+repository webapp.  If you're looking for user documentation, try
+the [wiki](http://github.com/ato/clojars-web/wiki/_pages).
 
-This is only of interest to you if you want to hack on the Clojars
-source code (send me a pull request with your patches) or if you want
-to try to run your own copy (for example inside a company).
+If you'd like contribute a change please send a GitHub pull request.
+Also see [the FAQ](https://github.com/ato/clojars-web/wiki/About).
 
 Running the webapp
 ------------------
@@ -127,7 +126,4 @@ and run `make` then copy the `ng` executable somewhere like `/usr/local/bin`
 Mailing lists
 -------------
 
-There's a public mailing list
-[clojars@googlegroups.com](http://groups.google.com/group/clojars) for
-general discussion.  There's also a separate maintainers list for
-people looking after the repository and server.
+If you'd like to get involved, join the [clojars-maintainers@googlegroups.com](http://groups.google.com/group/clojars) list.
