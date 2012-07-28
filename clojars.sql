@@ -18,6 +18,8 @@ create table jars
         homepage TEXT,
         scm TEXT,
         authors TEXT);
+
+create index jars_idx0 on jars (group_name, jar_name, created desc);
         
 create table deps
        (id INTEGER PRIMARY KEY AUTOINCREMENT,
