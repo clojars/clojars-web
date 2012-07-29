@@ -12,7 +12,7 @@
             [:h1 (jar-link jar)]
             (:description jar)
             (when-let [homepage (:homepage jar)]
-              [:p (link-to homepage (str (h homepage)))])
+              [:p.homepage (link-to homepage (str (h homepage)))])
 
             [:div {:class "useit"}
              [:div {:class "lein"}

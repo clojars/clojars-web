@@ -59,7 +59,7 @@
       (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
               (has (text? "dantheman")))
       (follow "org.clojars.dantheman/test")
-      (within [:article [:p (enlive/nth-of-type 2)]]
+      (within [:article [:p.homepage enlive/last-of-type]]
               (has (text? "https://example.org")))))
 
 (deftest user-can-deploy-to-new-group
@@ -87,7 +87,7 @@
        (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
                (has (text? "dantheman")))
        (follow "fake/test")
-       (within [:article [:p (enlive/nth-of-type 2)]]
+       (within [:article [:p.homepage enlive/last-of-type]]
                (has (text? "https://example.org")))))
 
 (deftest user-cannot-deploy-to-groups-without-permission
