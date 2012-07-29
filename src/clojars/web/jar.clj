@@ -40,12 +40,6 @@
                (tag "  <version>") (h (:version jar)) (tag "</version>\n")
                (tag "</dependency>")]]
              [:p "Pushed by " (user-link (:user jar)) " on " (java.util.Date. (:created jar))]
-              [:h3 "recent versions"]
-              [:ul#versions
-               (for [v recent-versions]
-                 [:li (link-to (url-for (assoc jar
-                                          :version (:version v)))
-                               (:version v))])]
              (let [dependencies (:dependencies (jar-to-pom-map jar))]
                (if-not (empty? dependencies)
                  (list
@@ -55,6 +49,12 @@
                     [:li (link-to
                            (if (jar-exists (:group_name d) (:jar_name d)) (url-for d) (maven-jar-url d))
                            (jar-name d))])])))
+              [:h3 "recent versions"]
+              [:ul#versions
+               (for [v recent-versions]
+                 [:li (link-to (url-for (assoc jar
+                                          :version (:version v)))
+                               (:version v))])]
 
              [:p (link-to (str (jar-url jar) "/versions")
                           (str "show all versions (" count " total)"))]]))
