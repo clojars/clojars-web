@@ -14,6 +14,11 @@
 (defn add-promoted-field []
   (sql/do-commands "ALTER TABLE jars ADD COLUMN promoted_at DATE"))
 
+(defn add-jars-index []
+  ;; speed up the front page and selects for jars by name
+  (sql/do-commands (str "CREATE INDEX IF NOT EXISTS jars_idx0 "
+                        "ON jars (group_name, jar_name, created DESC)")))
+
 ;; migrations mechanics
 
 (defn run-and-record [migration]
@@ -44,4 +49,5 @@
 
 (defn -main []
   (migrate #'initial-schema
-           #'add-promoted-field))
+           #'add-promoted-field
+           #'add-jars-index))
