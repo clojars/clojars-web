@@ -101,8 +101,9 @@ production-like metadata.  I've put up a production database dump
 you can use like this:
 
     wget http://meshy.org/~ato/clojars-test-data.sql.gz
-    rm data/db
-    gunzip -c clojars-test-data.sql.gz | sqlite3 data/db
+    mkdir -p data
+    rm -f data/dev_db
+    gunzip -c clojars-test-data.sql.gz | sqlite3 data/dev_db
 
 If you want all the actual jar files as well you can grab them via
 [rsync](http://github.com/ato/clojars-web/wiki/Data).
