@@ -11,6 +11,8 @@
   (html-doc account (:jar_name jar)
             [:h1 (jar-link jar)]
             (:description jar)
+            (when-let [homepage (:homepage jar)]
+              [:p (link-to homepage (str (h homepage)))])
 
             [:div {:class "useit"}
              [:div {:class "lein"}
@@ -30,8 +32,6 @@
                (tag "  <version>") (h (:version jar)) (tag "</version>\n")
                (tag "</dependency>")]]
              [:p "Pushed by " (user-link (:user jar)) " on " (java.util.Date. (:created jar))]
-             (when-let [homepage (:homepage jar)]
-               [:p (link-to homepage (str (h homepage)))])
               [:h3 "recent versions"]
               [:ul#versions
                (for [v recent-versions]
