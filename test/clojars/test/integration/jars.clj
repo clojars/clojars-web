@@ -87,3 +87,14 @@
               (has (text? "[fake \"0.0.1\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
+
+
+(deftest canonical-jars-can-view-dependencies
+  (-> (session web/clojars-app)
+      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+  (scp valid-ssh-key "fake.jar" "fake-0.0.1/fake.pom")
+  (scp valid-ssh-key "fake.jar" "fake-0.0.2/fake.pom")
+  (-> (session web/clojars-app)
+      (visit "/fake")
+      (within [:ul#dependencies]
+               (has (text? "org.clojure/clojureorg.clojurer/clojure")))))
