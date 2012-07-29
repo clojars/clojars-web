@@ -5,8 +5,26 @@ This is the source code for the [Clojars](http://clojars.org/) jar
 repository webapp.  If you're looking for user documentation, try
 the [wiki](http://github.com/ato/clojars-web/wiki/_pages).
 
-If you'd like contribute a change please send a GitHub pull request.
-Also see [the FAQ](https://github.com/ato/clojars-web/wiki/About).
+There is a also a [FAQ](https://github.com/ato/clojars-web/wiki/About).
+
+Contributing
+------------
+
+Please report bugs or problems with the repository on the 
+[bug tracker](https://github.com/ato/clojars-web/issues). 
+
+Design discussions occur on the 
+[clojars-maintainers list]([clojars-maintainers@googlegroups.com](http://groups.google.com/group/clojars))
+and the #leiningen channel on irc.freenode.org.
+
+If you'd like contribute a change please send a GitHub pull request
+for a topic branch.  Feel free to open a pull request early with a 
+"not ready for merging" note or ask on the mailing list or IRC to get
+feedback from other contributors.
+
+We try to make releases fairly soon after merging contributions, 
+but post to the mailing list if it's been a week or two and you'd like
+something pushed to the production website.
 
 Running the webapp
 ------------------
@@ -123,7 +141,8 @@ and run `make` then copy the `ng` executable somewhere like `/usr/local/bin`
 
 5. When running the webapp enable the nailgun server: `--nailgun-port 8700`
 
-Mailing lists
--------------
 
-If you'd like to get involved, join the [clojars-maintainers@googlegroups.com](http://groups.google.com/group/clojars) list.
+License
+-------
+Copyright © 2009-2012 Alex Osborne, Phil Hagelberg, Nelson Morris and [contributors](https://github.com/ato/clojars-web/graphs/contributors).
+Distributed under the Eclipse Public License, the same as Clojure. See the file COPYING.
