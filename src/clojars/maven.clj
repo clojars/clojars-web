@@ -55,4 +55,4 @@
   (let [pom-file (if (re-find #"SNAPSHOT$" version)
                    (snapshot-pom-file jar)
                    (io/file (directory-for jar) (format "%s-%s.%s" jar_name version "pom")))]
-    (if (.exists pom-file) (pom-to-map (str pom-file)))))
+    (pom-to-map (str pom-file))))

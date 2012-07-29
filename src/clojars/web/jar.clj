@@ -5,7 +5,8 @@
             [hiccup.page-helpers :refer [link-to]]
             [clojars.maven :refer [jar-to-pom-map]]
             [clojars.db :refer [find-jar jar-exists]]
-            [ring.util.codec :refer [url-encode]]))
+            [ring.util.codec :refer [url-encode]])
+  (:import java.io.IOException))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
@@ -40,7 +41,8 @@
                (tag "  <version>") (h (:version jar)) (tag "</version>\n")
                (tag "</dependency>")]]
              [:p "Pushed by " (user-link (:user jar)) " on " (java.util.Date. (:created jar))]
-             (let [dependencies (:dependencies (jar-to-pom-map jar))]
+             (try
+               (let [dependencies (:dependencies (jar-to-pom-map jar))]
                (if-not (empty? dependencies)
                  (list
                  [:h3 "dependencies"]
@@ -49,13 +51,16 @@
                     [:li (link-to
                            (if (jar-exists (:group_name d) (:jar_name d)) (url-for d) (maven-jar-url d))
                            (jar-name d))])])))
+               (catch IOException e
+                 (.printStackTrace e)
+                 [:p.error "Oops. We hit an error opening the metadata POM file for this jar "
+                           "so some details are not available."]))
               [:h3 "recent versions"]
               [:ul#versions
                (for [v recent-versions]
                  [:li (link-to (url-for (assoc jar
                                           :version (:version v)))
                                (:version v))])]
-
              [:p (link-to (str (jar-url jar) "/versions")
                           (str "show all versions (" count " total)"))]]))
 
