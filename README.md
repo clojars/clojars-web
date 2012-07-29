@@ -2,10 +2,11 @@ Clojars web interface
 =====================
 
 This is the source code for the [Clojars](http://clojars.org/) jar
-repository webapp.  If you're looking for user documentation, try
-the [wiki](http://github.com/ato/clojars-web/wiki/_pages).
+repository webapp.
 
-There is a also a [FAQ](https://github.com/ato/clojars-web/wiki/About).
+If you're looking for user documentation, try
+the [wiki](http://github.com/ato/clojars-web/wiki/_pages). There is a 
+also a [FAQ](https://github.com/ato/clojars-web/wiki/About).
 
 Contributing
 ------------
@@ -144,5 +145,7 @@ and run `make` then copy the `ng` executable somewhere like `/usr/local/bin`
 
 License
 -------
+
 Copyright © 2009-2012 Alex Osborne, Phil Hagelberg, Nelson Morris and [contributors](https://github.com/ato/clojars-web/graphs/contributors).
+
 Distributed under the Eclipse Public License, the same as Clojure. See the file COPYING.
