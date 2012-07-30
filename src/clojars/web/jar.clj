@@ -49,8 +49,8 @@
                  [:ul#dependencies
                   (for [d dependencies]
                     [:li (link-to
-                           (if (jar-exists (:group_name d) (:jar_name d)) (url-for d) (maven-jar-url d))
-                           (jar-name d))])])))
+                           (if (jar-exists (:group_name d) (:jar_name d)) (jar-url d) (maven-jar-url d))
+                           (str (jar-name d) " " (:version d)))])])))
                (catch IOException e
                  (.printStackTrace e)
                  [:p.error "Oops. We hit an error opening the metadata POM file for this jar "
