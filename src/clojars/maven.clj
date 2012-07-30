@@ -1,6 +1,7 @@
 (ns clojars.maven
   (:require [clojure.java.io :as io]
-            [clojars.config :refer [config]])
+            [clojars.config :refer [config]]
+            [clojure.string :refer [split]])
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader))
 
@@ -43,7 +44,7 @@
 (defn directory-for
   "Directory for a jar under repo"
   [{:keys [group_name jar_name version]}]
-  (io/file (config :repo) group_name jar_name version))
+  (apply io/file (concat [(config :repo)] (split group_name #"\.") [jar_name version])))
 
 (defn snapshot-pom-file [{:keys [jar_name version] :as jar}]
   (let [metadata-file (io/file (directory-for jar) "maven-metadata.xml")
