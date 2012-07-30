@@ -97,4 +97,4 @@
   (-> (session web/clojars-app)
       (visit "/fake")
       (within [:ul#dependencies]
-               (has (text? "org.clojure/clojureorg.clojurer/clojure")))))
+               (has (text? "org.clojure/clojure 1.3.0-beta1org.clojurer/clojure 1.6.0")))))
