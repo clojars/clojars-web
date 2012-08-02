@@ -149,6 +149,15 @@
                             "Page not found"
                             (not-found-doc)))))
 
+(defn error-page [exception]  (html-doc nil "Oops, we encountered an error" [:h1 "Oops!"]))
+(defn wrap-exceptions [app]
+  ; TODO: do something akin to a try let to pass along the app call
+  (fn [req]
+    (try
+      (app req)
+      (catch Exception e (prn e) (error-page e))
+      (finally req))))
+
 (defroutes clojars-app
   (context "/repo" _
            (-> repo/routes
@@ -174,4 +183,5 @@
                 (-> (redirect "/login")
                     (assoc-in [:session ::friend/unauthorized-uri] (:uri r))))})
             (wrap-resource "public")
-            (wrap-file-info))))
+            (wrap-file-info)
+            (wrap-exceptions))))

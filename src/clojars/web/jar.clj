@@ -25,6 +25,7 @@
 
             [:div {:class "useit"}
              [:div {:class "lein"}
+              [:h2 (throw (new Exception))]
               [:h3 "leiningen"]
               [:pre
                (tag "[")
