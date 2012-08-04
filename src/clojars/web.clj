@@ -8,6 +8,7 @@
             [clojars.repo :as repo]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
+            [clojars.web.error-page :refer [wrap-exceptions]]
             [clojars.web.search :refer [search]]
             [clojars.web.user :refer [profile-form update-profile show-user
                                       register-form
@@ -148,15 +149,6 @@
        (not-found (html-doc (session :account)
                             "Page not found"
                             (not-found-doc)))))
-
-(defn error-page [exception]  (html-doc nil "Oops, we encountered an error" [:h1 "Oops!"]))
-(defn wrap-exceptions [app]
-  ; TODO: do something akin to a try let to pass along the app call
-  (fn [req]
-    (try
-      (app req)
-      (catch Exception e (prn e) (error-page e))
-      (finally req))))
 
 (defroutes clojars-app
   (context "/repo" _
