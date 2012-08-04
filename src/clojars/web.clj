@@ -144,6 +144,7 @@
          (try-account
           (show-user account user))
          :next))
+  (GET "/error" {} (throw (Exception. "What!? You really want an error?")))
   (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
   (ANY "*" {session :session}
        (not-found (html-doc (session :account)
