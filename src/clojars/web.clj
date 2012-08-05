@@ -8,6 +8,7 @@
             [clojars.repo :as repo]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
+            [clojars.web.error-page :refer [wrap-exceptions]]
             [clojars.web.search :refer [search]]
             [clojars.web.user :refer [profile-form update-profile show-user
                                       register-form
@@ -143,6 +144,7 @@
          (try-account
           (show-user account user))
          :next))
+  (GET "/error" {} (throw (Exception. "What!? You really want an error?")))
   (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
   (ANY "*" {session :session}
        (not-found (html-doc (session :account)
@@ -174,4 +176,5 @@
                 (-> (redirect "/login")
                     (assoc-in [:session ::friend/unauthorized-uri] (:uri r))))})
             (wrap-resource "public")
-            (wrap-file-info))))
+            (wrap-file-info)
+            (wrap-exceptions))))
