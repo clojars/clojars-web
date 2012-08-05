@@ -1,7 +1,8 @@
 (ns clojars.web.error-page
   (:require [clojars.web.common :refer [html-doc]]
             [ring.util.response :refer [response status content-type]]
-            [hiccup.page-helpers :refer [link-to]]))
+            [hiccup.page-helpers :refer [link-to]]
+            [clj-stacktrace.repl :refer [pst]]))
 
 (defn error-page-response [throwable]
   (-> (response (html-doc nil
@@ -19,5 +20,5 @@
       (app req)
       (catch Throwable t
         (println (str "A server error has occured: " (.getMessage t)))
-        (.printStackTrace t)
+        (pst t)
         (error-page-response t)))))

@@ -9,12 +9,12 @@
 (help/use-fixtures)
 
 (deftest server-errors-display-pretty-message
-  (with-out-str     (-> (session web/clojars-app)
-                        (visit "/error")
-                        (within [:article :h1]
-                                (has (text? "Oops!"))))))
+  (with-out-str (-> (session web/clojars-app)
+                    (visit "/error")
+                    (within [:article :h1]
+                            (has (text? "Oops!"))))))
 
 (deftest server-errors-log-caught-exceptions
   (let [output (with-out-str (-> (session web/clojars-app)
                                  (visit "/error")))]
-    (is (re-find #"^A server error has occured:.*$" output))))
+    (is (re-find #"^A server error has occured:.*" output))))
