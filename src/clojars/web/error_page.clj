@@ -10,7 +10,9 @@
                  [:h1 "Oops!"]
                  [:p
                   "It seems as if an internal system error has occurred. Please give it another try. If it still doesn't work please "
-                  (link-to "https://github.com/ato/clojars-web/issues" "open an issue.")]))
+                  (link-to "https://github.com/ato/clojars-web/issues" "open an issue.")]
+                 [:p "Including the following stack trace would also be helpful."]
+                 [:pre.stacktrace (with-out-str (pst throwable))]))
       (status 500)
       (content-type "text/html")))
 

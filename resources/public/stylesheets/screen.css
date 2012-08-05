@@ -210,3 +210,7 @@ footer a {
    margin-bottom: .4em;
 }
 
+.stacktrace {
+    font-size: 0.75em;
+    overflow-x: scroll;
+}
