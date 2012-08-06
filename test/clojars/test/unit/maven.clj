@@ -20,3 +20,21 @@
          (directory-for {:group_name "com.novemberain"
                          :jar_name "monger"
                          :version "1.2.0-alpha1"}))))
+
+(deftest snapshot-pom-file-handles-single-digit-version
+  (is (=
+        (io/file (config :repo) "fake" "test" "0.1.3-SNAPSHOT" "test-0.1.3-20120806.052549-1.pom")
+        (with-redefs
+             [snapshot-version (constantly "20120806.052549-1")]
+             (snapshot-pom-file {:group_name "fake"
+                               :jar_name "test"
+                               :version "0.1.3-SNAPSHOT"})))))
+
+(deftest snapshot-pom-file-handles-multi-digit-version
+  (is (=
+        (io/file (config :repo) "fake" "test" "0.11.13-SNAPSHOT" "test-0.11.13-20120806.052549-1.pom")
+        (with-redefs
+             [snapshot-version (constantly "20120806.052549-1")]
+             (snapshot-pom-file {:group_name "fake"
+                               :jar_name "test"
+                               :version "0.11.13-SNAPSHOT"})))))
