@@ -49,7 +49,7 @@
 (defn snapshot-pom-file [{:keys [jar_name version] :as jar}]
   (let [metadata-file (io/file (directory-for jar) "maven-metadata.xml")
         snapshot (snapshot-version metadata-file)
-        filename (format "%s-%s-%s.pom" jar_name (re-find #"\d\.\d\.\d" version) snapshot)]
+        filename (format "%s-%s-%s.pom" jar_name (re-find #"\d+\.\d+\.\d+" version) snapshot)]
     (io/file (directory-for jar) filename)))
 
 (defn jar-to-pom-map [{:keys [jar_name version] :as jar}]
