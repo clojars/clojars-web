@@ -8,7 +8,7 @@ If you're looking for user documentation, try
 the [wiki](http://github.com/ato/clojars-web/wiki/_pages). There is a 
 also a [FAQ](https://github.com/ato/clojars-web/wiki/About).
 
-See [NEWS.md](NEWS.md) for recent user-facing changes.
+See [NEWS.md](https://github.com/ato/clojars-web/blob/master/NEWS.md) for recent user-facing changes.
 
 Contributing
 ------------
