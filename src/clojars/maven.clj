@@ -18,7 +18,8 @@
    :dependencies (vec (map
                         (fn [d] {:group_name (.getGroupId d)
                                  :jar_name (.getArtifactId d)
-                                 :version (.getVersion d)})
+                                 :version (.getVersion d)
+                                 :dev (= "test" (.getScope d))})
                         (.getDependencies model))) })
 
 (defn read-pom
