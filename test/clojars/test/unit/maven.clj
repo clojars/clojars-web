@@ -21,20 +21,46 @@
                          :jar_name "monger"
                          :version "1.2.0-alpha1"}))))
 
-(deftest snapshot-pom-file-handles-single-digit-version
-  (is (=
-        (io/file (config :repo) "fake" "test" "0.1.3-SNAPSHOT" "test-0.1.3-20120806.052549-1.pom")
-        (with-redefs
-             [snapshot-version (constantly "20120806.052549-1")]
-             (snapshot-pom-file {:group_name "fake"
-                               :jar_name "test"
-                               :version "0.1.3-SNAPSHOT"})))))
+(def snapshot "20120806.052549-1")
 
-(deftest snapshot-pom-file-handles-multi-digit-version
+(defn expected-file [& [d1 d2 d3 file :as args]]
+  (io/file (config :repo) d1 d2 d3 (str file "-" snapshot ".pom")))
+
+(defn snapshot-pom-file-with [jar-map]
+  (with-redefs [snapshot-version (constantly snapshot)]
+    (snapshot-pom-file jar-map)))
+
+(deftest snapshot-pom-file-handles-single-digit-patch-version
   (is (=
-        (io/file (config :repo) "fake" "test" "0.11.13-SNAPSHOT" "test-0.11.13-20120806.052549-1.pom")
-        (with-redefs
-             [snapshot-version (constantly "20120806.052549-1")]
-             (snapshot-pom-file {:group_name "fake"
-                               :jar_name "test"
-                               :version "0.11.13-SNAPSHOT"})))))
+        (expected-file "fake" "test" "0.1.3-SNAPSHOT" "test-0.1.3")
+        (snapshot-pom-file-with {:group_name "fake"
+                                 :jar_name "test"
+                                 :version "0.1.3-SNAPSHOT"}))))
+
+(deftest snapshot-pom-file-handles-multi-digit-patch-version
+  (is (=
+        (expected-file "fake" "test" "0.11.13-SNAPSHOT" "test-0.11.13")
+        (snapshot-pom-file-with {:group_name "fake"
+                                 :jar_name "test"
+                                 :version "0.11.13-SNAPSHOT"}))))
+
+(deftest snapshot-pom-file-handles-no-patch-version
+  (is (=
+        (expected-file "fake" "test" "0.1-SNAPSHOT" "test-0.1")
+        (snapshot-pom-file-with {:group_name "fake"
+                                 :jar_name "test"
+                                 :version "0.1-SNAPSHOT"}))))
+
+(deftest snapshot-pom-file-handles-no-patch-version
+  (is (=
+        (expected-file "fake" "test" "0.1-SNAPSHOT" "test-0.1")
+        (snapshot-pom-file-with {:group_name "fake"
+                                 :jar_name "test"
+                                 :version "0.1-SNAPSHOT"}))))
+
+(deftest snapshot-pom-file-handles-release-candidate-version
+  (is (=
+        (expected-file "fake" "test" "0.2.1-alpha-SNAPSHOT" "test-0.2.1-alpha")
+        (snapshot-pom-file-with {:group_name "fake"
+                                 :jar_name "test"
+                                 :version "0.2.1-alpha-SNAPSHOT"}))))
