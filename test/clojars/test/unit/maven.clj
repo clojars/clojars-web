@@ -5,8 +5,9 @@
 
 (deftest pom-to-map-returns-corrects-dependencies
   (is (=
-        [{:group_name "org.clojure", :jar_name "clojure", :version "1.3.0-beta1"}
-         {:group_name "org.clojurer", :jar_name "clojure", :version "1.6.0"}]
+        [{:group_name "org.clojure", :jar_name "clojure", :version "1.3.0-beta1" :dev false}
+         {:group_name "org.clojurer", :jar_name "clojure", :version "1.6.0" :dev false}
+         {:group_name "midje", :jar_name "midje", :version "1.3-alpha4", :dev true}]
      (:dependencies (pom-to-map "test-resources/test-maven/test-maven.pom")))))
 
 (deftest directory-for-handles-normal-group-name
