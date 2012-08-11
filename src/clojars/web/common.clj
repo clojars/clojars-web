@@ -1,52 +1,61 @@
 (ns clojars.web.common
-  (:use hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers))
+  (:require [hiccup.core :refer [html h]]
+            [hiccup.page-helpers :refer [html5 include-css include-js
+                                         link-to unordered-list]]
+            [hiccup.form-helpers :refer [form-to]]))
 
 (defn when-ie [& contents]
   (str
-   "<!--[if lt IE 9]>"
+   "<!--[if IE]>"
    (html contents)
    "<![endif]-->"))
 
 (defn html-doc [account title & body]
-  (html5   
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:title
-     (when title
-       (str title " | "))
-     "Clojars"]
-    (map #(include-css (str "/stylesheets/" %))
-         ["reset.css" "grid.css" "screen.css"])
-    (when-ie (include-js "/js/html5.js"))]
-   [:body
-    [:div {:class "container_12 header"}
-     [:header
-      [:hgroup {:class :grid_4}
-       [:h1 (link-to "/" "Clojars")]
-       [:h2 "Simple Clojure jar repository"]]
-      [:nav
-       (if account
-         (unordered-list
-          [(link-to "/" "dashboard")
-           (link-to "/profile" "profile")
-           (link-to "/logout" "logout")])
-         (unordered-list
-          [(link-to "/login" "login")
-           (link-to "/register" "register")]))
-       (form-to [:get "/search"]
-                [:input {:name "q" :id "search" :class :search
-                         :placeholder "Search jars..."}])]]
-     [:div {:class :clear}]]
+  (html5
+   [:html {:lang :en}
+    [:head
+     [:link {:type "application/opensearchdescription+xml" 
+	      :href "/opensearch.xml"
+	      :rel "search"}] 
+     [:meta {:charset "utf-8"}]
+     [:title
+      (when title
+        (str title " | "))
+      "Clojars"]
+     (map #(include-css (str "/stylesheets/" %))
+          ["reset.css" "grid.css" "screen.css"])
+     (when-ie (include-js "/js/html5.js"))]
+
+    [:body
+     [:div {:class "container_12 header"}
+      [:header
+       [:hgroup {:class :grid_4}
+        [:h1 (link-to "/" "Clojars")]
+        [:h2 "Simple Clojure jar repository"]]
+       [:nav
+        (if account
+          (unordered-list
+           [(link-to "/" "dashboard")
+            (link-to "/profile" "profile")
+            (link-to "/logout" "logout")])
+          (unordered-list
+           [(link-to "/login" "login")
+            (link-to "/register" "register")]))
+        (form-to [:get "/search"]
+          [:input {:name "q" :id "search" :class :search :value
+                   "Search jars..."
+                   :onclick (str "if (!this.cleared==1) {this.value=''; "
+                                 "this.cleared=1;}")}])]]
+      [:div {:class :clear}]]]
     [:div {:class "container_12 article"}
      [:article
       body]]
     [:footer
-     (link-to "mailto:contact@clojars.org" "contact")
-     (link-to "/stats" "stats")
-     (link-to "http://github.com/ato/clojars-web" "code")
-     (link-to "http://wiki.github.com/ato/clojars-web" "help")]]))
+     (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
+     (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
+     (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
+     (link-to "https://github.com/ato/clojars-web" "code")
+     (link-to "https://github.com/ato/clojars-web/wiki/" "help")]]))
 
 (defn error-list [errors]
   (when errors
@@ -77,6 +86,4 @@
 (defn group-link [groupname]
   (link-to (str "/groups/" groupname) groupname))
 
-(defmacro try-account [body]
-  `(let [~'account (~'session :account)]
-     ~body))
+

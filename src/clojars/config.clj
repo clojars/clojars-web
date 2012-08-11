@@ -1,10 +1,8 @@
 (ns clojars.config
-  (:use     [clojure.tools.cli :only [cli]])
-  (:require [clojure.java.io :as io]
+  (:require [clojure.tools.cli :refer [cli]]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [ring.util.codec :as codec]))
-
-(def config (when-not *compile-files* (read-string (slurp (io/resource "config.clj")))))
 
 (def default-config
   {:port 8080
@@ -17,6 +15,13 @@
           :ssl false
           :from "noreply@clojars.org"}
    :bcrypt-work-factor 12})
+
+(defn parse-resource [f]
+  (when-let [r (io/resource f)] (read-string (slurp r))))
+
+;; we attempt to read a config.clj from the classpath at load time
+;; this is handy for interactive development and unit tests
+(def config (merge default-config (parse-resource "config.clj")))
 
 (defn url-decode [s]
   (java.net.URLDecoder/decode s "UTF-8"))
@@ -87,9 +92,6 @@
 (defn parse-file [f]
   (read-string (slurp (io/file f))))
 
-(defn parse-resource [f]
-  (when-let [r (io/resource f)] (read-string (slurp r))))
-
 (defn remove-nil-vals [m]
   (into {} (remove #(nil? (val %)) m)))
 
@@ -115,5 +117,4 @@
       (println "Some options can be set using these environment variables:")
       (println (str/join " " (map first env-vars)))
       (System/exit 0))
-    (alter-var-root #'config (fn [_] options))
-    args))
+    (alter-var-root #'config (fn [_] options))))

@@ -1,13 +1,18 @@
 (ns clojars.web.user
-  (:use [clojure.string :only [blank?]]
-        clojars.db
-        clojars.web.common
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers
-        ring.middleware.session.store
-        ring.util.response)
-  (:require [clojars.config :as config])
+  (:require [clojars.config :as config]
+            [clojars.db :refer [find-user group-membernames add-user
+                                reserved-names update-user jars-by-username
+                                find-groupnames find-user-by-user-or-email
+                                rand-string]]
+            [clojars.web.common :refer [html-doc error-list jar-link
+                                        group-link]]
+            [clojure.string :refer [blank?]]
+            [hiccup.core :refer [h]]
+            [hiccup.page-helpers :refer [link-to unordered-list]]
+            [hiccup.form-helpers :refer [form-to label text-field
+                                         password-field text-area
+                                         submit-button]]
+            [ring.util.response :refer [response redirect]])
   (:import [org.apache.commons.mail SimpleEmail]))
 
 (defn register-form [ & [errors email username ssh-key]]
@@ -61,13 +66,6 @@
       (conj-when (not (or (blank? ssh-key)
                           (valid-ssh-key? ssh-key)))
                  "Invalid SSH public key")))
-
-(defn register [{:keys [email username password confirm ssh-key]}]
-  (if-let [errors (validate-profile nil email username password confirm ssh-key)]
-    (register-form errors email username ssh-key)
-    (do (add-user email username password ssh-key)
-        (let [response (redirect "/")]
-          (assoc-in response [:session :account] username)))))
 
 (defn profile-form [account & [errors]]
   (let [user (find-user account)]

@@ -1,6 +1,6 @@
 (ns clojars.test.unit.config
-  (:use clojure.test)
-  (:require [clojars.config :as config]))
+  (:require [clojars.config :as config]
+            [clojure.test :refer :all]))
 
 (deftest parse-query
   (is (= (config/parse-query "foo=bar&baz=12")

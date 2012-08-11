@@ -1,9 +1,9 @@
 (ns clojars.test.integration.users
-  (:use clojure.test
-        kerodon.core
-        kerodon.test
-        clojars.test.integration.steps)
-  (:require [clojars.web :as web]
+  (:require [clojure.test :refer :all]
+            [kerodon.core :refer :all]
+            [kerodon.test :refer :all]
+            [clojars.test.integration.steps :refer :all]
+            [clojars.web :as web]
             [clojars.test.test-helper :as help]
             [net.cgrand.enlive-html :as enlive]
             [clojure.java.io :as io]
@@ -11,13 +11,6 @@
             [cemerick.pomegranate.aether :as aether]))
 
 (help/use-fixtures)
-
-(defn delete-recursive
-  [dir]
-  (when (.isDirectory dir)
-    (doseq [file (.listFiles dir)]
-      (delete-recursive file)))
-  (.delete dir))
 
 (deftest user-can-register
   (-> (session web/clojars-app)
@@ -196,17 +189,15 @@
   (is (= 6
          (count
           (.list (io/file (:repo config/config) "fake" "test" "0.0.1")))))
-  (let [local-repo (io/file (System/getProperty "java.io.tmpdir")
-                            "clojars-test-tmp")]
-    (delete-recursive local-repo)
-    (is (= {'[fake/test "0.0.1"] nil}
-           (aether/resolve-dependencies
-            :coordinates '[[fake/test "0.0.1"]]
-            :repositories {"local" (-> (:repo config/config)
-                                       io/file
-                                       .toURI
-                                       .toString)}
-            :local-repo local-repo)))))
+  (help/delete-file-recursively help/local-repo)
+  (is (= {'[fake/test "0.0.1"] nil}
+         (aether/resolve-dependencies
+          :coordinates '[[fake/test "0.0.1"]]
+          :repositories {"local" (-> (:repo config/config)
+                                     io/file
+                                     .toURI
+                                     .toString)}
+          :local-repo help/local-repo))))
 
 (deftest user-can-update-and-scp
   (-> (session web/clojars-app)
@@ -251,7 +242,6 @@
         (register-as "fixture" "fixture@example.org" "password" ssh-key))
     (is (= "Welcome to Clojars, fixture!\n\nDeploying fake/test 0.0.1\nError: You don't have access to the fake group.\n"
            (scp ssh-key "test.jar" "test-0.0.1/test.pom")))))
-
 
 (deftest member-can-add-user-to-group
   (-> (session web/clojars-app)

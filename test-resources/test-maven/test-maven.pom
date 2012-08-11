@@ -1,18 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>fake</groupId>
-  <artifactId>fake</artifactId>
-  <version>0.0.2</version>
-  <packaging>jar</packaging>
-
-  <name>asdf</name>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
+  <artifactId>test</artifactId>
+  <version>0.0.4</version>
+  <name>blarg</name>
   <dependencies>
     <dependency>
       <groupId>org.clojure</groupId>

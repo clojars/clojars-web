@@ -1,21 +1,23 @@
 (ns clojars.test.integration.sessions
-  (:use clojure.test
-        kerodon.core
-        kerodon.test
-        clojars.test.integration.steps)
-  (:require [clojars.web :as web]
+  (:require [clojure.test :refer :all]
+            [kerodon.core :refer :all]
+            [kerodon.test :refer :all]
+            [clojars.test.integration.steps :refer :all]
+            [clojars.db :as db]
+            [clojars.web :as web]
             [clojars.test.test-helper :as help]
             [net.cgrand.enlive-html :as enlive]
-            [net.cgrand.xml :as x]))
+            [korma.core :as korma]))
 
 (help/use-fixtures)
 
 (deftest user-cant-login-with-bad-user-pass-combo
   (-> (session web/clojars-app)
       (login-as "fixture@example.org" "password")
+      (follow-redirect)
       (has (status? 200))
-      (within [:article :div.error]
-              (has (text? "Incorrect username or password.")))))
+      (within [:article :div :p.error]
+              (has (text? "Incorrect username and/or password.")))))
 
 (deftest user-can-login-and-logout
   (-> (session web/clojars-app)
@@ -32,3 +34,16 @@
         (has (status? 200))
         (within [:nav [:li enlive/first-child] :a]
                 (has (text? "login"))))))
+
+(deftest user-with-password-wipe-gets-message
+  (-> (session web/clojars-app)
+      (register-as "fixture" "fixture@example.org" "password" ""))
+  (korma/update db/users
+                (korma/set-fields {:password ""})
+                (korma/where {:user "fixture"}))
+  (-> (session web/clojars-app)
+      (login-as "fixture" "password")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:article :div :p.error]
+              (has (text? "Incorrect username and/or password.")))))

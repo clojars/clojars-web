@@ -1,6 +1,6 @@
 (ns clojars.test.integration.steps
-  (:use kerodon.core)
-  (:require [clojure.test :as test]
+  (:require [kerodon.core :refer :all]
+            [clojure.test :as test]
             [clojure.java.io :as io]
             [clojars.scp :as scp]
             [clojars.config :as config]))

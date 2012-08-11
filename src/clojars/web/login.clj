@@ -1,34 +1,27 @@
 (ns clojars.web.login
-  (:use clojars.web.common
-        clojars.db
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers
-        ring.middleware.session.store
-        ring.util.response))
+  (:require [clojars.web.common :refer [html-doc]]
+            [hiccup.page-helpers :refer [link-to]]
+            [hiccup.form-helpers :refer [form-to label text-field
+                                         password-field submit-button]]
+            [ring.util.response :refer [redirect]]))
 
-(defn login-form [ & [error]]
+(defn login-form [{:keys [login_failed username]}]
   (html-doc nil "Login"
    [:h1 "Login"]
    [:p "Don't have an account? "
     (link-to "/register" "Sign up!")]
 
-   (when error
-     [:div {:class :error} (str error)])
+   (when login_failed
+     [:div [:p {:class :error} "Incorrect username and/or password."]
+      [:p "If you have not logged in since "
+       [:a {:href "https://groups.google.com/group/clojure/browse_thread/thread/5e0d48d2b82df39b"}
+        "the insecure password hashes were wiped"]
+       ", please use the " [:a {:href "/forgot-password"} "forgot password"]
+       " functionality to reset your password."]])
    (form-to [:post "/login"]
      (label :username "Username or email:")
-     (text-field :username)
+     (text-field :username username)
      (label :password "Password:")
      (password-field :password)
      (link-to "/forgot-password" "Forgot password?") [:br]
      (submit-button "Login"))))
-
-(defn login [{username :username password :password}]
-  (if-let [user (auth-user username password)]
-    (let [response (redirect "/")]
-      ;; presence of salt indicates sha1'd password, so re-hash to bcrypt
-      (when (not (empty? (:salt user "")))
-        (update-user (:user user) (:email user) (:user user)
-                     password (:ssh_key user)))
-      (assoc-in response [:session :account] (:user user)))
-    (login-form "Incorrect username or password.")))

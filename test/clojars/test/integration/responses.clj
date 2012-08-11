@@ -1,9 +1,9 @@
 (ns clojars.test.integration.responses
-  (:use clojure.test
-        kerodon.core
-        kerodon.test
-        clojars.test.integration.steps)
-  (:require [clojars.web :as web]
+  (:require [clojure.test :refer :all]
+            [kerodon.core :refer :all]
+            [kerodon.test :refer :all]
+            [clojars.test.integration.steps :refer :all]
+            [clojars.web :as web]
             [clojars.test.test-helper :as help]
             [net.cgrand.enlive-html :as enlive]))
 
@@ -15,3 +15,8 @@
       (has (status? 404))
       (within [:title]
               (has (text? "Page not found | Clojars")))))
+
+(deftest respond-405-for-puts
+  (-> (session web/clojars-app)
+      (visit "/nonexistant-route" :request-method :put)
+      (has (status? 405))))

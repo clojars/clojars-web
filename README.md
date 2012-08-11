@@ -2,12 +2,32 @@ Clojars web interface
 =====================
 
 This is the source code for the [Clojars](http://clojars.org/) jar
-repository.  If you're looking for user documentation, try the
-[wiki](http://github.com/ato/clojars-web/wiki/_pages).
+repository webapp.
 
-This is only of interest to you if you want to hack on the Clojars
-source code (send me a pull request with your patches) or if you want
-to try to run your own copy (for example inside a company).
+If you're looking for user documentation, try
+the [wiki](http://github.com/ato/clojars-web/wiki/_pages). There is a 
+also a [FAQ](https://github.com/ato/clojars-web/wiki/About).
+
+See [NEWS.md](https://github.com/ato/clojars-web/blob/master/NEWS.md) for recent user-facing changes.
+
+Contributing
+------------
+
+Please report bugs or problems with the repository on the 
+[bug tracker](https://github.com/ato/clojars-web/issues). 
+
+Design discussions occur on the 
+[clojars-maintainers list]([clojars-maintainers@googlegroups.com](http://groups.google.com/group/clojars))
+and the #leiningen channel on irc.freenode.org.
+
+If you'd like contribute a change please send a GitHub pull request
+for a topic branch.  Feel free to open a pull request early with a 
+"not ready for merging" note or ask on the mailing list or IRC to get
+feedback from other contributors.
+
+We try to make releases fairly soon after merging contributions, 
+but post to the mailing list if it's been a week or two and you'd like
+something pushed to the production website.
 
 Running the webapp
 ------------------
@@ -22,7 +42,7 @@ it. Regardless of how you run it, you first need to do some setup:
    * Debian: `apt-get install sqlite3`
    * Mac OS X Homebrew: `brew install sqlite`
 
-3. Create an initial sqlite database: `mkdir data; sqlite3 data/dev_db < clojars.sql`
+3. Run the DB migrations: `lein run -m clojars.db.migrate`
 
 To run the application using Leinigen 2:
 
@@ -73,6 +93,7 @@ running out of a source checkout using `lein run` the configuration
 will be read from `dev-resources/config.clj`.  When running automated
 tests with `lein test` then `test-resources/config.clj` is used.
 
+
 Test data
 ---------
 
@@ -80,10 +101,11 @@ If you'd like to hack on the UI or search it might be useful to have
 production-like metadata.  I've put up a production database dump
 (with password hashes and email addresses stripped of course) which
 you can use like this:
-    
+
     wget http://meshy.org/~ato/clojars-test-data.sql.gz
-    rm data/db
-    gunzip -c clojars-test-data.sql.gz | sqlite3 data/db
+    mkdir -p data
+    rm -f data/dev_db
+    gunzip -c clojars-test-data.sql.gz | sqlite3 data/dev_db
 
 If you want all the actual jar files as well you can grab them via
 [rsync](http://github.com/ato/clojars-web/wiki/Data).
@@ -123,10 +145,10 @@ and run `make` then copy the `ng` executable somewhere like `/usr/local/bin`
 
 5. When running the webapp enable the nailgun server: `--nailgun-port 8700`
 
-Mailing lists
--------------
 
-There's a public mailing list
-[clojars@googlegroups.com](http://groups.google.com/group/clojars) for
-general discussion.  There's also a separate maintainers list for
-people looking after the repository and server.
+License
+-------
+
+Copyright © 2009-2012 Alex Osborne, Phil Hagelberg, Nelson Morris and [contributors](https://github.com/ato/clojars-web/graphs/contributors).
+
+Distributed under the Eclipse Public License, the same as Clojure. See the file COPYING.

@@ -1,16 +1,40 @@
 (ns clojars.web.jar
-  (:use clojars.web.common
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers))
+  (:require [clojars.web.common :refer [html-doc jar-link group-link
+                                        tag jar-url jar-name user-link]]
+            [hiccup.core :refer [h]]
+            [hiccup.page-helpers :refer [link-to]]
+            [clojars.maven :refer [jar-to-pom-map]]
+            [clojars.db :refer [find-jar jar-exists]]
+            [ring.util.codec :refer [url-encode]])
+  (:import java.io.IOException))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
+
+(defn maven-jar-url [jar]
+ (str "http://search.maven.org/#"
+   (url-encode (apply format "artifactdetails|%s|%s|%s|jar"
+        ((juxt :group_name :jar_name :version) jar)))))
+
+(defn dependency-link [dep]
+  (link-to
+    (if (jar-exists (:group_name dep) (:jar_name dep)) (jar-url dep) (maven-jar-url dep))
+    (str (jar-name dep) " " (:version dep))))
+
+(defn dependency-section [title id dependencies]
+  (if (empty? dependencies) '()
+    (list
+    [:h3 title]
+    [(keyword (str "ul#" id))
+     (for [dep dependencies]
+       [:li (dependency-link dep)])])))
 
 (defn show-jar [account jar recent-versions count]
   (html-doc account (:jar_name jar)
             [:h1 (jar-link jar)]
             (:description jar)
+            (when-let [homepage (:homepage jar)]
+              [:p.homepage (link-to homepage (str (h homepage)))])
 
             [:div {:class "useit"}
              [:div {:class "lein"}
@@ -30,8 +54,15 @@
                (tag "  <version>") (h (:version jar)) (tag "</version>\n")
                (tag "</dependency>")]]
              [:p "Pushed by " (user-link (:user jar)) " on " (java.util.Date. (:created jar))]
-             (when-let [homepage (:homepage jar)]
-               [:p (link-to homepage (str (h homepage)))])
+             (try
+               (let [dependencies (:dependencies (jar-to-pom-map jar))]
+                 (concat
+                   (dependency-section "dependencies" "dependencies" (remove :dev dependencies))
+                   (dependency-section "dev dependencies" "dev_dependencies" (filter :dev dependencies))))
+               (catch IOException e
+                 (.printStackTrace e)
+                 [:p.error "Oops. We hit an error opening the metadata POM file for this jar "
+                           "so some details are not available."]))
               [:h3 "recent versions"]
               [:ul#versions
                (for [v recent-versions]

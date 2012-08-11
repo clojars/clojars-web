@@ -1,9 +1,8 @@
 (ns clojars.web.dashboard
-  (:use clojars.web.common
-        clojars.db
-        hiccup.page-helpers
-        hiccup.form-helpers
-        hiccup.core))
+  (:require [clojars.web.common :refer [html-doc jar-link group-link tag]]
+            [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
+            [hiccup.core :refer [h]]
+            [hiccup.page-helpers :refer [unordered-list link-to]]))
 
 (defn index-page [account]
   (html-doc account nil
@@ -18,9 +17,7 @@
        (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]
 
      "It's the " [:strong "default repository"] " for "
-     (link-to
-      "http://github.com/technomancy/leiningen/blob/master/README.md"
-      "Leiningen")
+     (link-to "http://leiningen.org" "Leiningen")
      ", but you can use it with other build tools like "
      (link-to "http://maven.apache.org/" "Maven") " as well."
      [:div {:class "maven"}

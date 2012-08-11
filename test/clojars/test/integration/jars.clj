@@ -1,9 +1,9 @@
 (ns clojars.test.integration.jars
-  (:use clojure.test
-        kerodon.core
-        kerodon.test
-        clojars.test.integration.steps)
-  (:require [clojars.web :as web]
+  (:require [clojure.test :refer :all]
+            [kerodon.core :refer :all]
+            [kerodon.test :refer :all]
+            [clojars.test.integration.steps :refer :all]
+            [clojars.web :as web]
             [clojars.test.test-helper :as help]))
 
 (help/use-fixtures)
@@ -87,3 +87,16 @@
               (has (text? "[fake \"0.0.1\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
+
+
+(deftest canonical-jars-can-view-dependencies
+  (-> (session web/clojars-app)
+      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+  (scp valid-ssh-key "fake.jar" "fake-0.0.1/fake.pom")
+  (scp valid-ssh-key "fake.jar" "fake-0.0.2/fake.pom")
+  (-> (session web/clojars-app)
+      (visit "/fake")
+      (within [:ul#dependencies]
+               (has (text? "org.clojure/clojure 1.3.0-beta1org.clojurer/clojure 1.6.0")))
+      (within [:ul#dev_dependencies]
+               (has (text? "midje 1.3-alpha4")))))
