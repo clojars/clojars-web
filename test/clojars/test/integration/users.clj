@@ -227,6 +227,25 @@
 
   (is (thrown? Exception (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom"))))
 
+(deftest user-can-use-multiple-ssh-keys
+  (let [valid-ssh-keys (str valid-ssh-key "0\n" valid-ssh-key "1")]
+   (-> (session web/clojars-app)
+       (register-as "dantheman" "test@example.org" "password" valid-ssh-keys)))
+  (let [new-ssh-keys (str valid-ssh-key "3\n   \n" valid-ssh-key "4")]
+    (-> (session web/clojars-app)
+        (login-as "dantheman" "password")
+        (follow-redirect)
+        (follow "profile")
+        (fill-in "Password:" "password")
+        (fill-in "Confirm password:" "password")
+        (fill-in "SSH public key:" new-ssh-keys)
+        (press "Update"))
+    (is (thrown? Exception (scp (str valid-ssh-key "1") "test.jar" "test-0.0.1/test.pom")))
+    (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
+           (scp (str valid-ssh-key "3") "test.jar" "test-0.0.1/test.pom")))
+    (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
+           (scp (str valid-ssh-key "4") "test.jar" "test-0.0.1/test.pom")))))
+
 (deftest scp-wants-filenames-in-specific-format
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))

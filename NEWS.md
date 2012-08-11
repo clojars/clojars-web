@@ -4,6 +4,7 @@ Newest items at the top.
 
 ## 2012-August
 
+* Multiple SSH keys are now accepted. #7
 * Improved error messages. #60
 
 ## 2012-July

@@ -3,7 +3,7 @@
             [clojars.db :refer [find-user group-membernames add-user
                                 reserved-names update-user jars-by-username
                                 find-groupnames find-user-by-user-or-email
-                                rand-string]]
+                                rand-string split-keys]]
             [clojars.web.common :refer [html-doc error-list jar-link
                                         group-link]]
             [clojure.string :refer [blank?]]
@@ -34,6 +34,7 @@
                            "http://wiki.github.com/ato/clojars-web/ssh-keys"
                            "what's this?") ")"
                            (text-area :ssh-key ssh-key)
+                           [:p.hint "Entering multiple keys? Put them on separate lines."]
                            (submit-button "Register"))))
 
 (defn conj-when [coll test x]
@@ -42,7 +43,7 @@
     coll))
 
 (defn valid-ssh-key? [key]
-  (re-matches #"(ssh-\w+ \S+|\d+ \d+ \D+).*\s*" key))
+  (every? #(re-matches #"(ssh-\w+ \S+|\d+ \d+ \D+).*\s*" %) (split-keys key)))
 
 (defn validate-profile
   "Validates a profile, returning nil if it's okay, otherwise a list
@@ -82,6 +83,7 @@
                        (password-field :confirm)
                        (label :ssh-key "SSH public key:")
                        (text-area :ssh-key (user :ssh_key))
+                       [:p.hint "Entering multiple keys? Put them on separate lines."]
                        (submit-button "Update")))))
 
 (defn update-profile [account {:keys [email password confirm ssh-key]}]

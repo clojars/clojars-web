@@ -48,16 +48,17 @@
 (defentity groups)
 (defentity jars)
 
+(defn split-keys [s]
+  (map str/trim (str/split s #"\s*\n\s*")))
+
 (defn write-key-file [path]
   (locking (:key-file config)
     (let [new-file (File. (str path ".new"))]
       (with-open [f (io/writer new-file)]
-        (doseq [{:keys [user ssh_key]} (select users (fields :user :ssh_key))]
+        (doseq [{:keys [user ssh_key]} (select users (fields :user :ssh_key))
+                key (remove str/blank? (split-keys ssh_key))]
           (.write f (str "command=\"ng --nailgun-port 8700 clojars.scp " user
-                         "\"," ssh-options " "
-                         (.replaceAll (.trim ssh_key)
-                                      "[\n\r\0]" "")
-                         "\n"))))
+                         "\"," ssh-options " " key "\n"))))
       (.renameTo new-file (File. path)))))
 
 (defn find-user [username]

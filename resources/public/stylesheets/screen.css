@@ -140,11 +140,11 @@ input {
 
 input[type=submit] {
     width: auto;
+    margin-top: 20px;
 }
 
 textarea {
     width: 100%;
-    margin-bottom: 20px;
     height: 8em;
     margin-top: 5px;
 }
@@ -213,4 +213,9 @@ footer a {
 .stacktrace {
     font-size: 0.75em;
     overflow-x: scroll;
+}
+
+p.hint {
+    margin: 0;
+    color: #555;
 }
