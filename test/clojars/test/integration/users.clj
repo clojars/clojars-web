@@ -28,7 +28,7 @@
       (follow "register")
       (has (status? 200))
       (within [:title]
-              (has (text? "Register | Clojars")))
+              (has (text? "Register - Clojars")))
 
       (fill-in "Email:" "test@example.org")
       (fill-in "Username:" "dantheman")
@@ -112,7 +112,7 @@
       (follow "profile")
       (has (status? 200))
       (within [:title]
-              (has (text? "Profile | Clojars")))
+              (has (text? "Profile - Clojars")))
 
       (fill-in "Email:" "fixture2@example.org")
       (press "Update")

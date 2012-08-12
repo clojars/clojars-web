@@ -19,7 +19,7 @@
     [:meta {:charset "utf-8"}]
     [:title
      (when title
-       (str title " | "))
+       (str title " - "))
      "Clojars"]
     (map #(include-css (str "/stylesheets/" %))
          ["reset.css" "grid.css" "screen.css"])
