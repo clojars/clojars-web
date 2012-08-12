@@ -1,6 +1,6 @@
 # News
 
-Newest items at the top.
+Newest items at the top.  [More detailed announcements].
 
 ## 2012-August
 
@@ -18,3 +18,5 @@ Newest items at the top.
 
 * .asc files for PGP signing are now accepted.
 * Uploads are now accepted via HTTPS. #45
+
+[More detailed announcements]: https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann
