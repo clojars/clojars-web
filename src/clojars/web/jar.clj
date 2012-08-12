@@ -30,7 +30,7 @@
        [:li (dependency-link dep)])])))
 
 (defn show-jar [account jar recent-versions count]
-  (html-doc account (:jar_name jar)
+  (html-doc account (str (:jar_name jar) " " (:version jar))
             [:h1 (jar-link jar)]
             (:description jar)
             (when-let [homepage (:homepage jar)]
