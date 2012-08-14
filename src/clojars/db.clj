@@ -114,6 +114,9 @@
           (order :created :desc)
           (limit 5)))
 
+(defn browse-jars []
+  (select jars (order :jar_name :asc)))
+
 (defn jar-exists [groupname jarname]
   (-> (exec-raw
         [(str "select exists(select 1 from jars where group_name = ? and jar_name = ?)")

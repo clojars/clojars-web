@@ -84,4 +84,5 @@
 (defn group-link [groupname]
   (link-to (str "/groups/" groupname) groupname))
 
-
+(defn format-date [s]
+  (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
