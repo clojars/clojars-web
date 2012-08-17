@@ -16,7 +16,8 @@
 
 (defn- run-test-app
   [f]
-  (let [server (jetty/run-jetty #'clojars-app {:port 0 :join? false})
+  (let [server (jetty/run-jetty #(binding [*out* (java.io.StringWriter.)]
+                                   (#'clojars-app %)) {:port 0 :join? false})
         port (-> server .getConnectors first .getLocalPort)]
     (with-redefs [test-port port]
       (try
