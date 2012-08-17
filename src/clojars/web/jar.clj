@@ -5,7 +5,8 @@
             [hiccup.page-helpers :refer [link-to]]
             [clojars.maven :refer [jar-to-pom-map]]
             [clojars.db :refer [find-jar jar-exists]]
-            [ring.util.codec :refer [url-encode]])
+            [ring.util.codec :refer [url-encode]]
+            [clj-stacktrace.repl :refer [pst]])
   (:import java.io.IOException))
 
 (defn url-for [jar]
@@ -60,7 +61,7 @@
                    (dependency-section "dependencies" "dependencies" (remove :dev dependencies))
                    (dependency-section "dev dependencies" "dev_dependencies" (filter :dev dependencies))))
                (catch IOException e
-                 (.printStackTrace e)
+                 (pst e)
                  [:p.error "Oops. We hit an error opening the metadata POM file for this jar "
                            "so some details are not available."]))
               [:h3 "recent versions"]

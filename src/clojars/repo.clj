@@ -9,7 +9,8 @@
             [clojure.java.io :as io]
             [clojure.string :as string]
             [ring.util.codec :as codec]
-            [ring.util.response :as response])
+            [ring.util.response :as response]
+            [clj-stacktrace.repl :refer [pst]])
   (:import java.io.StringReader))
 
 (defn save-to-file [sent-file input]
@@ -62,7 +63,7 @@
 		)
               {:status 201 :headers {} :body nil}
               (catch Exception e
-                (.printStackTrace e)
+                (pst e)
                 {:status 403 :headers {} :body (.getMessage e)}))))))
   (PUT "*" _ {:status 400 :headers {}})
   (not-found "Page not found"))
