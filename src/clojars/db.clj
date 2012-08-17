@@ -114,9 +114,6 @@
           (order :created :desc)
           (limit 5)))
 
-(defn browse-jars []
-  (select jars (order :jar_name :asc)))
-
 (defn jar-exists [groupname jarname]
   (-> (exec-raw
         [(str "select exists(select 1 from jars where group_name = ? and jar_name = ?)")
@@ -144,6 +141,17 @@
                                  :version version}))
                     (order :created :desc)
                     (limit 1)))))
+
+(defn latest-jars []
+  (select jars
+          (modifier "distinct")
+          (fields :group_name :jar_name)
+          (order :group_name :asc)
+          (order :jar_name :asc)
+          (limit 20)))
+
+(defn browse-jars []
+  (map #(find-jar (:group_name %) (:jar_name %)) (latest-jars)))
 
 (defn add-user [email username password ssh-key]
   (insert users
