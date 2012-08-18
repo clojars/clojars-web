@@ -35,7 +35,12 @@
             [:h1 (jar-link jar)]
             (:description jar)
             (when-let [homepage (:homepage jar)]
-              [:p.homepage (link-to homepage (str (h homepage)))])
+              [:p.homepage
+               (try (link-to homepage (str (h homepage)))
+                    (catch Exception e
+                      ; link-to will throw an exception when a non url
+                      ; is given
+                      (h homepage)))])
 
             [:div {:class "useit"}
              [:div {:class "lein"}
@@ -58,18 +63,18 @@
              (try
                (let [dependencies (:dependencies (jar-to-pom-map jar))]
                  (concat
-                   (dependency-section "dependencies" "dependencies" (remove :dev dependencies))
-                   (dependency-section "dev dependencies" "dev_dependencies" (filter :dev dependencies))))
+                  (dependency-section "dependencies" "dependencies" (remove :dev dependencies))
+                  (dependency-section "dev dependencies" "dev_dependencies" (filter :dev dependencies))))
                (catch IOException e
                  (pst e)
                  [:p.error "Oops. We hit an error opening the metadata POM file for this jar "
-                           "so some details are not available."]))
-              [:h3 "recent versions"]
-              [:ul#versions
-               (for [v recent-versions]
-                 [:li (link-to (url-for (assoc jar
-                                          :version (:version v)))
-                               (:version v))])]
+                  "so some details are not available."]))
+             [:h3 "recent versions"]
+             [:ul#versions
+              (for [v recent-versions]
+                [:li (link-to (url-for (assoc jar
+                                         :version (:version v)))
+                              (:version v))])]
              [:p (link-to (str (jar-url jar) "/versions")
                           (str "show all versions (" count " total)"))]]))
 
