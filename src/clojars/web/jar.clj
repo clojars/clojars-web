@@ -63,8 +63,7 @@
              (try
                (let [dependencies (:dependencies (jar-to-pom-map jar))]
                  (concat
-                  (dependency-section "dependencies" "dependencies" (remove :dev dependencies))
-                  (dependency-section "dev dependencies" "dev_dependencies" (filter :dev dependencies))))
+                  (dependency-section "dependencies" "dependencies" (remove #(not= (:scope %) "compile") dependencies))))
                (catch IOException e
                  (pst e)
                  [:p.error "Oops. We hit an error opening the metadata POM file for this jar "

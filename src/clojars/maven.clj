@@ -19,7 +19,7 @@
                         (fn [d] {:group_name (.getGroupId d)
                                  :jar_name (.getArtifactId d)
                                  :version (.getVersion d)
-                                 :dev (= "test" (.getScope d))})
+                                 :scope (or (.getScope d) "compile")})
                         (.getDependencies model))) })
 
 (defn read-pom
