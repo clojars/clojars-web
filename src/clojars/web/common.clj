@@ -50,6 +50,7 @@
       body]]
     [:footer
      (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
+     (link-to "/projects" "projects")
      (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
      (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
      (link-to "https://github.com/ato/clojars-web" "code")

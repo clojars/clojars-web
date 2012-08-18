@@ -142,7 +142,7 @@
                     (order :created :desc)
                     (limit 1)))))
 
-(defn latest-jars []
+(defn all-projects []
   (select jars
           (modifier "distinct")
           (fields :group_name :jar_name)
@@ -150,8 +150,8 @@
           (order :jar_name :asc)
           (limit 20)))
 
-(defn browse-jars []
-  (map #(find-jar (:group_name %) (:jar_name %)) (latest-jars)))
+(defn browse-projects []
+  (map #(find-jar (:group_name %) (:jar_name %)) (all-projects)))
 
 (defn add-user [email username password ssh-key]
   (insert users

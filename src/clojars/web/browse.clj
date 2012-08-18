@@ -1,13 +1,13 @@
 (ns clojars.web.browse
   (:require [clojars.web.common :refer [html-doc jar-link user-link format-date]]
-            [clojars.db :refer [browse-jars]]
+            [clojars.db :refer [browse-projects]]
             [hiccup.core :refer [h]]))
 
  (defn browse [account params] 
-   (html-doc account "All clojars"
-     [:h1 "All clojars"]
+   (html-doc account "All projects"
+     [:h1 "All projects"]
      [:ul
-      (for [jar (browse-jars)]
+      (for [jar (browse-projects)]
         [:li.search-results
           (jar-link jar) " " (h (:version jar))
           [:br]

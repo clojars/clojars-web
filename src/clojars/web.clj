@@ -37,7 +37,7 @@
   (GET "/search" {session :session params :params}
        (try-account
         (search account params)))
-  (GET "/clojars" {session :session params :params}
+  (GET "/projects" {session :session params :params}
        (try-account
         (browse account params)))
   (GET "/profile" {session :session params :params}
