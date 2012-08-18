@@ -8,14 +8,12 @@
      [:h1 "All projects"]
      [:ul
       (for [jar (browse-projects)]
-        [:li.search-results
+        [:li.browse-results
           (jar-link jar) " " (h (:version jar))
           [:br]
-          (let [description (:description jar)]
-            (when (and (not= "" description)
-                       (not (nil? description)))
-              [:span.desc (h description)
-               [:br]]))
+          (when (seq (:description jar))
+            [:span.desc (h (:description jar))
+              [:br]])
            [:span.details 
              (user-link (:user jar)) 
              " "

@@ -176,7 +176,7 @@ footer a {
     margin-bottom: 20px;
 
     border: 5px solid #444;
-    
+
     -moz-border-radius: 10px;
     -webkit-border-radius: 10px;
     border-radius: 10px;
@@ -205,7 +205,7 @@ footer a {
     font-size: 80%;
 }
 
-.search-results {
+.search-results, .browse-results {
    list-style-type: none;
    margin-bottom: .4em;
 }
