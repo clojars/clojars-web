@@ -19,9 +19,9 @@
                  [com.cemerick/friend "0.0.8"]
                  [clj-stacktrace "0.2.4"]]
   :profiles {:test {:resource-paths ["test-resources"]
-                    :dependencies [[kerodon "0.0.4"]
+                    :dependencies [[kerodon "0.0.6"]
                                    [nailgun-shim "0.0.1"]]}
-             :dev {:dependencies [[kerodon "0.0.4"]
+             :dev {:dependencies [[kerodon "0.0.6"]
                                   [nailgun-shim "0.0.1"]]
                    :resource-paths ["local-resources"]}}
   :plugins [[lein-ring "0.7.3"]]
