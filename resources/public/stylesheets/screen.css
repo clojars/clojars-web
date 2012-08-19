@@ -219,3 +219,18 @@ p.hint {
     margin: 0;
     color: #555;
 }
+
+.pagination {
+  padding: 0 2em 2em;
+  text-align: center;
+}
+
+.pagination * {
+  padding: 5px;
+  text-align: center;
+  font-weight: 900;
+}
+
+.pagination .disabled, .pagination .current {
+  color: #777;
+}

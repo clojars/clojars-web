@@ -87,3 +87,13 @@
 
 (defn format-date [s]
   (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
+
+(defn page-nav [current-page total-pages]
+  [:div {:class "pagination"}
+    [:span {:class "previous_page disabled"} "&#8592; Previous"]
+    [:em {:class "current"} "1"]
+    (link-to "/projects?page=2" "2")
+    (link-to "/projects?page=3" "3")
+    (link-to "/projects?page=4" "4")
+    (link-to "/projects?page=5" "5")
+    [:a {:href "/projects?page=2" :class "next_page"} "Next &#8594"]])
