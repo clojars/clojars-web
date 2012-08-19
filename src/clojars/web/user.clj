@@ -8,10 +8,10 @@
                                         group-link]]
             [clojure.string :refer [blank?]]
             [hiccup.core :refer [h]]
-            [hiccup.page-helpers :refer [link-to unordered-list]]
-            [hiccup.form-helpers :refer [form-to label text-field
-                                         password-field text-area
-                                         submit-button]]
+            [hiccup.element :refer [link-to unordered-list]]
+            [hiccup.form :refer [form-to label text-field
+                                 password-field text-area
+                                 submit-button]]
             [ring.util.response :refer [response redirect]])
   (:import [org.apache.commons.mail SimpleEmail]))
 

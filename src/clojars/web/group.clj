@@ -2,8 +2,8 @@
   (:require [clojars.web.common :refer [html-doc jar-link user-link error-list]]
             [clojars.db :refer [jars-by-groupname]]
             [clojars.auth :refer [authorized?]]
-            [hiccup.page-helpers :refer [unordered-list]]
-            [hiccup.form-helpers :refer [form-to text-field submit-button]]))
+            [hiccup.element :refer [unordered-list]]
+            [hiccup.form :refer [form-to text-field submit-button]]))
 
 (defn show-group [account groupname membernames & errors]
   (html-doc account (str groupname " group")

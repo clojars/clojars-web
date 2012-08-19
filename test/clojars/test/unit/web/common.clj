@@ -21,7 +21,9 @@
         (common/error-list ["error"]))))
 
 (deftest user-link-works
-  (is (= [:a {:href "/users/kiwi"} '("kiwi")] (common/user-link "kiwi"))))
+  (is (= [:a {:href (java.net.URI. "/users/kiwi")} '("kiwi")]
+         (common/user-link "kiwi"))))
 
 (deftest group-link-works
-  (is (= [:a {:href "/groups/artifruit"} '("artifruit")] (common/group-link "artifruit"))))
+  (is (= [:a {:href (java.net.URI. "/groups/artifruit")} '("artifruit")]
+         (common/group-link "artifruit"))))

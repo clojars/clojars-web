@@ -1,8 +1,8 @@
 (ns clojars.web.login
   (:require [clojars.web.common :refer [html-doc]]
-            [hiccup.page-helpers :refer [link-to]]
-            [hiccup.form-helpers :refer [form-to label text-field
-                                         password-field submit-button]]
+            [hiccup.element :refer [link-to]]
+            [hiccup.form :refer [form-to label text-field
+                                 password-field submit-button]]
             [ring.util.response :refer [redirect]]))
 
 (defn login-form [{:keys [login_failed username]}]

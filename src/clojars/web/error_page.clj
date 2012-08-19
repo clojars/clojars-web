@@ -1,7 +1,7 @@
 (ns clojars.web.error-page
   (:require [clojars.web.common :refer [html-doc]]
             [ring.util.response :refer [response status content-type]]
-            [hiccup.page-helpers :refer [link-to]]
+            [hiccup.element :refer [link-to]]
             [clj-stacktrace.repl :refer [pst]]))
 
 (defn error-page-response [throwable]

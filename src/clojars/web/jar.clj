@@ -2,7 +2,7 @@
   (:require [clojars.web.common :refer [html-doc jar-link group-link
                                         tag jar-url jar-name user-link]]
             [hiccup.core :refer [h]]
-            [hiccup.page-helpers :refer [link-to]]
+            [hiccup.element :refer [link-to]]
             [clojars.maven :refer [jar-to-pom-map]]
             [clojars.db :refer [find-jar jar-exists]]
             [ring.util.codec :refer [url-encode]]
