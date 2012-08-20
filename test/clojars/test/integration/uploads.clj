@@ -200,3 +200,29 @@
                                      "UTF-8"))}
              :body "Bad jar")
       (has (status? 400))))
+
+(deftest does-not-write-incomplete-file
+  (-> (session clojars-app)
+      (register-as "dantheman" "test@example.org" "password" ""))
+  (with-out-str
+    (-> (session clojars-app)
+        (visit "/repo/group3/artifact3/1.0.0/test.jar"
+               :body (proxy [java.io.InputStream] []
+                       (read
+                         ([_] (throw (java.io.IOException.)))))
+               :request-method :put
+               :content-length 1000
+               :content-type "txt/plain"
+               :headers {:content-length 1000
+                         :content-type "txt/plain"
+                         :authorization (str "Basic "
+                                             (String. (base64/encode
+                                                       (.getBytes "dantheman:password"
+                                                                  "UTF-8"))
+                                                      "UTF-8"))})
+        (has (status? 403))))
+  (is (not (.exists (clojure.java.io/file (:repo config)
+                                          "group3"
+                                          "artifact3"
+                                          "1.0.0"
+                                          "test.jar")))))

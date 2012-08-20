@@ -43,18 +43,22 @@
                           :version version}
                     file (io/file (config :repo) group
                                   artifact version filename)]
-                (if (.endsWith filename ".pom")
-                  (let [contents (slurp body)
-                        pom-info (merge (maven/pom-to-map
-                                         (StringReader. contents)) info)]
-                    (if (find-jar groupname artifact version)
-                      (update-jar account pom-info)
-                      (add-jar account pom-info))
-                    (save-to-file file contents))
-                  (do
-                    (when-not (find-jar groupname artifact version)
-                      (add-jar account info))
-                    (save-to-file file body)))
+                (try
+                  (if (.endsWith filename ".pom")
+                    (let [contents (slurp body)
+                          pom-info (merge (maven/pom-to-map
+                                           (StringReader. contents)) info)]
+                      (save-to-file file contents)
+                      (if (find-jar groupname artifact version)
+                        (update-jar account pom-info)
+                        (add-jar account pom-info)))
+                    (do
+                      (save-to-file file body)
+                      (when-not (find-jar groupname artifact version)
+                        (add-jar account info))))
+                  (catch java.io.IOException e
+                    (.delete file)
+                    (throw e)))
                 ;; TODO: re-enable this when the promotion thread is
                 ;; re-enabled it would be good to make it conditional,
                 ;; ie if no S3 key is configured then don't
