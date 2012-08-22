@@ -5,7 +5,8 @@
             [hiccup.core :refer [h]]))
 
  (defn browse [account params]
-   (let [page (Integer. (or (:page params) 1))]
+   (let [page (Integer. (or (:page params) 1))
+         total-pages 50]
    (html-doc account "All projects"
      [:h1 "All projects"]
      [:ul
@@ -21,4 +22,4 @@
              " "
              (if-let [created (:created jar)]
                [:td (format-date created)])]])]
-     (page-nav page 1))))
+     (page-nav page total-pages))))

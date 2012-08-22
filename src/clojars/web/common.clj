@@ -89,11 +89,29 @@
   (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
 
 (defn page-nav [current-page total-pages]
-  [:div {:class "pagination"}
-    [:span {:class "previous_page disabled"} "&#8592; Previous"]
-    [:em {:class "current"} "1"]
-    (link-to "/projects?page=2" "2")
-    (link-to "/projects?page=3" "3")
-    (link-to "/projects?page=4" "4")
-    (link-to "/projects?page=5" "5")
-    [:a {:href "/projects?page=2" :class "next_page"} "Next &#8594"]])
+  (let [page-range 3
+        page-url "/projects?page="
+        main-div [:div {:class "pagination"}]
+        previous-page (if (= current-page 1)
+                        [[:span {:class "previous_page disabled"} "&#8592; Previous"]]
+                        [[:a
+                          {:href (str page-url (- current-page 1)) :class "previous_page"}
+                          "&#8592; Previous"]])
+        before-current-links (->> (drop-while
+                                    #(< % 1)
+                                    (range (- current-page page-range) current-page))
+                               (map #(link-to (str page-url %) %)))
+        current-link [[:em {:class "current"} (str current-page)]]
+        after-current-links (->>
+                              (take-while
+                                #(<= % total-pages)
+                                (range (+ current-page 1) (+ current-page 1 page-range)))
+                              (map #(link-to (str page-url %) %)))
+        next-page (if (= current-page total-pages)
+                    [[:span {:class "next_page disabled"} "Next &#8594"]]
+                    [[:a
+                      {:href (str page-url (+ current-page 1)) :class "next_page"}
+                      "Next &#8594"]])]
+    (vec
+      (concat main-div previous-page before-current-links current-link after-current-links
+              next-page))))
