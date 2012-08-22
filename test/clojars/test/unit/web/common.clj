@@ -47,3 +47,33 @@
   (is (=
         [:a {:href "/projects?page=3" :class "next_page"} "Next &#8594"]
         (-> (common/page-nav 2 3) (last)))))
+
+(deftest page-nav-renders-no-before-links
+  (is (=
+        [:span :em]
+        (->> (-> (common/page-nav 1 3) (subvec 2 4)) (map first)))))
+
+(deftest page-nav-renders-some-before-links
+  (is (=
+        [:a :em]
+        (->> (-> (common/page-nav 2 3) (subvec 3 5)) (map first)))))
+
+(deftest page-nav-renders-all-before-links
+  (is (=
+        [:a :a :a :em]
+        (->> (-> (common/page-nav 5 10) (subvec 3 7)) (map first)))))
+
+(deftest page-nav-renders-no-after-links
+  (is (=
+        [:em :span]
+        (->> (-> (common/page-nav 3 3) (subvec 5 7)) (map first)))))
+
+(deftest page-nav-renders-some-after-links
+  (is (=
+        [:em :a]
+        (->> (-> (common/page-nav 3 4) (subvec 5 7)) (map first)))))
+
+(deftest page-nav-renders-all-after-links
+  (is (=
+        [:em :a :a :a]
+        (->> (-> (common/page-nav 3 10) (subvec 5 9)) (map first)))))

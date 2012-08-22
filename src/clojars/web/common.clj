@@ -97,21 +97,19 @@
                         [[:a
                           {:href (str page-url (- current-page 1)) :class "previous_page"}
                           "&#8592; Previous"]])
-        before-current-links (->> (drop-while
-                                    #(< % 1)
-                                    (range (- current-page page-range) current-page))
-                               (map #(link-to (str page-url %) %)))
-        current-link [[:em {:class "current"} (str current-page)]]
-        after-current-links (->>
-                              (take-while
-                                #(<= % total-pages)
-                                (range (+ current-page 1) (+ current-page 1 page-range)))
-                              (map #(link-to (str page-url %) %)))
+        before-current (->> (drop-while
+                              #(< % 1)
+                              (range (- current-page page-range) current-page))
+                            (map #(link-to (str page-url %) %)))
+        current [[:em {:class "current"} (str current-page)]]
+        after-current (->> (take-while
+                             #(<= % total-pages)
+                             (range (+ current-page 1) (+ current-page 1 page-range)))
+                           (map #(link-to (str page-url %) %)))
         next-page (if (= current-page total-pages)
                     [[:span {:class "next_page disabled"} "Next &#8594"]]
                     [[:a
                       {:href (str page-url (+ current-page 1)) :class "next_page"}
                       "Next &#8594"]])]
     (vec
-      (concat main-div previous-page before-current-links current-link after-current-links
-              next-page))))
+      (concat main-div previous-page before-current current after-current next-page))))
