@@ -220,17 +220,21 @@ p.hint {
     color: #555;
 }
 
-.pagination {
+.page-nav {
   padding: 0 2em 2em;
   text-align: center;
 }
 
-.pagination * {
+.page-nav * {
   padding: 5px;
   text-align: center;
   font-weight: 900;
 }
 
-.pagination .disabled, .pagination .current {
+.page-nav .disabled, .page-nav .current {
   color: #777;
+}
+
+.page-description {
+  color: #444;
 }

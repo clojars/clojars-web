@@ -77,3 +77,18 @@
   (is (=
         [:em :a :a :a]
         (->> (-> (common/page-nav 3 10) (subvec 5 9)) (map first)))))
+
+(deftest page-description-on-first-page
+  (is (=
+        [[:b "1 - 20"] " of " [:b 80]]
+        (-> (common/page-description 1 20 80) (subvec 3)))))
+
+(deftest page-description-on-last-page-with-total-equal-to-upper-limit
+  (is (=
+        [[:b "61 - 80"] " of " [:b 80]]
+        (-> (common/page-description 4 20 80) (subvec 3)))))
+
+(deftest page-description-on-last-page-with-total-not-equal-to-upper-limit
+  (is (=
+        [[:b "61 - 75"] " of " [:b 75]]
+        (-> (common/page-description 4 20 75) (subvec 3)))))

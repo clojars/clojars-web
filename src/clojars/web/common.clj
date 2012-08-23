@@ -91,7 +91,7 @@
 (defn page-nav [current-page total-pages]
   (let [page-range 3
         page-url "/projects?page="
-        main-div [:div {:class "pagination"}]
+        main-div [:div {:class "page-nav"}]
         previous-page (if (= current-page 1)
                         [[:span {:class "previous_page disabled"} "&#8592; Previous"]]
                         [[:a
@@ -113,3 +113,11 @@
                       "Next &#8594"]])]
     (vec
       (concat main-div previous-page before-current current after-current next-page))))
+
+(defn page-description [current-page per-page total]
+  (let [upper (* per-page current-page)]
+   [:div {:class "page-description"}
+     "Displaying projects "
+     [:b (str (-> upper (- per-page) inc) " - " (min upper total))]
+     " of "
+     [:b total]]))
