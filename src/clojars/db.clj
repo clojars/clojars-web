@@ -151,6 +151,13 @@
     (limit limit-num)
     (offset offset-num)))
 
+(defn count-all-projects []
+  (-> (exec-raw
+        "select count(*) count from (select distinct group_name, jar_name from jars order by group_name, jar_name)"
+        :results)
+      first
+      :count))
+
 (defn browse-projects
   ([current-page] (browse-projects current-page 20))
   ([current-page per-page]
