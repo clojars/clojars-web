@@ -83,6 +83,11 @@
         [:span :em :a :a :a]
       (->> (-> (common/page-nav -1 3) (subvec 2)) (map first)))))
 
+(deftest page-nav-handles-nonexistent-page
+  (is (=
+        [:a :a :a :em :span]
+      (->> (-> (common/page-nav 4 3) (subvec 2)) (map first)))))
+
 (deftest page-description-on-first-page
   (is (=
         [[:b "1 - 20"] " of " [:b 80]]
@@ -102,3 +107,8 @@
   (is (=
         [:b "1 - 20"]
         (-> (common/page-description -1 20 80) (get 3)))))
+
+(deftest page-description-handles-nonexistent-page
+  (is (=
+        [:b "61 - 80"]
+        (-> (common/page-description 15 20 80) (get 3)))))
