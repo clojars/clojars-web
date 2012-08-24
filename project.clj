@@ -26,7 +26,7 @@
                    :resource-paths ["local-resources"]}}
   :plugins [[lein-ring "0.7.3"]]
   :ring {:handler clojars.web/clojars-app}
-  :aot [clojars.scp]
+  :aot [clojars.scp, clojars.stats]
   :main clojars.main
   :min-lein-version "2.0.0")
 

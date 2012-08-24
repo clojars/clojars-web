@@ -15,7 +15,9 @@
         password "password"
         ssh-key "asdf"
         ms (long 0)]
+      (is (= (db/count-users) 0))    
       (is (db/add-user email name password ssh-key))
+      (is (= (db/count-users) 1))    
       (are [x] (submap {:email email
                         :user name
                         :ssh_key ssh-key}
@@ -99,7 +101,9 @@
                 :authors "Alex Osborne, a little fish"
                 :description "An dog awesome and non-existent test jar."}]
     (binding [db/get-time (fn [] (java.sql.Timestamp. ms))]
+      (is (= 0 (db/count-jars)))
       (is (db/add-jar "test-user" jarmap))
+      (is (= 1 (db/count-jars)))
       (are [x] (submap result x)
            (db/find-jar name name)
            (first (db/jars-by-groupname name))
@@ -123,6 +127,7 @@
 (deftest jars-with-multiple-versions
   (let [name "tester"
         jarmap {:name name :group name :version "1" }]
+    (is (= 0 (db/count-versions)))
     (binding [db/get-time (fn [] (java.sql.Timestamp. 0))]
       (is (db/add-jar "test-user" jarmap)))
     (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
@@ -132,6 +137,8 @@
     (binding [db/get-time (fn [] (java.sql.Timestamp. 3))]
       (is (db/add-jar "test-user" (assoc jarmap :version "4-SNAPSHOT"))))
     (is (= 4 (db/count-versions name name)))
+    (is (= 4 (db/count-versions)))
+    (is (= 1 (db/count-jars)))
     (is (= ["4-SNAPSHOT" "3" "2" "1"]
            (map :version (db/recent-versions name name))))
     (is (= ["4-SNAPSHOT"] (map :version (db/recent-versions name name 1))))
