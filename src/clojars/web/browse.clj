@@ -13,7 +13,7 @@
      [:h1 "All projects"]
      (page-description page per-page project-count)
      [:ul
-      (for [jar (browse-projects page)]
+      (for [jar (browse-projects page per-page)]
         [:li.browse-results
           (jar-link jar) " " (h (:version jar))
           [:br]
