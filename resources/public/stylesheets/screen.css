@@ -176,7 +176,7 @@ footer a {
     margin-bottom: 20px;
 
     border: 5px solid #444;
-    
+
     -moz-border-radius: 10px;
     -webkit-border-radius: 10px;
     border-radius: 10px;
@@ -205,7 +205,7 @@ footer a {
     font-size: 80%;
 }
 
-.search-results {
+.search-results, .browse-results {
    list-style-type: none;
    margin-bottom: .4em;
 }
@@ -218,4 +218,23 @@ footer a {
 p.hint {
     margin: 0;
     color: #555;
+}
+
+.page-nav {
+  padding: 0 2em 2em;
+  text-align: center;
+}
+
+.page-nav * {
+  padding: 5px;
+  text-align: center;
+  font-weight: 900;
+}
+
+.page-nav .disabled, .page-nav .current {
+  color: #777;
+}
+
+.page-description {
+  color: #444;
 }

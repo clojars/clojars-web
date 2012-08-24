@@ -297,5 +297,27 @@
                  (assoc result :jar_name "2")]
                 (db/recent-jars)))))
 
+(deftest browse-projects-finds-jars
+  (db/add-jar "test-user" {:name "rock" :group "jester" :version "0.1"})
+  (db/add-jar "test-user" {:name "rock" :group "tester" :version "0.1"})
+  (db/add-jar "test-user" {:name "rock" :group "tester" :version "0.2"})
+  (db/add-jar "test-user" {:name "paper" :group "tester" :version "0.1"})
+  (db/add-jar "test-user" {:name "scissors" :group "tester" :version "0.1"})
+    ; tests group_name and jar_name ordering
+    (is (=
+          '({:version "0.1", :jar_name "rock", :group_name "jester"}
+            {:version "0.1", :jar_name "paper", :group_name "tester"})
+          (->>
+            (db/browse-projects 1 2)
+            (map #(select-keys % [:group_name :jar_name :version])))))
+
+    ; tests version ordering and pagination
+    (is (=
+          '({:version "0.2", :jar_name "rock", :group_name "tester"}
+            {:version "0.1", :jar_name "scissors", :group_name "tester"})
+          (->>
+            (db/browse-projects 2 2)
+             ( map #(select-keys % [:group_name :jar_name :version]))))))
+
 ;; TODO: search tests?
 ;; TODO: recent-versions

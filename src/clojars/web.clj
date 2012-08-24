@@ -10,6 +10,7 @@
             [clojars.web.dashboard :refer [dashboard index-page]]
             [clojars.web.error-page :refer [wrap-exceptions]]
             [clojars.web.search :refer [search]]
+            [clojars.web.browse :refer [browse]]
             [clojars.web.user :refer [profile-form update-profile show-user
                                       register-form
                                       forgot-password forgot-password-form]]
@@ -36,6 +37,9 @@
   (GET "/search" {session :session params :params}
        (try-account
         (search account params)))
+  (GET "/projects" {session :session params :params}
+       (try-account
+        (browse account params)))
   (GET "/profile" {session :session params :params}
        (with-account
          (profile-form account)))

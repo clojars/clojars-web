@@ -1,11 +1,8 @@
 (ns clojars.web.search
-  (:require [clojars.web.common :refer [html-doc jar-link user-link]]
+  (:require [clojars.web.common :refer [html-doc jar-link user-link format-date]]
             [clojars.db :refer [search-jars]]
             [hiccup.core :refer [h]]
             [cheshire.core :as json]))
-
-(defn format-date [s]
-  (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
 
 (defn- jar->json [jar]
   (let [m {:jar_name (:jar_name jar)
@@ -38,11 +35,9 @@
        [:li.search-results
         (jar-link jar) " " (h (:version jar))
         [:br]
-        (let [description (:description jar)]
-          (when (and (not= "" description)
-                     (not (nil? description)))
-            [:span.desc (h description)
-             [:br]]))
+        (when (seq (:description jar))
+          [:span.desc (h (:description jar))
+            [:br]])
         [:span.details
          (user-link (:user jar))
          " "
