@@ -6,10 +6,16 @@
   <artifactId>test</artifactId>
   <version>0.0.3-SNAPSHOT</version>
   <packaging>jar</packaging>
-
   <name>asdf</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+  <scm>
+    <connection>scm:git:git://github.com/fake/test.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/fake/test.git</developerConnection>
+    <tag>70470ff6ae74505bdbfe5955fca6797f613c113c</tag>
+    <url>https://github.com/fake/test</url>
+  </scm>
+
 </project>

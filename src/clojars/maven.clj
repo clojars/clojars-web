@@ -58,3 +58,9 @@
                    (snapshot-pom-file jar)
                    (io/file (directory-for jar) (format "%s-%s.%s" jar_name version "pom")))]
     (pom-to-map (str pom-file))))
+
+(defn commit-url [jar]
+  (let [scm (:scm (jar-to-pom-map jar))
+        url (and scm (.getUrl scm))
+        base-url (re-find #"https?://github.com/[^/]+/[^/]+" (str url))]
+    (if (and base-url (.getTag scm)) (str base-url "/commit/" (.getTag scm)))))

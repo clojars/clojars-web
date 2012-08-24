@@ -1,9 +1,10 @@
 (ns clojars.web.jar
   (:require [clojars.web.common :refer [html-doc jar-link group-link
-                                        tag jar-url jar-name user-link]]
+                                        tag jar-url jar-name user-link
+                                        simple-date]]
             [hiccup.core :refer [h]]
             [hiccup.element :refer [link-to]]
-            [clojars.maven :refer [jar-to-pom-map]]
+            [clojars.maven :refer [jar-to-pom-map commit-url]]
             [clojars.db :refer [find-jar jar-exists]]
             [ring.util.codec :refer [url-encode]]
             [clj-stacktrace.repl :refer [pst]])
@@ -59,7 +60,12 @@
                (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
                (tag "  <version>") (h (:version jar)) (tag "</version>\n")
                (tag "</dependency>")]]
-             [:p "Pushed by " (user-link (:user jar)) " on " (java.util.Date. (:created jar))]
+             [:p "Pushed by " (user-link (:user jar)) " on "
+              [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
+              (try
+                (if-let [url (commit-url jar)]
+                  [:span.commit-url " with " (link-to url "this commit")])
+                (catch IOException e))]
              (try
                (let [dependencies (:dependencies (jar-to-pom-map jar))]
                  (concat
