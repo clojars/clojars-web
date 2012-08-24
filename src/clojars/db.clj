@@ -158,15 +158,13 @@
       first
       :count))
 
-(defn browse-projects
-  ([current-page] (browse-projects current-page 20))
-  ([current-page per-page]
-   (vec
-     (map
-       #(find-jar (:group_name %) (:jar_name %))
-       (all-projects
-         (* (- current-page 1) per-page)
-         per-page)))))
+(defn browse-projects [current-page per-page]
+  (vec
+    (map
+      #(find-jar (:group_name %) (:jar_name %))
+      (all-projects
+        (* (- current-page 1) per-page)
+        per-page))))
 
 (defn add-user [email username password ssh-key]
   (insert users
