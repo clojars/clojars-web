@@ -17,8 +17,7 @@
        (label :from "starting from")
        [:input {:type :text :name :from :id :from
                 :placeholder (jar-name (first projects))}]
-       [:input {:type :submit :value "Jump" :id :jump}]
-       (submit-button "Jump")]]
+       [:input {:type :submit :value "Jump" :id :jump}]]]
      (page-description page per-page project-count)
      [:ul
       (for [[i jar] (map-indexed vector projects)]
