@@ -6,7 +6,7 @@
 
 (defn when-ie [& contents]
   (str
-   "<!--[if IE]>"
+   "<!--[if lt IE 9]>"
    (html contents)
    "<![endif]-->"))
 
@@ -40,10 +40,8 @@
           [(link-to "/login" "login")
            (link-to "/register" "register")]))
        (form-to [:get "/search"]
-                [:input {:name "q" :id "search" :class :search :value
-                         "Search jars..."
-                         :onclick (str "if (!this.cleared==1) {this.value=''; "
-                                       "this.cleared=1;}")}])]]
+                [:input {:name "q" :id "search" :class :search
+                         :placeholder "Search jars..."}])]]
      [:div {:class :clear}]]
     [:div {:class "container_12 article"}
      [:article
