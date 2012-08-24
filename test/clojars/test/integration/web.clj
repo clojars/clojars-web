@@ -5,7 +5,8 @@
             [clojars.test.integration.steps :refer :all]
             [clojars.web :as web]
             [clojars.db :as db]
-            [clojars.test.test-helper :as help]))
+            [clojars.test.test-helper :as help]
+            [net.cgrand.enlive-html :as enlive]))
 
 (help/use-fixtures)
 
@@ -43,3 +44,16 @@
              (has (text? "Huh")))
      (within [:.page-nav :.current]
              (has (text? "2")))))
+
+(deftest browse-page-can-jump
+  (doseq [i (range 100 125)]
+    (db/add-jar
+      "test-user"
+      {:name (str "tester" i "a") :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
+  (-> (session web/clojars-app)
+      (visit "/projects")
+      (fill-in "starting from" "tester/tester123")
+      (press "Jump")
+      (follow-redirect)
+      (within [[:li.browse-results (enlive/nth-of-type 3)] [:a (enlive/nth-of-type 2)]]
+              (has (text? "tester/tester123a")))))

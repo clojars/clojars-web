@@ -238,3 +238,25 @@ p.hint {
 .page-description {
   color: #444;
 }
+
+.browse-from {
+  display: inline;
+}
+
+.browse-from label {
+  color: #444;
+  font-size: 60%;
+  font-weight: normal;
+  margin-left: 10px;
+  margin-right: 5px;
+}
+
+.browse-from input#from {
+  display: inline;
+  width: 200px;
+  margin-bottom: 0;
+}
+
+.browse-from input#jump {
+  display: none;
+}

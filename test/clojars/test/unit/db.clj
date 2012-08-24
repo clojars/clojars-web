@@ -317,7 +317,19 @@
             {:version "0.1", :jar_name "scissors", :group_name "tester"})
           (->>
             (db/browse-projects 2 2)
-             ( map #(select-keys % [:group_name :jar_name :version]))))))
+            ( map #(select-keys % [:group_name :jar_name :version]))))))
+
+(deftest count-projects-works
+  (db/add-jar "test-user" {:name "rock" :group "jester" :version "0.1"})
+  (db/add-jar "test-user" {:name "rock" :group "tester" :version "0.1"})
+  (db/add-jar "test-user" {:name "rock" :group "tester" :version "0.2"})
+  (db/add-jar "test-user" {:name "paper" :group "tester" :version "0.1"})
+  (db/add-jar "test-user" {:name "scissors" :group "tester" :version "0.1"})
+  (is (= (db/count-all-projects) 4))
+  (is (= (db/count-projects-before "a") 0))
+  (is (= (db/count-projects-before "tester/rock") 2))
+  (is (= (db/count-projects-before "tester/rocks") 3))
+  (is (= (db/count-projects-before "z") 4)))
 
 ;; TODO: search tests?
 ;; TODO: recent-versions

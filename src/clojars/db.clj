@@ -158,6 +158,16 @@
       first
       :count))
 
+(defn count-projects-before [s]
+  (-> (exec-raw
+       [(str "select count(*) count from"
+              " (select distinct group_name, jar_name from jars"
+              "  order by group_name, jar_name)"
+              " where group_name || '/' || jar_name < ?")
+        [s]] :results)
+      first
+      :count))
+
 (defn browse-projects [current-page per-page]
   (vec
     (map
