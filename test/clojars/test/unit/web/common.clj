@@ -30,22 +30,22 @@
 
 (deftest page-nav-renders-disabled-previous-page
   (is (=
-        [:span {:class "previous_page disabled"} "&#8592; Previous"]
+        [:span {:class "previous-page disabled"} "&#8592; Previous"]
         (-> (common/page-nav 1 3) (get 2)))))
 
 (deftest page-nav-renders-active-previous-page
   (is (=
-        [:a {:href "/projects?page=1" :class "previous_page"} "&#8592; Previous"]
+        [:a {:href "/projects?page=1" :class "previous-page"} "&#8592; Previous"]
         (-> (common/page-nav 2 3) (get 2)))))
 
 (deftest page-nav-renders-disabled-next-page
   (is (=
-        [:span {:class "next_page disabled"} "Next &#8594"]
+        [:span {:class "next-page disabled"} "Next &#8594"]
         (-> (common/page-nav 3 3) (last)))))
 
 (deftest page-nav-renders-active-next-page
   (is (=
-        [:a {:href "/projects?page=3" :class "next_page"} "Next &#8594"]
+        [:a {:href "/projects?page=3" :class "next-page"} "Next &#8594"]
         (-> (common/page-nav 2 3) (last)))))
 
 (deftest page-nav-renders-no-before-links

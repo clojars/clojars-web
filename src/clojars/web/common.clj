@@ -94,9 +94,9 @@
         current-page (-> current-page (max 1) (min total-pages))
         main-div [:div {:class "page-nav"}]
         previous-page (if (= current-page 1)
-                        [[:span {:class "previous_page disabled"} "&#8592; Previous"]]
+                        [[:span {:class "previous-page disabled"} "&#8592; Previous"]]
                         [[:a
-                          {:href (str page-url (- current-page 1)) :class "previous_page"}
+                          {:href (str page-url (- current-page 1)) :class "previous-page"}
                           "&#8592; Previous"]])
         before-current (->> (drop-while
                               #(< % 1)
@@ -108,9 +108,9 @@
                              (range (+ current-page 1) (+ current-page 1 page-range)))
                            (map #(link-to (str page-url %) %)))
         next-page (if (= current-page total-pages)
-                    [[:span {:class "next_page disabled"} "Next &#8594"]]
+                    [[:span {:class "next-page disabled"} "Next &#8594"]]
                     [[:a
-                      {:href (str page-url (+ current-page 1)) :class "next_page"}
+                      {:href (str page-url (+ current-page 1)) :class "next-page"}
                       "Next &#8594"]])]
     (vec
       (concat main-div previous-page before-current current after-current next-page))))
