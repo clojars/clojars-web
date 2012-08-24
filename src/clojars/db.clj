@@ -5,7 +5,7 @@
             [korma.db :refer [defdb transaction rollback]]
             [korma.core :refer [defentity select group fields order
                                 modifier exec-raw where limit values
-                                raw insert update set-fields]])
+                                raw insert update set-fields offset]])
   (:import java.security.MessageDigest
            java.util.Date
            java.io.File
@@ -141,6 +141,30 @@
                                  :version version}))
                     (order :created :desc)
                     (limit 1)))))
+
+(defn all-projects [offset-num limit-num]
+  (select jars
+    (modifier "distinct")
+    (fields :group_name :jar_name)
+    (order :group_name :asc)
+    (order :jar_name :asc)
+    (limit limit-num)
+    (offset offset-num)))
+
+(defn count-all-projects []
+  (-> (exec-raw
+        "select count(*) count from (select distinct group_name, jar_name from jars order by group_name, jar_name)"
+        :results)
+      first
+      :count))
+
+(defn browse-projects [current-page per-page]
+  (vec
+    (map
+      #(find-jar (:group_name %) (:jar_name %))
+      (all-projects
+        (* (- current-page 1) per-page)
+        per-page))))
 
 (defn add-user [email username password ssh-key]
   (insert users
