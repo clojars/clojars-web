@@ -16,7 +16,8 @@
                  [org.apache.commons/commons-email "1.2"]
                  [net.cgrand/regex "1.0.1" :exclusions [org.clojure/clojure]]
                  [clj-time "0.3.8"]
-                 [com.cemerick/friend "0.0.8"]
+                 [com.cemerick/friend "0.0.8"
+                  :exclusions [org.openid4java/openid4java-nodeps]]
                  [clj-stacktrace "0.2.4"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.6"]
