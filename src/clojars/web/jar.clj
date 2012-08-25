@@ -1,13 +1,12 @@
 (ns clojars.web.jar
   (:require [clojars.web.common :refer [html-doc jar-link group-link
-                                        tag jar-url jar-name user-link]]
+                                        tag jar-url jar-name user-link
+                                        simple-date]]
             [hiccup.core :refer [h]]
             [hiccup.element :refer [link-to]]
-            [clojars.maven :refer [jar-to-pom-map]]
+            [clojars.maven :refer [jar-to-pom-map commit-url]]
             [clojars.db :refer [find-jar jar-exists]]
-            [ring.util.codec :refer [url-encode]]
-            [clj-stacktrace.repl :refer [pst]])
-  (:import java.io.IOException))
+            [ring.util.codec :refer [url-encode]]))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
@@ -30,18 +29,17 @@
      (for [dep dependencies]
        [:li (dependency-link dep)])])))
 
+; handles link-to throwing an exception when given a non-url
+(defn safe-link-to [url text]
+  (try (link-to url text)
+    (catch Exception e text)))
+
 (defn show-jar [account jar recent-versions count]
   (html-doc account (str (:jar_name jar) " " (:version jar))
             [:h1 (jar-link jar)]
             (:description jar)
             (when-let [homepage (:homepage jar)]
-              [:p.homepage
-               (try (link-to homepage (str (h homepage)))
-                    (catch Exception e
-                      ; link-to will throw an exception when a non url
-                      ; is given
-                      (h homepage)))])
-
+              [:p.homepage (safe-link-to homepage (h homepage))])
             [:div {:class "useit"}
              [:div {:class "lein"}
               [:h3 "leiningen"]
@@ -59,15 +57,17 @@
                (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
                (tag "  <version>") (h (:version jar)) (tag "</version>\n")
                (tag "</dependency>")]]
-             [:p "Pushed by " (user-link (:user jar)) " on " (java.util.Date. (:created jar))]
-             (try
-               (let [dependencies (:dependencies (jar-to-pom-map jar))]
-                 (concat
-                  (dependency-section "dependencies" "dependencies" (remove #(not= (:scope %) "compile") dependencies))))
-               (catch IOException e
-                 (pst e)
-                 [:p.error "Oops. We hit an error opening the metadata POM file for this jar "
-                  "so some details are not available."]))
+             (let [pom (jar-to-pom-map jar)]
+               (list
+                 [:p "Pushed by " (user-link (:user jar)) " on "
+                   [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
+                   (if-let [url (commit-url pom)]
+                     [:span.commit-url " with " (link-to url "this commit")])]
+                 (dependency-section "dependencies" "dependencies"
+                                     (remove #(not= (:scope %) "compile") (:dependencies pom)))
+                 (when-not pom
+                   [:p.error "Oops. We hit an error opening the metadata POM file for this jar "
+                     "so some details are not available."])))
              [:h3 "recent versions"]
              [:ul#versions
               (for [v recent-versions]

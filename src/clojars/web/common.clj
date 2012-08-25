@@ -86,6 +86,9 @@
 (defn format-date [s]
   (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
 
+(defn simple-date [s]
+  (.format (java.text.SimpleDateFormat. "MMM d, yyyy") s))
+
 (defn page-nav [current-page total-pages]
   (let [page-range 3
         page-url "/projects?page="
