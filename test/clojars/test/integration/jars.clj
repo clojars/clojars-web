@@ -37,6 +37,8 @@
               (has (text? "fake/test")))
       (within [:.lein :pre]
               (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
+      (within [:span.commit-url]
+              (has (text? " with this commit")))
       (follow "show all versions (1 total)")
       (within [:.versions :ul]
               (has (text? "0.0.3-SNAPSHOT")))))
