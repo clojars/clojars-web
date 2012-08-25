@@ -16,7 +16,7 @@
       [:form.browse-from {:method :get :action "/projects"}
        (label :from "starting from")
        [:input {:type :text :name :from :id :from
-                :placeholder (jar-name (first projects))}]
+                :placeholder "Enter a few letters..."}]
        [:input {:type :submit :value "Jump" :id :jump}]]]
      (page-description page per-page project-count)
      [:ul
