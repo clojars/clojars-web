@@ -1,9 +1,11 @@
 (ns clojars.maven
   (:require [clojure.java.io :as io]
             [clojars.config :refer [config]]
-            [clojure.string :refer [split]])
+            [clojure.string :refer [split]]
+            [clj-stacktrace.repl :refer [pst]])
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
-           org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader))
+           org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
+           java.io.IOException))
 
 (defn model-to-map [model]
   {:name (.getArtifactId model)
@@ -54,13 +56,15 @@
     (io/file (directory-for jar) filename)))
 
 (defn jar-to-pom-map [{:keys [jar_name version] :as jar}]
-  (let [pom-file (if (re-find #"SNAPSHOT$" version)
-                   (snapshot-pom-file jar)
-                   (io/file (directory-for jar) (format "%s-%s.%s" jar_name version "pom")))]
-    (pom-to-map (str pom-file))))
+  (try
+    (let [pom-file (if (re-find #"SNAPSHOT$" version)
+                     (snapshot-pom-file jar)
+                     (io/file (directory-for jar) (format "%s-%s.%s" jar_name version "pom")))]
+      (pom-to-map (str pom-file)))
+    (catch IOException e (pst e) nil)))
 
-(defn commit-url [jar]
-  (let [scm (:scm (jar-to-pom-map jar))
+(defn commit-url [pom-map]
+  (let [scm (:scm pom-map)
         url (and scm (.getUrl scm))
         base-url (re-find #"https?://github.com/[^/]+/[^/]+" (str url))]
     (if (and base-url (.getTag scm)) (str base-url "/commit/" (.getTag scm)))))
