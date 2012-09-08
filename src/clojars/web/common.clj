@@ -1,8 +1,9 @@
 (ns clojars.web.common
-  (:require [hiccup.core :refer [html h]]
-            [hiccup.page :refer [html5 include-css include-js]]
+  (:require [hiccup.core :refer [html]]
+            [hiccup.page :refer [include-css include-js]]
             [hiccup.element :refer [link-to unordered-list]]
-            [hiccup.form :refer [form-to]]))
+            [hiccup.form :refer [form-to]]
+            [clojars.web.safe-hiccup :refer [html5 raw]]))
 
 (defn when-ie [& contents]
   (str
@@ -23,7 +24,7 @@
      "Clojars"]
     (map #(include-css (str "/stylesheets/" %))
          ["reset.css" "grid.css" "screen.css"])
-    (when-ie (include-js "/js/html5.js"))]
+    (raw (when-ie (include-js "/js/html5.js")))]
    [:body
     [:div {:class "container_12 header"}
      [:header
@@ -62,7 +63,7 @@
      (unordered-list errors)]))
 
 (defn tag [s]
-  (html [:span {:class "tag"} (h s)]))
+  (raw (html [:span {:class "tag"} s])))
 
 (defn jar-url [jar]
   (if (= (:group_name jar) (:jar_name jar))
@@ -71,8 +72,8 @@
 
 (defn jar-name [jar]
   (if (= (:group_name jar) (:jar_name jar))
-    (h (:jar_name jar))
-    (h (str (:group_name jar) "/" (:jar_name jar)))))
+    (:jar_name jar)
+    (str (:group_name jar) "/" (:jar_name jar))))
 
 (defn jar-link [jar]
   (link-to (jar-url jar) (jar-name jar)))

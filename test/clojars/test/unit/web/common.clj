@@ -6,9 +6,7 @@
   (is (= "group/artifact" (common/jar-name {:jar_name "artifact"
                                             :group_name "group"})))
   (is (= "artifact" (common/jar-name {:jar_name "artifact"
-                                      :group_name "artifact"})))
-  (is (= "&lt;/alert&gt;/&lt;alert&gt;" (common/jar-name {:jar_name "<alert>"
-                                           :group_name "</alert>"}))))
+                                      :group_name "artifact"}))))
 
 (deftest jar-url-uses-shortest-unique
   (is (= "/group/artifact" (common/jar-url {:jar_name "artifact" :group_name "group"})))
