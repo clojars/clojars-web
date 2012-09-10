@@ -11,7 +11,7 @@
 (defn start-jetty []
   (when-let [port (:port config)]
     (println "clojars-web: starting jetty on" (str "http://" (:bind config) ":" port))
-    (run-jetty clojars-app {:host (:bind config)
+    (run-jetty #'clojars-app {:host (:bind config)
                             :port port
                             :join? false})))
 
