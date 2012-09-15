@@ -3,7 +3,9 @@
 does some monkey patching to automatically escape strings."
   (:require [hiccup.core :refer [html]]
             [hiccup.page :refer [doctype]]
-            [hiccup.util :refer [escape-html to-str ToString]]))
+            [hiccup.util :refer [escape-html to-str ToString]]
+            [ring.middleware.anti-forgery :refer [ *anti-forgery-token*]]
+            [hiccup.form :as form]))
 
 (deftype RawString [s]
   ToString
@@ -31,3 +33,16 @@ does some monkey patching to automatically escape strings."
          (html {:mode :html}
            (raw (doctype :html5))
            [:html {:lang (options# :lang)} ~@contents])))))
+
+(defmacro form-to
+  "Create a form that points to a particular method and route.
+e.g. (form-to [:put \"/post\"]
+...)"
+  [[method action] & body]
+  `(if (contains? #{:head :get} ~method)
+     (form/form-to [~method ~action] ~@body)
+     (form/form-to [~method ~action]
+                   (conj
+                    (form/hidden-field "__anti-forgery-token"
+                                       *anti-forgery-token*)
+                    ~@body))))

@@ -20,14 +20,17 @@
                  [clj-time "0.3.8"]
                  [com.cemerick/friend "0.0.8"
                   :exclusions [org.openid4java/openid4java-nodeps]]
-                 [clj-stacktrace "0.2.4"]]
+                 [clj-stacktrace "0.2.4"]
+                 [ring-anti-forgery "0.2.0"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.6"]
                                    [nailgun-shim "0.0.1"]]}
              :dev {:dependencies [[kerodon "0.0.6"]
                                   [nailgun-shim "0.0.1"]]
                    :resource-paths ["local-resources"]}}
-  :plugins [[lein-ring "0.7.3"]]
+  :plugins [[lein-ring "0.7.3" :exclusions [thneed]]
+            ;fix downloading -snapshot all the time
+            [thneed "1.0.0"]]
   :ring {:handler clojars.web/clojars-app}
   :aot [clojars.scp]
   :main clojars.main

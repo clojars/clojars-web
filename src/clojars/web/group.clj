@@ -3,7 +3,8 @@
             [clojars.db :refer [jars-by-groupname]]
             [clojars.auth :refer [authorized?]]
             [hiccup.element :refer [unordered-list]]
-            [hiccup.form :refer [form-to text-field submit-button]]))
+            [hiccup.form :refer [text-field submit-button]]
+            [clojars.web.safe-hiccup :refer [form-to]]))
 
 (defn show-group [account groupname membernames & errors]
   (html-doc account (str groupname " group")

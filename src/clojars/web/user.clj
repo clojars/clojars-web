@@ -9,9 +9,10 @@
             [clojure.string :refer [blank?]]
             [hiccup.core :refer [h]]
             [hiccup.element :refer [link-to unordered-list]]
-            [hiccup.form :refer [form-to label text-field
+            [hiccup.form :refer [label text-field
                                  password-field text-area
                                  submit-button]]
+            [clojars.web.safe-hiccup :refer [form-to]]
             [ring.util.response :refer [response redirect]])
   (:import [org.apache.commons.mail SimpleEmail]))
 

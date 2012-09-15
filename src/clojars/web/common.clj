@@ -2,8 +2,7 @@
   (:require [hiccup.core :refer [html]]
             [hiccup.page :refer [include-css include-js]]
             [hiccup.element :refer [link-to unordered-list]]
-            [hiccup.form :refer [form-to]]
-            [clojars.web.safe-hiccup :refer [html5 raw]]))
+            [clojars.web.safe-hiccup :refer [html5 raw form-to]]))
 
 (defn when-ie [& contents]
   (str

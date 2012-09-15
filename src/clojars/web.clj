@@ -22,6 +22,7 @@
             [ring.middleware.file-info :refer [wrap-file-info]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [redirect status response]]
+            [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [compojure.core :refer [defroutes GET POST PUT ANY context]]
             [compojure.handler :refer [site]]
             [compojure.route :refer [not-found]]
@@ -54,7 +55,10 @@
         (forgot-password params))
   (GET "/forgot-password" {params :params}
        (forgot-password-form))
-  (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))
+  (friend/logout (ANY "/logout" request
+                      ; Work around friend#20 and ring-anti-forgery#10
+                      (-> (ring.util.response/redirect "/")
+                           (assoc :session (:session request)))))
 
   (GET "/" {session :session params :params}
        (try-account
@@ -166,19 +170,27 @@
                  :unauthorized-handler
                  (partial workflows/http-basic-deny "clojars")})
                (repo/wrap-file (:repo config))))
-  (site (-> main-routes
-            (friend/authenticate
-             {:credential-fn
-              (partial creds/bcrypt-credential-fn
-                       get-user)
-              :workflows [(workflows/interactive-form)
-                          registration/workflow]
-              :login-uri "/login"
-              :default-landing-uri "/"
-              :unauthorized-handler
-              (fn [r]
-                (-> (redirect "/login")
-                    (assoc-in [:session ::friend/unauthorized-uri] (:uri r))))})
-            (wrap-resource "public")
-            (wrap-file-info)
-            (wrap-exceptions))))
+  (-> main-routes
+      ; Work around friend#20 and ring-anti-forgery#10
+      ((fn [h] (fn [r] (let [s (:session r)
+                           res (h r)]
+                       (if (:session res)
+                         res
+                         (assoc res :session s))))))
+      (friend/authenticate
+       {:credential-fn
+        (partial creds/bcrypt-credential-fn
+                 get-user)
+        :workflows [(workflows/interactive-form)
+                    registration/workflow]
+        :login-uri "/login"
+        :default-landing-uri "/"
+        :unauthorized-handler
+        (fn [r]
+          (-> (redirect "/login")
+              (assoc-in [:session ::friend/unauthorized-uri] (:uri r))))})
+      (wrap-anti-forgery)
+      (wrap-exceptions)
+      (site)
+      (wrap-resource "public")
+      (wrap-file-info)))
