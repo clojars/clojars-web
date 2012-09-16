@@ -33,7 +33,7 @@
      " and then check out the "
      (link-to "http://wiki.github.com/ato/clojars-web/tutorial"
               "tutorial") ". Alternatively, "
-     (link-to "/repo" "browse") " the repository."]
+     (link-to "/projects" "browse") " the repository."]
     [:h2 "Recently pushed jars"]
     (unordered-list (map jar-link (recent-jars)))))
 
