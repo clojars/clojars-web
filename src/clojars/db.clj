@@ -191,13 +191,15 @@
   (write-key-file (:key-file config)))
 
 (defn update-user [account email username password ssh-key]
-  (update users
-          (set-fields {:email email
-                       :user username
-                       :salt ""
-                       :password (bcrypt password)
-                       :ssh_key ssh-key})
-          (where {:user account}))
+  (let [fields {:email email
+                :user username
+                :salt ""
+                :ssh_key ssh-key}]
+    (update users
+            (set-fields (if (empty? password)
+                          fields
+                          (assoc fields :password (bcrypt password))))
+            (where {:user account})))
   (write-key-file (:key-file config)))
 
 (defn add-member [groupname username]

@@ -2,12 +2,17 @@
   (:require [cemerick.friend :as friend]
             [cemerick.friend.workflows :as workflow]
             [ring.util.response :refer [response]]
-            [clojars.web.user :refer [register-form validate-profile]]
-            [clojars.db :refer [add-user]]))
+            [clojars.web.user :refer [register-form new-user-validations]]
+            [clojars.db :refer [add-user]]
+            [valip.core :refer [validate]]))
 
 (defn register [{:keys [email username password confirm ssh-key]}]
-  (if-let [errors (validate-profile nil email username password confirm ssh-key)]
-    (response (register-form errors email username ssh-key))
+  (if-let [errors (apply validate {:email email
+                                   :username username
+                                   :password password
+                                   :ssh-key ssh-key}
+                         (new-user-validations confirm))]
+    (response (register-form (apply concat (vals errors)) email username ssh-key))
     (do (add-user email username password ssh-key)
         (workflow/make-auth {:identity username :username username}))))
 

@@ -13,7 +13,9 @@
                                  password-field text-area
                                  submit-button]]
             [clojars.web.safe-hiccup :refer [form-to]]
-            [ring.util.response :refer [response redirect]])
+            [ring.util.response :refer [response redirect]]
+            [valip.core :refer [validate]]
+            [valip.predicates :as pred])
   (:import [org.apache.commons.mail SimpleEmail]))
 
 (defn register-form [ & [errors email username ssh-key]]
@@ -46,28 +48,24 @@
 (defn valid-ssh-key? [key]
   (every? #(re-matches #"(ssh-\w+ \S+|\d+ \d+ \D+).*\s*" %) (split-keys key)))
 
-(defn validate-profile
-  "Validates a profile, returning nil if it's okay, otherwise a list
-  of errors."
-  [account email username password confirm ssh-key]
-  (-> nil
-      (conj-when (blank? email) "Email can't be blank")
-      (conj-when (blank? username) "Username can't be blank")
-      (conj-when (blank? password) "Password can't be blank")
-      (conj-when (not= password confirm)
-                 "Password and confirm password must match")
-      (conj-when (and (nil? account) ; only check username on register
-                      (or (reserved-names username)  ; "I told them we already
-                          (and (not= account username) ; got one!"
-                               (find-user username))
-                          (seq (group-membernames username))))
-                 "Username is already taken")
-      (conj-when (not (re-matches #"[a-z0-9_-]+" username))
-                 (str "Username must consist only of lowercase "
-                      "letters, numbers, hyphens and underscores."))
-      (conj-when (not (or (blank? ssh-key)
-                          (valid-ssh-key? ssh-key)))
-                 "Invalid SSH public key")))
+(defn update-user-validations [confirm]
+  [[:email pred/present? "Email can't be blank"]
+   [:username #(re-matches #"[a-z0-9_-]+" %)
+    (str "Username must consist only of lowercase "
+         "letters, numbers, hyphens and underscores.")]
+   [:username pred/present? "Username can't be blank"]
+   [:password #(= % confirm) "Password and confirm password must match"]
+   [:ssh-key #(or (blank? %)
+                  (valid-ssh-key? %))
+    "Invalid SSH public key"]])
+
+(defn new-user-validations [confirm]
+  (concat [[:password pred/present? "Password can't be blank"]
+           [:username #(not (or (reserved-names %)
+                                (find-user %)
+                                (seq (group-membernames %))))
+            "Username is already taken"]]
+          (update-user-validations confirm)))
 
 (defn profile-form [account & [errors]]
   (let [user (find-user account)]
@@ -88,9 +86,12 @@
                        (submit-button "Update")))))
 
 (defn update-profile [account {:keys [email password confirm ssh-key]}]
-  (if-let [errors (validate-profile account email
-                                    account password confirm ssh-key)]
-    (profile-form account errors)
+  (if-let [errors (apply validate {:email email
+                                   :username account
+                                   :password password
+                                   :ssh-key ssh-key}
+                         (update-user-validations confirm))]
+    (profile-form account (apply concat (vals  errors)))
     (do (update-user account email account password ssh-key)
         (redirect "/profile"))))
 
