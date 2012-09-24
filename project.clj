@@ -25,10 +25,9 @@
              :dev {:dependencies [[kerodon "0.0.6"]
                                   [nailgun-shim "0.0.1"]]
                    :resource-paths ["local-resources"]}}
+  :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
   :plugins [[lein-ring "0.7.3"]]
   :ring {:handler clojars.web/clojars-app}
   :aot [clojars.scp]
   :main clojars.main
   :min-lein-version "2.0.0")
-
-
