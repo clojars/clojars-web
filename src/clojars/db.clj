@@ -176,12 +176,13 @@
         (* (- current-page 1) per-page)
         per-page))))
 
-(defn add-user [email username password ssh-key]
+(defn add-user [email username password ssh-key pgp-key]
   (insert users
           (values {:email email
                    :user username
                    :password (bcrypt password)
                    :ssh_key ssh-key
+                   :pgp_key pgp-key
                    :created (get-time)
                    ;;TODO: remove salt field
                    :salt ""}))
@@ -190,13 +191,14 @@
                    :user username}))
   (write-key-file (:key-file config)))
 
-(defn update-user [account email username password ssh-key]
+(defn update-user [account email username password ssh-key pgp-key]
   (update users
           (set-fields {:email email
                        :user username
                        :salt ""
                        :password (bcrypt password)
-                       :ssh_key ssh-key})
+                       :ssh_key ssh-key
+                       :pgp_key pgp-key})
           (where {:user account}))
   (write-key-file (:key-file config)))
 
