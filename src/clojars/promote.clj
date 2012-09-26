@@ -1,14 +1,16 @@
 (ns clojars.promote
   (:require [clojars.config :refer [config]]
             [clojars.maven :as maven]
+            [clojars.db :as db]
             [clojure.java.io :as io]
             [clojure.java.shell :as sh]
-            [cemerick.pomegranate.aether :as aether]
-            [clojars.db :as db]
             [clojure.java.jdbc :as sql]
+            [alice.sign :as sign]
+            [cemerick.pomegranate.aether :as aether]
             [korma.core :refer [select fields where update set-fields]])
   (:import (java.util.concurrent LinkedBlockingQueue)
-           (org.springframework.aws.maven SimpleStorageServiceWagon)))
+           (org.springframework.aws.maven SimpleStorageServiceWagon)
+           (java.io ByteArrayInputStream)))
 
 (defn file-for [group artifact version extension]
   (let [filename (format "%s-%s.%s" artifact version extension)]
@@ -29,27 +31,16 @@
     blockers
     (conj blockers (str "Missing " (name field)))))
 
-(declare check-signature)
+(defn signed-with? [file sig-file key]
+  (try (sign/verify file sig-file (ByteArrayInputStream. (.getBytes key)))
+       (catch Exception e false)))
 
-(defn- fetch-key [signature err]
-  (if (re-find #"Can't check signature: public key not found" err)
-    (let [key (second (re-find #"using \w+ key ID (.+)" err))
-          {:keys [exit]} (sh/sh "gpg" "--recv-keys" key)]
-      (if (zero? exit)
-        (check-signature signature)))))
-
-(defn- check-signature [signature]
-  (let [err (java.io.StringWriter.)
-        out (java.io.StringWriter.)
-        {:keys [exit]} (binding [*err* (java.io.PrintWriter. err), *out* out]
-                         (sh/sh "gpg" "--verify" (str signature)))]
-    (or (zero? exit)
-        (fetch-key signature (str err)))))
-
-(defn signed? [blockers file]
-  (if (check-signature (str file ".asc"))
-    blockers
-    (conj blockers (str file " is not signed."))))
+(defn signed? [blockers file keys]
+  (let [sig-file (str file ".asc")]
+    (if (and (.exists (io/file sig-file))
+             (some (partial signed-with? file sig-file) keys))
+      blockers
+      (conj blockers (str file " is not signed.")))))
 
 (defn unpromoted? [blockers {:keys [group name version]}]
   (let [[{:keys [promoted_at]}] (select db/jars (fields :promoted_at)
@@ -63,6 +54,7 @@
 (defn blockers [{:keys [group name version]}]
   (let [jar (file-for group name version "jar")
         pom (file-for group name version "pom")
+        keys (db/group-keys group)
         info (try (maven/pom-to-map pom)
                   (catch Exception _ {}))]
     ;; TODO: convert this to a lazy seq for cheaper qualification checks
@@ -77,8 +69,8 @@
         (check-field info :licenses)
         (check-field info :scm)
 
-        (signed? jar)
-        (signed? pom)
+        (signed? jar keys)
+        (signed? pom keys)
         (unpromoted? info))))
 
 (def releases {:url "s3://clojars/releases/"

@@ -11,6 +11,7 @@
                  [hiccup "1.0.1"]
                  [cheshire "2.2.2"]
                  [korma "0.3.0-beta10"]
+                 [alice "0.0.1-SNAPSHOT"]
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.6.17"]
                  [org.apache.commons/commons-email "1.2"]

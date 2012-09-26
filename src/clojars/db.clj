@@ -3,9 +3,9 @@
             [clojure.java.io :as io]
             [clojars.config :refer [config]]
             [korma.db :refer [defdb transaction rollback]]
-            [korma.core :refer [defentity select group fields order
-                                modifier exec-raw where limit values
-                                raw insert update set-fields offset]])
+            [korma.core :refer [defentity select group fields order join
+                                modifier exec-raw where limit values with
+                                has-many raw insert update set-fields offset]])
   (:import java.security.MessageDigest
            java.util.Date
            java.io.File
@@ -73,6 +73,11 @@
 
 (defn group-membernames [groupname]
   (map :user (select groups (fields :user) (where {:name groupname}))))
+
+(defn group-keys [groupname]
+  (map :pgp_key (select users (fields :pgp_key)
+                        (join groups (= :users.user :groups.user))
+                        (where {:groups.name groupname}))))
 
 (defn jars-by-username [username]
   (select jars
