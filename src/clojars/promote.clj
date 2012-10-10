@@ -27,8 +27,8 @@
     (conj blockers "Snapshot versions cannot be promoted")
     blockers))
 
-(defn check-field [blockers info field]
-  (if (field info)
+(defn check-field [blockers info field pred]
+  (if (pred (field info))
     blockers
     (conj blockers (str "Missing " (name field)))))
 
@@ -41,7 +41,7 @@
     (let [{:keys [exit out err]} (sh/sh "gpg" "--homedir" temp-home
                                         "--verify" (str sig-file) (str file))]
       (doseq [f (reverse (file-seq (io/file temp-home)))] (.delete f))
-      (zero? exit))))
+      (or (zero? exit) (println "GPG error:" out "\n" err)))))
 
 (defn signed? [blockers file keys]
   (let [sig-file (str file ".asc")]
@@ -66,23 +66,21 @@
         info (try (maven/pom-to-map pom)
                   (catch Exception e
                     (.printStackTrace e) {}))]
-    ;; TODO: convert this to a lazy seq for cheaper qualification checks
     (-> []
         (check-version version)
         (check-file jar)
         (check-file pom)
 
-        ;; TODO: check contents, not just presence
-        (check-field info :description)
-        (check-field info :url)
-        (check-field info :licenses)
-        (check-field info :scm)
+        (check-field info :description (complement empty?))
+        (check-field info :url (partial re-find #"http:"))
+        (check-field info :licenses seq)
+        (check-field info :scm identity)
 
         (signed? jar keys)
         (signed? pom keys)
         (unpromoted? info))))
 
-(def releases {:url "s3://clojars/releases/"
+(def releases {:url (config :releases-url)
                :username (config :releases-access-key)
                :passphrase (config :releases-secret-key)})
 
