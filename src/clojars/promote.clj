@@ -72,7 +72,7 @@
         (check-file pom)
 
         (check-field info :description (complement empty?))
-        (check-field info :url (partial re-find #"http:"))
+        (check-field info :url #(re-find #"^http" (str %)))
         (check-field info :licenses seq)
         (check-field info :scm identity)
 
