@@ -6,6 +6,7 @@
             [clojure.java.shell :as sh]
             [clojure.java.jdbc :as sql]
             [clojure.string :as str]
+            [korma.db :as korma]
             [cemerick.pomegranate.aether :as aether]
             [korma.core :refer [select fields where update set-fields]])
   (:import (java.util.concurrent LinkedBlockingQueue)
@@ -96,33 +97,33 @@
 (defn- deploy-to-s3 [info]
   (let [files (reduce (partial add-coords info) {}
                       ["jar" "jar.asc" "pom" "pom.asc"])]
-    (aether/deploy-artifacts :artifacts (keys files)
-                             :files files
-                             :transfer-listener :stdout
-                             :repository {"releases" releases})))
+    (when (config :releases-secret-key)
+      (aether/deploy-artifacts :artifacts (keys files)
+                               :files files
+                               :transfer-listener :stdout
+                               :repository {"releases" releases}))))
 
 (defn promote [{:keys [group name version] :as info}]
-  (sql/with-connection (config :db)
-    (sql/transaction
-     (let [blockers (blockers info)]
-       (if (empty? blockers)
-         (do
-           (println "Promoting" info)
-           (update db/jars
-                   (set-fields {:promoted_at (java.util.Date.)})
-                   (where {:group_name group :jar_name name :version version}))
-           (deploy-to-s3 info))
-         blockers)))))
+  (korma/transaction
+   (println "checking" group "/" name "for promotion...")
+   (let [blockers (blockers info)]
+     (if (empty? blockers)
+       (do
+         (println "Promoting" info)
+         (deploy-to-s3 info)
+         ;; TODO: this doesn't seem to be happening. db locked?
+         (update db/jars
+                 (set-fields {:promoted_at (java.util.Date.)})
+                 (where {:group_name group :jar_name name :version version})))
+       (do (println "...failed.")
+           blockers)))))
 
 (defonce queue (LinkedBlockingQueue.))
 
 (defn start []
   (.start (Thread. #(loop []
-                      (try (promote (.take queue))
-                           (catch Exception e
-                             (.printStackTrace e)))
+                      (locking #'promote
+                        (try (promote (.take queue))
+                             (catch Exception e
+                               (.printStackTrace e))))
                       (recur)))))
-
-;; TODO: probably worth periodically queueing all non-promoted
-;; releases into here to catch things that fall through the cracks,
-;; say if the JVM is restarted before emptying this queue.
