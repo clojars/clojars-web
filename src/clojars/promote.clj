@@ -37,7 +37,7 @@
 (defn signed-with? [file sig-file keys]
   (let [temp-home (str (doto (File/createTempFile "clojars" "gpg")
                          .delete .mkdirs (.setReadable true true)))]
-    (sh/sh "gpg" "--homedir" home "--import" :in (str/join "\n" keys))
+    (sh/sh "gpg" "--homedir" temp-home "--import" :in (str/join "\n" keys))
     (let [{:keys [exit out err]} (sh/sh "gpg" "--homedir" temp-home
                                         "--verify" (str sig-file) (str file))]
       (doseq [f (reverse (file-seq (io/file temp-home)))] (.delete f))
