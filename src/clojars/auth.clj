@@ -16,8 +16,9 @@
       {:username user :password password})))
 
 (defn authorized? [account group]
-  (let [names# (group-membernames group)]
-    (or (some #{account} names#) (empty? names#))))
+  (if account
+    (let [names (group-membernames group)]
+      (or (some #{account} names) (empty? names)))))
 
 (defmacro require-authorization [group & body]
   `(if (authorized? ~'account ~group)
