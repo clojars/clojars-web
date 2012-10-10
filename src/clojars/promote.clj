@@ -5,12 +5,12 @@
             [clojure.java.io :as io]
             [clojure.java.shell :as sh]
             [clojure.java.jdbc :as sql]
-            [alice.sign :as sign]
+            [clojure.string :as str]
             [cemerick.pomegranate.aether :as aether]
             [korma.core :refer [select fields where update set-fields]])
   (:import (java.util.concurrent LinkedBlockingQueue)
            (org.springframework.aws.maven SimpleStorageServiceWagon)
-           (java.io ByteArrayInputStream)))
+           (java.io File ByteArrayInputStream PrintWriter)))
 
 (defn file-for [group artifact version extension]
   (let [filename (format "%s-%s.%s" artifact version extension)]
@@ -31,14 +31,21 @@
     blockers
     (conj blockers (str "Missing " (name field)))))
 
-(defn signed-with? [file sig-file key]
-  (try (sign/verify file sig-file (ByteArrayInputStream. (.getBytes key)))
-       (catch Exception e false)))
+;; if you think this looks crazy, you should see what it looked like
+;; with bouncy castle.
+(defn signed-with? [file sig-file keys]
+  (let [temp-home (str (doto (File/createTempFile "clojars" "gpg")
+                         .delete .mkdirs (.setReadable true true)))]
+    (sh/sh "gpg" "--homedir" home "--import" :in (str/join "\n" keys))
+    (let [{:keys [exit out err]} (sh/sh "gpg" "--homedir" temp-home
+                                        "--verify" (str sig-file) (str file))]
+      (doseq [f (reverse (file-seq (io/file temp-home)))] (.delete f))
+      (zero? exit))))
 
 (defn signed? [blockers file keys]
   (let [sig-file (str file ".asc")]
     (if (and (.exists (io/file sig-file))
-             (some (partial signed-with? file sig-file) keys))
+             (signed-with? file sig-file keys))
       blockers
       (conj blockers (str file " is not signed.")))))
 
@@ -56,7 +63,8 @@
         pom (file-for group name version "pom")
         keys (db/group-keys group)
         info (try (maven/pom-to-map pom)
-                  (catch Exception _ {}))]
+                  (catch Exception e
+                    (.printStackTrace e) {}))]
     ;; TODO: convert this to a lazy seq for cheaper qualification checks
     (-> []
         (check-version version)
