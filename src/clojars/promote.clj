@@ -95,18 +95,17 @@
 (defn- deploy-to-s3 [info]
   (let [files (reduce (partial add-coords info) {}
                       ["jar" "jar.asc" "pom" "pom.asc"])]
-    (when (config :releases-secret-key)
-      (aether/deploy-artifacts :artifacts (keys files)
-                               :files files
-                               :transfer-listener :stdout
-                               :repository {"releases" releases}))))
+    (aether/deploy-artifacts :artifacts (keys files)
+                             :files files
+                             :transfer-listener :stdout
+                             :repository {"releases" releases})))
 
 (defn promote [{:keys [group name version] :as info}]
   (korma/transaction
    (println "checking" group "/" name "for promotion...")
    (let [blockers (blockers info)]
      (if (empty? blockers)
-       (do
+       (when (config :releases-secret-key)
          (println "Promoting" info)
          (deploy-to-s3 info)
          ;; TODO: this doesn't seem to be happening. db locked?
