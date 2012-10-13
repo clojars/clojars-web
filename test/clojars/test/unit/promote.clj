@@ -29,8 +29,9 @@
 
 (deftest test-unsigned
   (copy-resource "1.1.2")
-  (is (= #{"data/dev_repo/robert/hooke/1.1.2/hooke-1.1.2.pom is not signed."
-           "data/dev_repo/robert/hooke/1.1.2/hooke-1.1.2.jar is not signed."
+  ;; TODO: requires test profile; breaks in repl
+  (is (= #{"data/test_repo/robert/hooke/1.1.2/hooke-1.1.2.pom is not signed."
+           "data/test_repo/robert/hooke/1.1.2/hooke-1.1.2.jar is not signed."
            "Missing file hooke-1.1.2.jar"}
                            (set (blockers {:group "robert" :name "hooke"
                                            :version "1.1.2"})))))
@@ -55,5 +56,5 @@
   (db/add-user "test@ex.com" "testuser" "password" "asdf"
                (slurp "test-resources/pubring.gpg"))
   (db/add-member "robert" "testuser")
-  (is (= ["data/dev_repo/robert/hooke/1.1.2/hooke-1.1.2.jar is not signed."]
+  (is (= ["data/test_repo/robert/hooke/1.1.2/hooke-1.1.2.jar is not signed."]
          (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))
