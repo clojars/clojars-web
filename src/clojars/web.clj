@@ -30,10 +30,6 @@
             [cemerick.friend.credentials :as creds]
             [cemerick.friend.workflows :as workflows]))
 
-(defn not-found-doc []
-  (html [:h1 "Page not found"]
-        [:p "Thundering typhoons!  I think we lost it.  Sorry!"]))
-
 (defroutes main-routes
   (GET "/search" {session :session params :params}
        (try-account
@@ -56,9 +52,9 @@
   (GET "/forgot-password" {params :params}
        (forgot-password-form))
   (friend/logout (ANY "/logout" request
-                      ; Work around friend#20 and ring-anti-forgery#10
+                                        ; Work around friend#20 and ring-anti-forgery#10
                       (-> (ring.util.response/redirect "/")
-                           (assoc :session (:session request)))))
+                          (assoc :session (:session request)))))
 
   (GET "/" {session :session params :params}
        (try-account
@@ -157,7 +153,8 @@
   (ANY "*" {session :session}
        (not-found (html-doc (session :account)
                             "Page not found"
-                            (not-found-doc)))))
+                            [:h1 "Page not found"]
+                            [:p "Thundering typhoons!  I think we lost it.  Sorry!"]))))
 
 (defroutes clojars-app
   (context "/repo" _
