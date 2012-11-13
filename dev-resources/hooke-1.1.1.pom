@@ -6,8 +6,6 @@
   <packaging>jar</packaging>
   <version>1.2.0</version>
   <name>hooke</name>
-  <description>Hooke your functions!</description>
-  <url>https://github.com/technomancy/robert-hooke</url>
   <licenses>
     <license>
       <name>Eclipse Public License</name>

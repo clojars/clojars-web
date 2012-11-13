@@ -18,7 +18,7 @@
             [valip.predicates :as pred])
   (:import [org.apache.commons.mail SimpleEmail]))
 
-(defn register-form [ & [errors email username ssh-key]]
+(defn register-form [ & [errors email username ssh-key pgp-key]]
   (html-doc nil "Register"
             [:h1 "Register"]
             (error-list errors)
@@ -36,14 +36,20 @@
                      " (" (link-to
                            "http://wiki.github.com/ato/clojars-web/ssh-keys"
                            "what's this?") ")"
-                           (text-area :ssh-key ssh-key)
-                           [:p.hint "Entering multiple keys? Put them on separate lines."]
-                           (submit-button "Register"))))
+                     (text-area :ssh-key ssh-key)
+                     [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
+                     (label :pgp-key "PGP public key:")
+                     (text-area :pgp-key pgp-key)
+                     (submit-button "Register"))))
 
 (defn conj-when [coll test x]
   (if test
     (conj coll x)
     coll))
+
+(defn valid-pgp-key? [key]
+  (and (.startsWith key "-----BEGIN PGP PUBLIC KEY BLOCK-----")
+       (.endsWith key "-----END PGP PUBLIC KEY BLOCK-----")))
 
 (defn valid-ssh-key? [key]
   (every? #(re-matches #"(ssh-\w+ \S+|\d+ \d+ \D+).*\s*" %) (split-keys key)))
@@ -55,9 +61,10 @@
          "letters, numbers, hyphens and underscores.")]
    [:username pred/present? "Username can't be blank"]
    [:password #(= % confirm) "Password and confirm password must match"]
-   [:ssh-key #(or (blank? %)
-                  (valid-ssh-key? %))
-    "Invalid SSH public key"]])
+   [:ssh-key #(or (blank? %) (valid-ssh-key? %))
+    "Invalid SSH public key"]
+   [:pgp-key #(or (blank? %) (valid-pgp-key? %))
+    "Invalid PGP public key"]])
 
 (defn new-user-validations [confirm]
   (concat [[:password pred/present? "Password can't be blank"]
@@ -82,17 +89,20 @@
                        (password-field :confirm)
                        (label :ssh-key "SSH public key:")
                        (text-area :ssh-key (user :ssh_key))
-                       [:p.hint "Entering multiple keys? Put them on separate lines."]
+                       [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
+                       (label :pgp-key "PGP public key:")
+                       (text-area :pgp-key (user :pgp_key))
                        (submit-button "Update")))))
 
-(defn update-profile [account {:keys [email password confirm ssh-key]}]
+(defn update-profile [account {:keys [email password confirm ssh-key pgp-key]}]
   (if-let [errors (apply validate {:email email
                                    :username account
                                    :password password
-                                   :ssh-key ssh-key}
+                                   :ssh-key ssh-key
+                                   :pgp-key pgp-key}
                          (update-user-validations confirm))]
     (profile-form account (apply concat (vals  errors)))
-    (do (update-user account email account password ssh-key)
+    (do (update-user account email account password ssh-key pgp-key)
         (redirect "/profile"))))
 
 (defn show-user [account user]
@@ -133,7 +143,8 @@
 (defn forgot-password [{:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email email-or-username)]
     (let [new-password (rand-string 15)]
-      (update-user (user :user) (user :email) (user :user) new-password (user :ssh_key))
+      (update-user (user :user) (user :email) (user :user) new-password
+                   (user :ssh_key) (user :pgp_key))
       (send-mail (user :email)
         "Password reset for Clojars"
         (str "Hello,\n\nYour new password for Clojars is: " new-password "\n\nKeep it safe this time."))))

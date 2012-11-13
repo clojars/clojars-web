@@ -5,7 +5,9 @@
             [hiccup.core :refer [h]]
             [hiccup.element :refer [link-to]]
             [clojars.maven :refer [jar-to-pom-map commit-url]]
+            [clojars.auth :refer [authorized?]]
             [clojars.db :refer [find-jar jar-exists]]
+            [clojars.promote :refer [blockers]]
             [ring.util.codec :refer [url-encode]]))
 
 (defn url-for [jar]
@@ -33,6 +35,19 @@
 (defn safe-link-to [url text]
   (try (link-to url text)
     (catch Exception e text)))
+
+(defn promotion-details [account jar]
+  (if (authorized? account (:group_name jar))
+    (list [:h3 "promotion"]
+          (if (:promoted_at jar)
+            [:p (str "Promoted at " (java.util.Date. (:promoted_at jar)))]
+            (if-let [issues (seq (blockers (clojure.set/rename-keys
+                                            jar {:group_name :group
+                                                 :jar_name :name})))]
+              [:ul#blockers
+               (for [i issues]
+                 [:li i])]
+              [:p "No blockers; redeploy to promote."])))))
 
 (defn show-jar [account jar recent-versions count]
   (html-doc account (str (:jar_name jar) " " (:version jar))
@@ -63,6 +78,7 @@
                    [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
                    (if-let [url (commit-url pom)]
                      [:span.commit-url " with " (link-to url "this commit")])]
+                 (promotion-details account jar)
                  (dependency-section "dependencies" "dependencies"
                                      (remove #(not= (:scope %) "compile") (:dependencies pom)))
                  (when-not pom

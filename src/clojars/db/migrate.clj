@@ -19,6 +19,9 @@
   (sql/do-commands (str "CREATE INDEX IF NOT EXISTS jars_idx0 "
                         "ON jars (group_name, jar_name, created DESC)")))
 
+(defn add-pgp-key []
+  (sql/do-commands "ALTER TABLE users ADD COLUMN pgp_key TEXT"))
+
 ;; migrations mechanics
 
 (defn run-and-record [migration]
@@ -50,4 +53,5 @@
 (defn -main []
   (migrate #'initial-schema
            #'add-promoted-field
-           #'add-jars-index))
+           #'add-jars-index
+           #'add-pgp-key))

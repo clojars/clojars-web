@@ -32,9 +32,8 @@
   :plugins [[lein-ring "0.7.3" :exclusions [thneed]]
             ;fix downloading -snapshot all the time
             [thneed "1.0.0"]]
+  :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
   :ring {:handler clojars.web/clojars-app}
   :aot [clojars.scp]
   :main clojars.main
   :min-lein-version "2.0.0")
-
-

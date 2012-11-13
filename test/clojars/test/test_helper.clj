@@ -38,10 +38,10 @@
                        (force migrate)
                        (let [file (File. (:repo config/config))]
                          (delete-file-recursively file))
-                       (f)
                        (jdbc/with-connection (kdb/get-connection @kdb/_default)
                          (jdbc/do-commands
                           "delete from users;"
                           "delete from jars;"
                           "delete from deps;"
-                          "delete from groups;")))))
+                          "delete from groups;"))
+                       (f))))

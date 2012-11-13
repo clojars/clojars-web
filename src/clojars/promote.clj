@@ -1,14 +1,17 @@
 (ns clojars.promote
   (:require [clojars.config :refer [config]]
             [clojars.maven :as maven]
+            [clojars.db :as db]
             [clojure.java.io :as io]
             [clojure.java.shell :as sh]
-            [cemerick.pomegranate.aether :as aether]
-            [clojars.db :as db]
             [clojure.java.jdbc :as sql]
+            [clojure.string :as str]
+            [korma.db :as korma]
+            [cemerick.pomegranate.aether :as aether]
             [korma.core :refer [select fields where update set-fields]])
   (:import (java.util.concurrent LinkedBlockingQueue)
-           (org.springframework.aws.maven SimpleStorageServiceWagon)))
+           (org.springframework.aws.maven SimpleStorageServiceWagon)
+           (java.io File ByteArrayInputStream PrintWriter)))
 
 (defn file-for [group artifact version extension]
   (let [filename (format "%s-%s.%s" artifact version extension)]
@@ -24,32 +27,28 @@
     (conj blockers "Snapshot versions cannot be promoted")
     blockers))
 
-(defn check-field [blockers info field]
-  (if (field info)
+(defn check-field [blockers info field pred]
+  (if (pred (field info))
     blockers
     (conj blockers (str "Missing " (name field)))))
 
-(declare check-signature)
+;; if you think this looks crazy, you should see what it looked like
+;; with bouncy castle.
+(defn signed-with? [file sig-file keys]
+  (let [temp-home (str (doto (File/createTempFile "clojars" "gpg")
+                         .delete .mkdirs (.setReadable true true)))]
+    (sh/sh "gpg" "--homedir" temp-home "--import" :in (str/join "\n" keys))
+    (let [{:keys [exit out err]} (sh/sh "gpg" "--homedir" temp-home
+                                        "--verify" (str sig-file) (str file))]
+      (doseq [f (reverse (file-seq (io/file temp-home)))] (.delete f))
+      (or (zero? exit) (println "GPG error:" out "\n" err)))))
 
-(defn- fetch-key [signature err]
-  (if (re-find #"Can't check signature: public key not found" err)
-    (let [key (second (re-find #"using \w+ key ID (.+)" err))
-          {:keys [exit]} (sh/sh "gpg" "--recv-keys" key)]
-      (if (zero? exit)
-        (check-signature signature)))))
-
-(defn- check-signature [signature]
-  (let [err (java.io.StringWriter.)
-        out (java.io.StringWriter.)
-        {:keys [exit]} (binding [*err* (java.io.PrintWriter. err), *out* out]
-                         (sh/sh "gpg" "--verify" (str signature)))]
-    (or (zero? exit)
-        (fetch-key signature (str err)))))
-
-(defn signed? [blockers file]
-  (if (check-signature (str file ".asc"))
-    blockers
-    (conj blockers (str file " is not signed."))))
+(defn signed? [blockers file keys]
+  (let [sig-file (str file ".asc")]
+    (if (and (.exists (io/file sig-file))
+             (signed-with? file sig-file keys))
+      blockers
+      (conj blockers (str file " is not signed.")))))
 
 (defn unpromoted? [blockers {:keys [group name version]}]
   (let [[{:keys [promoted_at]}] (select db/jars (fields :promoted_at)
@@ -63,25 +62,25 @@
 (defn blockers [{:keys [group name version]}]
   (let [jar (file-for group name version "jar")
         pom (file-for group name version "pom")
+        keys (db/group-keys group)
         info (try (maven/pom-to-map pom)
-                  (catch Exception _ {}))]
-    ;; TODO: convert this to a lazy seq for cheaper qualification checks
+                  (catch Exception e
+                    (.printStackTrace e) {}))]
     (-> []
         (check-version version)
         (check-file jar)
         (check-file pom)
 
-        ;; TODO: check contents, not just presence
-        (check-field info :description)
-        (check-field info :url)
-        (check-field info :licenses)
-        (check-field info :scm)
+        (check-field info :description (complement empty?))
+        (check-field info :url #(re-find #"^http" (str %)))
+        (check-field info :licenses seq)
+        (check-field info :scm identity)
 
-        (signed? jar)
-        (signed? pom)
+        (signed? jar keys)
+        (signed? pom keys)
         (unpromoted? info))))
 
-(def releases {:url "s3://clojars/releases/"
+(def releases {:url (config :releases-url)
                :username (config :releases-access-key)
                :passphrase (config :releases-secret-key)})
 
@@ -102,27 +101,26 @@
                              :repository {"releases" releases})))
 
 (defn promote [{:keys [group name version] :as info}]
-  (sql/with-connection (config :db)
-    (sql/transaction
-     (let [blockers (blockers info)]
-       (if (empty? blockers)
-         (do
-           (println "Promoting" info)
-           (update db/jars
-                   (set-fields {:promoted_at (java.util.Date.)})
-                   (where {:group_name group :jar_name name :version version}))
-           (deploy-to-s3 info))
-         blockers)))))
+  (korma/transaction
+   (println "checking" group "/" name "for promotion...")
+   (let [blockers (blockers info)]
+     (if (empty? blockers)
+       (when (config :releases-secret-key)
+         (println "Promoting" info)
+         (deploy-to-s3 info)
+         ;; TODO: this doesn't seem to be happening. db locked?
+         (update db/jars
+                 (set-fields {:promoted_at (java.util.Date.)})
+                 (where {:group_name group :jar_name name :version version})))
+       (do (println "...failed.")
+           blockers)))))
 
 (defonce queue (LinkedBlockingQueue.))
 
 (defn start []
   (.start (Thread. #(loop []
-                      (try (promote (.take queue))
-                           (catch Exception e
-                             (.printStackTrace e)))
+                      (locking #'promote
+                        (try (promote (.take queue))
+                             (catch Exception e
+                               (.printStackTrace e))))
                       (recur)))))
-
-;; TODO: probably worth periodically queueing all non-promoted
-;; releases into here to catch things that fall through the cracks,
-;; say if the JVM is restarted before emptying this queue.

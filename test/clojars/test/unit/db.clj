@@ -14,8 +14,9 @@
         name "testuser"
         password "password"
         ssh-key "asdf"
+        pgp-key "aoeu"
         ms (long 0)]
-      (is (db/add-user email name password ssh-key))
+      (is (db/add-user email name password ssh-key pgp-key))
       (are [x] (submap {:email email
                         :user name
                         :ssh_key ssh-key}
@@ -32,20 +33,23 @@
         name "testuser"
         password "password"
         ssh-key "asdf"
+        pgp-key "aoeu"
         ms (long 0)
         email2 "test2@example.com"
         name2 "testuser2"
         password2 "password2"
-        ssh-key2 "asdf2"]
+        ssh-key2 "asdf2"
+        pgp-key2 "aoeu2"]
     (binding [db/get-time (fn [] (java.sql.Timestamp. ms))]
       ;;TODO: What should be done about the key-file?
-      (is (db/add-user email name password ssh-key))
+      (is (db/add-user email name password ssh-key pgp-key))
       (binding [db/get-time (fn [] (java.sql.Timestamp. (long 1)))]
         ;;TODO: What should be done about the key-file?
-        (is (db/update-user name email2 name2 password2 ssh-key2))
+        (is (db/update-user name email2 name2 password2 ssh-key2 pgp-key2))
         (are [x] (submap {:email email2
                           :user name2
                           :ssh_key ssh-key2
+                          :pgp_key pgp-key2
                           :created ms}
                          x)
              (db/find-user name2)
@@ -57,9 +61,10 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"
-        ssh-key "asdf"]
+        ssh-key "asdf"
+        pgp-key "aoeu"]
     ;;TODO: What should be done about the key-file?
-    (is (db/add-user email name password ssh-key))
+    (is (db/add-user email name password ssh-key pgp-key))
     (is (= ["testuser"]
            (db/group-membernames (str "org.clojars." name))))
     (is (= ["org.clojars.testuser"]
@@ -69,9 +74,10 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"
-        ssh-key "asdf"]
+        ssh-key "asdf"
+        pgp-key "aoeu"]
     ;;TODO: What should be done about the key-file?
-    (is (db/add-user email name password ssh-key))
+    (is (db/add-user email name password ssh-key pgp-key))
     (is (db/add-member "test-group" name))
     (is (= ["testuser"]
            (db/group-membernames "test-group")))
