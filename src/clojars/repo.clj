@@ -59,12 +59,7 @@
                   (catch java.io.IOException e
                     (.delete file)
                     (throw e)))
-                ;; TODO: re-enable this when the promotion thread is
-                ;; re-enabled it would be good to make it conditional,
-                ;; ie if no S3 key is configured then don't
-                ;; enqueue.
-                ;;(.offer promote/queue info)
-		)
+                (.offer promote/queue info))
               {:status 201 :headers {} :body nil}
               (catch Exception e
                 (pst e)
