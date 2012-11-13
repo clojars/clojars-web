@@ -6,6 +6,7 @@
             [clojure.java.shell :as sh]
             [clojure.java.jdbc :as sql]
             [clojure.string :as str]
+            [clojure.set :as set]
             [korma.db :as korma]
             [cemerick.pomegranate.aether :as aether]
             [korma.core :refer [select fields where update set-fields]])
@@ -81,11 +82,9 @@
         (signed? pom keys)
         (unpromoted? info))))
 
-(def releases {:url (config :releases-url)
-               :username (config :releases-access-key)
-               :passphrase (config :releases-secret-key)})
-
-(aether/register-wagon-factory! "s3" (constantly (SimpleStorageServiceWagon.)))
+(defonce _
+  (aether/register-wagon-factory!
+   "s3" (constantly (SimpleStorageServiceWagon.))))
 
 (defn- add-coords [{:keys [group name version classifier] :as info}
                    files extension]
@@ -95,18 +94,21 @@
 
 (defn- deploy-to-s3 [info]
   (let [files (reduce (partial add-coords info) {}
-                      ["jar" "jar.asc" "pom" "pom.asc"])]
+                      ["jar" "jar.asc" "pom" "pom.asc"])
+        releases-repo (set/rename-keys (config :releases)
+                                       {:access-key :username
+                                        :secret-key :passphrase})]
     (aether/deploy-artifacts :artifacts (keys files)
                              :files files
                              :transfer-listener :stdout
-                             :repository {"releases" releases})))
+                             :repository {"releases" releases-repo})))
 
 (defn promote [{:keys [group name version] :as info}]
   (korma/transaction
    (println "checking" group "/" name "for promotion...")
    (let [blockers (blockers info)]
      (if (empty? blockers)
-       (when (config :releases-secret-key)
+       (when (config :releases)
          (println "Promoting" info)
          (deploy-to-s3 info)
          ;; TODO: this doesn't seem to be happening. db locked?
