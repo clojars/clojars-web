@@ -63,7 +63,8 @@
   (let [jar (file-for group name version "jar")
         pom (file-for group name version "pom")
         keys (db/group-keys group)
-        info (try (maven/pom-to-map pom)
+        info (try (if (.exists pom)
+                    (maven/pom-to-map pom))
                   (catch Exception e
                     (.printStackTrace e) {}))]
     (-> []
