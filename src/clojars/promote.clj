@@ -95,9 +95,9 @@
 (defn- deploy-to-s3 [info]
   (let [files (reduce (partial add-coords info) {}
                       ["jar" "jar.asc" "pom" "pom.asc"])
-        releases-repo (set/rename-keys (config :releases)
-                                       {:access-key :username
-                                        :secret-key :passphrase})]
+        releases-repo {:url (config :releases-url)
+                       :username (config :releases-access-key)
+                       :passphrase (config :releases-secret-key)}]
     (aether/deploy-artifacts :artifacts (keys files)
                              :files files
                              :transfer-listener :stdout
@@ -108,7 +108,7 @@
    (println "checking" group "/" name "for promotion...")
    (let [blockers (blockers info)]
      (if (empty? blockers)
-       (when (config :releases)
+       (when (config :releases-url)
          (println "Promoting" info)
          (deploy-to-s3 info)
          ;; TODO: this doesn't seem to be happening. db locked?

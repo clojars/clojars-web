@@ -62,7 +62,10 @@
    ["REPO" :repo]
    ["KEY_FILE" :key-file]
    ["NAILGUN_BIND" :nailgun-bind]
-   ["NAILGUN_PORT" :nailgun-port #(Integer/parseInt %)]])
+   ["NAILGUN_PORT" :nailgun-port #(Integer/parseInt %)]
+   ["RELEASES_URL" :releases-url]
+   ["RELEASES_ACCESS_KEY" :releases-access-key]
+   ["RELEASES_SECRET_KEY" :releases-secret-key]])
 
 (defn parse-env []
   (reduce
