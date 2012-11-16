@@ -108,13 +108,14 @@
    (println "checking" group "/" name "for promotion...")
    (let [blockers (blockers info)]
      (if (empty? blockers)
-       (when (config :releases-url)
-         (println "Promoting" info)
-         (deploy-to-s3 info)
-         ;; TODO: this doesn't seem to be happening. db locked?
-         (update db/jars
-                 (set-fields {:promoted_at (java.util.Date.)})
-                 (where {:group_name group :jar_name name :version version})))
+       (if (config :releases-url)
+         (do
+           (println "Promoting" info)
+           (deploy-to-s3 info)
+           (update db/jars
+                   (set-fields {:promoted_at (java.util.Date.)})
+                   (where {:group_name group :jar_name name :version version})))
+         (println "Didn't promote since :releases-url wasn't set."))
        (do (println "...failed.")
            blockers)))))
 
