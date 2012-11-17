@@ -156,7 +156,16 @@
 
 (deftest put-on-html-fails
   (-> (session clojars-app)
-      (visit "/repo/group/artifact/1.0.0/injection.html" :request-method :put)
+      (register-as "dantheman" "test@example.org" "password" "")
+      (visit "/repo/group/artifact/1.0.0/injection.html"
+             :request-method :put
+             :headers {"authorization"
+                       (str "Basic "
+                            (String. (base64/encode
+                                      (.getBytes "dantheman:password"
+                                                 "UTF-8"))
+                                     "UTF-8"))}
+             :body "XSS here")
       (has (status? 400))))
 
 (deftest put-using-dotdot-fails

@@ -4,7 +4,7 @@
                                 find-user-by-user-or-email]]
             [clojars.config :refer [config]]
             [clojars.auth :refer [with-account try-account require-authorization
-                                  get-user]]
+                                  get-user admin?]]
             [clojars.repo :as repo]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
@@ -23,12 +23,13 @@
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [redirect status response]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-            [compojure.core :refer [defroutes GET POST PUT ANY context]]
+            [compojure.core :refer [defroutes GET POST PUT ANY context routes]]
             [compojure.handler :refer [site]]
             [compojure.route :refer [not-found]]
             [cemerick.friend :as friend]
             [cemerick.friend.credentials :as creds]
-            [cemerick.friend.workflows :as workflows]))
+            [cemerick.friend.workflows :as workflows]
+            [cemerick.drawbridge :as drawbridge]))
 
 (defroutes main-routes
   (GET "/search" {session :session params :params}
@@ -164,28 +165,28 @@
                  (partial creds/bcrypt-credential-fn
                           get-user)
                  :workflows [(workflows/http-basic :realm "clojars")]
-                 :unauthorized-handler
-                 (partial workflows/http-basic-deny "clojars")})
+                 :allow-anon? false})
                (repo/wrap-file (:repo config))))
+  (context "/admin" _
+           (let [drawb (drawbridge/ring-handler)]
+             (-> (routes (ANY "/repl" request
+                              (with-account
+                                (if (admin? account)
+                                  (drawb request)))))
+                 (friend/authenticate
+                  {:credential-fn
+                   (partial creds/bcrypt-credential-fn
+                            get-user)
+                   :workflows [(workflows/http-basic :realm "clojars")]
+                   :allow-anon? false})
+                 (site))))
   (-> main-routes
-      ; Work around friend#20 and ring-anti-forgery#10
-      ((fn [h] (fn [r] (let [s (:session r)
-                           res (h r)]
-                       (if (:session res)
-                         res
-                         (assoc res :session s))))))
       (friend/authenticate
        {:credential-fn
         (partial creds/bcrypt-credential-fn
                  get-user)
         :workflows [(workflows/interactive-form)
-                    registration/workflow]
-        :login-uri "/login"
-        :default-landing-uri "/"
-        :unauthorized-handler
-        (fn [r]
-          (-> (redirect "/login")
-              (assoc-in [:session ::friend/unauthorized-uri] (:uri r))))})
+                    registration/workflow]})
       (wrap-anti-forgery)
       (wrap-exceptions)
       (site)

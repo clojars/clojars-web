@@ -15,6 +15,8 @@
     (when (not (empty? password))
       {:username user :password password})))
 
+(def admin? #{"ato" "technomancy" "xeqi"})
+
 (defn authorized? [account group]
   (if account
     (let [names (group-membernames group)]
@@ -22,5 +24,7 @@
 
 (defmacro require-authorization [group & body]
   `(if (authorized? ~'account ~group)
-       (do ~@body)
-       (friend/throw-unauthorized friend/*identity*)))
+     (do ~@body)
+     (friend/throw-unauthorized friend/*identity*
+                                {:cemerick.friend/exprs (quote [~@body])
+                                 :cemerick.friend/required-roles ~group})))

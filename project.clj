@@ -8,21 +8,24 @@
                   :exclusions
                   [org.apache.httpcomponents/httpcore]]
                  [s3-wagon-private "1.0.0"]
-                 [compojure "1.1.1"]
+                 [compojure "1.1.3"
+                  :exclusions [org.clojure/core.incubator]]
                  [ring/ring-jetty-adapter "1.1.1"]
                  [hiccup "1.0.1"]
-                 [cheshire "2.2.2"]
+                 [cheshire "3.0.0"]
                  [korma "0.3.0-beta10"]
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.6.17"]
                  [org.apache.commons/commons-email "1.2"]
-                 [net.cgrand/regex "1.0.1" :exclusions [org.clojure/clojure]]
+                 [net.cgrand/regex "1.0.1"
+                  :exclusions [org.clojure/clojure]]
                  [clj-time "0.3.8"]
-                 [com.cemerick/friend "0.0.8"
+                 [com.cemerick/friend "0.1.2"
                   :exclusions [org.openid4java/openid4java-nodeps]]
                  [clj-stacktrace "0.2.4"]
                  [ring-anti-forgery "0.2.0"]
-                 [valip "0.2.0"]]
+                 [valip "0.2.0"]
+                 [com.cemerick/drawbridge "0.0.6"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.7"]
                                    [nailgun-shim "0.0.1"]]}
