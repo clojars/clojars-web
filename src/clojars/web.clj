@@ -28,8 +28,7 @@
             [compojure.route :refer [not-found]]
             [cemerick.friend :as friend]
             [cemerick.friend.credentials :as creds]
-            [cemerick.friend.workflows :as workflows]
-            [cemerick.drawbridge :as drawbridge]))
+            [cemerick.friend.workflows :as workflows]))
 
 (defroutes main-routes
   (GET "/search" {session :session params :params}
@@ -167,19 +166,6 @@
                  :workflows [(workflows/http-basic :realm "clojars")]
                  :allow-anon? false})
                (repo/wrap-file (:repo config))))
-  (context "/admin" _
-           (let [drawb (drawbridge/ring-handler)]
-             (-> (routes (ANY "/repl" request
-                              (with-account
-                                (if (admin? account)
-                                  (drawb request)))))
-                 (friend/authenticate
-                  {:credential-fn
-                   (partial creds/bcrypt-credential-fn
-                            get-user)
-                   :workflows [(workflows/http-basic :realm "clojars")]
-                   :allow-anon? false})
-                 (site))))
   (-> main-routes
       (friend/authenticate
        {:credential-fn
