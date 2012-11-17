@@ -24,7 +24,8 @@
                   :exclusions [org.openid4java/openid4java-nodeps]]
                  [clj-stacktrace "0.2.4"]
                  [ring-anti-forgery "0.2.0"]
-                 [valip "0.2.0"]]
+                 [valip "0.2.0"]
+                 [org.clojure/tools.nrepl "0.2.0-RC1"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.7"]
                                    [nailgun-shim "0.0.1"]]}

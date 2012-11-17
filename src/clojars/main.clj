@@ -3,7 +3,8 @@
             [ring.adapter.jetty :refer [run-jetty]]
             [clojars.web :refer [clojars-app]]
             [clojars.promote :as promote]
-            [clojars.config :refer [config configure]])
+            [clojars.config :refer [config configure]]
+            [clojure.tools.nrepl.server :as nrepl])
   (:import com.martiansoftware.nailgun.NGServer
            java.net.InetAddress)
   (:gen-class))
@@ -24,6 +25,8 @@
   (configure args)
   (promote/start)
   (start-jetty)
-  (start-nailgun))
+  (start-nailgun)
+  (when-let [port (config :nrepl-port)]
+    (nrepl/start-server :port port)))
 
 ; (defonce server (run-jetty #'clojars-app {:port 8080 :join? false}))

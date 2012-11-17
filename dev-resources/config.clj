@@ -9,4 +9,5 @@
  :bcrypt-work-factor 12
  :mail {:hostname "localhost"
         :from "noreply@clojars.org"
-        :ssl false}}
+        :ssl false}
+ :nrepl-port 7991}
