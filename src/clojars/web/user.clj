@@ -95,15 +95,16 @@
                        (submit-button "Update")))))
 
 (defn update-profile [account {:keys [email password confirm ssh-key pgp-key]}]
-  (if-let [errors (apply validate {:email email
-                                   :username account
-                                   :password password
-                                   :ssh-key ssh-key
-                                   :pgp-key pgp-key}
-                         (update-user-validations confirm))]
-    (profile-form account (apply concat (vals  errors)))
-    (do (update-user account email account password ssh-key pgp-key)
-        (redirect "/profile"))))
+  (let [pgp-key (and pgp-key (.trim pgp-key))]
+    (if-let [errors (apply validate {:email email
+                                     :username account
+                                     :password password
+                                     :ssh-key ssh-key
+                                     :pgp-key pgp-key}
+                           (update-user-validations confirm))]
+      (profile-form account (apply concat (vals  errors)))
+      (do (update-user account email account password ssh-key pgp-key)
+          (redirect "/profile")))))
 
 (defn show-user [account user]
   (html-doc account (h (user :user))
