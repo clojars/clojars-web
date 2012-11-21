@@ -154,7 +154,7 @@
             (if-let [jar (find-jar jarname groupname version)]
               (do (promote/promote (set/rename-keys jar {:jar_name :name
                                                          :group_name :group}))
-                  (redirect (jar-url groupname jarname)))
+                  (redirect (jar-url {:group_name groupname :jar_name jarname})))
               :next))))
   (GET "/:username" {session :session {username :username} :params}
        (if-let [user (find-user username)]
