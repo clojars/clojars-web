@@ -23,7 +23,6 @@
 
 (defn -main [& args]
   (configure args)
-  (promote/start)
   (start-jetty)
   (nrepl/start-server :port 7991 :bind "127.0.0.1")
   (start-nailgun))

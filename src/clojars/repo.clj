@@ -58,8 +58,7 @@
                         (add-jar account info))))
                   (catch java.io.IOException e
                     (.delete file)
-                    (throw e)))
-                (.offer promote/queue info))
+                    (throw e))))
               {:status 201 :headers {} :body nil}
               (catch Exception e
                 (pst e)
