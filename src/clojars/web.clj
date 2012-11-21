@@ -6,6 +6,7 @@
             [clojars.auth :refer [with-account try-account require-authorization
                                   get-user admin?]]
             [clojars.repo :as repo]
+            [clojars.promote :as promote]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
             [clojars.web.error-page :refer [wrap-exceptions]]
@@ -16,8 +17,9 @@
                                       forgot-password forgot-password-form]]
             [clojars.web.group :refer [show-group]]
             [clojars.web.jar :refer [show-jar show-versions]]
-            [clojars.web.common :refer [html-doc]]
+            [clojars.web.common :refer [html-doc jar-url]]
             [clojars.web.login :refer [login-form]]
+            [clojure.set :as set]
             [hiccup.core :refer [html h]]
             [ring.middleware.file-info :refer [wrap-file-info]]
             [ring.middleware.resource :refer [wrap-resource]]
@@ -143,6 +145,17 @@
                     (recent-versions groupname jarname 5)
                     (count-versions groupname jarname)))
          :next))
+  (POST ["/:groupname/:jarname/promote/:version"
+         :jarname #"[^/]+" :groupname #"[^/]+" :version #"[^/]+"]
+        {session :session
+         {groupname :groupname jarname :jarname version :version} :params}
+        (with-account
+          (require-authorization groupname
+            (if-let [jar (find-jar jarname groupname version)]
+              (do (promote/promote (set/rename-keys jar {:jar_name :name
+                                                         :group_name :group}))
+                  (redirect (jar-url groupname jarname)))
+              :next))))
   (GET "/:username" {session :session {username :username} :params}
        (if-let [user (find-user username)]
          (try-account

@@ -4,10 +4,12 @@
                                         simple-date]]
             [hiccup.core :refer [h]]
             [hiccup.element :refer [link-to]]
+            [hiccup.form :refer [form-to submit-button]]
             [clojars.maven :refer [jar-to-pom-map commit-url]]
             [clojars.auth :refer [authorized?]]
             [clojars.db :refer [find-jar jar-exists]]
             [clojars.promote :refer [blockers]]
+            [clojure.set :as set]
             [ring.util.codec :refer [url-encode]]))
 
 (defn url-for [jar]
@@ -41,13 +43,15 @@
     (list [:h3 "promotion"]
           (if (:promoted_at jar)
             [:p (str "Promoted at " (java.util.Date. (:promoted_at jar)))]
-            (if-let [issues (seq (blockers (clojure.set/rename-keys
+            (if-let [issues (seq (blockers (set/rename-keys
                                             jar {:group_name :group
                                                  :jar_name :name})))]
               [:ul#blockers
                (for [i issues]
                  [:li i])]
-              [:p "No blockers; redeploy to promote."])))))
+              (form-to [:post (str "/" (:group_name jar) "/" (:jar_name jar)
+                                   "/promote/" (:version jar))]
+                       (submit-button "Promote")))))))
 
 (defn show-jar [account jar recent-versions count]
   (html-doc account (str (:jar_name jar) " " (:version jar))
