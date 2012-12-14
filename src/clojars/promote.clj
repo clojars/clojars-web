@@ -16,7 +16,7 @@
 
 (defn file-for [group artifact version extension]
   (let [filename (format "%s-%s.%s" artifact version extension)]
-    (io/file (config :repo) group artifact version filename)))
+    (apply io/file (concat [(config :repo)] (str/split group #"\.") [artifact version filename]))))
 
 (defn check-file [blockers file]
   (if (.exists file)
