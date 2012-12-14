@@ -151,7 +151,7 @@
          {groupname :groupname jarname :jarname version :version} :params}
         (with-account
           (require-authorization groupname
-            (if-let [jar (find-jar jarname groupname version)]
+            (if-let [jar (find-jar groupname jarname version)]
               (do (promote/promote (set/rename-keys jar {:jar_name :name
                                                          :group_name :group}))
                   (redirect (jar-url {:group_name groupname :jar_name jarname})))
