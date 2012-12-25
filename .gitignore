@@ -2,11 +2,10 @@
 *.swp
 \#*
 \.#*
-lib/
 home
-data/
-native/
-target/
+/data
+/native
+/target
 
 # IntelliJ IDEA (La Clojure) project files
 *.ipr
