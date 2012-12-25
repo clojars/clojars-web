@@ -5,11 +5,11 @@
             [korma.db :refer [defdb transaction rollback]]
             [korma.core :refer [defentity select group fields order join
                                 modifier exec-raw where limit values with
-                                has-many raw insert update set-fields offset]])
+                                has-many raw insert update set-fields offset]]
+            [cemerick.friend.credentials :as creds])
   (:import java.security.MessageDigest
            java.util.Date
-           java.io.File
-           org.mindrot.jbcrypt.BCrypt))
+           java.io.File))
 
 (def ^{:private true} ssh-options
   "no-agent-forwarding,no-port-forwarding,no-pty,no-X11-forwarding")
@@ -41,7 +41,7 @@
   (Date.))
 
 (defn bcrypt [s]
-  (BCrypt/hashpw s (BCrypt/gensalt (:bcrypt-work-factor config))))
+  (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor config)))
 
 (defdb mydb (:db config))
 (defentity users)
