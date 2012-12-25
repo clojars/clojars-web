@@ -37,7 +37,7 @@
   [n]
   (apply str (repeatedly n #(rand-nth constituent-chars))))
 
-(defn ^:dynamic get-time []
+(defn get-time []
   (Date.))
 
 (defn bcrypt [s]

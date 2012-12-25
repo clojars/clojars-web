@@ -40,10 +40,10 @@
         password2 "password2"
         ssh-key2 "asdf2"
         pgp-key2 "aoeu2"]
-    (binding [db/get-time (fn [] (java.sql.Timestamp. ms))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. ms))]
       ;;TODO: What should be done about the key-file?
       (is (db/add-user email name password ssh-key pgp-key))
-      (binding [db/get-time (fn [] (java.sql.Timestamp. (long 1)))]
+      (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 1)))]
         ;;TODO: What should be done about the key-file?
         (is (db/update-user name email2 name2 password2 ssh-key2 pgp-key2))
         (are [x] (submap {:email email2
@@ -104,7 +104,7 @@
                 :group_name name
                 :authors "Alex Osborne, a little fish"
                 :description "An dog awesome and non-existent test jar."}]
-    (binding [db/get-time (fn [] (java.sql.Timestamp. ms))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. ms))]
       (is (db/add-jar "test-user" jarmap))
       (are [x] (submap result x)
            (db/find-jar name name)
@@ -118,9 +118,9 @@
                 :version "2"
                 :user "test-user"
                 :group_name name }]
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 0))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 0))]
       (is (db/add-jar "test-user" jarmap))
-      (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
+      (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
         (is (db/add-jar "test-user" (assoc jarmap :version "2")))))
     (let [jars (db/jars-by-groupname name)]
       (dorun (map #(is (submap %1 %2)) [result] jars))
@@ -129,13 +129,13 @@
 (deftest jars-with-multiple-versions
   (let [name "tester"
         jarmap {:name name :group name :version "1" }]
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 0))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 0))]
       (is (db/add-jar "test-user" jarmap)))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
       (is (db/add-jar "test-user" (assoc jarmap :version "2"))))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 2))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 2))]
       (is (db/add-jar "test-user" (assoc jarmap :version "3"))))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 3))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 3))]
       (is (db/add-jar "test-user" (assoc jarmap :version "4-SNAPSHOT"))))
     (is (= 4 (db/count-versions name name)))
     (is (= ["4-SNAPSHOT" "3" "2" "1"]
@@ -153,13 +153,13 @@
     (db/add-member name "test-user")
     (db/add-member "tester-group" "test-user2")
     (db/add-member name "test-user2")
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 0))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 0))]
       (is (db/add-jar "test-user" jarmap)))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
       (is (db/add-jar "test-user" (assoc jarmap :name "tester2"))))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 2))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 2))]
       (is (db/add-jar "test-user2" (assoc jarmap :name "tester3"))))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 3))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 3))]
       (is (db/add-jar "test-user2" (assoc jarmap :group "tester-group"))))
     (let [jars (db/jars-by-groupname name)]
       (dorun (map #(is (submap %1 %2))
@@ -176,9 +176,9 @@
                 :version "2"
                 :user "test-user"
                 :group_name name }]
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 0))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 0))]
       (is (db/add-jar "test-user" jarmap))
-          (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
+          (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
             (is (db/add-jar "test-user" (assoc jarmap :version "2")))))
     (let [jars (db/jars-by-username "test-user")]
       (dorun (map #(is (submap %1 %2)) [result] jars))
@@ -194,13 +194,13 @@
     (db/add-member name "test-user")
     (db/add-member "tester-group" "test-user")
     (db/add-member name "test-user2")
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 0))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 0))]
       (is (db/add-jar "test-user" jarmap)))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 1))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
       (is (db/add-jar "test-user" (assoc jarmap :name "tester2"))))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 2))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 2))]
       (is (db/add-jar "test-user2" (assoc jarmap :name "tester3"))))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. 3))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 3))]
       (is (db/add-jar "test-user" (assoc jarmap :group "tester-group"))))
     (let [jars (db/jars-by-username "test-user")]
       (dorun (map #(is (submap %1 %2))
@@ -280,19 +280,19 @@
                 :group_name name
                 :authors "Alex Osborne, a little fish"
                 :description "An dog awesome and non-existent test jar."}]
-    (binding [db/get-time (fn [] (java.sql.Timestamp. (long 1)))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 1)))]
       (db/add-jar "test-user" (assoc jarmap :name "1")))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. (long 2)))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 2)))]
       (db/add-jar "test-user" (assoc jarmap :name "2")))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. (long 3)))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 3)))]
       (db/add-jar "test-user" (assoc jarmap :name "3")))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. (long 4)))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 4)))]
       (db/add-jar "test-user" (assoc jarmap :name "4")))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. (long 5)))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 5)))]
       (db/add-jar "test-user" (assoc jarmap :version "5")))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. (long 6)))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 6)))]
       (db/add-jar "test-user" (assoc jarmap :name "6")))
-    (binding [db/get-time (fn [] (java.sql.Timestamp. (long 7)))]
+    (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 7)))]
       (db/add-jar "test-user" (assoc jarmap :version "7"))
       (db/add-jar "test-user" (assoc jarmap :version "8")))
     (dorun (map #(is (submap %1 %2))
