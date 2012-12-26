@@ -46,9 +46,11 @@
 
 (defn signed? [blockers file keys]
   (let [sig-file (str file ".asc")]
-    (if (and (.exists (io/file sig-file))
-             (signed-with? file sig-file keys))
-      blockers
+    (if (.exists (io/file sig-file))
+      (if (signed-with? file sig-file keys)
+        blockers
+        (conj blockers (str "Could not verify signature of " file "."
+                            " Ensure your public key is in your profile.")))
       (conj blockers (str file " is not signed.")))))
 
 (defn unpromoted? [blockers {:keys [group name version]}]
