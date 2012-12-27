@@ -43,22 +43,26 @@
                           :version version}
                     file (io/file (config :repo) group
                                   artifact version filename)]
-                (try
-                  (if (.endsWith filename ".pom")
-                    (let [contents (slurp body)
-                          pom-info (merge (maven/pom-to-map
-                                           (StringReader. contents)) info)]
+                (if (.endsWith filename ".pom")
+                  (let [contents (slurp body)
+                        pom-info (merge (maven/pom-to-map
+                                         (StringReader. contents)) info)]
+                    (if (find-jar groupname artifact version)
+                      (update-jar account pom-info)
+                      (add-jar account pom-info))
+                    (try
                       (save-to-file file contents)
-                      (if (find-jar groupname artifact version)
-                        (update-jar account pom-info)
-                        (add-jar account pom-info)))
-                    (do
+                      (catch java.io.IOException e
+                        (.delete file)
+                        (throw e))))
+                  (do
+                    (when-not (find-jar groupname artifact version)
+                      (add-jar account info))
+                    (try
                       (save-to-file file body)
-                      (when-not (find-jar groupname artifact version)
-                        (add-jar account info))))
-                  (catch java.io.IOException e
-                    (.delete file)
-                    (throw e))))
+                      (catch java.io.IOException e
+                        (.delete file)
+                        (throw e))))))
               {:status 201 :headers {} :body nil}
               (catch Exception e
                 (pst e)
