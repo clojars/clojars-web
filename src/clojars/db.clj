@@ -48,6 +48,20 @@
 (defentity groups)
 (defentity jars)
 
+;; über-hack to work around hard-coded sqlite busy-timeout:
+;; https://github.com/ato/clojars-web/issues/105
+;; http://sqlite.org/c3ref/busy_timeout.html
+;; https://bitbucket.org/xerial/sqlite-jdbc/issue/27
+(defonce _
+  (alter-var-root #'clojure.java.jdbc.internal/prepare-statement*
+                  (fn [prepare]
+                    (fn timeout-prepare [& args]
+                      (let [stmt (apply prepare args)]
+                        (doto stmt
+                          ;; Note that while .getQueryTimeout returns
+                          ;; milliseconds, .setQueryTimeout takes seconds!
+                          (.setQueryTimeout 30)))))))
+
 (defn split-keys [s]
   (map str/trim (str/split s #"\s*\n\s*")))
 
