@@ -56,5 +56,5 @@
   (db/add-user "test@ex.com" "testuser" "password" "asdf"
                (slurp "test-resources/pubring.gpg"))
   (db/add-member "robert" "testuser")
-  (is (= ["data/test_repo/robert/hooke/1.1.2/hooke-1.1.2.jar is not signed."]
+  (is (= ["Could not verify signature of data/test_repo/robert/hooke/1.1.2/hooke-1.1.2.jar. Ensure your public key is in your profile."]
          (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))
