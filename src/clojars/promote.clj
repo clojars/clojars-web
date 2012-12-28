@@ -107,6 +107,8 @@
 
 (defn promote [{:keys [group name version] :as info}]
   (korma/transaction
+   ;; grab a write lock so uploads don't rewrite jars out from under us
+   (korma/do-query "PRAGMA locking_mode = RESERVED")
    (println "checking" group "/" name "for promotion...")
    (let [blockers (blockers info)]
      (if (empty? blockers)
