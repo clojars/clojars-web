@@ -43,6 +43,9 @@
 (defn bcrypt [s]
   (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor config)))
 
+;; work around segfault bug: https://github.com/ato/clojars-web/issues/115
+(System/setProperty "sqlite.purejava", "true")
+
 (defdb mydb (:db config))
 (defentity users)
 (defentity groups)

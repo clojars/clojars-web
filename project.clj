@@ -15,7 +15,7 @@
                  [cheshire "3.0.0"]
                  [korma "0.3.0-beta10"]
                  [org.clojars.ato/nailgun "0.7.1"]
-                 [org.xerial/sqlite-jdbc "3.6.17"]
+                 [org.xerial/sqlite-jdbc "3.7.2"]
                  [org.apache.commons/commons-email "1.2"]
                  [net.cgrand/regex "1.0.1"
                   :exclusions [org.clojure/clojure]]

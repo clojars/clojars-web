@@ -106,22 +106,24 @@
                              :repository {"releases" releases-repo})))
 
 (defn promote [{:keys [group name version] :as info}]
-  (korma/transaction
-   ;; grab a write lock so uploads don't rewrite jars out from under us
-   (korma/do-query "PRAGMA locking_mode = RESERVED")
-   (println "checking" group "/" name "for promotion...")
-   (let [blockers (blockers info)]
-     (if (empty? blockers)
-       (if (config :releases-url)
-         (do
-           (println "Promoting" info)
-           (deploy-to-s3 info)
-           (update db/jars
-                   (set-fields {:promoted_at (java.util.Date.)})
-                   (where {:group_name group :jar_name name :version version})))
-         (println "Didn't promote since :releases-url wasn't set."))
-       (do (println "...failed.")
-           blockers)))))
+  (sql/with-connection (config :db)
+    (sql/transaction
+     ;; grab a write lock so uploads don't rewrite jars out from under us.
+     ;; using korma here blows up, so let's go lower level
+     (sql/with-query-results _ ["PRAGMA locking_mode = RESERVED"])
+     (println "checking" group "/" name "for promotion...")
+     (let [blockers (blockers info)]
+       (if (empty? blockers)
+         (if (config :releases-url)
+           (do
+             (println "Promoting" info)
+             (deploy-to-s3 info)
+             (update db/jars
+                     (set-fields {:promoted_at (java.util.Date.)})
+                     (where {:group_name group :jar_name name :version version})))
+           (println "Didn't promote since :releases-url wasn't set."))
+         (do (println "...failed.")
+             blockers))))))
 
 (defonce queue (LinkedBlockingQueue.))
 
