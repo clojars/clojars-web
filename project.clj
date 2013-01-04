@@ -1,4 +1,4 @@
-(defproject clojars-web "0.12.11"
+(defproject clojars-web "0.12.12"
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.apache.maven/maven-model "3.0.4"
