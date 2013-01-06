@@ -2,9 +2,12 @@
   (:import (java.io InputStream IOException File OutputStream
                     FileOutputStream)
            com.martiansoftware.nailgun.NGContext)
-  (:require [clojars.config :refer [config]]
+  (:require [clojure.set :as set]
+            [clojure.java.io :as io]
+            [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [clojars.db :as db]
+            [clojars.event :as ev]
             [cemerick.pomegranate.aether :as aether])
   (:gen-class
    :methods [#^{:static true}
@@ -109,7 +112,11 @@
                            :repository {"local" (file-repo (:repo config))}
                            :transfer-listener
                            (bound-fn [e] (@#'aether/default-listener-fn e)))
-            (db/add-jar account jarmap))
+            (db/add-jar account jarmap)
+            (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id})
+                              account jarfile)
+            (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id})
+                              account (:file metafile)))
         (throw (Exception. (str "You need to give me one of: " names)))))
     (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
                               "http://clojars.org/"))

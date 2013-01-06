@@ -62,7 +62,10 @@
                       (save-to-file file body)
                       (catch java.io.IOException e
                         (.delete file)
-                        (throw e))))))
+                        (throw e))))
+                  (ev/record-deploy {:group groupname
+                                     :artifact-id artifact-id
+                                     :version version} account filename)))
               {:status 201 :headers {} :body nil}
               (catch Exception e
                 (pst e)

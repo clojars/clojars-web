@@ -1,6 +1,7 @@
 (ns clojars.db
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [clojars.event :as ev]
             [clojars.config :refer [config]]
             [korma.db :refer [defdb transaction rollback]]
             [korma.core :refer [defentity select group fields order join
@@ -196,38 +197,43 @@
         per-page))))
 
 (defn add-user [email username password ssh-key pgp-key]
-  (insert users
-          (values {:email email
-                   :user username
-                   :password (bcrypt password)
-                   :ssh_key ssh-key
-                   :pgp_key pgp-key
-                   :created (get-time)
-                   ;;TODO: remove salt field
-                   :salt ""}))
-  (insert groups
-          (values {:name (str "org.clojars." username)
-                   :user username}))
-  (write-key-file (:key-file config)))
+  (let [record {:email email, :user username, :password (bcrypt password)
+                :ssh_key ssh-key, :pgp_key pgp-key}]
+    (insert users
+            (values (assoc record
+                      :created (get-time)
+                      ;;TODO: remove salt field
+                      :salt "")))
+    (insert groups
+            (values {:name (str "org.clojars." username)
+                     :user username}))
+    (ev/record :user (clojure.set/rename-keys record {:user :username
+                                                      :ssh_key :ssh-key
+                                                      :pgp_key :pgp-key}))
+    (write-key-file (:key-file config))))
 
 (defn update-user [account email username password ssh-key pgp-key]
   (let [fields {:email email
                 :user username
-                :salt ""
                 :ssh_key ssh-key
-                :pgp_key pgp-key}]
+                :pgp_key pgp-key}
+        fields (if (empty? password)
+                 fields
+                 (assoc fields :password (bcrypt password)))]
     (update users
-            (set-fields (if (empty? password)
-                          fields
-                          (assoc fields :password (bcrypt password))))
-            (where {:user account})))
+            (set-fields (assoc fields :salt ""))
+            (where {:user account}))
+    (ev/record :user (clojure.set/rename-keys fields {:user :username
+                                                      :ssh_key :ssh-key
+                                                      :pgp_key :pgp-key})))
   (write-key-file (:key-file config)))
 
-(defn add-member [groupname username added-by]
+(defn add-member [group username added-by]
   (insert groups
-          (values {:name groupname
+          (values {:name group
                    :user username
-                   :added_by added-by})))
+                   :added_by added-by}))
+  (ev/record :membership {:group group :username username :added-by added-by}))
 
 (defn check-and-add-group [account groupname]
   (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)

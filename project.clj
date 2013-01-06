@@ -17,6 +17,7 @@
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.7.2"]
                  [org.apache.commons/commons-email "1.2"]
+                 [commons-codec "1.6"]
                  [net.cgrand/regex "1.0.1"
                   :exclusions [org.clojure/clojure]]
                  [clj-time "0.3.8"]
@@ -25,6 +26,7 @@
                  [clj-stacktrace "0.2.4"]
                  [ring-anti-forgery "0.2.0"]
                  [valip "0.2.0"]
+                 [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.0-RC1"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.7"]
