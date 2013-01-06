@@ -22,6 +22,9 @@
 (defn add-pgp-key []
   (sql/do-commands "ALTER TABLE users ADD COLUMN pgp_key TEXT"))
 
+(defn add-added-by []
+  (sql/do-commands "ALTER TABLE groups ADD COLUMN added_by TEXT"))
+
 ;; migrations mechanics
 
 (defn run-and-record [migration]
@@ -54,4 +57,5 @@
   (migrate #'initial-schema
            #'add-promoted-field
            #'add-jars-index
-           #'add-pgp-key))
+           #'add-pgp-key
+           #'add-added-by))

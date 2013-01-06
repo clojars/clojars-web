@@ -223,10 +223,11 @@
             (where {:user account})))
   (write-key-file (:key-file config)))
 
-(defn add-member [groupname username]
+(defn add-member [groupname username added-by]
   (insert groups
           (values {:name groupname
-                   :user username})))
+                   :user username
+                   :added_by added-by})))
 
 (defn check-and-add-group [account groupname]
   (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)
@@ -239,7 +240,7 @@
         (throw (Exception. (str "The group name "
                                 groupname
                                 " is already taken.")))
-        (add-member groupname account))
+        (add-member groupname account "clojars"))
       (when-not (some #{account} members)
         (throw (Exception. (str "You don't have access to the "
                                 groupname " group.")))))))

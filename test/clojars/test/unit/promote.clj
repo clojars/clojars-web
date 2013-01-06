@@ -44,7 +44,7 @@
   (copy-resource "1.1.2" "pom.asc")
   (db/add-user "test@ex.com" "testuser" "password" "asdf"
                (slurp "test-resources/pubring.gpg"))
-  (db/add-member "robert" "testuser")
+  (db/add-member "robert" "testuser" nil)
   (is (empty? (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))
 
 (deftest test-failed-signature
@@ -55,6 +55,6 @@
   (copy-resource "1.1.2" "pom.asc")
   (db/add-user "test@ex.com" "testuser" "password" "asdf"
                (slurp "test-resources/pubring.gpg"))
-  (db/add-member "robert" "testuser")
+  (db/add-member "robert" "testuser" nil)
   (is (= ["Could not verify signature of data/test_repo/robert/hooke/1.1.2/hooke-1.1.2.jar. Ensure your public key is in your profile."]
          (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))

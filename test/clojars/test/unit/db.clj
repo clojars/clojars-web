@@ -78,7 +78,7 @@
         pgp-key "aoeu"]
     ;;TODO: What should be done about the key-file?
     (is (db/add-user email name password ssh-key pgp-key))
-    (is (db/add-member "test-group" name))
+    (is (db/add-member "test-group" name "some-dude"))
     (is (= ["testuser"]
            (db/group-membernames "test-group")))
     (is (some #{"test-group"}
@@ -150,9 +150,9 @@
         result {:jar_name name
                 :version "1"
                 :group_name name }]
-    (db/add-member name "test-user")
-    (db/add-member "tester-group" "test-user2")
-    (db/add-member name "test-user2")
+    (db/add-member name "test-user" "some-dude")
+    (db/add-member "tester-group" "test-user2" "some-dude")
+    (db/add-member name "test-user2" "some-dude")
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 0))]
       (is (db/add-jar "test-user" jarmap)))
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
@@ -191,9 +191,9 @@
                 :user "test-user"
                 :version "1"
                 :group_name name }]
-    (db/add-member name "test-user")
-    (db/add-member "tester-group" "test-user")
-    (db/add-member name "test-user2")
+    (db/add-member name "test-user" "some-dude")
+    (db/add-member "tester-group" "test-user" "some-dude")
+    (db/add-member name "test-user2" "some-dude")
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 0))]
       (is (db/add-jar "test-user" jarmap)))
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
@@ -252,7 +252,7 @@
 
 (deftest add-jar-validates-group-permissions
     (let [jarmap {:name "jar-name" :version "1" :group "group-name"}]
-      (db/add-member "group-name" "some-user")
+      (db/add-member "group-name" "some-user" "some-dude")
       (is (thrown? Exception (db/add-jar "test-user" jarmap)))))
 
 
