@@ -6,7 +6,6 @@
       :subname "data/dev_db"}
  :key-file "data/dev_authorized_keys"
  :repo "data/dev_repo"
- :event-dir "data/events"
  :bcrypt-work-factor 12
  :mail {:hostname "localhost"
         :from "noreply@clojars.org"
