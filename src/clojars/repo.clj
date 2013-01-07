@@ -3,7 +3,7 @@
             [clojars.db :refer [find-jar add-jar update-jar]]
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
-            [clojars.promote :as promote]
+            [clojars.event :as ev]
             [compojure.core :refer [defroutes PUT ANY]]
             [compojure.route :refer [not-found]]
             [clojure.java.io :as io]
@@ -62,10 +62,10 @@
                       (save-to-file file body)
                       (catch java.io.IOException e
                         (.delete file)
-                        (throw e))))
-                  (ev/record-deploy {:group groupname
-                                     :artifact-id artifact-id
-                                     :version version} account filename)))
+                        (throw e)))))
+                (ev/record-deploy {:group groupname
+                                   :artifact-id artifact
+                                   :version version} account filename))
               {:status 201 :headers {} :body nil}
               (catch Exception e
                 (pst e)
