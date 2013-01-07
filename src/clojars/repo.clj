@@ -65,7 +65,7 @@
                         (throw e)))))
                 (ev/record-deploy {:group groupname
                                    :artifact-id artifact
-                                   :version version} account filename))
+                                   :version version} account file))
               {:status 201 :headers {} :body nil}
               (catch Exception e
                 (pst e)
