@@ -79,7 +79,7 @@
              (some #{username} membernames)
              (show-group account groupname membernames "They're already a member!")
              (find-user username)
-             (do (add-member groupname username username)
+             (do (add-member groupname username account)
                  (show-group account groupname
                              (conj membernames username)))
              :else

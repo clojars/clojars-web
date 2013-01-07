@@ -7,10 +7,10 @@
   (io/file (config :event-dir) (str (name type) ".clj")))
 
 (defn record [type event]
-  (let [filename (event-log-file type), content (prn-str event)]
+  (let [filename (index/event-log-file type)
+        content (prn-str (assoc event :at (java.util.Date.)))]
     (locking #'record
-      ;; TODO: keep file open
-      (spit filename content :append))))
+      (spit filename content :append true))))
 
 (defn record-deploy [{:keys [group artifact-id version]} deployed-by filename]
   (record :deploy {:group group
