@@ -26,6 +26,9 @@
         doc (assoc (dissoc pom :homepage :dependencies :scm)
               :at (.lastModified pom-file)
               :_content content)]
+    (clucy/search-and-delete index (format "artifact-id:%s AND group-id:%s"
+                                           (:artifact-id pom)
+                                           (:group-id pom)))
     (clucy/add index (with-meta doc field-settings))))
 
 (defn index-repo [root]

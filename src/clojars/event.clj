@@ -1,7 +1,9 @@
 (ns clojars.event
   (:refer-clojure :exclude [load])
   (:require [clojure.java.io :as io]
-            [clojars.config :refer [config]])
+            [clojars.config :refer [config]]
+            [clojars.search :as search]
+            [clucy.core :as clucy])
   (:import (org.apache.commons.codec.digest DigestUtils)))
 
 (defn event-log-file [type]
@@ -17,6 +19,9 @@
       (spit filename content :append true))))
 
 (defn record-deploy [{:keys [group-id artifact-id version]} deployed-by file]
+  (when (.endsWith (str file) ".pom")
+    (with-open [index (clucy/disk-index (config :index-path))]
+      (search/index-pom index file)))
   (record :deploy {:group-id group-id
                    :artifact-id artifact-id
                    :version version
