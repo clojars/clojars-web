@@ -113,6 +113,7 @@
                            :transfer-listener
                            (bound-fn [e] (@#'aether/default-listener-fn e)))
             (db/add-jar account jarmap)
+            ;; TODO: doseq over files here
             (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id})
                               account jarfile)
             (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id})
