@@ -228,12 +228,13 @@
                                                       :pgp_key :pgp-key})))
   (write-key-file (:key-file config)))
 
-(defn add-member [group username added-by]
+(defn add-member [group-id username added-by]
   (insert groups
-          (values {:name group
+          (values {:name group-id
                    :user username
                    :added_by added-by}))
-  (ev/record :membership {:group group :username username :added-by added-by}))
+  (ev/record :membership {:group-id group-id :username username
+                          :added-by added-by}))
 
 (defn check-and-add-group [account groupname]
   (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)
