@@ -12,7 +12,7 @@
         :subprotocol "sqlite"
         :subname "data/db"}
    :event-dir "data/events"
-   :index-dir "data/indices"
+   :index-path "data/index"
    :mail {:hostname "127.0.0.1"
           :ssl false
           :from "noreply@clojars.org"}
