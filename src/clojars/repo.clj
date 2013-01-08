@@ -30,7 +30,7 @@
   (.list (io/file (config :repo) group-id)))
 
 (defn user-artifacts [username]
-  (mapcat group-artifacts (:groups (@users username))))
+  (mapcat group-artifacts (:groups (@ev/users username))))
 
 ;; web handlers
 
