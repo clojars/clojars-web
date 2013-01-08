@@ -1,6 +1,6 @@
 (ns clojars.repo
   (:require [clojars.auth :refer [with-account require-authorization]]
-            [clojars.db :refer [find-jar add-jar update-jar]]
+            [clojars.db :refer [add-jar update-jar]]
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [clojars.event :as ev]
@@ -12,6 +12,27 @@
             [ring.util.response :as response]
             [clj-stacktrace.repl :refer [pst]])
   (:import java.io.StringReader))
+
+(defn versions [group-id artifact-id]
+  (->> (.listFiles (io/file (config :repo) group-id artifact-id))
+       (filter (memfn isDirectory))
+       (sort-by (comp - (memfn last-modified)))
+       (map (memfn getName))))
+
+(defn find-jar
+  ([group-id artifact-id]
+     (find-jar group-id artifact-id (first (versions group-id artifact-id))))
+  ([group-id artifact-id version]
+     (maven/pom-to-map (io/file (config :repo) group-id artifact-id version
+                                (format "%s-%s.%s" artifact-id version "pom")))))
+
+(defn group-artifacts [group-id]
+  (.list (io/file (config :repo) group-id)))
+
+(defn user-artifacts [username]
+  (mapcat group-artifacts (:groups (@users username))))
+
+;; web handlers
 
 (defn save-to-file [sent-file input]
   (-> sent-file
