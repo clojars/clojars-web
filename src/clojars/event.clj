@@ -9,9 +9,6 @@
 (defn event-log-file [type]
   (io/file (config :event-dir) (str (name type) ".clj")))
 
-;; TODO: this will be triggered before config has been set up right
-(defonce _ (delay (.mkdirs (io/file (:event-dir config)))))
-
 (defn record [type event]
   (let [filename (event-log-file type)
         content (prn-str (assoc event :at (java.util.Date.)))]

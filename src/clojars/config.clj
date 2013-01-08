@@ -122,4 +122,5 @@
       (println "Some options can be set using these environment variables:")
       (println (str/join " " (map first env-vars)))
       (System/exit 0))
+    (.mkdirs (io/file (:event-dir options)))
     (alter-var-root #'config (fn [_] options))))
