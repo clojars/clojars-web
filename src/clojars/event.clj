@@ -1,6 +1,8 @@
 (ns clojars.event
   (:refer-clojure :exclude [load])
   (:require [clojure.java.io :as io]
+            [clojure.java.jdbc :as sql]
+            [clojure.set :as set]
             [clojars.config :refer [config]]
             [clojars.search :as search]
             [clucy.core :as clucy])
@@ -51,6 +53,21 @@
     (swap! users #(reduce add-user-membership %
                           (map read-string (line-seq r))))))
 
-(defn load []
+(defn load
+  "Load users and memberships from event logs."
+  []
   (load-users (event-log-file :user))
   (load-memberships (event-log-file :membership)))
+
+(defn seed
+  "Seed event log with initial values from SQLite DB"
+  []
+  (sql/with-connection (config :db)
+    (sql/with-query-results groups ["SELECT * FROM groups"]
+      (doseq [{:keys [name user]} groups]
+        (record :membership {:group name :username user :added-by nil})))
+    (sql/with-query-results users ["SELECT * FROM users"]
+      (doseq [{:keys [user password email created ssh_key pgp_key]} users]
+        (record :user {:username user :email email :password password
+                       :ssh-key ssh_key :pgp-key pgp_key
+                       :at created :from "sqlite"})))))
