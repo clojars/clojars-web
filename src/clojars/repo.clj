@@ -25,7 +25,7 @@
   ([group-id artifact-id version]
      (try
        (maven/pom-to-map (io/file (config :repo) group-id artifact-id version
-                                  (format "%s-%s.%s" artifact-id version "pom")))
+                                  (format "%s-%s.pom" artifact-id version)))
        (catch java.io.FileNotFoundException e
          nil))))
 

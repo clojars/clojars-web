@@ -13,7 +13,7 @@
 
 (defn record [type event]
   (let [filename (event-log-file type)
-        content (prn-str (assoc event :at (java.util.Date.)))]
+        content (prn-str (assoc event :at (:at event (java.util.Date.))))]
     (locking #'record
       (spit filename content :append true))))
 
@@ -67,6 +67,7 @@
   (time (load-users (event-log-file :user)))
   (time (load-memberships (event-log-file :membership)))
   (time (load-deploys (event-log-file :deploy))))
+
 (defn seed
   "Seed event log with initial values from SQLite DB"
   [[& sanitize?]]
@@ -79,4 +80,10 @@
         (record :user {:username user :email email
                        :password (or sanitize? password)
                        :ssh-key ssh_key :pgp-key pgp_key
-                       :at created :from "sqlite"})))))
+                       :at created :from "sqlite"})))
+    (sql/with-query-results jars ["SELECT * FROM jars"]
+      (doseq [{:keys [jar_name group_name version user]} jars]
+        (record-deploy {:group-id group_name :artifact-id  jar_name
+                        :version version} user
+                        (io/file (config :repo) group_name jar_name version
+                                 (format "%s-%s.pom" jar_name version)))))))
