@@ -24,7 +24,7 @@
 (defn -main [& args]
   (configure args)
   (start-jetty)
-  (nrepl/start-server :port 7991 :bind "127.0.0.1")
+  (nrepl/start-server :port (:nrepl-port config) :bind "127.0.0.1")
   (start-nailgun))
 
 ; (defonce server (run-jetty #'clojars-app {:port 8080 :join? false}))

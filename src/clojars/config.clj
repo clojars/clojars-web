@@ -13,6 +13,7 @@
         :subname "data/db"}
    :event-dir "data/events"
    :index-path "data/index"
+   :nrepl-port 7991
    :mail {:hostname "127.0.0.1"
           :ssl false
           :from "noreply@clojars.org"}
