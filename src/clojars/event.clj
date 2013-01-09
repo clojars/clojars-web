@@ -32,6 +32,8 @@
 
 (defonce memberships (atom {}))
 
+(defonce deploys (atom {}))
+
 (defn add-user [users {:keys [username email] :as user}]
   (-> users
       (update-in [username] merge user)
@@ -42,6 +44,9 @@
 
 (defn add-user-membership [users {:keys [group-id username]}]
   (update-in users [username :groups] (fnil conj #{}) group-id))
+
+(defn add-deploy [deploys {:keys [group-id artifact-id] :as deploy}]
+  (assoc deploys (str group-id "/" artifact-id) deploy))
 
 (defn load-users [file]
   (with-open [r (io/reader file)]
@@ -58,6 +63,9 @@
   []
   (load-users (event-log-file :user))
   (load-memberships (event-log-file :membership)))
+(defn load-deploys [file]
+  (with-open [r (io/reader file)]
+    (swap! users #(reduce add-deploy % (map read-string (line-seq r))))))
 
 (defn seed
   "Seed event log with initial values from SQLite DB"
