@@ -5,7 +5,10 @@
             [clojure.string :as string]
             [clojure.set :as set]
             [clojars.config :refer [config]]
-            [clojars.maven :as mvn]))
+            [clojars.maven :as mvn])
+  (:import (org.apache.lucene.analysis PerFieldAnalyzerWrapper)
+           (org.apache.lucene.analysis.standard StandardAnalyzer)
+           (org.apache.lucene.analysis KeywordAnalyzer)))
 
 (def content-fields [:artifact-id :group-id :version :description
                      :url :authors])
@@ -14,6 +17,14 @@
                      :group-id {:analyzed false}
                      :version {:analyzed false}
                      :at {:analyzed false}})
+
+;; TODO: make this easy to do from clucy
+(defonce analyzer (let [a (PerFieldAnalyzerWrapper.
+                           (StandardAnalyzer. clucy/*version*))]
+                    (doseq [[field {:keys [analyzed]}] field-settings
+                            :when (false? analyzed)]
+                      (.addAnalyzer a (name field) (KeywordAnalyzer.)))
+                    a))
 
 (def renames {:name :artifact-id :group :group-id})
 
@@ -26,10 +37,11 @@
         doc (assoc (dissoc pom :homepage :dependencies :scm)
               :at (.lastModified pom-file)
               :_content content)]
-    (clucy/search-and-delete index (format "artifact-id:%s AND group-id:%s"
-                                           (:artifact-id pom)
-                                           (:group-id pom)))
-    (clucy/add index (with-meta doc field-settings))))
+    (binding [clucy/*analyzer* analyzer]
+      (clucy/search-and-delete index (format "artifact-id:%s AND group-id:%s"
+                                             (:artifact-id pom)
+                                             (:group-id pom)))
+      (clucy/add index (with-meta doc field-settings)))))
 
 (defn index-repo [root]
   (with-open [index (clucy/disk-index (config :index-path))]
@@ -41,7 +53,8 @@
   (if (empty? query)
     []
     (with-open [index (clucy/disk-index (config :index-path))]
-      (clucy/search index query 25))))
+      (binding [clucy/*analyzer* analyzer]
+        (clucy/search index query 25)))))
 
 (defn -main [& [repo]]
   (index-repo (or repo (config :repo))))
