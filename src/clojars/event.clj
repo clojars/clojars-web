@@ -83,7 +83,10 @@
                        :at created :from "sqlite"})))
     (sql/with-query-results jars ["SELECT * FROM jars"]
       (doseq [{:keys [jar_name group_name version user]} jars]
-        (record-deploy {:group-id group_name :artifact-id  jar_name
-                        :version version} user
-                        (io/file (config :repo) group_name jar_name version
-                                 (format "%s-%s.pom" jar_name version)))))))
+        (try
+          (record-deploy {:group-id group_name :artifact-id  jar_name
+                          :version version} user
+                          (io/file (config :repo) group_name jar_name version
+                                   (format "%s-%s.pom" jar_name version)))
+          (catch Exception e
+            (println (.getMessage e))))))))
