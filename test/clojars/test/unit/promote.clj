@@ -4,6 +4,7 @@
             [clojure.java.io :as io]
             [clojars.maven :as maven]
             [clojars.db :as db]
+            [clojars.config :refer [config]]
             [clojars.test.test-helper :as help]))
 
 (help/use-fixtures)
@@ -29,12 +30,10 @@
 
 (deftest test-unsigned
   (copy-resource "1.1.2")
-  ;; TODO: requires test profile; breaks in repl
-  (is (= #{"data/test_repo/robert/hooke/1.1.2/hooke-1.1.2.pom is not signed."
-           "data/test_repo/robert/hooke/1.1.2/hooke-1.1.2.jar is not signed."
-           "Missing file hooke-1.1.2.jar"}
-                           (set (blockers {:group "robert" :name "hooke"
-                                           :version "1.1.2"})))))
+  (let [b (blockers {:group "robert" :name "hooke" :version "1.1.2"})]
+    (is (some #(.endsWith % "hooke-1.1.2.pom is not signed.") b))
+    (is (some #(.endsWith % "hooke-1.1.2.jar is not signed.") b))
+    (is (some #(= % "Missing file hooke-1.1.2.jar") b))))
 
 (deftest test-success
   (copy-resource "1.1.2")
@@ -56,5 +55,7 @@
   (db/add-user "test@ex.com" "testuser" "password" "asdf"
                (slurp "test-resources/pubring.gpg"))
   (db/add-member "robert" "testuser" nil)
-  (is (= ["Could not verify signature of data/test_repo/robert/hooke/1.1.2/hooke-1.1.2.jar. Ensure your public key is in your profile."]
+  (is (= [(str "Could not verify signature of "
+               (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.jar. "
+               "Ensure your public key is in your profile.")]
          (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))

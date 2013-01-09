@@ -77,12 +77,10 @@
         ssh-key "asdf"
         pgp-key "aoeu"]
     ;;TODO: What should be done about the key-file?
-    (is (db/add-user email name password ssh-key pgp-key))
+    (db/add-user email name password ssh-key pgp-key)
     (db/add-member "test-group" name "some-dude")
-    (is (= ["testuser"]
-           (db/group-membernames "test-group")))
-    (is (some #{"test-group"}
-              (db/find-groupnames name)))))
+    (is (= ["testuser"] (db/group-membernames "test-group")))
+    (is (some #{"test-group"} (db/find-groupnames name)))))
 
 ;;TODO: Tests below should have the users added first.
 ;;Currently user unenforced foreign keys are by name

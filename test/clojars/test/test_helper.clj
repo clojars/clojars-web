@@ -2,7 +2,7 @@
   (import java.io.File)
   (:require [clojars.db :as db]
             [clojars.db.migrate :as migrate]
-            [clojars.config :as config]
+            [clojars.config :refer [config]]
             [korma.db :as kdb]
             [clojure.test :as test]
             [clojure.java.shell :as sh]
@@ -26,7 +26,7 @@
 
 (defonce migrate
   (delay
-   (let [db (:subname (:db config/config))]
+   (let [db (:subname (:db config))]
      (when-not (.exists (io/file db))
        (.mkdirs (.getParentFile (io/file db)))
        (sh/sh "sqlite3" db :in (slurp "clojars.sql"))))
@@ -36,8 +36,9 @@
   (test/use-fixtures :each
                      (fn [f]
                        (force migrate)
-                       (let [file (File. (:repo config/config))]
-                         (delete-file-recursively file))
+                       (delete-file-recursively (io/file (config :repo)))
+                       (delete-file-recursively (io/file (config :event-dir)))
+                       (.mkdirs (io/file (config :event-dir)))
                        (jdbc/with-connection (kdb/get-connection @kdb/_default)
                          (jdbc/do-commands
                           "delete from users;"
