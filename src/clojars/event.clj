@@ -58,15 +58,15 @@
     (swap! users #(reduce add-user-membership %
                           (map read-string (line-seq r))))))
 
-(defn load
-  "Load users and memberships from event logs."
-  []
-  (load-users (event-log-file :user))
-  (load-memberships (event-log-file :membership)))
 (defn load-deploys [file]
   (with-open [r (io/reader file)]
     (swap! users #(reduce add-deploy % (map read-string (line-seq r))))))
 
+(defn load []
+  (println "Loading users, memberships, and deploys from event logs...")
+  (time (load-users (event-log-file :user)))
+  (time (load-memberships (event-log-file :membership)))
+  (time (load-deploys (event-log-file :deploy))))
 (defn seed
   "Seed event log with initial values from SQLite DB"
   [[& sanitize?]]
