@@ -42,6 +42,5 @@
                          (jdbc/do-commands
                           "delete from users;"
                           "delete from jars;"
-                          "delete from deps;"
                           "delete from groups;"))
                        (f))))

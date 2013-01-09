@@ -78,7 +78,7 @@
         pgp-key "aoeu"]
     ;;TODO: What should be done about the key-file?
     (is (db/add-user email name password ssh-key pgp-key))
-    (is (db/add-member "test-group" name "some-dude"))
+    (db/add-member "test-group" name "some-dude")
     (is (= ["testuser"]
            (db/group-membernames "test-group")))
     (is (some #{"test-group"}
