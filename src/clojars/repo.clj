@@ -23,8 +23,11 @@
   ([group-id artifact-id]
      (find-jar group-id artifact-id (first (versions group-id artifact-id))))
   ([group-id artifact-id version]
-     (maven/pom-to-map (io/file (config :repo) group-id artifact-id version
-                                (format "%s-%s.%s" artifact-id version "pom")))))
+     (try
+       (maven/pom-to-map (io/file (config :repo) group-id artifact-id version
+                                  (format "%s-%s.%s" artifact-id version "pom")))
+       (catch java.io.FileNotFoundException e
+         nil))))
 
 (defn group-artifacts [group-id]
   (.list (io/file (config :repo) group-id)))
@@ -64,11 +67,14 @@
                           :version version}
                     file (io/file (config :repo) group
                                   artifact version filename)]
+                ;;TODO once db is removed this whole if block
+                ;;can be reduced to the common
+                ;;(try (save-to-file...) (catch ...))
                 (if (.endsWith filename ".pom")
                   (let [contents (slurp body)
                         pom-info (merge (maven/pom-to-map
                                          (StringReader. contents)) info)]
-                    (if (find-jar groupname artifact version)
+                    (if (find-jar group artifact version)
                       (update-jar account pom-info)
                       (add-jar account pom-info))
                     (try
@@ -77,16 +83,18 @@
                         (.delete file)
                         (throw e))))
                   (do
-                    (when-not (find-jar groupname artifact version)
+                    (when-not (find-jar group artifact version)
                       (add-jar account info))
                     (try
                       (save-to-file file body)
                       (catch java.io.IOException e
                         (.delete file)
                         (throw e)))))
-                (ev/record-deploy {:group groupname
-                                   :artifact-id artifact
-                                   :version version} account file))
+                ;;Be consistent with scp only recording pom or jar
+                (when (some #(.endsWith filename %) [".pom" ".jar"])
+                  (ev/record-deploy {:group groupname
+                                     :artifact-id artifact
+                                     :version version} account file)))
               {:status 201 :headers {} :body nil}
               (catch Exception e
                 (pst e)
