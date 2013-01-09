@@ -29,18 +29,21 @@
   (html-doc account (str (h query) " - search")
     [:h1 "Search for " (h query)]
     [:ul
-     (for [jar (search/search query)
-           ;; bc too lazy to see why blank entries are showing up
-           :when (not (nil? (:artifact-id jar)))]
-       [:li.search-results
-        (jar-link {:jar_name (:artifact-id jar)
-                   :group_name (:group-id jar)}) " " (h (:version jar))
-        [:br]
-        (when (seq (:description jar))
-          [:span.desc (h (:description jar))
-            [:br]])
-        [:span.details (if-let [created (:created jar)]
-                         [:td (format-date created)])]])]))
+     (let [results (search/search query)]
+       (if (empty? results)
+         [:p "No results."]
+         (for [jar results
+               ;; bc too lazy to see why blank entries are showing up
+               :when (not (nil? (:artifact-id jar)))]
+           [:li.search-results
+            (jar-link {:jar_name (:artifact-id jar)
+                       :group_name (:group-id jar)}) " " (h (:version jar))
+            [:br]
+            (when (seq (:description jar))
+              [:span.desc (h (:description jar))
+               [:br]])
+            [:span.details (if-let [created (:created jar)]
+                             [:td (format-date created)])]])))]))
 
 (defn search [account params]
   (let [q (params :q)]

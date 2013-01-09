@@ -38,8 +38,10 @@
       (index-pom index file))))
 
 (defn search [query]
-  (with-open [index (clucy/disk-index (config :index-path))]
-    (clucy/search index query 25)))
+  (if (empty? query)
+    []
+    (with-open [index (clucy/disk-index (config :index-path))]
+      (clucy/search index query 25))))
 
 (defn -main [& [repo]]
   (index-repo (or repo (config :repo))))
