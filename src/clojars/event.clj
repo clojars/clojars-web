@@ -74,7 +74,7 @@
   (sql/with-connection (config :db)
     (sql/with-query-results groups ["SELECT * FROM groups"]
       (doseq [{:keys [name user]} groups]
-        (record :membership {:group name :username user :added-by nil})))
+        (record :membership {:group-id name :username user :added-by nil})))
     (sql/with-query-results users ["SELECT * FROM users"]
       (doseq [{:keys [user password email created ssh_key pgp_key]} users]
         (record :user {:username user :email email
