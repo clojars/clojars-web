@@ -15,8 +15,6 @@
     (when (not (empty? password))
       {:username user :password password})))
 
-(def admin? #{"ato" "technomancy" "xeqi"})
-
 (defn authorized? [account group]
   (if account
     (let [names (group-membernames group)]

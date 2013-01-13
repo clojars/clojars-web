@@ -311,22 +311,3 @@
      (do (rollback)
          (add-jar-helper account jarmap))
      (add-jar-helper account jarmap))))
-
-(defn quote-hyphenated
-  "Wraps hyphenated-words in double quotes."
-  [s]
-  (str/replace s #"\w+(-\w+)+" "\"$0\""))
-
-(defn search-jars [query & [offset]]
-  ;; TODO make search less stupid, figure out some relevance ranking
-  ;; scheme, do stopwords etc.
-  (let [r (exec-raw [(str "select jar_name, group_name from search where "
-                          "content match ? "
-                          "order by rowid desc "
-                          "limit 100 "
-                          "offset ?")
-                     [(quote-hyphenated query)
-                      (or offset 0)]]
-                    :results)]
-    ;; TODO: do something less stupidly slow
-    (vec (map #(find-jar (:group_name %) (:jar_name %)) r))))
