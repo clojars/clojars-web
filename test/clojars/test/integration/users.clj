@@ -187,7 +187,7 @@
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" "")
       (visit "/groups/org.clojars.dantheman")
-      (fill-in [:#user] "fixture")
+      (fill-in [:#username] "fixture")
       (press "add member")
       ;;(follow-redirect)
       (within [:article :ul [:li enlive/first-child] :a]
@@ -197,7 +197,7 @@
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" "")
       (visit "/groups/org.clojars.dantheman")
-      (fill-in [:#user] "fixture")
+      (fill-in [:#username] "fixture")
       (press "add member")
       (within [:div.error :ul :li]
               (has (text? "No such user: fixture")))))

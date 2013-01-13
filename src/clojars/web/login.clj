@@ -6,7 +6,7 @@
             [ring.util.response :refer [redirect]]
             [clojars.web.safe-hiccup :refer [form-to]]))
 
-(defn login-form [{:keys [login_failed username]}]
+(defn login-form [login_failed username]
   (html-doc nil "Login"
    [:h1 "Login"]
    [:p "Don't have an account? "

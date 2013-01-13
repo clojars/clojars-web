@@ -17,5 +17,5 @@
     (when (authorized? account groupname)
       [:div {:class :add-member}
        (form-to [:post (str "/groups/" groupname)]
-         (text-field "user")
+         (text-field "username")
          (submit-button "add member"))])))
