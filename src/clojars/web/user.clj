@@ -122,7 +122,7 @@
       (text-field :email-or-username)
       (submit-button "Send new password"))))
 
-(defn ^{:dynamic true} send-out [email]
+(defn send-out [email]
   (.send email))
 
 ;; TODO: move this to another file?

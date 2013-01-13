@@ -148,8 +148,8 @@
               (has (text? "Invalid SSH public key")))))
 
 (deftest user-can-get-new-password
-  (let [email (ref nil)]
-    (binding [clojars.web.user/send-out (fn [x] (dosync (ref-set email x)))]
+  (let [transport (promise)]
+    (with-redefs [clojars.web.user/send-out (fn [x] (deliver transport x))]
       (-> (session web/clojars-app)
           (register-as "fixture" "fixture@example.org" "password" ""))
       (-> (session web/clojars-app)
@@ -161,25 +161,25 @@
           (has (status? 200))
           (within [:article :p]
                   (has (text? "If your account was found, you should get an email with a new password soon."))))
-      (is @email)
-      (let [from (.getFromAddress @email)]
-        (is (= (.getAddress from) "noreply@clojars.org"))
-        (is (= (.getPersonal from) "Clojars")))
-      (let [to (first (.getToAddresses @email))]
-        (is (= (.getAddress to) "fixture@example.org")))
-      (is (= (.getSubject @email)
-             "Password reset for Clojars"))
-      (.buildMimeMessage @email)
-      (let [[msg password] (re-find
-                            #"Hello,\n\nYour new password for Clojars is: ([^ ]+)\n\nKeep it safe this time."
-                            (.getContent (.getMimeMessage @email)))]
-        (is msg)
-        (-> (session web/clojars-app)
-            (login-as "fixture@example.org" password)
-            (follow-redirect)
-            (has (status? 200))
-            (within [:article :h1]
-                    (has (text? "Dashboard (fixture)"))))))))
+      (let [email (deref transport 100 nil)]
+        (is email)
+        (let [from (.getFromAddress email)]
+          (is (= (.getAddress from) "noreply@clojars.org"))
+          (is (= (.getPersonal from) "Clojars")))
+        (let [to (first (.getToAddresses email))]
+          (is (= (.getAddress to) "fixture@example.org")))
+        (is (= (.getSubject email)
+               "Password reset for Clojars"))
+        (.buildMimeMessage email)
+        (let [[msg password] (re-find
+                              #"Hello,\n\nYour new password for Clojars is: ([^ ]+)\n\nKeep it safe this time."
+                              (.getContent (.getMimeMessage email)))]
+          (-> (session web/clojars-app)
+              (login-as "fixture@example.org" password)
+              (follow-redirect)
+              (has (status? 200))
+              (within [:article :h1]
+                      (has (text? "Dashboard (fixture)")))))))))
 
 (deftest member-can-add-user-to-group
   (-> (session web/clojars-app)
