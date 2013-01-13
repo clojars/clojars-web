@@ -1,8 +1,7 @@
 (ns clojars.web
-  (:require [clojars.config :refer [config]]
-            [clojars.auth :refer [with-account try-account require-authorization
-                                  get-user admin?]]
-            [clojars.repo :as repo]
+  (:require [clojars.db :as db]
+            [clojars.config :refer [config]]
+            [clojars.auth :refer [with-account try-account]]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
             [clojars.web.error-page :refer [wrap-exceptions]]
@@ -21,7 +20,8 @@
             [clojars.routes.session :as session]
             [clojars.routes.user :as user]
             [clojars.routes.artifact :as artifact]
-            [clojars.routes.group :as group]))
+            [clojars.routes.group :as group]
+            [clojars.routes.repo :as repo]))
 
 (defroutes main-routes
   (GET "/" _
@@ -51,21 +51,25 @@
                    [:h1 "Page not found"]
                    [:p "Thundering typhoons!  I think we lost it.  Sorry!"])))))
 
+(def credential-fn
+  (partial creds/bcrypt-credential-fn
+           (fn [id]
+             (when-let [{:keys [user password]}
+                        (db/find-user-by-user-or-email id)]
+               (when (not (empty? password))
+                 {:username user :password password})))))
+
 (defroutes clojars-app
   (context "/repo" _
            (-> repo/routes
                (friend/authenticate
-                {:credential-fn
-                 (partial creds/bcrypt-credential-fn
-                          get-user)
+                {:credential-fn credential-fn
                  :workflows [(workflows/http-basic :realm "clojars")]
                  :allow-anon? false})
                (repo/wrap-file (:repo config))))
   (-> main-routes
       (friend/authenticate
-       {:credential-fn
-        (partial creds/bcrypt-credential-fn
-                 get-user)
+       {:credential-fn credential-fn
         :workflows [(workflows/interactive-form)
                     registration/workflow]})
       (wrap-anti-forgery)
