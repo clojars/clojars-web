@@ -1,7 +1,7 @@
 (ns clojars.web
   (:require [clojars.db :as db]
             [clojars.config :refer [config]]
-            [clojars.auth :refer [with-account try-account]]
+            [clojars.auth :refer [try-account]]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
             [clojars.web.error-page :refer [wrap-exceptions]]
