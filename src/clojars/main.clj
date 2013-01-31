@@ -22,6 +22,7 @@
     (.run (NGServer. (InetAddress/getByName (:nailgun-bin config)) port))))
 
 (defn -main [& args]
+  (alter-var-root #'*read-eval* (constantly false))
   (configure args)
   (start-jetty)
   (nrepl/start-server :port (:nrepl-port config) :bind "127.0.0.1")
