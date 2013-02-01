@@ -14,8 +14,7 @@
       m)))
 
 (defn json-gen [query]
-  (let [results (filter #(not (nil? (:jar_name %)))
-                        (search/search query))]
+  (let [results (search/search query)]
     (json/generate-string {:count (count results)
                            :results (map jar->json results)})))
 
