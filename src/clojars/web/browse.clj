@@ -3,7 +3,6 @@
                                         page-nav page-description jar-name]]
             [clojars.db :refer [browse-projects count-all-projects
                                 count-projects-before]]
-            [hiccup.core :refer [h]]
             [hiccup.form :refer [label submit-button]]
             [ring.util.response :refer [redirect]]))
 
@@ -23,13 +22,13 @@
       (for [[i jar] (map-indexed vector projects)]
         [:li.browse-results
           [:a {:name i}]
-          (jar-link jar) " " (h (:version jar))
+          (jar-link jar) " " (:version jar)
           [:br]
           (when (seq (:description jar))
-            [:span.desc (h (:description jar))
+            [:span.desc (:description jar)
               [:br]])
-           [:span.details 
-             (user-link (:user jar)) 
+           [:span.details
+             (user-link (:user jar))
              " "
              (if-let [created (:created jar)]
                [:td (format-date created)])]])]

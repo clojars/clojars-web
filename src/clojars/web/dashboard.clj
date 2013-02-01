@@ -1,7 +1,6 @@
 (ns clojars.web.dashboard
   (:require [clojars.web.common :refer [html-doc jar-link group-link tag]]
             [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
-            [hiccup.core :refer [h]]
             [hiccup.element :refer [unordered-list link-to]]))
 
 (defn index-page [account]
@@ -39,7 +38,7 @@
 
 (defn dashboard [account]
   (html-doc account "Dashboard"
-    [:h1 (str "Dashboard (" (h account) ")")]
+    [:h1 (str "Dashboard (" account ")")]
     [:h2 "Your jars"]
     (unordered-list (map jar-link (jars-by-username account)))
     (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add new jar")

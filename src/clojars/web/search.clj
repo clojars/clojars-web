@@ -1,7 +1,6 @@
 (ns clojars.web.search
   (:require [clojars.web.common :refer [html-doc jar-link user-link format-date]]
             [clojars.search :as search]
-            [hiccup.core :refer [h]]
             [cheshire.core :as json]))
 
 (defn- jar->json [jar]
@@ -26,8 +25,8 @@
    :body (json-gen query)})
 
 (defn html-search [account query]
-  (html-doc account (str (h query) " - search")
-    [:h1 "Search for " (h query)]
+  (html-doc account (str query " - search")
+    [:h1 "Search for " query]
     [:ul
      (try
        (let [results (search/search query)]
@@ -38,10 +37,10 @@
                  :when (not (nil? (:artifact-id jar)))]
              [:li.search-results
               (jar-link {:jar_name (:artifact-id jar)
-                         :group_name (:group-id jar)}) " " (h (:version jar))
+                         :group_name (:group-id jar)}) " " (:version jar)
               [:br]
               (when (seq (:description jar))
-                [:span.desc (h (:description jar))
+                [:span.desc (:description jar)
                  [:br]])
               [:span.details (if-let [created (:created jar)]
                                [:td (format-date created)])]])))

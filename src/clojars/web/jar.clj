@@ -2,7 +2,6 @@
   (:require [clojars.web.common :refer [html-doc jar-link group-link
                                         tag jar-url jar-name user-link
                                         simple-date]]
-            [hiccup.core :refer [h]]
             [hiccup.element :refer [link-to]]
             [hiccup.form :refer [submit-button]]
             [clojars.web.safe-hiccup :refer [form-to]]
@@ -59,7 +58,7 @@
             [:h1 (jar-link jar)]
             (:description jar)
             (when-let [homepage (:homepage jar)]
-              [:p.homepage (safe-link-to homepage (h homepage))])
+              [:p.homepage (safe-link-to homepage homepage)])
             [:div {:class "useit"}
              [:div {:class "lein"}
               [:h3 "leiningen"]
@@ -67,7 +66,7 @@
                (tag "[")
                (jar-name jar)
                [:span {:class :string} " \""
-                (h (:version jar)) "\""] (tag "]") ]]
+                (:version jar) "\""] (tag "]") ]]
 
              [:div {:class "maven"}
               [:h3 "maven"]
@@ -75,7 +74,7 @@
                (tag "<dependency>\n")
                (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
                (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
-               (tag "  <version>") (h (:version jar)) (tag "</version>\n")
+               (tag "  <version>") (:version jar) (tag "</version>\n")
                (tag "</dependency>")]]
              (let [pom (jar-to-pom-map jar)]
                (list

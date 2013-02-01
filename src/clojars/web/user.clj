@@ -7,7 +7,6 @@
             [clojars.web.common :refer [html-doc error-list jar-link
                                         group-link]]
             [clojure.string :refer [blank?]]
-            [hiccup.core :refer [h]]
             [hiccup.element :refer [link-to unordered-list]]
             [hiccup.form :refer [label text-field
                                  password-field text-area
@@ -107,8 +106,8 @@
           (redirect "/profile")))))
 
 (defn show-user [account user]
-  (html-doc account (h (user :user))
-    [:h1 (h (user :user))]
+  (html-doc account (user :user)
+    [:h1 (user :user)]
     [:h2 "Jars"]
     (unordered-list (map jar-link (jars-by-username (user :user))))
     [:h2 "Groups"]
