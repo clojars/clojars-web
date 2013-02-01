@@ -198,18 +198,17 @@
 
 (defn add-user [email username password ssh-key pgp-key]
   (let [record {:email email, :user username, :password (bcrypt password)
-                :ssh_key ssh-key, :pgp_key pgp-key}]
-    (insert users
-            (values (assoc record
-                      :created (get-time)
-                      ;;TODO: remove salt field
-                      :salt "")))
-    (insert groups
-            (values {:name (str "org.clojars." username)
-                     :user username}))
+                :ssh_key ssh-key, :pgp_key pgp-key}
+        group (str "org.clojars." username)]
+    (insert users (values (assoc record
+                            :created (get-time)
+                            ;;TODO: remove salt field
+                            :salt "")))
+    (insert groups (values {:name group :user username}))
     (ev/record :user (clojure.set/rename-keys record {:user :username
                                                       :ssh_key :ssh-key
                                                       :pgp_key :pgp-key}))
+    (ev/record :membership {:group-id group :username username :added-by nil})
     (write-key-file (:key-file config))))
 
 (defn update-user [account email username password ssh-key pgp-key]
