@@ -31,9 +31,7 @@
        (let [results (search/search query)]
          (if (empty? results)
            [:p "No results."]
-           (for [jar results
-                 ;; bc too lazy to see why blank entries are showing up
-                 :when (not (nil? (:artifact-id jar)))]
+           (for [jar results]
              [:li.search-results
               (jar-link {:jar_name (:artifact-id jar)
                          :group_name (:group-id jar)}) " " (:version jar)
