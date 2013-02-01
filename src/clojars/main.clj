@@ -19,7 +19,7 @@
 (defn start-nailgun []
   (when-let [port (:nailgun-port config)]
     (println "clojars-web: starting nailgun on" (str (:nailgun-bind config) ":" port))
-    (.run (NGServer. (InetAddress/getByName (:nailgun-bin config)) port))))
+    (.run (NGServer. (InetAddress/getByName (:nailgun-bind config)) port))))
 
 (defn -main [& args]
   (alter-var-root #'*read-eval* (constantly false))
