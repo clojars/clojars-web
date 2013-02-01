@@ -44,10 +44,17 @@
       (clucy/add index (with-meta doc field-settings)))))
 
 (defn index-repo [root]
-  (with-open [index (clucy/disk-index (config :index-path))]
-    (doseq [file (file-seq (io/file root))
-            :when (.endsWith (str file) ".pom")]
-      (index-pom index file))))
+  (let [indexed (atom 0)]
+    (with-open [index (clucy/disk-index (config :index-path))]
+      (doseq [file (file-seq (io/file root))
+              :when (.endsWith (str file) ".pom")]
+        (swap! indexed inc)
+        (when (zero? (mod @indexed 100))
+          (println "Indexed" @indexed))
+        (try
+          (index-pom index file)
+          (catch Exception e
+            (println "Failed to index" file " - " (.getMessage e))))))))
 
 (defn search [query]
   (if (empty? query)
