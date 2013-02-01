@@ -27,7 +27,8 @@
                  [ring-anti-forgery "0.2.0"]
                  [valip "0.2.0"]
                  [clucy "0.3.0"]
-                 [org.clojure/tools.nrepl "0.2.0-RC1"]]
+                 [org.clojure/tools.nrepl "0.2.0-RC1"]
+                 [org.bouncycastle/bcpg-jdk15on "1.47"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.7"]
                                    [nailgun-shim "0.0.1"]]}

@@ -12,7 +12,45 @@
             [korma.core :refer [select fields where update set-fields]])
   (:import (java.util.concurrent LinkedBlockingQueue)
            (org.springframework.aws.maven SimpleStorageServiceWagon)
-           (java.io File ByteArrayInputStream PrintWriter)))
+           (java.io File ByteArrayInputStream PrintWriter)
+           (org.bouncycastle.openpgp PGPUtil PGPObjectFactory)
+           (org.bouncycastle.bcpg ArmoredInputStream)))
+
+(defonce _
+  (do (java.security.Security/addProvider
+       (org.bouncycastle.jce.provider.BouncyCastleProvider.))
+      (aether/register-wagon-factory!
+       "s3" (constantly (SimpleStorageServiceWagon.)))))
+
+(defn to-byte-stream [in]
+  (let [bs (java.io.ByteArrayOutputStream.)]
+    (io/copy in bs)
+    bs))
+
+(defn verify [sig-file data public-key]
+  (-> sig-file
+      io/input-stream
+      ArmoredInputStream.
+      PGPObjectFactory.
+      .nextObject
+      (.get 0)
+      (doto
+        (.initVerify public-key "BC")
+        (.update (-> data
+                     io/input-stream
+                     to-byte-stream
+                     .toByteArray)))
+      .verify))
+
+(defn parse-key [s]
+  (-> s
+      .getBytes
+      ByteArrayInputStream.
+      PGPUtil/getDecoderStream
+      PGPObjectFactory.
+      .nextObject
+      .getPublicKeys
+      .next))
 
 (defn file-for [group artifact version extension]
   (let [filename (format "%s-%s.%s" artifact version extension)]
@@ -33,16 +71,8 @@
     blockers
     (conj blockers (str "Missing " (name field)))))
 
-;; if you think this looks crazy, you should see what it looked like
-;; with bouncy castle.
 (defn signed-with? [file sig-file keys]
-  (let [temp-home (str (doto (File/createTempFile "clojars" "gpg")
-                         .delete .mkdirs (.setReadable true true)))]
-    (sh/sh "gpg" "--homedir" temp-home "--import" :in (str/join "\n" keys))
-    (let [{:keys [exit out err]} (sh/sh "gpg" "--homedir" temp-home
-                                        "--verify" (str sig-file) (str file))]
-      (doseq [f (reverse (file-seq (io/file temp-home)))] (.delete f))
-      (or (zero? exit) (println "GPG error:" out "\n" err)))))
+  (some #(verify sig-file file (parse-key %)) keys))
 
 (defn signed? [blockers file keys]
   (let [sig-file (str file ".asc")]
@@ -83,10 +113,6 @@
         (signed? jar keys)
         (signed? pom keys)
         (unpromoted? info))))
-
-(defonce _
-  (aether/register-wagon-factory!
-   "s3" (constantly (SimpleStorageServiceWagon.))))
 
 (defn- add-coords [{:keys [group name version classifier] :as info}
                    files extension]
