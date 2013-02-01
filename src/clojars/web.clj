@@ -8,6 +8,8 @@
             [clojars.web.search :refer [search]]
             [clojars.web.browse :refer [browse]]
             [clojars.web.common :refer [html-doc]]
+            [clojars.web.safe-hiccup :refer [raw]]
+            [clojure.java.io :as io]
             [ring.middleware.file-info :refer [wrap-file-info]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
@@ -35,6 +37,10 @@
   (GET "/projects" {:keys [params]}
        (try-account
         (browse account params)))
+  (GET "/security" []
+       (try-account
+        (html-doc account "Security"
+                  (raw (slurp (io/resource "security.html"))))))
   session/routes
   group/routes
   artifact/routes

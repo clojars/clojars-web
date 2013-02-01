@@ -52,6 +52,7 @@
      (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
      (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
      (link-to "https://github.com/ato/clojars-web" "code")
+     (link-to "/security" "security")
      (link-to "https://github.com/ato/clojars-web/wiki/" "help")]]))
 
 (defn error-list [errors]
