@@ -115,6 +115,15 @@ nav a {
     margin-bottom: 20px;
 }
 
+#flash {
+    display: block;
+    border: 2px solid #693;
+    background: #fdd;
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
 ul {
     list-style: disc;
     margin-top: 20px;

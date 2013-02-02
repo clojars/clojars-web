@@ -5,7 +5,7 @@
                                 find-groupnames find-user-by-user-or-email
                                 rand-string split-keys]]
             [clojars.web.common :refer [html-doc error-list jar-link
-                                        group-link]]
+                                        flash group-link]]
             [clojure.string :refer [blank?]]
             [hiccup.element :refer [link-to unordered-list]]
             [hiccup.form :refer [label text-field
@@ -73,9 +73,10 @@
             "Username is already taken"]]
           (update-user-validations confirm)))
 
-(defn profile-form [account & [errors]]
+(defn profile-form [account flash-msg & [errors]]
   (let [user (find-user account)]
     (html-doc account "Profile"
+              (flash flash-msg)
               [:h1 "Profile"]
               (error-list errors)
               (form-to [:post "/profile"]
@@ -101,9 +102,10 @@
                                      :ssh-key ssh-key
                                      :pgp-key pgp-key}
                            (update-user-validations confirm))]
-      (profile-form account (apply concat (vals  errors)))
+      (profile-form account nil (apply concat (vals  errors)))
       (do (update-user account email account password ssh-key pgp-key)
-          (redirect "/profile")))))
+          (-> (redirect "/profile")
+              (assoc :flash "Profile updated."))))))
 
 (defn show-user [account user]
   (html-doc account (user :user)

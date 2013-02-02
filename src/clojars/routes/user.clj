@@ -10,9 +10,9 @@
      (view/show-user account user))))
 
 (defroutes routes
-  (GET "/profile" _
+  (GET "/profile" {:keys [flash]}
        (auth/with-account
-         (view/profile-form account)))
+         (view/profile-form account flash)))
   (POST "/profile" {:keys [params]}
         (auth/with-account
           (view/update-profile account params)))

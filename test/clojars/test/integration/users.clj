@@ -91,6 +91,8 @@
       (fill-in "Confirm password:" "password2")
       (press "Update")
       (follow-redirect)
+      (within [:article :div#flash]
+              (has (text? "Profile updated.")))
       (follow "logout")
       (follow-redirect)
       (has (status? 200))
