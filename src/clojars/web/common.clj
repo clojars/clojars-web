@@ -55,6 +55,11 @@
      (link-to "/security" "security")
      (link-to "https://github.com/ato/clojars-web/wiki/" "help")]]))
 
+(defn flash [msg]
+  (if msg
+    [:div {:id "flash"}
+     msg]))
+
 (defn error-list [errors]
   (when errors
     [:div {:class :error}
