@@ -57,8 +57,7 @@
 
 (defn flash [msg]
   (if msg
-    [:div {:id "flash"}
-     msg]))
+    [:div#flash msg]))
 
 (defn error-list [errors]
   (when errors
