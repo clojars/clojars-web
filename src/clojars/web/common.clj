@@ -95,15 +95,17 @@
   (.format (java.text.SimpleDateFormat. "MMM d, yyyy") s))
 
 (defn page-nav [current-page total-pages]
-  (let [page-range 3
+  (let [previous-text (raw "&#8592; Previous")
+        next-text (raw "Next &#8594")
+        page-range 3
         page-url "/projects?page="
         current-page (-> current-page (max 1) (min total-pages))
         main-div [:div {:class "page-nav"}]
         previous-page (if (= current-page 1)
-                        [[:span {:class "previous-page disabled"} "&#8592; Previous"]]
+                        [[:span {:class "previous-page disabled"} previous-text]]
                         [[:a
                           {:href (str page-url (- current-page 1)) :class "previous-page"}
-                          "&#8592; Previous"]])
+                          previous-text]])
         before-current (->> (drop-while
                               #(< % 1)
                               (range (- current-page page-range) current-page))
@@ -114,10 +116,10 @@
                              (range (+ current-page 1) (+ current-page 1 page-range)))
                            (map #(link-to (str page-url %) %)))
         next-page (if (= current-page total-pages)
-                    [[:span {:class "next-page disabled"} "Next &#8594"]]
+                    [[:span {:class "next-page disabled"} next-text]]
                     [[:a
                       {:href (str page-url (+ current-page 1)) :class "next-page"}
-                      "Next &#8594"]])]
+                      next-text]])]
     (vec
       (concat main-div previous-page before-current current after-current next-page))))
 
