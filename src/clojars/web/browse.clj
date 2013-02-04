@@ -1,6 +1,7 @@
 (ns clojars.web.browse
   (:require [clojars.web.common :refer [html-doc jar-link user-link format-date
-                                        page-nav page-description jar-name]]
+                                        page-nav page-description jar-name
+                                        collection-fork-notice]]
             [clojars.db :refer [browse-projects count-all-projects
                                 count-projects-before]]
             [hiccup.form :refer [label submit-button]]
@@ -17,6 +18,7 @@
        [:input {:type :text :name :from :id :from
                 :placeholder "Enter a few letters..."}]
        [:input {:type :submit :value "Jump" :id :jump}]]]
+     collection-fork-notice
      (page-description page per-page project-count)
      [:ul
       (for [[i jar] (map-indexed vector projects)]

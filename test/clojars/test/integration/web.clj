@@ -55,5 +55,5 @@
       (fill-in "starting from" "tester/tester123")
       (press "Jump")
       (follow-redirect)
-      (within [[:li.browse-results (enlive/nth-of-type 3)] [:a (enlive/nth-of-type 2)]]
+      (within [[:li.browse-results (enlive/nth-of-type 3)] [:span (enlive/nth-of-type 1)] :a]
               (has (text? "tester/tester123a")))))

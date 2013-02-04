@@ -269,3 +269,12 @@ p.hint {
 .browse-from input#jump {
   display: none;
 }
+
+.fork a {
+    font-style: italic;
+}
+
+.fork-notice {
+  font-style: italic;
+  font-size: 0.8em;
+}
