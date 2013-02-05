@@ -1,6 +1,7 @@
 (ns clojars.web.jar
   (:require [clojars.web.common :refer [html-doc jar-link group-link
                                         tag jar-url jar-name user-link
+                                        jar-fork? single-fork-notice
                                         simple-date]]
             [hiccup.element :refer [link-to]]
             [hiccup.form :refer [submit-button]]
@@ -37,6 +38,10 @@
 (defn safe-link-to [url text]
   (try (link-to url text)
     (catch Exception e text)))
+
+(defn fork-notice [jar]
+  (when (jar-fork? jar)
+    single-fork-notice))
 
 (defn promotion-details [account jar]
   (if (authorized? account (:group_name jar))
@@ -82,6 +87,7 @@
                    [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
                    (if-let [url (commit-url pom)]
                      [:span.commit-url " with " (link-to url "this commit")])]
+                 (fork-notice jar)
                  (promotion-details account jar)
                  (dependency-section "dependencies" "dependencies"
                                      (remove #(not= (:scope %) "compile") (:dependencies pom)))
@@ -99,7 +105,7 @@
 
 (defn show-versions [account jar versions]
   (html-doc account (str "all versions of "(jar-name jar))
-            [:h1 "all versions of "(jar-name jar)]
+            [:h1 "all versions of "(jar-link jar)]
             [:div {:class "versions"}
              [:ul
               (for [v versions]
