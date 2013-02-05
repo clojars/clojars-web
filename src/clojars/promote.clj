@@ -95,7 +95,7 @@
 (defn blockers [{:keys [group name version]}]
   (let [jar (file-for group name version "jar")
         pom (file-for group name version "pom")
-        keys (db/group-keys group)
+        keys (remove nil? (db/group-keys group))
         info (try (if (.exists pom)
                     (maven/pom-to-map pom))
                   (catch Exception e
