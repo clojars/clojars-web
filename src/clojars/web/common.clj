@@ -79,8 +79,27 @@
     (:jar_name jar)
     (str (:group_name jar) "/" (:jar_name jar))))
 
+(defn jar-fork? [jar]
+  (re-find #"^org.clojars." (or
+                             (:group_name jar)
+                             (:group-id jar)
+                             "")))
+
+(def single-fork-notice
+  [:p.fork-notice
+   "Note: this artifact is a non-canonical fork. See "
+   (link-to "https://github.com/ato/clojars-web/wiki/Groups" "the wiki")
+   " for more details."])
+
+(def collection-fork-notice
+  [:p.fork-notice
+   "Note: artifacts in italics are non-canonical forks. See "
+   (link-to "https://github.com/ato/clojars-web/wiki/Groups" "the wiki")
+   " for more details."])
+
 (defn jar-link [jar]
-  (link-to (jar-url jar) (jar-name jar)))
+  [:span {:class (if (jar-fork? jar) "fork")}
+   (link-to (jar-url jar) (jar-name jar))])
 
 (defn user-link [username]
   (link-to (str "/users/" username) username))
