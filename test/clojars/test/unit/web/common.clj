@@ -1,5 +1,6 @@
 (ns clojars.test.unit.web.common
   (:require [clojars.web.common :as common]
+            [hiccup.util :refer [to-str]]
             [clojure.test :refer :all]))
 
 (deftest jar-name-uses-shortest-unique-and-html-escape
@@ -26,25 +27,28 @@
   (is (= [:a {:href (java.net.URI. "/groups/artifruit")} '("artifruit")]
          (common/group-link "artifruit"))))
 
-(deftest page-nav-renders-disabled-previous-page
-  (is (=
-        [:span {:class "previous-page disabled"} "&#8592; Previous"]
-        (-> (common/page-nav 1 3) (get 2)))))
+(letfn [(cook-content [v]
+          (conj (vec (butlast v)) (to-str (last v))))]
+  
+  (deftest page-nav-renders-disabled-previous-page
+    (is (=
+         [:span {:class "previous-page disabled"} "&#8592; Previous"]
+         (-> (common/page-nav 1 3) (get 2) cook-content))))
 
-(deftest page-nav-renders-active-previous-page
-  (is (=
-        [:a {:href "/projects?page=1" :class "previous-page"} "&#8592; Previous"]
-        (-> (common/page-nav 2 3) (get 2)))))
+  (deftest page-nav-renders-active-previous-page
+    (is (=
+         [:a {:href "/projects?page=1" :class "previous-page"} "&#8592; Previous"]
+         (-> (common/page-nav 2 3) (get 2) cook-content))))
 
-(deftest page-nav-renders-disabled-next-page
-  (is (=
-        [:span {:class "next-page disabled"} "Next &#8594"]
-        (-> (common/page-nav 3 3) (last)))))
+  (deftest page-nav-renders-disabled-next-page
+    (is (=
+         [:span {:class "next-page disabled"} "Next &#8594"]
+         (-> (common/page-nav 3 3) (last) cook-content))))
 
-(deftest page-nav-renders-active-next-page
-  (is (=
-        [:a {:href "/projects?page=3" :class "next-page"} "Next &#8594"]
-        (-> (common/page-nav 2 3) (last)))))
+  (deftest page-nav-renders-active-next-page
+    (is (=
+         [:a {:href "/projects?page=3" :class "next-page"} "Next &#8594"]
+         (-> (common/page-nav 2 3) (last) cook-content)))))
 
 (deftest page-nav-renders-no-before-links
   (is (=
