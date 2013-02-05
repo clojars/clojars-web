@@ -38,14 +38,23 @@
               :at (.lastModified pom-file)
               :_content content)]
     (binding [clucy/*analyzer* analyzer]
-      (clucy/search-and-delete index (format "artifact-id:%s AND group-id:%s"
-                                             (:artifact-id pom)
-                                             (:group-id pom)))
-      (clucy/add index (with-meta doc field-settings)))))
+      (let [[old] (clucy/search index (format "artifact-id:%s AND group-id:%s"
+                                              (:artifact-id pom)
+                                              (:group-id pom)) 1)]
+        (if old
+          (when (and (< (Long. (:at old)) (:at doc))
+                     (not (re-find #"-SNAPSHOT$" (:version doc))))
+            (clucy/search-and-delete index (format "artifact-id:%s AND group-id:%s"
+                                                   (:artifact-id doc)
+                                                   (:group-id doc)))
+            (clucy/add index (with-meta doc field-settings)))
+          (clucy/add index (with-meta doc field-settings)))))))
 
 (defn index-repo [root]
   (let [indexed (atom 0)]
     (with-open [index (clucy/disk-index (config :index-path))]
+      ;; searching with an empty index creates an exception
+      (clucy/add index {:dummy true})
       (doseq [file (file-seq (io/file root))
               :when (.endsWith (str file) ".pom")]
         (swap! indexed inc)
@@ -54,7 +63,8 @@
         (try
           (index-pom index file)
           (catch Exception e
-            (println "Failed to index" file " - " (.getMessage e))))))))
+              (println "Failed to index" file " - " (.getMessage e)))))
+      (clucy/search-and-delete index "dummy:true"))))
 
 (defn search [query]
   (if (empty? query)
