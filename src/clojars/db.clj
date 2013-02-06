@@ -95,14 +95,35 @@
                         (where {:groups.name groupname}))))
 
 (defn jars-by-username [username]
-  (select jars
-          (where {:user username})
-          (group :group_name :jar_name)))
+  (exec-raw [(str
+              "select j.* "
+              "from jars j "
+              "join "
+              "(select group_name, jar_name, max(created) as created "
+              "from jars "
+              "group by group_name, jar_name) l "
+              "on j.group_name = l.group_name "
+              "and j.jar_name = l.jar_name "
+              "and j.created = l.created "
+              "where j.user = ?"
+              "order by j.group_name asc, j.jar_name asc")
+             [username]]
+            :results))
 
 (defn jars-by-groupname [groupname]
-  (select jars
-          (where {:group_name groupname})
-          (group :jar_name)))
+    (exec-raw [(str
+              "select j.* "
+              "from jars j "
+              "join "
+              "(select jar_name, max(created) as created "
+              "from jars "
+              "group by group_name, jar_name) l "
+              "on j.jar_name = l.jar_name "
+              "and j.created = l.created "
+              "where j.group_name = ? "
+              "order by j.group_name asc, j.jar_name asc")
+             [groupname]]
+              :results))
 
 (defn recent-versions
   ([groupname jarname]
@@ -129,10 +150,19 @@
       :count))
 
 (defn recent-jars []
-  (select jars
-          (group :group_name :jar_name)
-          (order :created :desc)
-          (limit 5)))
+  (exec-raw (str
+             "select j.* "
+             "from jars j "
+             "join "
+             "(select group_name, jar_name, max(created) as created "
+             "from jars "
+             "group by group_name, jar_name) l "
+             "on j.group_name = l.group_name "
+             "and j.jar_name = l.jar_name "
+             "and j.created = l.created "
+             "order by l.created desc "
+             "limit 5")
+            :results))
 
 (defn jar-exists [groupname jarname]
   (-> (exec-raw
