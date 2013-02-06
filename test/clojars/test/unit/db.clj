@@ -121,7 +121,7 @@
       (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
         (is (db/add-jar "test-user" (assoc jarmap :version "2")))))
     (let [jars (db/jars-by-groupname name)]
-      (dorun (map #(is (submap %1 %2)) [result] jars))
+      (dorun (map #(is (= %1 (select-keys %2 (keys %1)))) [result] jars))
       (is (= 1 (count jars))))))
 
 (deftest jars-with-multiple-versions
@@ -179,7 +179,7 @@
           (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
             (is (db/add-jar "test-user" (assoc jarmap :version "2")))))
     (let [jars (db/jars-by-username "test-user")]
-      (dorun (map #(is (submap %1 %2)) [result] jars))
+      (dorun (map #(is (= %1 (select-keys %2 (keys %1)))) [result] jars))
       (is (= 1 (count jars))))))
 
 (deftest jars-by-user-returns-all-jars-by-user
@@ -293,7 +293,7 @@
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 7)))]
       (db/add-jar "test-user" (assoc jarmap :version "7"))
       (db/add-jar "test-user" (assoc jarmap :version "8")))
-    (dorun (map #(is (submap %1 %2))
+    (dorun (map #(is (= %1 (select-keys %2 (keys %1))))
                 [(assoc result :version "8")
                  (assoc result :jar_name "6")
                  (assoc result :jar_name "4")
