@@ -9,7 +9,7 @@
             [net.cgrand.enlive-html :as enlive]
             [korma.core :as korma]))
 
-(help/use-fixtures)
+(use-fixtures :each help/default-fixture)
 
 (deftest user-cant-login-with-bad-user-pass-combo
   (-> (session web/clojars-app)

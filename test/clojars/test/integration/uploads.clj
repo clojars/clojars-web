@@ -26,7 +26,7 @@
          (.stop server))))))
 
 (use-fixtures :once run-test-app)
-(help/use-fixtures)
+(use-fixtures :each help/default-fixture help/index-fixture)
 
 (deftest user-can-register-and-deploy
   (-> (session clojars-app)

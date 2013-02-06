@@ -7,7 +7,7 @@
             [clojars.config :refer [config]]
             [clojars.test.test-helper :as help]))
 
-(help/use-fixtures)
+(use-fixtures :each help/default-fixture)
 
 (defn copy-resource [version & [extension]]
   (let [extension (or extension "pom")]

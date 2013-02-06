@@ -7,7 +7,7 @@
             [clojars.test.test-helper :as help]
             [net.cgrand.enlive-html :as enlive]))
 
-(help/use-fixtures)
+(use-fixtures :each help/default-fixture)
 
 (deftest respond-404
   (-> (session web/clojars-app)

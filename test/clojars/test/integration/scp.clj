@@ -10,7 +10,7 @@
             [clojars.config :as config]
             [cemerick.pomegranate.aether :as aether]))
 
-(help/use-fixtures)
+(use-fixtures :each help/default-fixture help/index-fixture)
 
 (deftest user-can-register-and-scp
   (-> (session web/clojars-app)

@@ -4,7 +4,7 @@
             [clojars.test.test-helper :as help]
             [clojure.test :refer :all]))
 
-(help/use-fixtures)
+(use-fixtures :each help/default-fixture help/index-fixture)
 
 (defn submap [s m]
   (every? (fn [[k v]] (= (m k) v)) s))

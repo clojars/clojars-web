@@ -8,7 +8,7 @@
             [clojars.test.test-helper :as help]
             [net.cgrand.enlive-html :as enlive]))
 
-(help/use-fixtures)
+(use-fixtures :each help/default-fixture)
 
 (deftest server-errors-display-pretty-message
   (with-out-str (-> (session web/clojars-app)

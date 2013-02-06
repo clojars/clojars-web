@@ -6,7 +6,7 @@
             [clojars.web :as web]
             [clojars.test.test-helper :as help]))
 
-(help/use-fixtures)
+(use-fixtures :each help/default-fixture)
 
 (deftest jars-can-be-viewed
   (-> (session web/clojars-app)
