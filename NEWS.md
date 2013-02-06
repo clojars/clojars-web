@@ -2,6 +2,12 @@
 
 Newest items at the top.  [More detailed announcements].
 
+## 2013-February
+
+* Switch to Lucene-powered search. #23
+* De-emphasize forked artifacts. #77
+* Show notice when profile is updated. #102
+
 ## 2012-August
 
 * Link to GitHub commits from jar pages. #88
