@@ -1,6 +1,7 @@
 (ns clojars.test.unit.stats
   (:require [clojars.stats :as stats]
             [clj-time.core :as time]
+            [clojure.java.io :as io]
             [clojure.test :refer :all]))
 
 (deftest parse-path
@@ -23,3 +24,8 @@
     (is (= "captain.archibald" (:group m)))
     (is (= "0.1.0" (:version m)))
     (is (= "jar" (:ext m)))))
+
+(deftest compute-stats
+  (let [stats (stats/process-log (io/resource "fake.access.log"))]
+    (is (= 5 (get-in stats [["snowy" "snowy"] "0.2.0"])))
+    (is (= 3 (get-in stats [["captain.archibald" "haddock"] "0.1.0"])))))

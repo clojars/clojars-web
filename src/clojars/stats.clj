@@ -1,8 +1,9 @@
 (ns clojars.stats "generate usage statistics from web logs"
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [net.cgrand.regex :as re]
-            [clj-time.format :as timef]))
+    (:require [clojure.java.io :as io]
+              [clojure.string :as str]
+              [net.cgrand.regex :as re]
+              [clj-time.format :as timef])
+    (:use [clojars.config :only [configure]]))
 
 (def time-clf (timef/formatter "dd/MMM/YYYY:HH:mm:ss Z"))
 
@@ -10,10 +11,10 @@
 ;; but they're too handy so let's enable them anyway
 (extend-type java.util.regex.Pattern
   re/RegexValue
-    (pattern [re] (.pattern re))
-    (groupnames [re] [])
+  (pattern [re] (.pattern re))
+  (groupnames [re] [])
   re/RegexFragment
-    (static? [this _] true))
+  (static? [this _] true))
 
 (def re-clf ; common log format (apache, nginx etc)
   (let [field #"\S+"
@@ -38,15 +39,16 @@
               [(re/* segment sep) segment :as :group] sep
               [segment :as :name] sep
               [segment :as :version] sep
-              segment \. [#"\w+" :as :ext])))
+              segment \.
+              [#"\w+" :as :ext])))
 
 (defn parse-path [s]
   (when s
-   (when-let [m (re/exec re-path s)]
-     {:name (:name m)
-      :group (str/replace (:group m) "/" ".")
-      :version (:version m)
-      :ext (:ext m)})))
+    (when-let [m (re/exec re-path s)]
+      {:name (:name m)
+       :group (str/replace (:group m) "/" ".")
+       :version (:version m)
+       :ext (:ext m)})))
 
 (defn parse-long [s]
   (when-not (#{nil "" "-"} s)
@@ -60,7 +62,8 @@
      {:status (parse-long (:status m))
       :method (:method m)
       :size (parse-long (:size m))
-      :time (when (:time m) (timef/parse time-clf (:time m)))})))
+      :time (when (:time m) (try (timef/parse time-clf (:time m))
+                                 (catch IllegalArgumentException e)))})))
 
 (defn valid-download? [m]
   (and m
@@ -68,16 +71,23 @@
        (= (:method m) "GET")
        (= (:ext m) "jar")))
 
-(comment
-  ;; top 10 most downloaded jars
-  (with-open [rdr (io/reader "clojars.access.log")]
-   (->> (line-seq rdr)
-        (map parse-clf)
-        (filter valid-download?)
-        (map (juxt :group :name))
-        (frequencies)
-        (sort-by val)
-        (reverse)
-        (take 10)))
-  )
+(def as-year-month (partial timef/unparse (timef/formatters :year-month)))
 
+(defn compute-stats [lines]
+  (->> lines
+       (map parse-clf)
+       (filter valid-download?)
+       (map (juxt :group :name :version))
+       (frequencies)
+       (reduce-kv (fn [acc [a g v] n] (assoc-in acc [[a g] v] n)) {})))
+
+(defn process-log [logfile]
+  (with-open [rdr (io/reader logfile)]
+    (compute-stats (line-seq rdr))))
+
+(defn -main [& args]
+  (-> *in*
+      java.io.BufferedReader.
+      line-seq
+      compute-stats
+      prn))
