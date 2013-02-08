@@ -59,3 +59,20 @@
                (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.jar. "
                "Ensure your public key is in your profile.")]
          (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))
+
+(deftest test-no-key
+  (copy-resource "1.1.2")
+  (io/copy "dummy hooke jar file corrupted"
+           (file-for "robert" "hooke" "1.1.2" "jar"))
+  (copy-resource "1.1.2" "jar.asc")
+  (copy-resource "1.1.2" "pom.asc")
+  (db/add-user "test@ex.com" "testuser" "password" "asdf"
+               "")
+  (db/add-member "robert" "testuser" nil)
+  (is (= [(str "Could not verify signature of "
+               (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.jar. "
+               "Ensure your public key is in your profile.")
+          (str "Could not verify signature of "
+               (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.pom. "
+               "Ensure your public key is in your profile.")]
+         (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))

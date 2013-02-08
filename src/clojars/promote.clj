@@ -28,29 +28,32 @@
     bs))
 
 (defn verify [sig-file data public-key]
-  (-> sig-file
-      io/input-stream
-      ArmoredInputStream.
-      PGPObjectFactory.
-      .nextObject
-      (.get 0)
-      (doto
-        (.initVerify public-key "BC")
-        (.update (-> data
-                     io/input-stream
-                     to-byte-stream
-                     .toByteArray)))
-      .verify))
+  (if public-key
+    (-> sig-file
+        io/input-stream
+        ArmoredInputStream.
+        PGPObjectFactory.
+        .nextObject
+        (.get 0)
+        (doto
+            (.initVerify public-key "BC")
+          (.update (-> data
+                       io/input-stream
+                       to-byte-stream
+                       .toByteArray)))
+        .verify)))
 
 (defn parse-key [s]
-  (-> s
-      .getBytes
-      ByteArrayInputStream.
-      PGPUtil/getDecoderStream
-      PGPObjectFactory.
-      .nextObject
-      .getPublicKeys
-      .next))
+  (try
+    (-> s
+        .getBytes
+        ByteArrayInputStream.
+        PGPUtil/getDecoderStream
+        PGPObjectFactory.
+        .nextObject
+        .getPublicKeys
+        .next)
+    (catch NullPointerException e)))
 
 (defn file-for [group artifact version extension]
   (let [filename (format "%s-%s.%s" artifact version extension)]
