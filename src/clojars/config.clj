@@ -12,6 +12,7 @@
         :subprotocol "sqlite"
         :subname "data/db"}
    :event-dir "data/events"
+   :stats-dir "data/stats"
    :index-path "data/index"
    :nrepl-port 7991
    :mail {:hostname "127.0.0.1"
