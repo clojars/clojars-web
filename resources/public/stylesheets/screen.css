@@ -46,8 +46,6 @@ p {
 
 .article {
     font-size: 20px;
-
-    width: 660px;
     padding-left: 40px;
     padding-right: 40px;
     padding-top: 20px;
@@ -277,4 +275,9 @@ p.hint {
 .fork-notice {
   font-style: italic;
   font-size: 0.8em;
+}
+
+.downloads {
+    float: right;
+    font-size: 0.6em;
 }

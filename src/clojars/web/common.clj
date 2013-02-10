@@ -44,7 +44,7 @@
                          :placeholder "Search jars..."}])]]
      [:div {:class :clear}]]
     [:div {:class "container_12 article"}
-     [:article
+     [:article.clearfix
       body]]
     [:footer
      (link-to "https://github.com/ato/clojars-web/wiki/About" "about")

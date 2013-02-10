@@ -38,6 +38,9 @@
   (delete-file-recursively (io/file (config :repo)))
   (delete-file-recursively (io/file (config :event-dir)))
   (.mkdirs (io/file (config :event-dir)))
+  (delete-file-recursively (io/file (config :stats-dir)))
+  (.mkdirs (io/file (config :stats-dir)))
+  (spit (io/file (config :stats-dir) "all.edn") "{}")
   (jdbc/with-connection (kdb/get-connection @kdb/_default)
     (jdbc/do-commands
      "delete from users;" "delete from jars;" "delete from groups;"))

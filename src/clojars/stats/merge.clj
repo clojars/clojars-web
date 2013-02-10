@@ -5,4 +5,4 @@
                      (read (java.io.PushbackReader. (java.io.FileReader.
                                                      filename))))
                    args)]
-    (apply merge-with (partial merge-with +) stats)))
+    (prn (apply merge-with (partial merge-with +) stats))))
