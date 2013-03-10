@@ -38,7 +38,7 @@
              :pallet {:dependencies
                       [[org.cloudhoist/pallet-vmfest "0.3.0-alpha.1"]
                        [org.clojars.tbatchelli/vboxjxpcom "4.2.4"]
-                       [com.palletops/pallet "0.8.0-beta.1"]
+                       [com.palletops/pallet "0.8.0-beta.4"]
                        [com.palletops/java-crate "0.8.0-beta.1"]
                        [com.palletops/lein-crate "0.8.0-alpha.1"]
                        [com.palletops/git-crate "0.8.0-alpha.1"]
@@ -47,7 +47,7 @@
   :plugins [[lein-ring "0.7.3" :exclusions [thneed]]
             ;fix downloading -snapshot all the time
             [thneed "1.0.0"]
-            [com.palletops/pallet-lein "0.6.0-beta.4"]]
+            [com.palletops/pallet-lein "0.6.0-beta.8"]]
   :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
   :ring {:handler clojars.web/clojars-app}
   :aot [clojars.scp]
