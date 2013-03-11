@@ -57,7 +57,8 @@
               :selectors #{:default}}}
 
   :groups [(group-spec "clojars"
-                       :extends [(java {}) (leiningen {}) (git {})]
+                       :extends [with-automated-admin-user
+                                 (java {}) (leiningen {}) (git {})]
                        :phases {:configure (plan-fn
                                              (setup-machine)
                                              (clone-repo)
