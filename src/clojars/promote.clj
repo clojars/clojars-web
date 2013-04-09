@@ -43,7 +43,7 @@
                        .toByteArray)))
         .verify)))
 
-(defn parse-key [s]
+(defn parse-keys [s]
   (try
     (-> s
         .getBytes
@@ -52,7 +52,7 @@
         PGPObjectFactory.
         .nextObject
         .getPublicKeys
-        .next)
+        iterator-seq)
     (catch NullPointerException e)))
 
 (defn file-for [group artifact version extension]
@@ -75,7 +75,7 @@
     (conj blockers (str "Missing " (name field)))))
 
 (defn signed-with? [file sig-file keys]
-  (some #(verify sig-file file (parse-key %)) keys))
+  (some #(verify sig-file file %) (mapcat parse-keys keys)))
 
 (defn signed? [blockers file keys]
   (let [sig-file (str file ".asc")]
