@@ -281,9 +281,14 @@
         (throw (Exception. (str "You don't have access to the "
                                 groupname " group.")))))))
 
+(defn- prevent-redeploy [group name version]
+  (when (.exists (io/file (:repo config) group name version))
+    (throw (ex-info "Redeploying is not allowed." {:status 403}))))
+
 (defn- add-jar-helper [account {:keys [group name version
                                        description homepage authors]}]
   (check-and-add-group account group)
+  (prevent-redeploy group name version)
   (insert jars
           (values {:group_name group
                    :jar_name   name
@@ -294,25 +299,6 @@
                    :homepage   homepage
                    :authors    (str/join ", " (map #(.replace % "," "")
                                                    authors))})))
-
-(defn update-jar [account {:keys [group name version
-                                  description homepage authors]}]
-  (let [[{:keys [promoted_at]}] (select jars (fields :promoted_at)
-                                        (where {:group_name group
-                                                :jar_name name
-                                                :version version}))]
-    (when promoted_at
-      (throw (Exception. "Already promoted."))))
-  (update jars
-          (set-fields {:user       account
-                       :created    (get-time)
-                       :description description
-                       :homepage   homepage
-                       :authors    (str/join ", " (map #(.replace % "," "")
-                                                       authors))})
-          (where {:group_name group
-                  :jar_name   name
-                  :version    version})))
 
 (defn- validate [x re message]
   (when-not (re-matches re x)
