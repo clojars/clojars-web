@@ -282,7 +282,7 @@
                                 groupname " group.")))))))
 
 (defn add-jar [account {:keys [group name version
-                                       description homepage authors]}]
+                               description homepage authors]}]
   (check-and-add-group account group)
   (insert jars
           (values {:group_name group

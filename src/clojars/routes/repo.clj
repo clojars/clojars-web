@@ -82,13 +82,11 @@
                       (catch java.io.IOException e
                         (.delete file)
                         (throw e))))
-                  (do
-                    (add-jar account info)
-                    (try
-                      (save-to-file file body)
-                      (catch java.io.IOException e
-                        (.delete file)
-                        (throw e)))))
+                  (try
+                    (save-to-file file body)
+                    (catch java.io.IOException e
+                      (.delete file)
+                      (throw e))))
                 ;; Be consistent with scp only recording pom or jar
                 (when (some #(.endsWith filename %) [".pom" ".jar"])
                   (ev/record-deploy {:group-id groupname

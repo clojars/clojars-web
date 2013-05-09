@@ -60,6 +60,7 @@
       (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
               (has (text? "dantheman")))
       (follow "org.clojars.dantheman/test")
+      (has (status? 200))
       (within [:article [:p.homepage enlive/last-of-type]]
               (has (text? "https://example.org")))))
 
@@ -88,6 +89,7 @@
        (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
                (has (text? "dantheman")))
        (follow "fake/test")
+       (has (status? 200))
        (within [:article [:p.homepage enlive/last-of-type]]
                (has (text? "https://example.org")))))
 
