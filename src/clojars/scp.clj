@@ -4,6 +4,7 @@
            com.martiansoftware.nailgun.NGContext)
   (:require [clojure.set :as set]
             [clojure.java.io :as io]
+            [clojure.java.shell]
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [clojars.db :as db]
@@ -99,26 +100,27 @@
             :when (not= (:name metafile) "maven-metadata.xml")
             :let [jarmap (maven/pom-to-map (:file metafile))
                   names (jar-names jarmap)]]
-      (if-let [jarfile (some jarfiles names)]
-        (do
-          (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
-                                    (:name jarmap) " " (:version jarmap)))
-            (db/add-jar account jarmap true)
-            (aether/deploy :coordinates [(keyword (:group jarmap)
-                                                  (:name jarmap))
-                                         (:version jarmap)]
-                           :jar-file jarfile
-                           :pom-file (:file metafile)
-                           :repository {"local" (file-repo (:repo config))}
-                           :transfer-listener
-                           (bound-fn [e] (@#'aether/default-listener-fn e)))
-            (db/add-jar account jarmap)
-            ;; TODO: doseq over files here
-            (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id})
-                              account jarfile)
-            (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id})
-                              account (:file metafile)))
-        (throw (Exception. (str "You need to give me one of: " names)))))
+      (let [jarfile (some jarfiles names)]
+        (when-not jarfile
+          (throw (Exception. (str "You need to give me one of: " names))))
+        (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
+                                  (:name jarmap) " " (:version jarmap)))
+        ;; TODO: doseq over files here
+        (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id
+                                                   :group :group-id})
+                          account jarfile)
+        (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id
+                                                   :group :group-id})
+                          account (:file metafile))
+        (db/add-jar account jarmap)
+        (aether/deploy :coordinates [(keyword (:group jarmap)
+                                              (:name jarmap))
+                                     (:version jarmap)]
+                       :jar-file jarfile
+                       :pom-file (:file metafile)
+                       :repository {"local" (file-repo (:repo config))}
+                       :transfer-listener
+                       (bound-fn [e] (@#'aether/default-listener-fn e)))))
     (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
                               "http://clojars.org/"))
     (.flush (.err ctx))))

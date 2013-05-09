@@ -1,5 +1,5 @@
 (ns clojars.test.integration.scp
-  (:require [clojure.test :refer :all]
+ (:require [clojure.test :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [clojars.test.integration.steps :refer :all]
@@ -15,7 +15,8 @@
 (deftest user-can-register-and-scp
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-  (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
+  (is (= (str "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\n"
+              "Success! Your jars are now available from http://clojars.org/\n")
          (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))
   (-> (session web/clojars-app)
       (visit "/groups/fake")
@@ -79,8 +80,8 @@
     (is (thrown? Exception (scp (str valid-ssh-key "1") "test.jar" "test-0.0.1/test.pom")))
     (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
            (scp (str valid-ssh-key "3") "test.jar" "test-0.0.1/test.pom")))
-    (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
-           (scp (str valid-ssh-key "4") "test.jar" "test-0.0.1/test.pom")))))
+    (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.2\n\nSuccess! Your jars are now available from http://clojars.org/\n"
+           (scp (str valid-ssh-key "4") "test.jar" "test-0.0.2/test.pom")))))
 
 (deftest scp-wants-filenames-in-specific-format
   (-> (session web/clojars-app)
@@ -95,5 +96,5 @@
   (let [ssh-key (str valid-ssh-key "1")]
     (-> (session web/clojars-app)
         (register-as "fixture" "fixture@example.org" "password" ssh-key))
-    (is (= "Welcome to Clojars, fixture!\n\nDeploying fake/test 0.0.1\nError: You don't have access to the fake group.\n"
-           (scp ssh-key "test.jar" "test-0.0.1/test.pom")))))
+    (is (= "Welcome to Clojars, fixture!\n\nDeploying fake/test 0.0.2\nError: You don't have access to the fake group.\n"
+           (scp ssh-key "test.jar" "test-0.0.2/test.pom")))))

@@ -281,14 +281,9 @@
         (throw (Exception. (str "You don't have access to the "
                                 groupname " group.")))))))
 
-(defn- prevent-redeploy [group name version]
-  (when (.exists (io/file (:repo config) group name version))
-    (throw (ex-info "Redeploying is not allowed." {:status 403}))))
-
-(defn- add-jar-helper [account {:keys [group name version
+(defn add-jar [account {:keys [group name version
                                        description homepage authors]}]
   (check-and-add-group account group)
-  (prevent-redeploy group name version)
   (insert jars
           (values {:group_name group
                    :jar_name   name
@@ -299,30 +294,3 @@
                    :homepage   homepage
                    :authors    (str/join ", " (map #(.replace % "," "")
                                                    authors))})))
-
-(defn- validate [x re message]
-  (when-not (re-matches re x)
-    (throw (Exception. (str message " (" re ")")))))
-
-(defn add-jar [account jarmap & [check-only]]
-  ;; We're on purpose *at least* as restrictive as the recommendations on
-  ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
-  ;; If you want loosen these please include in your proposal the
-  ;; ramifications on usability, security and compatiblity with filesystems,
-  ;; OSes, URLs and tools.
-  (validate (:name jarmap) #"^[a-z0-9_.-]+$"
-            (str "Jar names must consist solely of lowercase "
-                 "letters, numbers, hyphens and underscores."))
-  ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
-  ;; bar one broken non-ascii exception only these characters have been used.
-  ;; Even if we manage to support obscure characters some filesystems do not
-  ;; and some tools fail to escape URLs properly.  So to keep things nice and
-  ;; compatible for everyone let's lock it down.
-  (validate (:version jarmap) #"^[a-zA-Z0-9_.+-]+$"
-            (str "Version strings must consist solely of letters, "
-                 "numbers, dots, pluses, hyphens and underscores."))
-  (transaction
-   (if check-only
-     (do (rollback)
-         (add-jar-helper account jarmap))
-     (add-jar-helper account jarmap))))

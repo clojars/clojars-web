@@ -34,6 +34,7 @@
                                    [nailgun-shim "0.0.1"]]}
              :dev {:dependencies [[kerodon "0.0.7"]
                                   [nailgun-shim "0.0.1"]]
+                   ;; TODO: set test resources in fixture w/ with-redefs
                    :resource-paths ["local-resources"]}}
   :plugins [[lein-ring "0.7.3" :exclusions [thneed]]
             ;fix downloading -snapshot all the time

@@ -208,23 +208,6 @@
                   jars))
       (is (= 3 (count jars))))))
 
-(deftest add-jar-validates-jar-name-format
-  (let [jarmap {:group "group-name" :version "1"}]
-    (is (thrown? Exception (db/add-jar "test-user" jarmap)))
-    (is (thrown? Exception (db/add-jar "test-user"
-                                       (assoc jarmap :name "HI"))))
-    (is (thrown? Exception (db/add-jar "test-user"
-                                       (assoc jarmap :name "lein*"))))
-    (is (thrown? Exception (db/add-jar "test-user"
-                                       (assoc jarmap :name "lein="))))
-    (is (thrown? Exception (db/add-jar "test-user"
-                                       (assoc jarmap :name "lein>"))))
-    (is (thrown? Exception (db/add-jar "test-user"
-                                       (assoc jarmap :name "べ"))))
-    (is (db/add-jar "test-user" (assoc jarmap :name "hi")))
-    (is (db/add-jar "test-user" (assoc jarmap :name "hi-")))
-    (is (db/add-jar "test-user" (assoc jarmap :name "hi_1...2")))))
-
 (deftest add-jar-validates-group-name-format
   (let [jarmap {:name "jar-name" :version "1"}]
     (is (thrown? Exception (db/add-jar "test-user" jarmap)))

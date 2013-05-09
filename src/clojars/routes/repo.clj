@@ -71,6 +71,11 @@
                 ;;TODO once db is removed this whole if block
                 ;;can be reduced to the common
                 ;;(try (save-to-file...) (catch ...))
+                ;; Be consistent with scp only recording pom or jar
+                (when (some #(.endsWith filename %) [".pom" ".jar"])
+                  (ev/record-deploy {:group-id groupname
+                                     :artifact-id artifact
+                                     :version version} account file))
                 (if (.endsWith filename ".pom")
                   (let [contents (slurp body)
                         pom-info (merge (maven/pom-to-map
@@ -87,12 +92,7 @@
                       (save-to-file file body)
                       (catch java.io.IOException e
                         (.delete file)
-                        (throw e)))))
-                ;; Be consistent with scp only recording pom or jar
-                (when (some #(.endsWith filename %) [".pom" ".jar"])
-                  (ev/record-deploy {:group groupname
-                                     :artifact-id artifact
-                                     :version version} account file)))
+                        (throw e))))))
               {:status 201 :headers {} :body nil}
               (catch Exception e
                 (pst e)
