@@ -69,16 +69,16 @@
    (help/delete-file-recursively help/local-repo)
    (help/delete-file-recursively help/local-repo2)
    (aether/deploy
-    :coordinates '[fake/test "1.0.0"]
+    :coordinates '[fake/test "0.0.1"]
     :jar-file (io/file (io/resource "test.jar"))
     :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
     :repository {"test" {:url (str "http://localhost:" test-port "/repo")
                          :username "dantheman"
                          :password "password"}}
     :local-repo help/local-repo)
-   (is (= '{[fake/test "1.0.0"] nil}
+   (is (= '{[fake/test "0.0.1"] nil}
           (aether/resolve-dependencies
-           :coordinates '[[fake/test "1.0.0"]]
+           :coordinates '[[fake/test "0.0.1"]]
            :repositories {"test" {:url
                                   (str "http://localhost:" test-port "/repo")}}
            :local-repo help/local-repo2)))

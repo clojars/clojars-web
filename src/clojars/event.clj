@@ -12,7 +12,7 @@
   (when-not (re-matches re x)
     (throw (Exception. (str message " (" re ")")))))
 
-(defn- validate-deploy [group-id artifact-id version]
+(defn validate-deploy [group-id artifact-id version filename]
   ;; We're on purpose *at least* as restrictive as the recommendations on
   ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
   ;; If you want loosen these please include in your proposal the
@@ -32,7 +32,8 @@
   (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
                   (str "Version strings must consist solely of letters, "
                        "numbers, dots, pluses, hyphens and underscores."))
-  (when (.exists (io/file (config :repo) group-id artifact-id version))
+  (when (.exists (io/file (config :repo) group-id artifact-id version
+                          (or filename "")))
     (throw (ex-info "Redeploying is not allowed." {:status 403}))))
 
 (defn event-log-file [type]
@@ -45,7 +46,6 @@
       (spit filename content :append true))))
 
 (defn record-deploy [{:keys [group-id artifact-id version]} deployed-by file]
-  (validate-deploy group-id artifact-id version)
   (when (.endsWith (str file) ".pom")
     (with-open [index (clucy/disk-index (config :index-path))]
       (search/index-pom index file)))

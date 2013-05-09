@@ -105,13 +105,8 @@
           (throw (Exception. (str "You need to give me one of: " names))))
         (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
                                   (:name jarmap) " " (:version jarmap)))
-        ;; TODO: doseq over files here
-        (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id
-                                                   :group :group-id})
-                          account jarfile)
-        (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id
-                                                   :group :group-id})
-                          account (:file metafile))
+        ;; validate w/ empty filename since scp deploys happen all at once
+        (apply ev/validate-deploy ((juxt :group :name :version :_) jarmap))
         (db/add-jar account jarmap)
         (aether/deploy :coordinates [(keyword (:group jarmap)
                                               (:name jarmap))
@@ -120,7 +115,14 @@
                        :pom-file (:file metafile)
                        :repository {"local" (file-repo (:repo config))}
                        :transfer-listener
-                       (bound-fn [e] (@#'aether/default-listener-fn e)))))
+                       (bound-fn [e] (@#'aether/default-listener-fn e)))
+                ;; TODO: doseq over files here
+        (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id
+                                                   :group :group-id})
+                          account jarfile)
+        (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id
+                                                   :group :group-id})
+                          account (:file metafile))))
     (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
                               "http://clojars.org/"))
     (.flush (.err ctx))))
