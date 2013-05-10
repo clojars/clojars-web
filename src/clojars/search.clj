@@ -5,10 +5,17 @@
             [clojure.string :as string]
             [clojure.set :as set]
             [clojars.config :refer [config]]
-            [clojars.maven :as mvn])
+            [clojars.maven :as mvn]
+            [clojars.stats :as stats])
   (:import (org.apache.lucene.analysis PerFieldAnalyzerWrapper)
            (org.apache.lucene.analysis.standard StandardAnalyzer)
-           (org.apache.lucene.analysis KeywordAnalyzer)))
+           (org.apache.lucene.analysis KeywordAnalyzer)
+           (org.apache.lucene.search IndexSearcher)
+           (org.apache.lucene.queryParser QueryParser)
+           (org.apache.lucene.search.function CustomScoreQuery)
+           (org.apache.lucene.search.function FieldCacheSource)
+           (org.apache.lucene.search.function ValueSourceQuery)
+           (org.apache.lucene.search.function DocValues)))
 
 (def content-fields [:artifact-id :group-id :version :description
                      :url :authors])
@@ -66,12 +73,48 @@
               (println "Failed to index" file " - " (.getMessage e)))))
       (clucy/search-and-delete index "dummy:true"))))
 
+(defn download-values []
+  (let [stats (stats/all)
+        total (stats/total-downloads stats)]
+    (ValueSourceQuery.
+     (proxy [FieldCacheSource] ["download-count"]
+       (getCachedFieldValues [cache _ reader]
+         (let [ids (map vector
+                        (.getStrings cache reader "group-id")
+                        (.getStrings cache reader "artifact-id"))]
+           (proxy [DocValues] []
+             (floatVal [i]
+               (/ (apply stats/download-count stats (nth ids i))
+                  total))
+             (intVal [i]
+               (/ (apply stats/download-count stats (nth ids i))
+                  total))
+             (toString [i]
+               (str "download-count="
+                    (/ (apply stats/download-count stats (nth ids i))
+                       total))))))))))
+
 (defn search [query]
   (if (empty? query)
     []
     (with-open [index (clucy/disk-index (config :index-path))]
       (binding [clucy/*analyzer* analyzer]
-        (clucy/search index query 25)))))
+        (with-open [searcher (IndexSearcher. index)]
+          (let [parser (QueryParser. clucy/*version*
+                                     "_content"
+                                     clucy/*analyzer*)
+                query  (.parse parser query)
+                query  (CustomScoreQuery. query (download-values))
+                hits   (.search searcher query 25)
+                highlighter (#'clucy/make-highlighter query searcher nil)]
+            (doall
+             (with-meta (for [hit (.scoreDocs hits)]
+                          (#'clucy/document->map
+                           (.doc searcher (.doc hit))
+                           (.score hit)
+                           highlighter))
+               {:_total-hits (.totalHits hits)
+                :_max-score (.getMaxScore hits)}))))))))
 
 (defn -main [& [repo]]
   (index-repo (or repo (config :repo))))

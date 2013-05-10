@@ -33,6 +33,19 @@
        (sh/sh "sqlite3" db :in (slurp "clojars.sql"))))
    (migrate/-main)))
 
+(defn make-download-count! [m]
+  (spit (io/file (config :stats-dir) "all.edn")
+        (pr-str m)))
+
+(defn make-index! [v]
+  (delete-file-recursively (io/file (config :index-path)))
+  (with-open [index (clucy/disk-index (config :index-path))]
+    (if (empty? v)
+      (do (clucy/add index {:dummy true})
+          (clucy/search-and-delete index "dummy:true"))
+      (doseq [a v]
+        (clucy/add index a)))))
+
 (defn default-fixture [f]
   (force migrate)
   (delete-file-recursively (io/file (config :repo)))
@@ -40,15 +53,12 @@
   (.mkdirs (io/file (config :event-dir)))
   (delete-file-recursively (io/file (config :stats-dir)))
   (.mkdirs (io/file (config :stats-dir)))
-  (spit (io/file (config :stats-dir) "all.edn") "{}")
+  (make-download-count! {})
   (jdbc/with-connection (kdb/get-connection @kdb/_default)
     (jdbc/do-commands
      "delete from users;" "delete from jars;" "delete from groups;"))
   (f))
 
 (defn index-fixture [f]
-  (delete-file-recursively (io/file (config :index-path)))
-  (with-open [index (clucy/disk-index (config :index-path))]
-    (clucy/add index {:dummy true})
-    (clucy/search-and-delete index "dummy:true"))
+  (make-index! [])
   (f))

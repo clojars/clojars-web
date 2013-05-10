@@ -65,15 +65,18 @@
              [:h1 (jar-link jar)]]
             [:div.grid_3.omega
              [:small.downloads
-              [:p
-               "Downloads: "
-               (stats/download-count (:group_name jar)
-                                     (:jar_name jar))
-               [:br]
-               "This version: "
-               (stats/download-count (:group_name jar)
-                                     (:jar_name jar)
-                                     (:version jar))]]]
+              (let [stats (stats/all)]
+                [:p
+                 "Downloads: "
+                 (stats/download-count stats
+                                       (:group_name jar)
+                                       (:jar_name jar))
+                 [:br]
+                 "This version: "
+                 (stats/download-count stats
+                                       (:group_name jar)
+                                       (:jar_name jar)
+                                       (:version jar))])]]
             [:div.grid_12.alpha.omega
              (:description jar)
              (when-let [homepage (:homepage jar)]
