@@ -4,7 +4,6 @@
            com.martiansoftware.nailgun.NGContext)
   (:require [clojure.set :as set]
             [clojure.java.io :as io]
-            [clojure.java.shell]
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [clojars.db :as db]
