@@ -1,6 +1,6 @@
 (ns clojars.routes.repo
   (:require [clojars.auth :refer [with-account require-authorization]]
-            [clojars.db :refer [add-jar]]
+            [clojars.db :as db]
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [clojars.event :as ev]
@@ -68,15 +68,13 @@
                           :version version}
                     file (io/file (config :repo) group
                                   artifact version filename)]
-                ;;TODO once db is removed this whole if block
-                ;;can be reduced to the common
-                ;;(try (save-to-file...) (catch ...))
                 (ev/validate-deploy groupname artifact version filename)
+                (db/check-and-add-group account groupname)
                 (if (.endsWith filename ".pom")
                   (let [contents (slurp body)
                         pom-info (merge (maven/pom-to-map
                                          (StringReader. contents)) info)]
-                    (add-jar account pom-info)
+                    (db/add-jar account pom-info)
                     (try
                       (save-to-file file contents)
                       (catch java.io.IOException e
