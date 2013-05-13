@@ -34,7 +34,7 @@
                        "numbers, dots, pluses, hyphens and underscores."))
   (when (.exists (io/file (config :repo) group-id artifact-id version
                           (or filename "")))
-    (throw (ex-info "Redeploying is not allowed." {:status 403}))))
+    (throw (ex-info "Redeploying non-snapshots is not allowed." {:status 403}))))
 
 (defn event-log-file [type]
   (io/file (config :event-dir) (str (name type) ".clj")))
