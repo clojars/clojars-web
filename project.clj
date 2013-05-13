@@ -23,11 +23,11 @@
                  [clj-time "0.3.8"]
                  [com.cemerick/friend "0.1.2"
                   :exclusions [org.openid4java/openid4java-nodeps]]
-                 [clj-stacktrace "0.2.4"]
+                 [clj-stacktrace "0.2.5"]
                  [ring-anti-forgery "0.2.0"]
                  [valip "0.2.0"]
                  [clucy "0.3.0"]
-                 [org.clojure/tools.nrepl "0.2.0-RC1"]
+                 [org.clojure/tools.nrepl "0.2.3"]
                  [org.bouncycastle/bcpg-jdk15on "1.47"]]
   :profiles {:test {:resource-paths ["test-resources"]
                     :dependencies [[kerodon "0.0.7"]
@@ -36,9 +36,7 @@
                                   [nailgun-shim "0.0.1"]]
                    ;; TODO: set test resources in fixture w/ with-redefs
                    :resource-paths ["local-resources"]}}
-  :plugins [[lein-ring "0.7.3" :exclusions [thneed]]
-            ;fix downloading -snapshot all the time
-            [thneed "1.0.0"]]
+  :plugins [[lein-ring "0.8.5"]]
   :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
   :ring {:handler clojars.web/clojars-app}
   :aot [clojars.scp]
