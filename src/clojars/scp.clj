@@ -99,26 +99,29 @@
             :when (not= (:name metafile) "maven-metadata.xml")
             :let [jarmap (maven/pom-to-map (:file metafile))
                   names (jar-names jarmap)]]
-      (if-let [jarfile (some jarfiles names)]
-        (do
-          (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
-                                    (:name jarmap) " " (:version jarmap)))
-            (db/add-jar account jarmap true)
-            (aether/deploy :coordinates [(keyword (:group jarmap)
-                                                  (:name jarmap))
-                                         (:version jarmap)]
-                           :jar-file jarfile
-                           :pom-file (:file metafile)
-                           :repository {"local" (file-repo (:repo config))}
-                           :transfer-listener
-                           (bound-fn [e] (@#'aether/default-listener-fn e)))
-            (db/add-jar account jarmap)
-            ;; TODO: doseq over files here
-            (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id})
-                              account jarfile)
-            (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id})
-                              account (:file metafile)))
-        (throw (Exception. (str "You need to give me one of: " names)))))
+      (let [jarfile (some jarfiles names)]
+        (when-not jarfile
+          (throw (Exception. (str "You need to give me one of: " names))))
+        (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
+                                  (:name jarmap) " " (:version jarmap)))
+        ;; validate w/ empty filename since scp deploys happen all at once
+        (apply ev/validate-deploy ((juxt :group :name :version :_) jarmap))
+        (db/add-jar account jarmap)
+        (aether/deploy :coordinates [(keyword (:group jarmap)
+                                              (:name jarmap))
+                                     (:version jarmap)]
+                       :jar-file jarfile
+                       :pom-file (:file metafile)
+                       :repository {"local" (file-repo (:repo config))}
+                       :transfer-listener
+                       (bound-fn [e] (@#'aether/default-listener-fn e)))
+                ;; TODO: doseq over files here
+        (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id
+                                                   :group :group-id})
+                          account jarfile)
+        (ev/record-deploy (set/rename-keys jarmap {:name :artifact-id
+                                                   :group :group-id})
+                          account (:file metafile))))
     (.println (.err ctx) (str "\nSuccess! Your jars are now available from "
                               "http://clojars.org/"))
     (.flush (.err ctx))))

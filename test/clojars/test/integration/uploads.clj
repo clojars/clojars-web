@@ -60,6 +60,7 @@
       (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
               (has (text? "dantheman")))
       (follow "org.clojars.dantheman/test")
+      (has (status? 200))
       (within [:article [:p.homepage enlive/last-of-type]]
               (has (text? "https://example.org")))))
 
@@ -69,16 +70,16 @@
    (help/delete-file-recursively help/local-repo)
    (help/delete-file-recursively help/local-repo2)
    (aether/deploy
-    :coordinates '[fake/test "1.0.0"]
+    :coordinates '[fake/test "0.0.1"]
     :jar-file (io/file (io/resource "test.jar"))
     :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
     :repository {"test" {:url (str "http://localhost:" test-port "/repo")
                          :username "dantheman"
                          :password "password"}}
     :local-repo help/local-repo)
-   (is (= '{[fake/test "1.0.0"] nil}
+   (is (= '{[fake/test "0.0.1"] nil}
           (aether/resolve-dependencies
-           :coordinates '[[fake/test "1.0.0"]]
+           :coordinates '[[fake/test "0.0.1"]]
            :repositories {"test" {:url
                                   (str "http://localhost:" test-port "/repo")}}
            :local-repo help/local-repo2)))
@@ -88,6 +89,7 @@
        (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
                (has (text? "dantheman")))
        (follow "fake/test")
+       (has (status? 200))
        (within [:article [:p.homepage enlive/last-of-type]]
                (has (text? "https://example.org")))))
 
@@ -104,6 +106,27 @@
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
          :repository {"test" {:url (str "http://localhost:" test-port "/repo")}}
          :local-repo help/local-repo))))
+
+(deftest user-cannot-redeploy
+  (-> (session clojars-app)
+      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+  (aether/deploy
+   :coordinates '[org.clojars.dantheman/test "0.0.1"]
+   :jar-file (io/file (io/resource "test.jar"))
+   :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+   :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+                        :username "dantheman"
+                        :password "password"}}
+   :local-repo help/local-repo)
+  (is (thrown-with-msg?
+       org.sonatype.aether.deployment.DeploymentException
+       #"Unauthorized"
+       (aether/deploy
+        :coordinates '[org.clojars.fixture/test "0.0.1"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+        :repository {"test" {:url (str "http://localhost:" test-port "/repo")}}
+        :local-repo help/local-repo))))
 
 (deftest anonymous-cannot-deploy
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
