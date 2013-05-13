@@ -48,9 +48,25 @@
         (fill-in "Confirm password:" "password")
         (fill-in "SSH public key:" new-ssh-key)
         (press "Update"))
-    (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"
-           (scp new-ssh-key "test.jar" "test-0.0.1/test.pom")))
-    (is (thrown? Exception (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))))
+    (is (thrown? Exception (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))
+    (is (re-find #"Success! Your jars are now available"
+                 (scp new-ssh-key "test.jar" "test-0.0.1/test.pom")))))
+
+(deftest user-cannot-redeploy
+  (-> (session web/clojars-app)
+      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+  (is (re-find #"Success! Your jars are now available"
+               (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))
+  (is (re-find #"Error: Redeploying .* is not allowed"
+               (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom"))))
+
+(deftest user-can-redeploy-snapshots
+  (-> (session web/clojars-app)
+      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+  (is (re-find #"Success! Your jars are now available"
+               (scp valid-ssh-key "test.jar" "test-0.0.3-SNAPSHOT/test.pom")))
+  (is (re-find #"Success! Your jars are now available"
+               (scp valid-ssh-key "test.jar" "test-0.0.3-SNAPSHOT/test.pom"))))
 
 (deftest user-can-remove-key-and-scp-fails
   (-> (session web/clojars-app)
