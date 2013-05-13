@@ -3,23 +3,20 @@
 does some monkey patching to automatically escape strings."
   (:require [hiccup.core :refer [html]]
             [hiccup.page :refer [doctype]]
-            [hiccup.compiler :refer [HtmlRenderer]]
-            [hiccup.util :refer [escape-html ToString]]
+            [hiccup.util :refer [escape-html to-str ToString]]
             [ring.middleware.anti-forgery :refer [ *anti-forgery-token*]]
             [hiccup.form :as form]))
 
 (deftype RawString [s]
-  HtmlRenderer
-  (render-html [_] s)
   ToString
   (to-str [_] s))
 
 (defn raw [s]
   (RawString. s))
 
-(extend-protocol HtmlRenderer
-  Object
-  (render-html [s] (escape-html s)))
+(extend-protocol ToString
+  String
+  (to-str [s] (escape-html (raw s))))
 
 (defmacro html5
   "Create a HTML5 document with the supplied contents."

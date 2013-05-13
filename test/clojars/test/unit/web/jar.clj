@@ -10,12 +10,3 @@
                                   :group_name "test"
                                   :jar_name "test"} [] 0)]
       (is (re-find #"something thats not a url" html)))))
-
-(deftest pages-are-escaped
-  (with-out-str
-    (let [html (jar/show-jar nil {:homepage nil
-                                  :created 3
-                                  :version "<script>alert('hi')</script>"
-                                  :group_name "test"
-                                  :jar_name "test"} [] 0)]
-      (is (not (.contains html "<script>alert('hi')</script>"))))))
