@@ -1,6 +1,6 @@
 (ns clojars.routes.repo
   (:require [clojars.auth :refer [with-account require-authorization]]
-            [clojars.db :refer [add-jar update-jar]]
+            [clojars.db :as db]
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [clojars.event :as ev]
@@ -52,6 +52,7 @@
           (string/replace group "/" ".")
           (save-to-file (io/file (config :repo) group artifact file)
                         body)
+          ;; should we only do 201 if the file didn't already exist?
           {:status 201 :headers {} :body nil})))
   (PUT ["/:group/:artifact/:version/:filename"
         :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
@@ -67,32 +68,26 @@
                           :version version}
                     file (io/file (config :repo) group
                                   artifact version filename)]
-                ;;TODO once db is removed this whole if block
-                ;;can be reduced to the common
-                ;;(try (save-to-file...) (catch ...))
+                (ev/validate-deploy groupname artifact version filename)
+                (db/check-and-add-group account groupname)
                 (if (.endsWith filename ".pom")
                   (let [contents (slurp body)
                         pom-info (merge (maven/pom-to-map
                                          (StringReader. contents)) info)]
-                    (if (find-jar group artifact version)
-                      (update-jar account pom-info)
-                      (add-jar account pom-info))
+                    (db/add-jar account pom-info)
                     (try
                       (save-to-file file contents)
                       (catch java.io.IOException e
                         (.delete file)
                         (throw e))))
-                  (do
-                    (when-not (find-jar group artifact version)
-                      (add-jar account info))
-                    (try
-                      (save-to-file file body)
-                      (catch java.io.IOException e
-                        (.delete file)
-                        (throw e)))))
-                ;;Be consistent with scp only recording pom or jar
+                  (try
+                    (save-to-file file body)
+                    (catch java.io.IOException e
+                      (.delete file)
+                      (throw e))))
+                ;; Be consistent with scp only recording pom or jar
                 (when (some #(.endsWith filename %) [".pom" ".jar"])
-                  (ev/record-deploy {:group groupname
+                  (ev/record-deploy {:group-id groupname
                                      :artifact-id artifact
                                      :version version} account file)))
               {:status 201 :headers {} :body nil}

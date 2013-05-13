@@ -8,6 +8,34 @@
             [clucy.core :as clucy])
   (:import (org.apache.commons.codec.digest DigestUtils)))
 
+(defn- validate-regex [x re message]
+  (when-not (re-matches re x)
+    (throw (Exception. (str message " (" re ")")))))
+
+(defn validate-deploy [group-id artifact-id version filename]
+  ;; We're on purpose *at least* as restrictive as the recommendations on
+  ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
+  ;; If you want loosen these please include in your proposal the
+  ;; ramifications on usability, security and compatiblity with filesystems,
+  ;; OSes, URLs and tools.
+  (validate-regex artifact-id #"^[a-z0-9_.-]+$"
+                  (str "Jar names must consist solely of lowercase "
+                       "letters, numbers, hyphens and underscores."))
+  (validate-regex group-id #"^[a-z0-9_.-]+$"
+                  (str "Group names must consist solely of lowercase "
+                       "letters, numbers, hyphens and underscores."))
+  ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
+  ;; bar one broken non-ascii exception only these characters have been used.
+  ;; Even if we manage to support obscure characters some filesystems do not
+  ;; and some tools fail to escape URLs properly.  So to keep things nice and
+  ;; compatible for everyone let's lock it down.
+  (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
+                  (str "Version strings must consist solely of letters, "
+                       "numbers, dots, pluses, hyphens and underscores."))
+  (when (.exists (io/file (config :repo) group-id artifact-id version
+                          (or filename "")))
+    (throw (ex-info "Redeploying is not allowed." {:status 403}))))
+
 (defn event-log-file [type]
   (io/file (config :event-dir) (str (name type) ".clj")))
 
