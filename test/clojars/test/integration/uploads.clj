@@ -99,12 +99,14 @@
   (-> (session clojars-app)
       (register-as "fixture" "fixture@example.org" "password" valid-ssh-key))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-        #"Unauthorized"
+        #"Forbidden"
         (aether/deploy
          :coordinates '[org.clojars.fixture/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" test-port "/repo")}}
+         :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+                              :username "dantheman"
+                              :password "password"}}
          :local-repo help/local-repo))))
 
 (deftest user-cannot-redeploy

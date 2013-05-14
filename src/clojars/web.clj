@@ -71,7 +71,9 @@
                (friend/authenticate
                 {:credential-fn credential-fn
                  :workflows [(workflows/http-basic :realm "clojars")]
-                 :allow-anon? false})
+                 :allow-anon? false
+                 :unauthenticated-handler
+                 (partial workflows/http-basic-deny "clojars")})
                (repo/wrap-file (:repo config))))
   (-> main-routes
       (friend/authenticate

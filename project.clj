@@ -1,5 +1,5 @@
 (defproject clojars-web "0.14.1-SNAPSHOT"
-  :dependencies [[org.clojure/clojure "1.4.0"]
+  :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
@@ -8,7 +8,7 @@
                   :exclusions
                   [org.apache.httpcomponents/httpcore]]
                  [s3-wagon-private "1.0.0"]
-                 [compojure "1.1.3"
+                 [compojure "1.1.5"
                   :exclusions [org.clojure/core.incubator]]
                  [ring/ring-jetty-adapter "1.1.1"]
                  [hiccup "1.0.1"]
@@ -21,10 +21,9 @@
                  [net.cgrand/regex "1.0.1"
                   :exclusions [org.clojure/clojure]]
                  [clj-time "0.3.8"]
-                 [com.cemerick/friend "0.1.2"
-                  :exclusions [org.openid4java/openid4java-nodeps]]
+                 [com.cemerick/friend "0.1.4"]
                  [clj-stacktrace "0.2.5"]
-                 [ring-anti-forgery "0.2.0"]
+                 [ring-anti-forgery "0.2.1"]
                  [valip "0.2.0"]
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.3"]

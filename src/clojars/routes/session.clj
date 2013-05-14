@@ -8,7 +8,4 @@
   (GET "/login" [login_failed username]
        (view/login-form login_failed username))
   (friend/logout
-   (ANY "/logout" request
-        ;; Work around friend#20 and ring-anti-forgery#10
-        (-> (response/redirect "/")
-            (assoc :session (:session request))))))
+   (ANY "/logout" _ (response/redirect "/"))))
