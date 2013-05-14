@@ -65,6 +65,7 @@
    ["MAIL_URL" :mail parse-mail-uri]
    ["REPO" :repo]
    ["KEY_FILE" :key-file]
+   ["NREPL_PORT" :nrepl-port #(Integer/parseInt %)]
    ["NAILGUN_BIND" :nailgun-bind]
    ["NAILGUN_PORT" :nailgun-port #(Integer/parseInt %)]
    ["RELEASES_URL" :releases-url]
