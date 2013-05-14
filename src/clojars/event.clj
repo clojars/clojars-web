@@ -32,8 +32,7 @@
   (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
                   (str "Version strings must consist solely of letters, "
                        "numbers, dots, pluses, hyphens and underscores."))
-  (when (.exists (io/file (config :repo) group-id artifact-id version
-                          (or filename "")))
+  (when (.exists (io/file (config :repo) group-id artifact-id version filename))
     (throw (ex-info "Redeploying non-snapshots is not allowed." {:status 403}))))
 
 (defn event-log-file [type]

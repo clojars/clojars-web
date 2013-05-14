@@ -104,8 +104,8 @@
           (throw (Exception. (str "You need to give me one of: " names))))
         (.println (.err ctx) (str "\nDeploying " (:group jarmap) "/"
                                   (:name jarmap) " " (:version jarmap)))
-        ;; validate w/ empty filename since scp deploys happen all at once
-        (apply ev/validate-deploy ((juxt :group :name :version :_) jarmap))
+        (let [{:keys [group name version]} jarmap]
+          (ev/validate-deploy group name version (first names)))
         (db/add-jar account jarmap)
         (aether/deploy :coordinates [(keyword (:group jarmap)
                                               (:name jarmap))
