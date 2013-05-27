@@ -19,7 +19,7 @@
   ;; ramifications on usability, security and compatiblity with filesystems,
   ;; OSes, URLs and tools.
   (validate-regex artifact-id #"^[a-z0-9_.-]+$"
-                  (str "Jar names must consist solely of lowercase "
+                  (str "Project names must consist solely of lowercase "
                        "letters, numbers, hyphens and underscores."))
   (validate-regex group-id #"^[a-z0-9_.-]+$"
                   (str "Group names must consist solely of lowercase "

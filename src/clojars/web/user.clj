@@ -110,7 +110,7 @@
 (defn show-user [account user]
   (html-doc account (user :user)
     [:h1 (user :user)]
-    [:h2 "Jars"]
+    [:h2 "Projects"]
     (unordered-list (map jar-link (jars-by-username (user :user))))
     [:h2 "Groups"]
     (unordered-list (map group-link (find-groupnames (user :user))))))
