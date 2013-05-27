@@ -109,7 +109,7 @@
                  (dependency-section "dependencies" "dependencies"
                                      (remove #(not= (:scope %) "compile") (:dependencies pom)))
                  (when-not pom
-                   [:p.error "Oops. We hit an error opening the metadata POM file for this jar "
+                   [:p.error "Oops. We hit an error opening the metadata POM file for this project "
                     "so some details are not available."])))
               [:h3 "recent versions"]
               [:ul#versions

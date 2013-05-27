@@ -29,7 +29,7 @@
      [:header
       [:hgroup {:class :grid_4}
        [:h1 (link-to "/" "Clojars")]
-       [:h2 "Simple Clojure jar repository"]]
+       [:h2 "Simple Clojure project repository"]]
       [:nav
        (if account
          (unordered-list
@@ -41,7 +41,7 @@
            (link-to "/register" "register")]))
        (form-to [:get "/search"]
                 [:input {:name "q" :id "search" :class :search
-                         :placeholder "Search jars..."}])]]
+                         :placeholder "Search projects..."}])]]
      [:div {:class :clear}]]
     [:div {:class "container_12 article"}
      [:article.clearfix

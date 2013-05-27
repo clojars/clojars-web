@@ -27,20 +27,20 @@
        (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
        (tag "</repository>")]]]
 
-    [:p "To " [:strong "get started"] " pushing your own jars "
+    [:p "To " [:strong "get started"] " pushing your own projects "
      (link-to "/register" "create an account")
      " and then check out the "
      (link-to "http://wiki.github.com/ato/clojars-web/tutorial"
               "tutorial") ". Alternatively, "
      (link-to "/projects" "browse") " the repository."]
-    [:h2 "Recently pushed jars"]
+    [:h2 "Recently pushed projects"]
     (unordered-list (map jar-link (recent-jars)))))
 
 (defn dashboard [account]
   (html-doc account "Dashboard"
     [:h1 (str "Dashboard (" account ")")]
-    [:h2 "Your jars"]
+    [:h2 "Your projects"]
     (unordered-list (map jar-link (jars-by-username account)))
-    (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add new jar")
+    (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add new project")
     [:h2 "Your groups"]
     (unordered-list (map group-link (find-groupnames account)))))
