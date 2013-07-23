@@ -8,8 +8,10 @@
            java.io.IOException))
 
 (defn model-to-map [model]
-  {:name (.getArtifactId model)
-   :group (.getGroupId model)
+  {:name (or (.getArtifactId model)
+             (-> model .getParent .getArtifactId))
+   :group (or (.getGroupId model)
+              (-> model .getParent .getGroupId))
    :version (.getVersion model)
    :description (.getDescription model)
    :homepage (.getUrl model)
@@ -18,11 +20,11 @@
    :scm (.getScm model)
    :authors (vec (map #(.getName %) (.getContributors model)))
    :dependencies (vec (map
-                        (fn [d] {:group_name (.getGroupId d)
-                                 :jar_name (.getArtifactId d)
-                                 :version (.getVersion d)
-                                 :scope (or (.getScope d) "compile")})
-                        (.getDependencies model))) })
+                       (fn [d] {:group_name (.getGroupId d)
+                                :jar_name (.getArtifactId d)
+                                :version (.getVersion d)
+                                :scope (or (.getScope d) "compile")})
+                       (.getDependencies model)))})
 
 (defn read-pom
   "Reads a pom file returning a maven Model object."
