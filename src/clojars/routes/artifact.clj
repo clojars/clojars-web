@@ -54,6 +54,14 @@
        [group-id artifact-id version]
        (show-version group-id artifact-id version))
 
+  (GET ["/:artifact-id/latest-version.svg" :artifact-id #"[^/]+"]
+       [artifact-id]
+       (view/make-latest-version-svg artifact-id artifact-id))
+  (GET ["/:group-id/:artifact-id/latest-version.svg"
+        :group-id #"[^/]+" :artifact-id #"[^/]+"]
+       [group-id artifact-id]
+       (view/make-latest-version-svg group-id artifact-id))
+
   (POST ["/:group-id/:artifact-id/promote/:version"
          :group-id #"[^/]+" :artifact-id #"[^/]+" :version #"[^/]+"]
         [group-id artifact-id version]

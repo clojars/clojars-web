@@ -3,6 +3,7 @@
                                         tag jar-url jar-name user-link
                                         jar-fork? single-fork-notice
                                         simple-date]]
+            hiccup.core
             [hiccup.element :refer [link-to]]
             [hiccup.form :refer [submit-button]]
             [clojars.web.safe-hiccup :refer [form-to]]
@@ -129,3 +130,36 @@
                 [:li (link-to (url-for (assoc jar
                                          :version (:version v)))
                               (:version v))])]]))
+
+(defn svg-template [jar-id version]
+  (let [width-px (+ 138 (* (+ (count jar-id) (count version)) 6))]
+    [:svg {:width (str (* width-px 0.044) "cm")
+           :height "0.88cm"
+           :viewBox (str "0 0 " width-px " 20")
+           :xmlns "http://www.w3.org/2000/svg"
+           :version "1.1"}
+     [:rect {:x 0, :y 0, :width width-px, :height 20,
+             :rx 3, :fill "#444444"}]
+     [:rect {:x 2, :y 2, :width (- width-px 4), :height 16,
+             :rx 3, :fill "#1f1f1f"}]
+
+     [:text {:x 7, :y 13, :font-family "monospace",
+             :font-size 10, :fill "white"}
+      [:tspan {:fill "#ffcfaf"} "["]
+      [:tspan {:fill "#ffffff"} jar-id]
+      [:tspan " "]
+      [:tspan {:fill "#cc9393"} (str \" version \")]
+      [:tspan {:fill "#ffcfaf"} "]"]]
+
+     [:text {:x (- width-px 85), :y 15, :font-family "Verdana",
+             :font-size 7, :fill "white"}
+      [:tspan "Powered by "]
+      [:tspan {:fill "#ffcfaf"} "clojars.org"]]]))
+
+(defn make-latest-version-svg [group-id artifact-id]
+  (let [jar (find-jar group-id artifact-id)]
+    (hiccup.core/html
+     "<?xml version=\"1.0\" standalone=\"no\"?>"
+     "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
+ \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">"
+     (svg-template (jar-name jar) (:version jar)))))
