@@ -151,7 +151,7 @@
       [:tspan {:fill "#cc9393"} (str \" version \")]
       [:tspan {:fill "#ffcfaf"} "]"]]
 
-     [:text {:x (- width-px 85), :y 15, :font-family "Verdana",
+     [:text {:x (- width-px 90), :y 15, :font-family "Verdana",
              :font-size 7, :fill "white"}
       [:tspan "Powered by "]
       [:tspan {:fill "#ffcfaf"} "clojars.org"]]]))

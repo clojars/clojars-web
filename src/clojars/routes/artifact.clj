@@ -56,11 +56,13 @@
 
   (GET ["/:artifact-id/latest-version.svg" :artifact-id #"[^/]+"]
        [artifact-id]
-       (view/make-latest-version-svg artifact-id artifact-id))
+       (-> (response/response (view/make-latest-version-svg artifact-id artifact-id))
+           (response/content-type "image/svg+xml")))
   (GET ["/:group-id/:artifact-id/latest-version.svg"
         :group-id #"[^/]+" :artifact-id #"[^/]+"]
        [group-id artifact-id]
-       (view/make-latest-version-svg group-id artifact-id))
+       (-> (response/response (view/make-latest-version-svg group-id artifact-id))
+           (response/content-type "image/svg+xml")))
 
   (POST ["/:group-id/:artifact-id/promote/:version"
          :group-id #"[^/]+" :artifact-id #"[^/]+" :version #"[^/]+"]
