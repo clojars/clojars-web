@@ -11,11 +11,11 @@
    "<![endif]-->"))
 
 (defn html-doc [account title & body]
-  (html5   
+  (html5
    [:head
-    [:link {:type "application/opensearchdescription+xml" 
+    [:link {:type "application/opensearchdescription+xml"
             :href "/opensearch.xml"
-            :rel "search"}] 
+            :rel "search"}]
     [:meta {:charset "utf-8"}]
     [:title
      (when title
