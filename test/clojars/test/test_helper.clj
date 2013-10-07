@@ -76,10 +76,11 @@
      (delete-file-recursively (io/file (config :stats-dir)))
      (.mkdirs (io/file (config :stats-dir)))
      (make-download-count! {})
-     (jdbc/with-connection (kdb/get-connection @kdb/_default)
-       (jdbc/do-commands
-        "delete from users;" "delete from jars;" "delete from groups;"))
-     (f))))
+     (with-redefs [kdb/_default (atom {:pool (:db config)})]
+       (jdbc/with-connection (:pool @kdb/_default)
+         (jdbc/do-commands
+          "delete from users;" "delete from jars;" "delete from groups;"))
+       (f)))))
 
 (defn index-fixture [f]
   (make-index! [])

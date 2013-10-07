@@ -1,6 +1,9 @@
 (ns clojars.test.unit.web.jar
   (:require [clojars.web.jar :as jar]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all]
+            [clojars.test.test-helper :as help]))
+
+(use-fixtures :each help/default-fixture)
 
 (deftest bad-homepage-url-shows-as-text
   (with-out-str
