@@ -8,14 +8,14 @@
         [{:group_name "org.clojure", :jar_name "clojure", :version "1.3.0-beta1" :scope "compile"}
          {:group_name "org.clojurer", :jar_name "clojure", :version "1.6.0" :scope "provided"}
          {:group_name "midje", :jar_name "midje", :version "1.3-alpha4", :scope "test"}]
-     (:dependencies (pom-to-map "test-resources/test-maven/test-maven.pom")))))
+     (:dependencies (pom-to-map (.toString (io/resource "test-maven/test-maven.pom")))))))
 
 (deftest directory-for-handles-normal-group-name
   (is (= (io/file (config :repo) "fake" "test" "1.0.0")
          (directory-for {:group_name "fake"
                          :jar_name "test"
-                         :version "1.0.0"})))
-         )
+                         :version "1.0.0"}))))
+
 (deftest directory-for-handles-group-names-with-dots
   (is (= (io/file (config :repo) "com" "novemberain" "monger" "1.2.0-alpha1")
          (directory-for {:group_name "com.novemberain"

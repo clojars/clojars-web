@@ -42,7 +42,7 @@
   (copy-resource "1.1.2" "jar.asc")
   (copy-resource "1.1.2" "pom.asc")
   (db/add-user "test@ex.com" "testuser" "password" "asdf"
-               (slurp "test-resources/pubring.gpg"))
+               (slurp (io/resource "pubring.gpg")))
   (db/add-member "robert" "testuser" nil)
   (is (empty? (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))
 
@@ -53,7 +53,7 @@
   (copy-resource "1.1.2" "jar.asc")
   (copy-resource "1.1.2" "pom.asc")
   (db/add-user "test@ex.com" "testuser" "password" "asdf"
-               (slurp "test-resources/pubring.gpg"))
+               (slurp (io/resource "pubring.gpg")))
   (db/add-member "robert" "testuser" nil)
   (is (= [(str "Could not verify signature of "
                (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.jar. "

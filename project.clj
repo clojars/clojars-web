@@ -28,12 +28,8 @@
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [org.bouncycastle/bcpg-jdk15on "1.47"]]
-  :profiles {:test {:resource-paths ["test-resources"]
-                    :dependencies [[kerodon "0.0.7"]
-                                   [nailgun-shim "0.0.1"]]}
-             :dev {:dependencies [[kerodon "0.0.7"]
+  :profiles {:dev {:dependencies [[kerodon "0.0.7"]
                                   [nailgun-shim "0.0.1"]]
-                   ;; TODO: set test resources in fixture w/ with-redefs
                    :resource-paths ["local-resources"]}}
   :plugins [[lein-ring "0.8.5"]]
   :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}

@@ -15,6 +15,26 @@
 (def local-repo2 (io/file (System/getProperty "java.io.tmpdir")
                          "clojars" "test" "local-repo2"))
 
+(def test-config {:db {:classname "org.sqlite.JDBC"
+                       :subprotocol "sqlite"
+                       :subname "data/test_db"}
+                  :key-file "data/test/authorized_keys"
+                  :repo "data/test/repo"
+                  :event-dir "data/test/events"
+                  :stats-dir "data/test/stats"
+                  :index-path "data/test/index"
+                  :bcrypt-work-factor 12
+                  :mail {:hostname "smtp.gmail.com"
+                         :from "noreply@clojars.org"
+                         :username "clojars@pupeno.com"
+                         :password "fuuuuuu"
+                         :port 465 ; If you change ssl to false, the port might not be effective, search for .setSSL and .setSslSmtpPort
+                         :ssl true}})
+
+(defn using-test-config [f]
+  (with-redefs [config test-config]
+    (f)))
+
 (defn delete-file-recursively
   "Delete file f. If it's a directory, recursively delete all its contents."
   [f]
@@ -47,17 +67,19 @@
         (clucy/add index a)))))
 
 (defn default-fixture [f]
-  (force migrate)
-  (delete-file-recursively (io/file (config :repo)))
-  (delete-file-recursively (io/file (config :event-dir)))
-  (.mkdirs (io/file (config :event-dir)))
-  (delete-file-recursively (io/file (config :stats-dir)))
-  (.mkdirs (io/file (config :stats-dir)))
-  (make-download-count! {})
-  (jdbc/with-connection (kdb/get-connection @kdb/_default)
-    (jdbc/do-commands
-     "delete from users;" "delete from jars;" "delete from groups;"))
-  (f))
+  (using-test-config
+   (fn []
+     (force migrate)
+     (delete-file-recursively (io/file (config :repo)))
+     (delete-file-recursively (io/file (config :event-dir)))
+     (.mkdirs (io/file (config :event-dir)))
+     (delete-file-recursively (io/file (config :stats-dir)))
+     (.mkdirs (io/file (config :stats-dir)))
+     (make-download-count! {})
+     (jdbc/with-connection (kdb/get-connection @kdb/_default)
+       (jdbc/do-commands
+        "delete from users;" "delete from jars;" "delete from groups;"))
+     (f))))
 
 (defn index-fixture [f]
   (make-index! [])

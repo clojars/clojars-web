@@ -3,8 +3,7 @@
             [clojure.test :refer :all]
             [clojars.test.test-helper :as help]))
 
-(use-fixtures :each
-  help/default-fixture)
+(use-fixtures :each help/default-fixture)
 
 (deftest weight-by-downloads
   (help/make-download-count! {["asd" "alfred"] {"0.0.1" 1}
