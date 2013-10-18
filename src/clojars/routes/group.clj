@@ -7,8 +7,10 @@
 (defroutes routes
   (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
        (if-let [membernames (db/group-membernames groupname)]
-         (auth/try-account
-          (view/show-group account groupname membernames))))
+         {:body (auth/try-account
+                 (view/show-group account groupname membernames))
+          :headers {"X-Frame-Options" "DENY"}
+          :status 200}))
   (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username]
         (if-let [membernames (db/group-membernames groupname)]
           (auth/try-account
