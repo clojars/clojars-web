@@ -11,8 +11,10 @@
 
 (defroutes routes
   (GET "/profile" {:keys [flash]}
-       (auth/with-account
-         (view/profile-form account flash)))
+       {:body (auth/with-account
+                (view/profile-form account flash))
+        :headers {"X-Frame-Options" "DENY"}
+        :status 200})
   (POST "/profile" {:keys [params]}
         (auth/with-account
           (view/update-profile account params)))
@@ -21,7 +23,9 @@
        (view/register-form))
 
   (GET "/forgot-password" _
-       (view/forgot-password-form))
+       {:body (view/forgot-password-form)
+        :headers {"X-Frame-Options" "DENY"}
+        :status 200})
   (POST "/forgot-password" {:keys [params]}
         (view/forgot-password params))
 
