@@ -65,6 +65,9 @@
                (when (not (empty? password))
                  {:username user :password password})))))
 
+(defn wrap-x-frame-options [f]
+  (fn [req] (update-in (f req) [:headers] assoc "X-Frame-Options" "DENY")))
+
 (defroutes clojars-app
   (context "/repo" _
            (-> repo/routes
@@ -81,6 +84,7 @@
         :workflows [(workflows/interactive-form)
                     registration/workflow]})
       (wrap-anti-forgery)
+      (wrap-x-frame-options)
       (wrap-exceptions)
       (site)
       (wrap-resource "public")
