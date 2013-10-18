@@ -71,7 +71,7 @@
                  (when (not (empty? password))
                    (swap! attempts dissoc user)
                    {:username user :password password})
-                 (swap! attempts bad-attempt id))))))
+                 (do (swap! attempts bad-attempt id) nil))))))
 
 (defroutes clojars-app
   (context "/repo" _
