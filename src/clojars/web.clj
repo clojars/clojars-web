@@ -57,13 +57,21 @@
                    [:h1 "Page not found"]
                    [:p "Thundering typhoons!  I think we lost it.  Sorry!"])))))
 
+(defn bad-attempt [attempts user]
+  (let [failures (or (attempts user) 0)]
+    (Thread/sleep (* failures failures)))
+  (update-in attempts [user] (fnil inc 0)))
+
 (def credential-fn
-  (partial creds/bcrypt-credential-fn
-           (fn [id]
-             (when-let [{:keys [user password]}
+  (let [attempts (atom {})]
+    (partial creds/bcrypt-credential-fn
+             (fn [id]
+               (if-let [{:keys [user password]}
                         (db/find-user-by-user-or-email id)]
-               (when (not (empty? password))
-                 {:username user :password password})))))
+                 (when (not (empty? password))
+                   (swap! attempts dissoc user)
+                   {:username user :password password})
+                 (do (swap! attempts bad-attempt id) nil))))))
 
 (defn wrap-x-frame-options [f]
   (fn [req] (update-in (f req) [:headers] assoc "X-Frame-Options" "DENY")))
