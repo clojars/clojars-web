@@ -90,6 +90,18 @@
                 (jar-name jar)
                 [:span {:class :string} " \""
                  (:version jar) "\""] (tag "]") ]]
+              
+              [:div {:class "gradle"}
+               [:h3 "gradle"]
+               [:pre
+                "compile "
+                \"
+                (:group_name jar)
+                ":"
+                (:jar_name jar)
+                ":"
+                (:version jar)
+                \"]]
 
               [:div {:class "maven"}
                [:h3 "maven"]
