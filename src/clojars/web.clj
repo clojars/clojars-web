@@ -10,12 +10,14 @@
             [clojars.web.common :refer [html-doc]]
             [clojars.web.safe-hiccup :refer [raw]]
             [clojure.java.io :as io]
-            [ring.middleware.file-info :refer [wrap-file-info]]
-            [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+            [ring.middleware.file-info :refer [wrap-file-info]]
+            [ring.middleware.flash :refer [wrap-flash]]
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+            [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.session :refer [wrap-session]]
             [compojure.core :refer [defroutes GET POST PUT ANY context routes]]
-            [compojure.handler :refer [site]]
+            [compojure.handler :refer [api]]
             [compojure.route :refer [not-found]]
             [cemerick.friend :as friend]
             [cemerick.friend.credentials :as creds]
@@ -78,17 +80,17 @@
   (fn [req] (update-in (f req) [:headers] assoc "X-Frame-Options" "DENY")))
 
 (defn https-request? [req]
-  (or (= (:scheme req) "https")
+  (or (= (:scheme req) :https)
       (= (get-in req [:headers "x-forwarded-proto"]) "https")))
 
-(defn wrap-secure-cookie [f]
-  (let [secure-cookie (wrap-session f {:cookie-attrs {:secure true
+(defn wrap-secure-session [f]
+  (let [secure-session (wrap-session f {:cookie-attrs {:secure true
                                                       :http-only true}})
-        regular-cookie (wrap-session f {:cookie-attrs {:http-only true}})]
+        regular-session (wrap-session f {:cookie-attrs {:http-only true}})]
     (fn [req]
       (if (https-request? req)
-        (secure-cookie req)
-        (regular-cookie req)))))
+        (secure-session req)
+        (regular-session req)))))
 
 (defroutes clojars-app
   (context "/repo" _
@@ -108,7 +110,9 @@
       (wrap-anti-forgery)
       (wrap-exceptions)
       (wrap-x-frame-options)
-      (wrap-secure-cookie)
-      (site)
+      (api)
+      (wrap-multipart-params)
+      (wrap-flash)
+      (wrap-secure-session)
       (wrap-resource "public")
       (wrap-file-info)))
