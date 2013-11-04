@@ -13,6 +13,7 @@
             [ring.middleware.file-info :refer [wrap-file-info]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+            [ring.middleware.session :refer [wrap-session]]
             [compojure.core :refer [defroutes GET POST PUT ANY context routes]]
             [compojure.handler :refer [site]]
             [compojure.route :refer [not-found]]
@@ -76,6 +77,19 @@
 (defn wrap-x-frame-options [f]
   (fn [req] (update-in (f req) [:headers] assoc "X-Frame-Options" "DENY")))
 
+(defn https-request? [req]
+  (or (= (:scheme req) "https")
+      (= (get-in req [:headers "x-forwarded-proto"]) "https")))
+
+(defn wrap-secure-cookie [f]
+  (let [secure-cookie (wrap-session f {:cookie-attrs {:secure true
+                                                      :http-only true}})
+        regular-cookie (wrap-session f {:cookie-attrs {:http-only true}})]
+    (fn [req]
+      (if (https-request? req)
+        (secure-cookie req)
+        (regular-cookie req)))))
+
 (defroutes clojars-app
   (context "/repo" _
            (-> repo/routes
@@ -94,6 +108,7 @@
       (wrap-anti-forgery)
       (wrap-exceptions)
       (wrap-x-frame-options)
+      (wrap-secure-cookie)
       (site)
       (wrap-resource "public")
       (wrap-file-info)))
