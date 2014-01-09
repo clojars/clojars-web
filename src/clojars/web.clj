@@ -14,10 +14,11 @@
             [ring.middleware.file-info :refer [wrap-file-info]]
             [ring.middleware.flash :refer [wrap-flash]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+            [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.session :refer [wrap-session]]
             [compojure.core :refer [defroutes GET POST PUT ANY context routes]]
-            [compojure.handler :refer [api]]
             [compojure.route :refer [not-found]]
             [cemerick.friend :as friend]
             [cemerick.friend.credentials :as creds]
@@ -110,7 +111,8 @@
       (wrap-anti-forgery)
       (wrap-exceptions)
       (wrap-x-frame-options)
-      (api)
+      (wrap-keyword-params)
+      (wrap-params)
       (wrap-multipart-params)
       (wrap-flash)
       (wrap-secure-session)
