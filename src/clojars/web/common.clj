@@ -40,7 +40,7 @@
           [(link-to "/login" "login")
            (link-to "/register" "register")]))
        (form-to [:get "/search"]
-                [:input {:name "q" :id "search" :class :search
+                [:input {:name "q" :id "search" :class :search :autofocus true
                          :placeholder "Search projects..."}])]]
      [:div {:class :clear}]]
     [:div {:class "container_12 article"}
