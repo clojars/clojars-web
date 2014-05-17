@@ -10,6 +10,12 @@
          {:group_name "midje", :jar_name "midje", :version "1.3-alpha4", :scope "test"}]
      (:dependencies (pom-to-map (.toString (io/resource "test-maven/test-maven.pom")))))))
 
+(deftest pom-to-map-handles-group-and-version-inheritance
+  (let [m (pom-to-map (.toString (io/resource "test-maven/test-maven-child.pom")))]
+    (is (= "0.0.4" (:version m)))
+    (is (= "fake" (:group m)))
+    (is (= "child" (:name m)))))
+
 (deftest directory-for-handles-normal-group-name
   (is (= (io/file (config :repo) "fake" "test" "1.0.0")
          (directory-for {:group_name "fake"
