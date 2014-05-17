@@ -2,6 +2,10 @@
 
 Newest items at the top.  [More detailed announcements].
 
+## 2014-May
+
+* Improved search result quality. #210
+
 ## 2013-February
 
 * Switch to Lucene-powered search. #23
