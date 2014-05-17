@@ -73,6 +73,16 @@
               (println "Failed to index" file " - " (.getMessage e)))))
       (clucy/search-and-delete index "dummy:true"))))
 
+
+;; We multiply this by the fraction of total downloads an item gets to
+;; compute its download score. It's an arbitrary value chosen to give
+;; subjectively good search results.
+;;
+;; The most downloaded item has about 3% of the total downloads, so
+;; the maximum score is about 50 * 0.03 = 1.5.
+
+(def download-score-weight 50)
+
 (defn download-values []
   (let [stats (stats/all)
         total (stats/total-downloads stats)]
@@ -81,18 +91,25 @@
        (getCachedFieldValues [cache _ reader]
          (let [ids (map vector
                         (.getStrings cache reader "group-id")
-                        (.getStrings cache reader "artifact-id"))]
+                        (.getStrings cache reader "artifact-id"))
+               download-score (fn [i]
+                                (let [score
+                                      (+ 1
+                                         (* download-score-weight
+                                            (/ (apply
+                                                (comp inc stats/download-count)
+                                                stats
+                                                (nth ids i))
+                                               (max 1 total))))]
+                                  score))]
            (proxy [DocValues] []
              (floatVal [i]
-               (/ (apply stats/download-count stats (nth ids i))
-                  total))
+               (download-score i))
              (intVal [i]
-               (/ (apply stats/download-count stats (nth ids i))
-                  total))
+               (download-score i))
              (toString [i]
                (str "download-count="
-                    (/ (apply stats/download-count stats (nth ids i))
-                       total))))))))))
+                    (download-score i))))))))))
 
 (defn search [query]
   (if (empty? query)

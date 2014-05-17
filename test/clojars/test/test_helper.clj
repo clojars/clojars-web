@@ -5,6 +5,7 @@
             [clojars.config :refer [config]]
             [korma.db :as kdb]
             [clucy.core :as clucy]
+            [clojars.search :as search]
             [clojure.test :as test]
             [clojure.java.shell :as sh]
             [clojure.java.io :as io]
@@ -63,8 +64,9 @@
     (if (empty? v)
       (do (clucy/add index {:dummy true})
           (clucy/search-and-delete index "dummy:true"))
-      (doseq [a v]
-        (clucy/add index a)))))
+      (binding [clucy/*analyzer* search/analyzer]
+        (doseq [a v]
+          (clucy/add index a))))))
 
 (defn default-fixture [f]
   (using-test-config
