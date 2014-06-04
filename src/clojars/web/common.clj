@@ -22,14 +22,13 @@
        (str title " - "))
      "Clojars"]
     (map #(include-css (str "/stylesheets/" %))
-         ["reset.css" "grid.css" "screen.css"])
+         ["reset.css" "grid.css" "fonts.css" "screen.css"])
     (raw (when-ie (include-js "/js/html5.js")))]
    [:body
     [:div {:class "container_12 header"}
      [:header
       [:hgroup {:class :grid_4}
-       [:h1 (link-to "/" "Clojars")]
-       [:h2 "Simple Clojure project repository"]]
+       [:h1 (link-to "/" "Clojars")]]
       [:nav
        (if account
          (unordered-list
@@ -38,12 +37,20 @@
            (link-to "/logout" "logout")])
          (unordered-list
           [(link-to "/login" "login")
-           (link-to "/register" "register")]))
-       (form-to [:get "/search"]
-                [:input {:name "q" :id "search" :class :search
-                         :placeholder "Search projects..."}])]]
+           (link-to "/register" "register")]))]
+      [:h2 "Clojars is a dead easy community for open source Clojure libraries."]]
+     [:div {:class :search}
+      (form-to [:get "/search"]
+               [:input {:name "q"
+                        :id "search"
+                        :class :search
+                        :placeholder "Search projects..."}]
+               [:input {:id "search-button"
+                        :value "Search"
+                        :type "submit"}])]
+     [:h2 "To get started pushing your own projects create an account and then check out the tutorial. Alternatively, browse the repository."]
      [:div {:class :clear}]]
-    [:div {:class "container_12 article"}
+    [:div {:class "article"}
      [:article.clearfix
       body]]
     [:footer
