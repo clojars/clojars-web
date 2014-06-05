@@ -1,21 +1,28 @@
 /* COLORS:
 brown: #53321f
 blue: #1d96c9
+search blue: #238db5
 green: #93c83f
 orange: #f46422
 gray: #e6e7e9
 dark gray: #3e3e3f
+lightish gray: #e2e4e3
 light gray: #f2f3f4
 */
 
 body {
-  background: #53321f;
+  background: #e2e4e3;
   font-family: "MuseoSans-500", Arial, "Liberation Sans", FreeSans, sans-serif;
   line-height: 150%;
 }
 
 header {
   padding-top: 10px;
+}
+
+.header {
+  background: #53321f;
+  padding-bottom: 20px;
 }
 
 .header h1 a {
@@ -66,15 +73,8 @@ p {
   padding-top: 20px;
   padding-bottom: 20px;
   margin-bottom: 10px;
-  margin-top: 20px;
 
-  background: #e6e7e9;
-
-  /* border: 5px solid #a58879; */
-
-  -moz-border-radius: 10px;
-  -webkit-border-radius: 10px;
-  border-radius: 10px;
+  background: #e2e4e3;
 }
 
 nav {
@@ -124,7 +124,7 @@ nav a {
 }
 
 #search-button {
-  background: #1d96c9;
+  background: #238db5;
   color: white;
   padding: 10px 20px;
   border-radius: 0 10px 10px 0;
@@ -187,7 +187,7 @@ textarea {
 }
 
 footer {
-  background: #e6e7e9;
+  background: #e2e4e3;
   display: block;
   text-align: center;
   color: #3e3e3f;
@@ -214,10 +214,6 @@ footer a {
   margin-bottom: 20px;
 
   border: 5px solid #444;
-
-  -moz-border-radius: 10px;
-  -webkit-border-radius: 10px;
-  border-radius: 10px;
 }
 
 .useit div .tag {

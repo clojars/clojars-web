@@ -25,7 +25,7 @@
          ["reset.css" "grid.css" "fonts.css" "screen.css"])
     (raw (when-ie (include-js "/js/html5.js")))]
    [:body
-    [:div {:class "container_12 header"}
+    [:div {:class "header"}
      [:header
       [:hgroup {:class :grid_4}
        [:h1 (link-to "/" "Clojars")]]
