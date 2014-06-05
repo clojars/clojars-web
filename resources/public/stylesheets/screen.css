@@ -1,13 +1,13 @@
 /* COLORS:
-brown: #53321f
-blue: #1d96c9
-search blue: #238db5
-green: #93c83f
-orange: #f46422
-gray: #e6e7e9
-dark gray: #3e3e3f
+brown:         #53321f
+blue:          #1d96c9
+search blue:   #238db5
+green:         #93c83f
+orange:        #f46422
+gray:          #e6e7e9
+dark gray:     #3e3e3f
 lightish gray: #e2e4e3
-light gray: #f2f3f4
+light gray:    #f2f3f4
 */
 
 body {
@@ -32,7 +32,7 @@ header {
 
 .header h2 {
   clear: both;
-  color: #fff;
+  color: white;
   text-align: center;
   padding: 0 20%;
   line-height: 1em;
@@ -71,41 +71,28 @@ p {
 
 .article {
   font-size: 20px;
-  padding-left: 40px;
-  padding-right: 40px;
-  padding-top: 20px;
-  padding-bottom: 40px;
+  padding: 20px 40px 40px;
   margin-bottom: 10px;
-
   background: #e2e4e3;
 }
 
 .light-article {
   font-size: 20px;
-  padding-left: 40px;
-  padding-right: 40px;
-  padding-top: 20px;
-  padding-bottom: 40px;
+  padding: 20px 40px 40px;
   margin-bottom: 10px;
-
-  background: #fff;
+  background: white;
 }
 
 nav {
   float: right;
   display: block;
   height: 40px;
-
   margin-right: 10px;
-
   font-size: 20px;
   text-align: right;
 }
 
-nav ul {
-  display: inline;
-}
-nav ul li {
+nav ul, nav ul li {
   display: inline;
 }
 
@@ -115,7 +102,7 @@ nav form {
 }
 
 nav a {
-  color: #fff;
+  color: white;
   text-decoration: none;
   font-size: 0.8em;
   text-transform: uppercase;
@@ -129,11 +116,13 @@ nav a {
 #search {
   background: #eee;
   padding: 10px;
+
   border-radius: 10px 0 0 10px;
   -moz-border-radius: 10px 0 0 10px;
   -webkit-border-radius: 10px 0 0 10px;
   -o-border-radius: 10px 0 0 10px;
-  border: 0 none;
+
+  border: none;
   width: 300px;
 }
 
@@ -145,7 +134,7 @@ nav a {
   -moz-border-radius: 0 10px 10px 0;
   -webkit-border-radius: 0 10px 10px 0;
   -o-border-radius: 0 10px 10px 0;
-  border: 0 none;
+  border: none;
 }
 
 .error {
@@ -238,7 +227,7 @@ footer a {
 }
 
 .maven {
-  background: #fff;
+  background: white;
   color: black;
   width: 95%;
   height: 150px;
@@ -247,7 +236,7 @@ footer a {
 }
 
 .lein {
-  background: #fff;
+  background: white;
   color: black;
   width: 95%;
   height: 150px;
@@ -256,7 +245,7 @@ footer a {
 }
 
 .gradle {
-  background: #fff;
+  background: white;
   color: black;
   width: 95%;
   height: 150px;
@@ -290,23 +279,7 @@ footer a {
   border-radius: 10px;
 }
 
-.lein pre {
-  padding: 20px 0 0 20px;
-}
-
-.maven pre {
-  padding: 20px 0 0 20px;
-}
-
-.lein-small pre {
-  padding: 20px 0 0 20px;
-}
-
-.maven-small pre {
-  padding: 20px 0 0 20px;
-}
-
-.gradle-small pre {
+.lein pre, .maven pre, .lein-small pre, .maven-small pre, .gradle-small pre {
   padding: 20px 0 0 20px;
 }
 
@@ -315,8 +288,10 @@ footer a {
   color: #3e3e3f;
   padding-top: 20px;
   text-transform: uppercase;
-  border-top: 1px solid #fff;
-  border-bottom: 1px solid #fff;
+
+  border-top: 1px solid white;
+  border-bottom: 1px solid white;
+
   text-align: center;
   padding-bottom: 20px;
 }
@@ -419,7 +394,7 @@ p.hint {
   width: 25%;
   height: 200px;
   margin: 10px 75px 10px 0;
-  background: #fff;
+  background: white;
   border-top: 8px solid #93c83f;
 }
 
@@ -433,7 +408,7 @@ p.hint {
 }
 
 .recent-jar .jar p {
-  background: #fff;
+  background: white;
 }
 
 .heavy {
@@ -476,6 +451,7 @@ ul#jar-sidebar > li {
 
 .useit h3 {
   padding-top: 10px;
+
   margin-top: 10px;
   margin-bottom: 10px;
 }
