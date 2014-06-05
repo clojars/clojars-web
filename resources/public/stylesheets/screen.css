@@ -22,7 +22,7 @@ header {
 
 .header {
   background: #53321f;
-  padding-bottom: 20px;
+  padding-bottom: 50px;
 }
 
 .header h1 a {
@@ -39,14 +39,14 @@ header {
 }
 
 .article h1 {
-  color: #336;
+  color: #3e3e3f;
   margin-top: 20px;
   margin-bottom: 20px;
   font-size: 30px;
 }
 
 .article h2 {
-  color: #336;
+  color: #3e3e3f;
   margin-bottom: 20px;
   margin-top: 40px;
 }
@@ -199,25 +199,68 @@ footer a {
   margin: 20px;
 }
 
-.useit h3 {
+.useit-lein h3 {
   text-align: left;
   margin-bottom: 20px;
-  color: #777;
+  color: #3e3e3f;
 }
 
-.useit div {
-  background: #1f1f1f;
-  color: white;
-  padding: 20px;
-
-  margin-top: 20px;
+.useit-maven h3 {
+  text-align: left;
   margin-bottom: 20px;
-
-  border: 5px solid #444;
+  color: #3e3e3f;
 }
 
-.useit div .tag {
-  color: #ffcfaf;
+.useit-lein {
+  float: left;
+  width: 50%;
+  margin-bottom: 20px;
+}
+
+.useit-maven {
+  float: left;
+  width: 50%;
+  margin-bottom: 20px;
+}
+
+.maven {
+  background: #fff;
+  color: black;
+  width: 95%;
+  height: 150px;
+
+  border-radius: 10px;
+}
+
+.lein {
+  background: #fff;
+  color: black;
+  width: 95%;
+  height: 150px;
+
+  border-radius: 10px;
+}
+
+.lein pre {
+  padding: 20px 0 0 20px;
+}
+
+.maven pre {
+  padding: 20px 0 0 20px;
+}
+
+.recent {
+  clear: left;
+  color: #3e3e3f;
+  padding-top: 20px;
+  text-transform: uppercase;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+  text-align: center;
+  padding-bottom: 20px;
+}
+.useit-lein div .tag, .useit-maven div .tag {
+  color: #de5e33;
 }
 
 .useit div .string {
@@ -307,4 +350,27 @@ p.hint {
 .downloads {
   float: right;
   font-size: 0.6em;
+}
+
+.recent-jar {
+  display: block;
+  float: left;
+  width: 25%;
+  height: 200px;
+  margin: 10px 75px 10px 0;
+  background: #fff;
+  border-top: 8px solid #93c83f;
+}
+
+.recent-jar .jar {
+  padding: 10px 0 10px 10px;
+}
+
+.recent-jar .jar h3 a {
+  font-size: 2em;
+  color: #238db5;
+}
+
+.recent-jar .jar p {
+  background: #fff;
 }
