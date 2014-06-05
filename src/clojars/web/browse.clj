@@ -13,7 +13,7 @@
         projects (browse-projects page per-page)]
     (html-doc account "All projects"
      [:div {:class "light-article"}
-      [:article.clearfix
+      [:article
        [:h1 "All projects"
         [:form.browse-from {:method :get :action "/projects"}
          (label :from "starting from")

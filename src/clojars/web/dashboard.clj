@@ -13,7 +13,7 @@
 (defn index-page [account]
   (html-doc account nil
     [:div {:class "article"}
-     [:article.clearfix
+     [:article
       [:div {:class "useit-lein"}
        [:h3 "Push with Leiningen"]
        [:div {:class "lein"}

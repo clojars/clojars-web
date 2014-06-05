@@ -61,8 +61,7 @@
       (link-to "http://wiki.github.com/ato/clojars-web/tutorial" "tutorial")
       ". Alternatively, "
       (link-to "/projects" "browse the repository")
-      "."]
-     [:div {:class :clear}]]
+      "."]]
     body
     [:footer
      (link-to "https://github.com/ato/clojars-web/wiki/About" "about")

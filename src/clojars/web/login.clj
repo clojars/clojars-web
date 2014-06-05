@@ -9,7 +9,7 @@
 (defn login-form [login_failed username]
   (html-doc nil "Login"
    [:div {:class "light-article"}
-    [:article.clearfix
+    [:article
      [:h1 "Login"]
      [:p "Don't have an account? "
       (link-to "/register" "Sign up!")]

@@ -63,8 +63,7 @@
 (defn show-jar [account jar recent-versions count]
   (html-doc account (str (:jar_name jar) " " (:version jar))
             [:div {:class "light-article"}
-             [:article.clearfix
-              
+             [:article
               [:div.container_12
                [:div#jar-title.grid_8.alpha
                 [:h1 (jar-link jar)]
