@@ -74,10 +74,21 @@ p {
   padding-left: 40px;
   padding-right: 40px;
   padding-top: 20px;
-  padding-bottom: 20px;
+  padding-bottom: 40px;
   margin-bottom: 10px;
 
   background: #e2e4e3;
+}
+
+.light-article {
+  font-size: 20px;
+  padding-left: 40px;
+  padding-right: 40px;
+  padding-top: 20px;
+  padding-bottom: 40px;
+  margin-bottom: 10px;
+
+  background: #fff;
 }
 
 nav {
@@ -157,9 +168,8 @@ nav a {
 
 ul {
   list-style: disc;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  margin-left: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 ul li {
@@ -191,6 +201,7 @@ textarea {
 
 footer {
   background: #e2e4e3;
+  padding-top: 20px;
   display: block;
   text-align: center;
   color: #3e3e3f;
@@ -253,11 +264,49 @@ footer a {
   border-radius: 10px;
 }
 
+.lein-small {
+  background: #f0f1f1;
+  color: black;
+  width: 95%;
+  height: 150px;
+
+  border-radius: 10px;
+}
+
+.maven-small {
+  background: #f0f1f1;
+  color: black;
+  width: 95%;
+  height: 150px;
+
+  border-radius: 10px;
+}
+.gradle-small {
+  background: #f0f1f1;
+  color: black;
+  width: 95%;
+  height: 150px;
+
+  border-radius: 10px;
+}
+
 .lein pre {
   padding: 20px 0 0 20px;
 }
 
 .maven pre {
+  padding: 20px 0 0 20px;
+}
+
+.lein-small pre {
+  padding: 20px 0 0 20px;
+}
+
+.maven-small pre {
+  padding: 20px 0 0 20px;
+}
+
+.gradle-small pre {
   padding: 20px 0 0 20px;
 }
 
@@ -394,11 +443,12 @@ p.hint {
 #jar-title h1 {
   font-size: 2.5em;
   font-weight: 700;
+  line-height: 1.5em;
 }
 
 #jar-info-bar ul {
-  border-top: 1px solid #fff;
-  border-bottom: 1px solid #fff;
+  border-top: 1px solid #e2e4e3;
+  border-bottom: 1px solid #e2e4e3;
 }
 
 #jar-info-bar ul li {
@@ -408,7 +458,7 @@ p.hint {
 }
 
 #jar-info-bar ul li:not(:last-of-type) {
-  border-right: 1px solid #fff;
+  border-right: 1px solid #e2e4e3;
 }
 
 ul#jar-sidebar {
@@ -422,4 +472,10 @@ ul#jar-sidebar li {
 
 ul#jar-sidebar > li {
   border-top: 5px solid black;
+}
+
+.useit h3 {
+  padding-top: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }

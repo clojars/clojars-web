@@ -63,9 +63,7 @@
       (link-to "/projects" "browse the repository")
       "."]
      [:div {:class :clear}]]
-    [:div {:class "article"}
-     [:article.clearfix
-      body]]
+    body
     [:footer
      (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
      (link-to "/projects" "projects")
