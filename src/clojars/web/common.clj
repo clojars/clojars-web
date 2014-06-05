@@ -23,17 +23,18 @@
        (str title " - "))
      "Clojars"]
     (map #(include-css (str "/stylesheets/" %))
-         ["reset.css" "grid.css" "screen.css"])
+         ;; Bootstrap was customized to only include the 'grid' styles
+         ;; more info: http://getbootstrap.com/css/#grid
+         ["reset.css" "vendor/bootstrap/bootstrap.min.css" "screen.css"])
     (include-js "//use.typekit.net/zhw0tse.js")
     [:script {:type "text/javascript"}
      "try{Typekit.load();}catch(e){}"]
     (raw (when-ie (include-js "/js/html5.js")))]
-   [:body
-    [:div.header
+   [:body.container-fluid
+    [:div.header.row
      [:header
-      [:hgroup.grid_4
-       [:h1 (link-to "/" "Clojars")]]
-      [:nav
+      [:h1.col-md-6 (link-to "/" "Clojars")]
+      [:nav.col-md-6
        (if account
          (unordered-list
           [(link-to "/" "dashboard")
@@ -64,7 +65,7 @@
       (link-to "/projects" "browse the repository")
       "."]]
     body
-    [:footer
+    [:footer.col-md-12
      (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
      (link-to "/projects" "projects")
      (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")

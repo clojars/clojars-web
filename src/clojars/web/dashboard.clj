@@ -4,8 +4,8 @@
             [hiccup.element :refer [unordered-list link-to]]))
 
 (defn recent-jar [jar-map]
-  [:li.recent-jar
-   [:div.jar
+  [:li.col-md-4
+   [:div.recent-jar
     [:h3.recent-title
      (jar-link jar-map)]
     [:p.description (:description jar-map)]]])
@@ -13,14 +13,14 @@
 (defn index-page [account]
   (html-doc account nil
     [:div.article
-     [:article
-      [:div.useit-lein
+     [:article.row
+      [:div.useit-lein.col-md-6
        [:h3 "Push with Leiningen"]
        [:div.lein
         [:pre
          (tag "$") " lein pom\n"
          (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]]
-      [:div.useit-maven
+      [:div.useit-maven.col-md-6
        [:h3 "Maven Repository"]
        [:div.maven
         [:pre
@@ -28,8 +28,8 @@
          (tag "  <id>") "clojars.org" (tag "</id>\n")
          (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
          (tag "</repository>")]]]]
-     [:h2.recent "Recently pushed projects"]
-     [:ul (map recent-jar (recent-jars))]]))
+     [:h2.recent.col-md-12 "Recently pushed projects"]
+     [:ul.row (map recent-jar (recent-jars))]]))
 
 (defn dashboard [account]
   (html-doc account "Dashboard"
