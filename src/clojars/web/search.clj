@@ -27,28 +27,30 @@
 
 (defn html-search [account query]
   (html-doc account (str query " - search")
-    [:h1 "Search for '" query "'"]
-    (try
-      (let [results (search/search query)]
-        (if (empty? results)
-          [:p "No results."]
-          [:div
-           (if (some jar-fork? results)
-             collection-fork-notice)
-           [:ul
-            (for [jar results]
-              [:li.search-results
-               (jar-link {:jar_name (:artifact-id jar)
-                          :group_name (:group-id jar)}) " " (:version jar)
-               [:br]
-               (when (seq (:description jar))
-                 [:span.desc (:description jar)
-                  [:br]])
-               [:span.details (if-let [created (:created jar)]
-                                [:td (format-date created)])]])]]))
-      (catch Exception _
-        (.printStackTrace _)
-        [:p "Could not search; please check your query syntax."]))))
+    [:div {:class "light-article"}
+     [:article.clearfix]
+     [:h1 "Search for '" query "'"]
+     (try
+       (let [results (search/search query)]
+         (if (empty? results)
+           [:p "No results."]
+           [:div
+            (if (some jar-fork? results)
+              collection-fork-notice)
+            [:ul
+             (for [jar results]
+               [:li.search-results
+                (jar-link {:jar_name (:artifact-id jar)
+                           :group_name (:group-id jar)}) " " (:version jar)
+                [:br]
+                (when (seq (:description jar))
+                  [:span.desc (:description jar)
+                   [:br]])
+                [:span.details (if-let [created (:created jar)]
+                                 [:td (format-date created)])]])]]))
+       (catch Exception _
+         (.printStackTrace _)
+         [:p "Could not search; please check your query syntax."]))]))
 
 (defn search [account params]
   (let [q (params :q)]

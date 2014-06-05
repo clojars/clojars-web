@@ -44,7 +44,9 @@
   (GET "/security" []
        (try-account
         (html-doc account "Security"
-                  (raw (slurp (io/resource "security.html"))))))
+                  [:div {:class "light-article"}
+                   [:article.clearfix
+                    (raw (slurp (io/resource "security.html")))]])))
   session/routes
   group/routes
   artifact/routes

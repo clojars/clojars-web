@@ -19,27 +19,29 @@
 
 (defn register-form [ & [errors email username ssh-key pgp-key]]
   (html-doc nil "Register"
-            [:h1 "Register"]
-            (error-list errors)
-            (form-to [:post "/register"]
-                     (label :email "Email:")
-                     [:input {:type :email :name :email :id
-                              :email :value email}]
-                     (label :username "Username:")
-                     (text-field :username username)
-                     (label :password "Password:")
-                     (password-field :password)
-                     (label :confirm "Confirm password:")
-                     (password-field :confirm)
-                     (label :ssh-key "SSH public key:")
-                     " (" (link-to
-                           "http://wiki.github.com/ato/clojars-web/ssh-keys"
-                           "what's this?") ")"
-                     (text-area :ssh-key ssh-key)
-                     [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
-                     (label :pgp-key "PGP public key:")
-                     (text-area :pgp-key pgp-key)
-                     (submit-button "Register"))))
+            [:div {:class "light-article"}
+             [:article.clearfix
+              [:h1 "Register"]
+              (error-list errors)
+              (form-to [:post "/register"]
+                       (label :email "Email:")
+                       [:input {:type :email :name :email :id
+                                :email :value email}]
+                       (label :username "Username:")
+                       (text-field :username username)
+                       (label :password "Password:")
+                       (password-field :password)
+                       (label :confirm "Confirm password:")
+                       (password-field :confirm)
+                       (label :ssh-key "SSH public key:")
+                       " (" (link-to
+                             "http://wiki.github.com/ato/clojars-web/ssh-keys"
+                             "what's this?") ")"
+                             (text-area :ssh-key ssh-key)
+                             [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
+                             (label :pgp-key "PGP public key:")
+                             (text-area :pgp-key pgp-key)
+                             (submit-button "Register"))]]))
 
 (defn conj-when [coll test x]
   (if test
