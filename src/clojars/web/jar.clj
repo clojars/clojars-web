@@ -64,7 +64,7 @@
   (html-doc account (str (:jar_name jar) " " (:version jar))
             [:div.container_12
              [:div#jar-title.grid_8.alpha
-              [:h1 (:jar_name jar)]
+              [:h1 (jar-link jar)]
               [:h2 (:description jar)]
               [:div#jar-info-bar
                (let [stats (stats/all)]
