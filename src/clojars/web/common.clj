@@ -22,7 +22,10 @@
        (str title " - "))
      "Clojars"]
     (map #(include-css (str "/stylesheets/" %))
-         ["reset.css" "grid.css" "fonts.css" "screen.css"])
+         ["reset.css" "grid.css" "screen.css"])
+    (include-js "//use.typekit.net/zhw0tse.js")
+    [:script {:type "text/javascript"}
+     "try{Typekit.load();}catch(e){}"]
     (raw (when-ie (include-js "/js/html5.js")))]
    [:body
     [:div {:class "header"}
@@ -38,7 +41,11 @@
          (unordered-list
           [(link-to "/login" "login")
            (link-to "/register" "register")]))]
-      [:h2 "Clojars is a dead easy community for open source Clojure libraries."]]
+      [:h2
+       [:span.heavy "Clojars"]
+       " is a "
+       [:span.heavy "dead easy"]
+       " community for open source Clojure libraries."]]
      [:div {:class :search}
       (form-to [:get "/search"]
                [:input {:name "q"
@@ -48,7 +55,13 @@
                [:input {:id "search-button"
                         :value "Search"
                         :type "submit"}])]
-     [:h2 "To get started pushing your own projects create an account and then check out the tutorial. Alternatively, browse the repository."]
+     [:h2 "To get started pushing your own project "
+      (link-to "/register" "create an account")
+      " and then check out the "
+      (link-to "http://wiki.github.com/ato/clojars-web/tutorial" "tutorial")
+      ". Alternatively, "
+      (link-to "/projects" "browse the repository")
+      "."]
      [:div {:class :clear}]]
     [:div {:class "article"}
      [:article.clearfix

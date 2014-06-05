@@ -62,76 +62,83 @@
 
 (defn show-jar [account jar recent-versions count]
   (html-doc account (str (:jar_name jar) " " (:version jar))
-            [:div.grid_9.alpha
-             [:h1 (jar-link jar)]]
-            [:div.grid_3.omega
-             [:small.downloads
-              (let [stats (stats/all)]
-                [:p
-                 "Downloads: "
-                 (stats/download-count stats
-                                       (:group_name jar)
-                                       (:jar_name jar))
-                 [:br]
-                 "This version: "
-                 (stats/download-count stats
-                                       (:group_name jar)
-                                       (:jar_name jar)
-                                       (:version jar))])]]
-            [:div.grid_12.alpha.omega
-             (:description jar)
-             (when-let [homepage (:homepage jar)]
-               [:p.homepage (safe-link-to homepage homepage)])
-             [:div {:class "useit"}
-              [:div {:class "lein"}
-               [:h3 "leiningen"]
-               [:pre
-                (tag "[")
-                (jar-name jar)
-                [:span {:class :string} " \""
-                 (:version jar) "\""] (tag "]") ]]
-              
-              [:div {:class "gradle"}
-               [:h3 "gradle"]
-               [:pre
-                "compile "
-                \"
-                (:group_name jar)
-                ":"
-                (:jar_name jar)
-                ":"
-                (:version jar)
-                \"]]
+            [:div.container_12
+             [:div#jar-title.grid_8.alpha
+              [:h1 (:jar_name jar)]
+              [:h2 (:description jar)]
+              [:div#jar-info-bar
+               (let [stats (stats/all)]
+                 [:ul
+                  [:li "github/repo"]
+                  [:li (stats/download-count stats
+                                             (:group_name jar)
+                                             (:jar_name jar))
+                   " Downloads"]
+                  [:li (stats/download-count stats
+                                             (:group_name jar)
+                                             (:jar_name jar)
+                                             (:version jar))
+                   " This Version"]])]
+              [:div {:class "useit"}
+               [:h3 "Leiningen"]
+               [:div {:class "lein"}
+                [:pre
+                 (tag "[")
+                 (jar-name jar)
+                 [:span {:class :string} " \""
+                  (:version jar) "\""] (tag "]") ]]
 
-              [:div {:class "maven"}
-               [:h3 "maven"]
-               [:pre
-                (tag "<dependency>\n")
-                (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
-                (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
-                (tag "  <version>") (:version jar) (tag "</version>\n")
-                (tag "</dependency>")]]
+               [:h3 "Gradle"]
+               [:div {:class "gradle"}
+                [:pre
+                 "compile "
+                 \"
+                 (:group_name jar)
+                 ":"
+                 (:jar_name jar)
+                 ":"
+                 (:version jar)
+                 \"]]
+
+               [:h3 "Maven"]
+               [:div {:class "maven"}
+                [:pre
+                 (tag "<dependency>\n")
+                 (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
+                 (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
+                 (tag "  <version>") (:version jar) (tag "</version>\n")
+                 (tag "</dependency>")]]
+               (let [pom (jar-to-pom-map jar)]
+                 (list
+                  (fork-notice jar)
+                  (promotion-details account jar)                 
+                  (when-not pom
+                    [:p.error "Oops. We hit an error opening the metadata POM file for this project "
+                     "so some details are not available."])))]]
+             [:div.grid_4.omega
               (let [pom (jar-to-pom-map jar)]
-                (list
-                 [:p "Pushed by " (user-link (:user jar)) " on "
-                  [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
-                  (if-let [url (commit-url pom)]
-                    [:span.commit-url " with " (link-to url "this commit")])]
-                 (fork-notice jar)
-                 (promotion-details account jar)
-                 (dependency-section "dependencies" "dependencies"
-                                     (remove #(not= (:scope %) "compile") (:dependencies pom)))
-                 (when-not pom
-                   [:p.error "Oops. We hit an error opening the metadata POM file for this project "
-                    "so some details are not available."])))
-              [:h3 "recent versions"]
-              [:ul#versions
-               (for [v recent-versions]
-                 [:li (link-to (url-for (assoc jar
-                                          :version (:version v)))
-                               (:version v))])]
-              [:p (link-to (str (jar-url jar) "/versions")
-                           (str "show all versions (" count " total)"))]]]))
+                [:ul#jar-sidebar
+                 [:li
+                  [:p "Pushed by "
+                   (user-link (:user jar)) " on "
+                   [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
+                   (if-let [url (commit-url pom)]
+                     [:span.commit-url " with " (link-to url "this commit")])]]
+                 [:li
+                  [:h4 "recent versions"]
+                  [:ul#versions
+                   (for [v recent-versions]
+                     [:li (link-to (url-for (assoc jar
+                                              :version (:version v)))
+                                   (:version v))])]
+                  [:p (link-to (str (jar-url jar) "/versions")
+                               (str "show all versions (" count " total)"))]]
+                 [:li
+                  (dependency-section "dependencies" "dependencies"
+                                      (remove #(not= (:scope %) "compile") (:dependencies pom)))]])]]
+            [:div.grid_12.alpha.omega
+             (when-let [homepage (:homepage jar)]
+               [:p.homepage (safe-link-to homepage homepage)])]))
 
 (defn show-versions [account jar versions]
   (html-doc account (str "all versions of "(jar-name jar))

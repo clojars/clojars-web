@@ -12,7 +12,7 @@ light gray: #f2f3f4
 
 body {
   background: #e2e4e3;
-  font-family: "MuseoSans-500", Arial, "Liberation Sans", FreeSans, sans-serif;
+  font-family: "museo-sans-rounded", Arial, "Liberation Sans", FreeSans, sans-serif;
   line-height: 150%;
 }
 
@@ -27,7 +27,7 @@ header {
 
 .header h1 a {
   color: #93c83f;
-  font-size: 2em;
+  font-size: 3em;
 }
 
 .header h2 {
@@ -35,7 +35,9 @@ header {
   color: #fff;
   text-align: center;
   padding: 0 20%;
-  font-size: 1.5em;
+  line-height: 1em;
+  font-size: 2.5em;
+  font-weight: 300;
 }
 
 .article h1 {
@@ -43,6 +45,7 @@ header {
   margin-top: 20px;
   margin-bottom: 20px;
   font-size: 30px;
+  font-weight: 300;
 }
 
 .article h2 {
@@ -53,7 +56,7 @@ header {
 
 
 a {
-  color: #339;
+  color: #238db5;
   text-decoration: none;
 }
 
@@ -241,6 +244,15 @@ footer a {
   border-radius: 10px;
 }
 
+.gradle {
+  background: #fff;
+  color: black;
+  width: 95%;
+  height: 150px;
+
+  border-radius: 10px;
+}
+
 .lein pre {
   padding: 20px 0 0 20px;
 }
@@ -373,4 +385,41 @@ p.hint {
 
 .recent-jar .jar p {
   background: #fff;
+}
+
+.heavy {
+  font-weight: 700;
+}
+
+#jar-title h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+}
+
+#jar-info-bar ul {
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+}
+
+#jar-info-bar ul li {
+  display: inline-block;
+  text-align: center;
+  width: 30%;
+}
+
+#jar-info-bar ul li:not(:last-of-type) {
+  border-right: 1px solid #fff;
+}
+
+ul#jar-sidebar {
+  list-style: none;
+}
+
+ul#jar-sidebar li {
+  list-style-type: none;
+  display: block;
+}
+
+ul#jar-sidebar > li {
+  border-top: 5px solid black;
 }

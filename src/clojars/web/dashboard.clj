@@ -3,12 +3,12 @@
             [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
             [hiccup.element :refer [unordered-list link-to]]))
 
-(defn recent-jar [title description]
+(defn recent-jar [jar-map]
   [:li.recent-jar
    [:div.jar
     [:h3.recent-title
-     [:a {:href "#"} title]]
-    [:p.description description]]])
+     (jar-link jar-map)]
+    [:p.description (:description jar-map)]]])
 
 (defn index-page [account]
   (html-doc account nil
@@ -27,17 +27,7 @@
        (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
        (tag "</repository>")]]]
     [:h2 {:class "recent"} "Recently pushed projects"]
-    [:ul
-     (map #(apply recent-jar %)
-          [["foo" "bar"]
-           ["bar" "baz"]
-           ["def" "ghi"]
-           ["jkl" "mno"]
-           ["pqr" "stu"]
-           ["vwx" "yz1"]])]
-    ;; TODO: Bring me back.
-    ;; (unordered-list (map jar-link (recent-jars)))
-    ))
+    [:ul (map recent-jar (recent-jars))]))
 
 (defn dashboard [account]
   (html-doc account "Dashboard"

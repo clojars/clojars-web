@@ -161,7 +161,7 @@
              "and j.jar_name = l.jar_name "
              "and j.created = l.created "
              "order by l.created desc "
-             "limit 5")
+             "limit 6")
             :results))
 
 (defn jar-exists [groupname jarname]
