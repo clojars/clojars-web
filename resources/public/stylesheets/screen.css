@@ -32,80 +32,80 @@ header {
 }
 
 .article h1 {
-    color: #336;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    font-size: 30px;
+  color: #336;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-size: 30px;
 }
 
 .article h2 {
-    color: #336;
-    margin-bottom: 20px;
-    margin-top: 40px;
+  color: #336;
+  margin-bottom: 20px;
+  margin-top: 40px;
 }
 
 
 a {
-    color: #339;
-    text-decoration: none;
+  color: #339;
+  text-decoration: none;
 }
 
 a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 p {
-    margin-top: 1em;
-    margin-bottom: 1em;
+  margin-top: 1em;
+  margin-bottom: 1em;
 }
 
 .article {
-    font-size: 20px;
-    padding-left: 40px;
-    padding-right: 40px;
-    padding-top: 20px;
-    padding-bottom: 20px;
-    margin-bottom: 10px;
-    margin-top: 20px;
+  font-size: 20px;
+  padding-left: 40px;
+  padding-right: 40px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  margin-bottom: 10px;
+  margin-top: 20px;
 
-    background: #e6e7e9;
+  background: #e6e7e9;
 
-    /* border: 5px solid #a58879; */
+  /* border: 5px solid #a58879; */
 
-    -moz-border-radius: 10px;
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  border-radius: 10px;
 }
 
 nav {
-    float: right;
-    display: block;
-    height: 40px;
+  float: right;
+  display: block;
+  height: 40px;
 
-    margin-right: 10px;
+  margin-right: 10px;
 
-    font-size: 20px;
-    text-align: right;
+  font-size: 20px;
+  text-align: right;
 }
 
 nav ul {
-    display: inline;
+  display: inline;
 }
 nav ul li {
-    display: inline;
+  display: inline;
 }
 
 nav form {
-    clear: right;
-    margin-top: 10px;
+  clear: right;
+  margin-top: 10px;
 }
 
 nav a {
-    color: #fff;
-    text-decoration: none;
-    font-size: 0.8em;
-    text-transform: uppercase;
-    padding: 5px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  padding: 5px;
 }
 
 .search {
@@ -135,127 +135,127 @@ nav a {
 }
 
 .error {
-    display: block;
-    border: 2px solid #f66;
-    background: #fdd;
-    padding: 20px;
-    margin-top: 20px;
-    margin-bottom: 20px;
+  display: block;
+  border: 2px solid #f66;
+  background: #fdd;
+  padding: 20px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 #flash {
-    display: block;
-    border: 2px solid #693;
-    background: #fdd;
-    padding: 20px;
-    margin-top: 20px;
-    margin-bottom: 20px;
+  display: block;
+  border: 2px solid #693;
+  background: #fdd;
+  padding: 20px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 ul {
-    list-style: disc;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    margin-left: 20px;
+  list-style: disc;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: 20px;
 }
 
 ul li {
-    padding: 0.25em;
+  padding: 0.25em;
 }
 
 label {
-    margin-top: 10px;
-    margin-bottom: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 input {
-    font-size: 20px;
-    width: 100%;
-    margin-bottom: 20px;
-    margin-top: 5px;
+  font-size: 20px;
+  width: 100%;
+  margin-bottom: 20px;
+  margin-top: 5px;
 }
 
 input[type=submit] {
-    width: auto;
-    margin-top: 20px;
+  width: auto;
+  margin-top: 20px;
 }
 
 textarea {
-    width: 100%;
-    height: 8em;
-    margin-top: 5px;
+  width: 100%;
+  height: 8em;
+  margin-top: 5px;
 }
 
 footer {
   background: #e6e7e9;
-    display: block;
-    text-align: center;
-    color: #3e3e3f;
-    font-weight: bold;
+  display: block;
+  text-align: center;
+  color: #3e3e3f;
+  font-weight: bold;
 }
 
 footer a {
   color: #3e3e3f;
-    margin: 20px;
+  margin: 20px;
 }
 
 .useit h3 {
-    text-align: left;
-    margin-bottom: 20px;
-    color: #777;
+  text-align: left;
+  margin-bottom: 20px;
+  color: #777;
 }
 
 .useit div {
-    background: #1f1f1f;
-    color: white;
-    padding: 20px;
+  background: #1f1f1f;
+  color: white;
+  padding: 20px;
 
-    margin-top: 20px;
-    margin-bottom: 20px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 
-    border: 5px solid #444;
+  border: 5px solid #444;
 
-    -moz-border-radius: 10px;
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  border-radius: 10px;
 }
 
 .useit div .tag {
-    color: #ffcfaf;
+  color: #ffcfaf;
 }
 
 .useit div .string {
-    color: #cc9393;
+  color: #cc9393;
 }
 
 .add-member input {
-    width: 200px;
-    margin-right: 10px;
+  width: 200px;
+  margin-right: 10px;
 }
 
 .desc {
-    color: #444;
-    font-size: 90%;
+  color: #444;
+  font-size: 90%;
 }
 
 .details {
-    color: #444;
-    font-size: 80%;
+  color: #444;
+  font-size: 80%;
 }
 
 .search-results, .browse-results {
-   list-style-type: none;
-   margin-bottom: .4em;
+  list-style-type: none;
+  margin-bottom: .4em;
 }
 
 .stacktrace {
-    font-size: 0.75em;
-    overflow-x: scroll;
+  font-size: 0.75em;
+  overflow-x: scroll;
 }
 
 p.hint {
-    margin: 0;
-    color: #555;
+  margin: 0;
+  color: #555;
 }
 
 .page-nav {
@@ -300,7 +300,7 @@ p.hint {
 }
 
 .fork a {
-    font-style: italic;
+  font-style: italic;
 }
 
 .fork-notice {
@@ -309,6 +309,6 @@ p.hint {
 }
 
 .downloads {
-    float: right;
-    font-size: 0.6em;
+  float: right;
+  font-size: 0.6em;
 }
