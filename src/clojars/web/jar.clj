@@ -62,7 +62,7 @@
 
 (defn show-jar [account jar recent-versions count]
   (html-doc account (str (:jar_name jar) " " (:version jar))
-            [:div {:class "light-article"}
+            [:div.light-article
              [:article
               [:div.container_12
                [:div#jar-title.grid_8.alpha
@@ -81,17 +81,17 @@
                                                (:jar_name jar)
                                                (:version jar))
                      " This Version"]])]
-                [:div {:class "useit"}
+                [:div.useit
                  [:h3 "Leiningen"]
-                 [:div {:class "lein-small"}
+                 [:div.lein-small
                   [:pre
                    (tag "[")
                    (jar-name jar)
-                   [:span {:class :string} " \""
+                   [:span.string " \""
                     (:version jar) "\""] (tag "]") ]]
 
                  [:h3 "Gradle"]
-                 [:div {:class "gradle-small"}
+                 [:div.gradle-small
                   [:pre
                    "compile "
                    \"
@@ -103,7 +103,7 @@
                    \"]]
 
                  [:h3 "Maven"]
-                 [:div {:class "maven-small"}
+                 [:div.maven-small
                   [:pre
                    (tag "<dependency>\n")
                    (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
@@ -145,7 +145,7 @@
 (defn show-versions [account jar versions]
   (html-doc account (str "all versions of "(jar-name jar))
             [:h1 "all versions of "(jar-link jar)]
-            [:div {:class "versions"}
+            [:div.versions
              [:ul
               (for [v versions]
                 [:li (link-to (url-for (assoc jar

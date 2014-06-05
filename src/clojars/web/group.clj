@@ -15,7 +15,7 @@
     (unordered-list (map user-link membernames))
     (error-list errors)
     (when (authorized? account groupname)
-      [:div {:class :add-member}
+      [:div.add-member
        (form-to [:post (str "/groups/" groupname)]
          (text-field "username")
          (submit-button "add member"))])))

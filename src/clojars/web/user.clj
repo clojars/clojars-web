@@ -19,7 +19,7 @@
 
 (defn register-form [ & [errors email username ssh-key pgp-key]]
   (html-doc nil "Register"
-            [:div {:class "light-article"}
+            [:div.light-article
              [:article
               [:h1 "Register"]
               (error-list errors)

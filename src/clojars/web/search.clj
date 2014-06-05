@@ -27,7 +27,7 @@
 
 (defn html-search [account query]
   (html-doc account (str query " - search")
-    [:div {:class "light-article"}
+    [:div.light-article
      [:h1 "Search for '" query "'"]
      (try
        (let [results (search/search query)]

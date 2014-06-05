@@ -8,14 +8,14 @@
 
 (defn login-form [login_failed username]
   (html-doc nil "Login"
-   [:div {:class "light-article"}
+   [:div.light-article
     [:article
      [:h1 "Login"]
      [:p "Don't have an account? "
       (link-to "/register" "Sign up!")]
 
      (when login_failed
-       [:div [:p {:class :error} "Incorrect username and/or password."]
+       [:div [:p.error "Incorrect username and/or password."]
         [:p "If you have not logged in since "
          [:a {:href "https://groups.google.com/group/clojure/browse_thread/thread/5e0d48d2b82df39b"}
           "the insecure password hashes were wiped"]

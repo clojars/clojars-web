@@ -28,9 +28,9 @@
      "try{Typekit.load();}catch(e){}"]
     (raw (when-ie (include-js "/js/html5.js")))]
    [:body
-    [:div {:class "header"}
+    [:div.header
      [:header
-      [:hgroup {:class :grid_4}
+      [:hgroup.grid_4
        [:h1 (link-to "/" "Clojars")]]
       [:nav
        (if account
@@ -46,7 +46,7 @@
        " is a "
        [:span.heavy "dead easy"]
        " community for open source Clojure libraries."]]
-     [:div {:class :search}
+     [:div.search
       (form-to [:get "/search"]
                [:input {:name "q"
                         :id "search"
@@ -78,13 +78,13 @@
 
 (defn error-list [errors]
   (when errors
-    [:div {:class :error}
+    [:div.error
      [:strong "Blistering barnacles!"]
      "  Something's not shipshape:"
      (unordered-list errors)]))
 
 (defn tag [s]
-  (raw (html [:span {:class "tag"} s])))
+  (raw (html [:span.tag s])))
 
 (defn jar-url [jar]
   (if (= (:group_name jar) (:jar_name jar))
@@ -136,25 +136,25 @@
         page-range 3
         page-url "/projects?page="
         current-page (-> current-page (max 1) (min total-pages))
-        main-div [:div {:class "page-nav"}]
+        main-div [:div.page-nav]
         previous-page (if (= current-page 1)
-                        [[:span {:class "previous-page disabled"} previous-text]]
-                        [[:a
-                          {:href (str page-url (- current-page 1)) :class "previous-page"}
+                        [[:span.previous-page.disabled previous-text]]
+                        [[:a.previous-page
+                          {:href (str page-url (- current-page 1))}
                           previous-text]])
         before-current (->> (drop-while
                               #(< % 1)
                               (range (- current-page page-range) current-page))
                             (map #(link-to (str page-url %) %)))
-        current [[:em {:class "current"} (str current-page)]]
+        current [[:em.current (str current-page)]]
         after-current (->> (take-while
                              #(<= % total-pages)
                              (range (+ current-page 1) (+ current-page 1 page-range)))
                            (map #(link-to (str page-url %) %)))
         next-page (if (= current-page total-pages)
-                    [[:span {:class "next-page disabled"} next-text]]
-                    [[:a
-                      {:href (str page-url (+ current-page 1)) :class "next-page"}
+                    [[:span.next-page.disabled next-text]]
+                    [[:a.next-page
+                      {:href (str page-url (+ current-page 1))}
                       next-text]])]
     (vec
       (concat main-div previous-page before-current current after-current next-page))))
@@ -163,7 +163,7 @@
   (let [total-pages (-> (/ total per-page) Math/ceil .intValue)
         current-page (-> current-page (max 1) (min total-pages))
         upper (* per-page current-page)]
-   [:div {:class "page-description"}
+   [:div.page-description
      "Displaying projects "
      [:b (str (-> upper (- per-page) inc) " - " (min upper total))]
      " of "

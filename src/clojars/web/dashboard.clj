@@ -12,23 +12,23 @@
 
 (defn index-page [account]
   (html-doc account nil
-    [:div {:class "article"}
+    [:div.article
      [:article
-      [:div {:class "useit-lein"}
+      [:div.useit-lein
        [:h3 "Push with Leiningen"]
-       [:div {:class "lein"}
+       [:div.lein
         [:pre
          (tag "$") " lein pom\n"
          (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]]
-      [:div {:class "useit-maven"}
+      [:div.useit-maven
        [:h3 "Maven Repository"]
-       [:div {:class "maven"}
+       [:div.maven
         [:pre
          (tag "<repository>\n")
          (tag "  <id>") "clojars.org" (tag "</id>\n")
          (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
          (tag "</repository>")]]]]
-     [:h2 {:class "recent"} "Recently pushed projects"]
+     [:h2.recent "Recently pushed projects"]
      [:ul (map recent-jar (recent-jars))]]))
 
 (defn dashboard [account]
