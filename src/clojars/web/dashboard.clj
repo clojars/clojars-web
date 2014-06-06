@@ -4,31 +4,32 @@
             [hiccup.element :refer [unordered-list link-to]]))
 
 (defn recent-jar [jar-map]
-  [:li.col-md-4
+  [:li.col-md-4.col-sm-6
    [:div.recent-jar
-    [:h3.recent-title
+    [:h3.recent-jar-title
      (jar-link jar-map)]
-    [:p.description (:description jar-map)]]])
+    [:p.recent-jar-description (:description jar-map)]]])
 
 (defn index-page [account]
   (html-doc account nil
-    [:article.row.push-information
-     [:div.useit-lein.col-md-6
+    [:article.row
+     [:div.push-information.col-md-6
       [:h3.push-header "Push with Leiningen"]
-      [:div.lein.push-example
-       [:pre
+      [:div.push-example
+       [:pre.push-example-leiningen
         (tag "$") " lein pom\n"
         (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]]
-     [:div.useit-maven.col-md-6
+     [:div.push-information.col-md-6
       [:h3.push-header "Maven Repository"]
-      [:div.maven.push-example
+      [:div.push-example
        [:pre
         (tag "<repository>\n")
         (tag "  <id>") "clojars.org" (tag "</id>\n")
         (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
         (tag "</repository>")]]]]
-    [:h2.recent-header.col-md-12 "Recently pushed projects"]
-    [:ul.row (map recent-jar (recent-jars))]))
+    [:div.recent-jars-header-container.row
+     [:h2.recent-jars-header.col-md-12 "Recently pushed projects"]]
+    [:ul.recent-jars-list.row (map recent-jar (recent-jars))]))
 
 (defn dashboard [account]
   (html-doc account "Dashboard"

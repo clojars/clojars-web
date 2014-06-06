@@ -14,6 +14,8 @@ light gray:    #f2f3f4
 body {
   background: #e2e4e3;
   font-family: "museo-sans-rounded", Arial, "Liberation Sans", FreeSans, sans-serif;
+  transition-timing-function: ease;
+  transition-duration: 1s;
 }
 
 a {
@@ -44,41 +46,51 @@ a:hover {
   font-size: 0.8em;
   letter-spacing: 1px;
   text-transform: uppercase;
+  line-height: 40px;
+  vertical-align: middle;
 }
 
 .main-navigation a {
   color: white;
+  padding: 10px;
+  border-radius: 10px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.main-navigation a:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  text-decoration: none;
 }
 
 .main-navigation li {
   display: inline;
-  margin-left: 30px;
+  margin-left: 15px;
 }
 
-/* FIXME:
- * the font sizes and spacing is off here
- */
 .hero {
   padding: 15px 25px 50px;
-  background-color: #622C15;
+  background-color: #622c15;
   text-align: center;
   color: white;
 }
 
 .hero-text {
   clear: both;
-  font-size: 2.2em;
+  font-size: 2.4em;
   line-height: 1.5em;
   font-weight: 300;
+  padding-top: 30px;
 }
 
 .getting-started {
   clear: both;
   font-size: 1.2em;
   line-height: 1.6em;
+  height: 4em;
 }
 
 .search-form-container {
+  white-space: nowrap;
   margin: 50px 0;
 }
 
@@ -89,39 +101,27 @@ a:hover {
   font-weight: 300;
 }
 
-/* FIXME:
- * this isn't the right width (doesn't match the comp) and doesn't work well on
- * mobile
- *
- * also the text color is probably wrong (both placeholder and actual typed
- * text)
- */
+/* FIXME: add active/hover states? */
 .search-text {
+  box-sizing: border-box;
   color: black;
-  width: 50%;
+  width: 60%;
   background-color: #e9e9e9;
   border-radius: 10px 0 0 10px;
   border: none;
 }
 
-/* FIXME:
- * this doesn't work well on mobile
- *
- * also make sure the active/hover states are right and add transitions (if desired)
- */
+/* FIXME: add active/hover states? */
 .search-button {
-  min-width: 160px;
+  min-width: 150px;
   background: #4098cf;
   color: white;
   border-radius: 0 10px 10px 0;
   border: none;
 }
 
-/* FIXME
- * the padding on here and on the hero/home is off
- */
 .push-information {
-  padding: 40px 10px;
+  padding: 40px 30px 0;
 }
 
 .push-header {
@@ -129,72 +129,119 @@ a:hover {
   margin-left: 15px;
 }
 
-/* FIXME:
- * center the leiningen push information
- */
 .push-example {
   padding: 25px;
   background: white;
   border-radius: 10px;
   margin-top: 15px;
   height: 130px;
+  overflow-x: auto;
+}
+
+/* override bootstrap's default overflow */
+pre {
+  overflow: visible;
 }
 
 .push-example .tag {
   color: #f2511b;
 }
 
+/* bump the leiningen push example text down a little so it's closer to
+ * vertically centered
+ */
+.push-example-leiningen {
+  margin-top: 20px;
+}
 
-.recent-header {
+.recent-jars-header-container {
+  margin: 0 30px;
+}
+
+.recent-jars-header {
   color: #4f4c4c;
   text-transform: uppercase;
   border: solid #f4f4f4;
   border-width: 1px 0;
   text-align: center;
-  padding: 10px;
-  margin: 40px;
+  padding: 10px 0 ;
+  margin: 40px 0;
   font-size: 1.1em;
   letter-spacing: 2px;
   font-weight: 600;
 }
 
-/* FIXME
- * the padding around these is wrong
- *
- * missing download stats in the markup or data (so that's unstyled)
- */
+.recent-jars-list {
+  margin: 0 15px;
+}
+
 .recent-jar {
+  cursor: pointer;
   background: white;
   border-top: 8px solid #87cf29;
   padding: 10px 20px;
-}
-
-.recent-title {
-  margin-bottom: 10px;
-  font-size: 1.2em;
-}
-
-.recent-title a {
-  color: #4098cf;
-}
-
-.recent-jar {
-  height: 110px;
+  height: 150px;
   margin-bottom: 30px;
+  transition: border-color 0.2s ease-in-out;
 }
 
-/* .useit div .string { */
-/*   color: #cc9393; */
-/* } */
+.recent-jar:hover {
+  border-top-color: #f16621;
+}
+
+.recent-jar:hover a {
+  text-decoration: underline;
+}
+
+.recent-jar-description {
+  font-size: 1.1em;
+}
+
+.recent-jar-title {
+  margin-bottom: 10px;
+  font-size: 1.4em;
+}
+
+.recent-jar-title a {
+  color: #4098cf;
+  /* make the entire box clickable
+   *
+   * this is the only link in this box
+   */
+  padding: 20px 90% 110px 20px;
+  margin-left: -20px;
+}
 
 footer {
   text-align: center;
-  margin: 40px 0;
   font-weight: 400;
   font-size: 1.1em;
+  padding: 40px 0 50px;
+  clear: both;
 }
 
 footer a {
   color: #393536;
   margin: 0 5px;
+}
+
+/* See http://getbootstrap.com/css/#grid-media-queries for more information
+ * about bootstrap's breakpoints
+ */
+@media (max-width: 768px) {
+  /* Hide the search button on small screens */
+  .search-button {
+    display: none;
+  }
+
+  .search-text {
+    border-radius: 10px;
+    width: 90%;
+  }
+
+  /* reflow the 'hero' and 'getting started' text on small screens  */
+  .getting-started > .col-md-12, .hero-text > .col-md-12 {
+    display: inline;
+    padding: 0
+  }
 }

@@ -33,8 +33,8 @@
    [:body.container-fluid
     [:div.hero.row
      [:header
-      [:h1.home.col-md-6 (link-to "/" "Clojars")]
-      [:nav.main-navigation.col-md-6
+      [:h1.home.col-md-6.col-sm-6.col-xs-6 (link-to "/" "Clojars")]
+      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-6
        (if account
          (unordered-list
           [(link-to "/" "dashboard")
@@ -43,34 +43,37 @@
          (unordered-list
           [(link-to "/login" "login")
            (link-to "/register" "register")]))]
-      [:h2.hero-text.col-md-12
-       [:span.heavy "Clojars"]
-       " is a "
-       [:span.heavy "dead easy"]
-       " community repository for "
-       [:br]
-       " open source Clojure libraries."]]
+      [:h2.hero-text.row
+       [:div.col-md-12
+        [:span.heavy "Clojars"]
+        " is a "
+        [:span.heavy "dead easy"]
+        " community repository for "]
+       [:div.col-md-12
+        " open source Clojure libraries."]]]
      [:div.search-form-container.col-md-12
       [:form {:action "/search"}
        [:input {:type "search"
                 :name "q"
                 :id "search"
                 :class "search search-text"
-                :placeholder "Search projects..."}]
+                :placeholder "Search projects..."
+                :required true}]
        [:input {:id "search-button"
                 :value "Search"
                 :class "search-button"
                 :type "submit"}]]]
      [:h2.getting-started.row
-      "To get started pushing your own project "
-      (link-to "/register" "create an account")
-      " and then"
-      [:br]
-      " check out the "
-      (link-to "http://wiki.github.com/ato/clojars-web/tutorial" "tutorial")
-      ". Alternatively, "
-      (link-to "/projects" "browse the repository")
-      "."]]
+      [:div.col-md-12
+       "To get started pushing your own project "
+       (link-to "/register" "create an account")
+       " and then"]
+      [:div.col-md-12
+       " check out the "
+       (link-to "http://wiki.github.com/ato/clojars-web/tutorial" "tutorial")
+       ". Alternatively, "
+       (link-to "/projects" "browse the repository")
+       "."]]]
     body
     [:footer.col-md-12
      (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
