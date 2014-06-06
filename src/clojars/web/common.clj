@@ -31,6 +31,56 @@
     [:script "try{Typekit.load();}catch(e){}"]
     (raw (when-ie (include-js "/js/html5.js")))]
    [:body.container-fluid
+    [:header.small-header.row
+     [:h1.home.col-md-2.col-sm-2.col-xs-2 (link-to "/" "Clojars")]
+     [:div.search-form-container.col-md-6.col-sm-6.col-xs-6
+      [:form {:action "/search"}
+       [:input {:type "search"
+                :name "q"
+                :id "search"
+                :class "search search-text"
+                :placeholder "Search projects..."
+                :required true}]]]
+     [:nav.main-navigation.col-md-4.col-sm-4.col-xs-4
+      (if account
+        (unordered-list
+         [(link-to "/" "dashboard")
+          (link-to "/profile" "profile")
+          (link-to "/logout" "logout")])
+        (unordered-list
+         [(link-to "/login" "login")
+          (link-to "/register" "register")]))]]
+    body
+    [:footer.col-md-12
+     (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
+     (link-to "/projects" "projects")
+     (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
+     (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
+     (link-to "https://github.com/ato/clojars-web" "code")
+     (link-to "/security" "security")
+     (link-to "https://github.com/ato/clojars-web/wiki/" "help")]]))
+
+(defn html-doc-with-large-header [account title & body]
+  (html5
+   [:head
+    [:link {:type "application/opensearchdescription+xml"
+            :href "/opensearch.xml"
+            :rel "search"}]
+    [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+    [:title
+     (when title
+       (str title " - "))
+     "Clojars"]
+    (map #(include-css (str "/stylesheets/" %))
+         ;; Bootstrap was customized to only include the 'grid' styles
+         ;; (then the default colors were removed)
+         ;; more info: http://getbootstrap.com/css/#grid
+         ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
+    (include-js "//use.typekit.net/zhw0tse.js")
+    [:script "try{Typekit.load();}catch(e){}"]
+    (raw (when-ie (include-js "/js/html5.js")))]
+   [:body.container-fluid
     [:div.hero.row
      [:header
       [:h1.home.col-md-6.col-sm-6.col-xs-6 (link-to "/" "Clojars")]

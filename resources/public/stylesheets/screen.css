@@ -67,11 +67,15 @@ a:hover {
   margin-left: 15px;
 }
 
-.hero {
+.hero, .small-header {
   padding: 15px 25px 50px;
   background-color: #622c15;
   text-align: center;
   color: white;
+}
+
+.small-header {
+  padding: 20px 25px 60px;
 }
 
 .hero-text {
@@ -89,12 +93,12 @@ a:hover {
   height: 4em;
 }
 
-.search-form-container {
+.hero .search-form-container {
   white-space: nowrap;
   margin: 50px 0;
 }
 
-.search-text, .search-button {
+.hero .search-text, .hero .search-button {
   padding: 15px 30px;
   font-size: 1.4em;
   letter-spacing: 1px;
@@ -109,6 +113,12 @@ a:hover {
   background-color: #e9e9e9;
   border-radius: 10px 0 0 10px;
   border: none;
+}
+
+.small-header .search-text {
+  border-radius: 3px;
+  padding: 5px 10px;
+  margin-top: 5px;
 }
 
 /* FIXME: add active/hover states? */

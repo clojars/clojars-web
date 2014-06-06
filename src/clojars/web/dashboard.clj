@@ -1,5 +1,5 @@
 (ns clojars.web.dashboard
-  (:require [clojars.web.common :refer [html-doc jar-link group-link tag]]
+  (:require [clojars.web.common :refer [html-doc html-doc-with-large-header jar-link group-link tag]]
             [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
             [hiccup.element :refer [unordered-list link-to]]))
 
@@ -11,7 +11,7 @@
     [:p.recent-jar-description (:description jar-map)]]])
 
 (defn index-page [account]
-  (html-doc account nil
+  (html-doc-with-large-header account nil
     [:article.row
      [:div.push-information.col-md-6
       [:h3.push-header "Push with Leiningen"]
