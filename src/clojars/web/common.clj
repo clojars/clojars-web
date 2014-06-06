@@ -24,17 +24,18 @@
      "Clojars"]
     (map #(include-css (str "/stylesheets/" %))
          ;; Bootstrap was customized to only include the 'grid' styles
+         ;; (then the default colors were removed)
          ;; more info: http://getbootstrap.com/css/#grid
-         ["reset.css" "vendor/bootstrap/bootstrap.min.css" "screen.css"])
+         ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
     (include-js "//use.typekit.net/zhw0tse.js")
     [:script {:type "text/javascript"}
      "try{Typekit.load();}catch(e){}"]
     (raw (when-ie (include-js "/js/html5.js")))]
    [:body.container-fluid
-    [:div.header.row
+    [:div.hero.row
      [:header
-      [:h1.col-md-6 (link-to "/" "Clojars")]
-      [:nav.col-md-6
+      [:h1.home.col-md-6 (link-to "/" "Clojars")]
+      [:nav.main-navigation.col-md-6
        (if account
          (unordered-list
           [(link-to "/" "dashboard")
@@ -43,23 +44,30 @@
          (unordered-list
           [(link-to "/login" "login")
            (link-to "/register" "register")]))]
-      [:h2
+      [:h2.hero-text.col-md-12
        [:span.heavy "Clojars"]
        " is a "
        [:span.heavy "dead easy"]
-       " community for open source Clojure libraries."]]
-     [:div.search
-      (form-to [:get "/search"]
-               [:input {:name "q"
-                        :id "search"
-                        :class :search
-                        :placeholder "Search projects..."}]
-               [:input {:id "search-button"
-                        :value "Search"
-                        :type "submit"}])]
-     [:h2 "To get started pushing your own project "
+       " community repository for "
+       [:br]
+       " open source Clojure libraries."]]
+     [:div.search-form-container.col-md-12
+      [:form {:action "/search"}
+       [:input {:type "search"
+                :name "q"
+                :id "search"
+                :class "search search-text"
+                :placeholder "Search projects..."}]
+       [:input {:id "search-button"
+                :value "Search"
+                :class "search-button"
+                :type "submit"}]]]
+     [:h2.getting-started.row
+      "To get started pushing your own project "
       (link-to "/register" "create an account")
-      " and then check out the "
+      " and then"
+      [:br]
+      " check out the "
       (link-to "http://wiki.github.com/ato/clojars-web/tutorial" "tutorial")
       ". Alternatively, "
       (link-to "/projects" "browse the repository")

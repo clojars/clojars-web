@@ -12,24 +12,23 @@
 
 (defn index-page [account]
   (html-doc account nil
-    [:div.article
-     [:article.row
-      [:div.useit-lein.col-md-6
-       [:h3 "Push with Leiningen"]
-       [:div.lein
-        [:pre
-         (tag "$") " lein pom\n"
-         (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]]
-      [:div.useit-maven.col-md-6
-       [:h3 "Maven Repository"]
-       [:div.maven
-        [:pre
-         (tag "<repository>\n")
-         (tag "  <id>") "clojars.org" (tag "</id>\n")
-         (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
-         (tag "</repository>")]]]]
-     [:h2.recent.col-md-12 "Recently pushed projects"]
-     [:ul.row (map recent-jar (recent-jars))]]))
+    [:article.row.push-information
+     [:div.useit-lein.col-md-6
+      [:h3.push-header "Push with Leiningen"]
+      [:div.lein.push-example
+       [:pre
+        (tag "$") " lein pom\n"
+        (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]]
+     [:div.useit-maven.col-md-6
+      [:h3.push-header "Maven Repository"]
+      [:div.maven.push-example
+       [:pre
+        (tag "<repository>\n")
+        (tag "  <id>") "clojars.org" (tag "</id>\n")
+        (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
+        (tag "</repository>")]]]]
+    [:h2.recent-header.col-md-12 "Recently pushed projects"]
+    [:ul.row (map recent-jar (recent-jars))]))
 
 (defn dashboard [account]
   (html-doc account "Dashboard"
