@@ -10,6 +10,16 @@
    (html contents)
    "<![endif]-->"))
 
+(def footer
+  [:footer.col-md-12
+   (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
+   (link-to "/projects" "projects")
+   (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
+   (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
+   (link-to "https://github.com/ato/clojars-web" "code")
+   (link-to "/security" "security")
+   (link-to "https://github.com/ato/clojars-web/wiki/" "help")])
+
 (defn html-doc [account title & body]
   (html5
    [:head
@@ -51,14 +61,7 @@
          [(link-to "/login" "login")
           (link-to "/register" "register")]))]]
     body
-    [:footer.col-md-12
-     (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
-     (link-to "/projects" "projects")
-     (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
-     (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
-     (link-to "https://github.com/ato/clojars-web" "code")
-     (link-to "/security" "security")
-     (link-to "https://github.com/ato/clojars-web/wiki/" "help")]]))
+    footer]))
 
 (defn html-doc-with-large-header [account title & body]
   (html5
@@ -80,7 +83,7 @@
     (include-js "//use.typekit.net/zhw0tse.js")
     [:script "try{Typekit.load();}catch(e){}"]
     (raw (when-ie (include-js "/js/html5.js")))]
-   [:body.container-fluid
+   [:body.container-fluid.with-large-header
     [:div.hero.row
      [:header
       [:h1.home.col-md-6.col-sm-6.col-xs-6 (link-to "/" "Clojars")]
@@ -125,14 +128,7 @@
        (link-to "/projects" "browse the repository")
        "."]]]
     body
-    [:footer.col-md-12
-     (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
-     (link-to "/projects" "projects")
-     (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
-     (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
-     (link-to "https://github.com/ato/clojars-web" "code")
-     (link-to "/security" "security")
-     (link-to "https://github.com/ato/clojars-web/wiki/" "help")]]))
+    footer]))
 
 (defn flash [msg]
   (if msg

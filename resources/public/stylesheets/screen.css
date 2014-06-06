@@ -12,10 +12,13 @@ light gray:    #f2f3f4
 */
 
 body {
-  background: #e2e4e3;
   font-family: "museo-sans-rounded", Arial, "Liberation Sans", FreeSans, sans-serif;
   transition-timing-function: ease;
   transition-duration: 1s;
+}
+
+.with-large-header {
+  background: #e2e4e3;
 }
 
 a {
