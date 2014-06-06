@@ -28,8 +28,7 @@
          ;; more info: http://getbootstrap.com/css/#grid
          ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
     (include-js "//use.typekit.net/zhw0tse.js")
-    [:script {:type "text/javascript"}
-     "try{Typekit.load();}catch(e){}"]
+    [:script "try{Typekit.load();}catch(e){}"]
     (raw (when-ie (include-js "/js/html5.js")))]
    [:body.container-fluid
     [:div.hero.row
