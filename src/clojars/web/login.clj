@@ -8,23 +8,26 @@
 
 (defn login-form [login_failed username]
   (html-doc nil "Login"
-   [:div.light-article
-    [:article
-     [:h1 "Login"]
-     [:p "Don't have an account? "
-      (link-to "/register" "Sign up!")]
+   [:div.small-section
+    [:h1 "Login"]
+    [:p.hint "Don't have an account? "
+     (link-to "/register" "Sign up!")]
 
-     (when login_failed
-       [:div [:p.error "Incorrect username and/or password."]
-        [:p "If you have not logged in since "
-         [:a {:href "https://groups.google.com/group/clojure/browse_thread/thread/5e0d48d2b82df39b"}
-          "the insecure password hashes were wiped"]
-         ", please use the " [:a {:href "/forgot-password"} "forgot password"]
-         " functionality to reset your password."]])
-     (form-to [:post "/login"]
-              (label :username "Username or email:")
-              (text-field :username username)
-              (label :password "Password:")
-              (password-field :password)
-              (link-to "/forgot-password" "Forgot password?") [:br]
-              (submit-button "Login"))]]))
+    (when login_failed
+      [:div [:p.error "Incorrect username and/or password."]
+       [:p.hint "If you have not logged in since "
+        [:a {:href "https://groups.google.com/group/clojure/browse_thread/thread/5e0d48d2b82df39b"}
+         "the insecure password hashes were wiped"]
+        ", please use the " [:a {:href "/forgot-password"} "forgot password"]
+        " functionality to reset your password."]])
+    (form-to [:post "/login" :class "row"]
+             (label :username "Username")
+             (text-field {:placeholder "bob"
+                          :required true}
+                         :username)
+             (label :password "Password")
+             (password-field {:placeholder "keep it secret, keep it safe"
+                              :required true}
+                             :password)
+             (link-to {:class :hint-link} "/forgot-password" "Forgot password?")
+             (submit-button "Login"))]))

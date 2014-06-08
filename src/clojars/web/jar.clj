@@ -4,7 +4,7 @@
                                         jar-fork? single-fork-notice
                                         simple-date]]
             hiccup.core
-            [hiccup.element :refer [link-to]]
+            [hiccup.element :refer [link-to image]]
             [hiccup.form :refer [submit-button]]
             [clojars.web.safe-hiccup :refer [form-to]]
             [clojars.maven :refer [jar-to-pom-map commit-url]]
@@ -62,95 +62,104 @@
 
 (defn show-jar [account jar recent-versions count]
   (html-doc account (str (:jar_name jar) " " (:version jar))
-            [:div.light-article
-             [:article
-              [:div.container_12
-               [:div#jar-title.grid_8.alpha
-                [:h1 (jar-link jar)]
-                [:h2 (:description jar)]
-                [:div#jar-info-bar
-                 (let [stats (stats/all)]
-                   [:ul
-                    [:li "github/repo"]
-                    [:li (stats/download-count stats
-                                               (:group_name jar)
-                                               (:jar_name jar))
-                     " Downloads"]
-                    [:li (stats/download-count stats
-                                               (:group_name jar)
-                                               (:jar_name jar)
-                                               (:version jar))
-                     " This Version"]])]
-                [:div.useit
-                 [:h3 "Leiningen"]
-                 [:div.lein-small
-                  [:pre
-                   (tag "[")
-                   (jar-name jar)
-                   [:span.string " \""
-                    (:version jar) "\""] (tag "]") ]]
+            [:div.light-article.row
+             [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
+              [:h1 (jar-link jar)]
+              [:p.description (:description jar)]
+              (let [stats (stats/all)]
+                [:ul#jar-info-bar
+                 [:li
+                  (link-to {:target "_blank"}
+                           "https://github.com/"
+                           (image "/images/GitHub-Mark-16px.png" "GitHub")
+                           "github/repo")]
+                 [:li (stats/download-count stats
+                                            (:group_name jar)
+                                            (:jar_name jar))
+                  " Downloads"]
+                 [:li (stats/download-count stats
+                                            (:group_name jar)
+                                            (:jar_name jar)
+                                            (:version jar))
+                  " This Version"]])
+              [:div.useit
+               [:h2 "Leiningen"]
+               [:div.lein-small.package-config-example
+                [:pre
+                 (tag "[")
+                 (jar-name jar)
+                 [:span.string " \""
+                  (:version jar) "\""] (tag "]") ]]
 
-                 [:h3 "Gradle"]
-                 [:div.gradle-small
-                  [:pre
-                   "compile "
-                   \"
-                   (:group_name jar)
-                   ":"
-                   (:jar_name jar)
-                   ":"
-                   (:version jar)
-                   \"]]
+               [:h2 "Gradle"]
+               [:div.gradle-small.package-config-example
+                [:pre
+                 "compile "
+                 [:span.string
+                  \"
+                  (:group_name jar)
+                  ":"
+                  (:jar_name jar)
+                  ":"
+                  (:version jar)
+                  \"]]]
 
-                 [:h3 "Maven"]
-                 [:div.maven-small
-                  [:pre
-                   (tag "<dependency>\n")
-                   (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
-                   (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
-                   (tag "  <version>") (:version jar) (tag "</version>\n")
-                   (tag "</dependency>")]]
-                 (let [pom (jar-to-pom-map jar)]
-                   (list
-                    (fork-notice jar)
-                    (promotion-details account jar)
-                    (when-not pom
-                      [:p.error "Oops. We hit an error opening the metadata POM file for this project "
-                       "so some details are not available."])))]]
-               [:div.grid_4.omega
-                (let [pom (jar-to-pom-map jar)]
-                  [:ul#jar-sidebar
-                   [:li
-                    [:h4 "Pushed by "]
-                    (user-link (:user jar)) " on "
-                    [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
-                    (if-let [url (commit-url pom)]
-                      [:span.commit-url " with " (link-to url "this commit")])]
-                   [:li
-                    [:h4 "Recent Versions"]
-                    [:ul#versions
-                     (for [v recent-versions]
-                       [:li (link-to (url-for (assoc jar
-                                                :version (:version v)))
-                                     (:version v))])]
-                    [:p (link-to (str (jar-url jar) "/versions")
-                                 (str "Show All Versions (" count " total)"))]]
-                   [:li
-                    (dependency-section "Dependencies" "dependencies"
-                                        (remove #(not= (:scope %) "compile") (:dependencies pom)))]])]]]
-             [:div.grid_12.alpha.omega
-              (when-let [homepage (:homepage jar)]
-                [:p.homepage (safe-link-to homepage homepage)])]]))
+               [:h2 "Maven"]
+               [:div.maven-small.package-config-example
+                [:pre
+                 (tag "<dependency>\n")
+                 (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
+                 (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
+                 (tag "  <version>") (:version jar) (tag "</version>\n")
+                 (tag "</dependency>")]]
+               (let [pom (jar-to-pom-map jar)]
+                 (list
+                  (fork-notice jar)
+                  (promotion-details account jar)
+                  (when-not pom
+                    [:p.error "Oops. We hit an error opening the metadata POM file for this project "
+                     "so some details are not available."])))]]
+             (let [pom (jar-to-pom-map jar)]
+               [:ul#jar-sidebar.col-sm-3.col-xs-12.col-md-3.col-lg-3
+                [:li
+                 [:h4 "Pushed by"]
+                 (user-link (:user jar)) " on "
+                 [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
+                 (if-let [url (commit-url pom)]
+                   [:span.commit-url " with " (link-to url "this commit")])]
+                [:li
+                 [:h4 "Recent Versions"]
+                 [:ul#versions
+                  (for [v recent-versions]
+                    [:li (link-to (url-for (assoc jar
+                                             :version (:version v)))
+                                  (:version v))])]
+                 ;; by default, 5 versions are shown. If there are only 5 to
+                 ;; see, then there's no reason to show the 'all versions' link
+                 (when (> count 5)
+                   [:p (link-to (str (jar-url jar) "/versions")
+                                (str "Show All Versions (" count " total)"))])]
+                (let [dependencies
+                      (dependency-section "Dependencies" "dependencies"
+                                          (remove #(not= (:scope %) "compile") (:dependencies pom)))]
+                  (when-not (empty? dependencies)
+                    [:li dependencies]))
+                (when-let [homepage (:homepage jar)]
+                  [:li
+                   [:h4 "Homepage"]
+                   (safe-link-to homepage homepage)])])]))
 
 (defn show-versions [account jar versions]
   (html-doc account (str "all versions of "(jar-name jar))
-            [:h1 "all versions of "(jar-link jar)]
-            [:div.versions
-             [:ul
-              (for [v versions]
-                [:li (link-to (url-for (assoc jar
-                                         :version (:version v)))
-                              (:version v))])]]))
+            [:div.light-article
+             [:h1 "all versions of "(jar-link jar)]
+             [:div.versions
+              [:ul
+               (for [v versions]
+                 [:li.col-md-4.col-lg-3.col-sm-6.col-xs-12
+                  (link-to (url-for (assoc jar
+                                      :version (:version v)))
+                           (:version v))])]]]))
 
 (defn svg-template [jar-id version]
   (let [width-px (+ 138 (* (+ (count jar-id) (count version)) 6))]

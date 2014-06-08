@@ -10,7 +10,8 @@
             [hiccup.element :refer [link-to unordered-list]]
             [hiccup.form :refer [label text-field
                                  password-field text-area
-                                 submit-button]]
+                                 submit-button
+                                 email-field]]
             [clojars.web.safe-hiccup :refer [form-to]]
             [ring.util.response :refer [response redirect]]
             [valip.core :refer [validate]]
@@ -19,29 +20,37 @@
 
 (defn register-form [ & [errors email username ssh-key pgp-key]]
   (html-doc nil "Register"
-            [:div.light-article
-             [:article
-              [:h1 "Register"]
-              (error-list errors)
-              (form-to [:post "/register"]
-                       (label :email "Email:")
-                       [:input {:type :email :name :email :id
-                                :email :value email}]
-                       (label :username "Username:")
-                       (text-field :username username)
-                       (label :password "Password:")
-                       (password-field :password)
-                       (label :confirm "Confirm password:")
-                       (password-field :confirm)
-                       (label :ssh-key "SSH public key:")
+            [:div.small-section
+             [:h1 "Register"]
+             (error-list errors)
+             (form-to [:post "/register"]
+                      (label :email "Email")
+                      (email-field {:value email
+                                    :required true
+                                    :placeholder "bob@example.com"}
+                                   :email)
+                      (label :username "Username")
+                      (text-field {:required true
+                                   :placeholder "bob"}
+                                  :username)
+                      (label :password "Password")
+                      (password-field {:placeholder "keep it secret, keep it safe"
+                                       :required true}
+                                      :password)
+                      (label :confirm "Confirm password")
+                      (password-field {:placeholder "confirm your password"
+                                       :required true}
+                                      :confirm)
+                      (label :ssh-key "SSH public key")
+                      [:p.hint
                        " (" (link-to
                              "http://wiki.github.com/ato/clojars-web/ssh-keys"
-                             "what's this?") ")"
-                             (text-area :ssh-key ssh-key)
-                             [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
-                             (label :pgp-key "PGP public key:")
-                             (text-area :pgp-key pgp-key)
-                             (submit-button "Register"))]]))
+                             "what's this?") ")"]
+                      (text-area :ssh-key ssh-key)
+                      [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
+                      (label :pgp-key "PGP public key:")
+                      (text-area :pgp-key pgp-key)
+                      (submit-button "Register"))]))
 
 (defn conj-when [coll test x]
   (if test
@@ -111,19 +120,26 @@
 
 (defn show-user [account user]
   (html-doc account (user :user)
-    [:h1 (user :user)]
-    [:h2 "Projects"]
-    (unordered-list (map jar-link (jars-by-username (user :user))))
-    [:h2 "Groups"]
-    (unordered-list (map group-link (find-groupnames (user :user))))))
+            [:div.light-article.row
+             [:h1.col-md-12.col-sm-12.col-xs-12.col-lg-12
+              (user :user)]
+             [:div.col-sm-6.col-lg-6.col-xs-12.col-md-6
+              [:h2 "Projects"]
+              (unordered-list (map jar-link (jars-by-username (user :user))))]
+             [:div.col-sm-6.col-lg-6.col-xs-12.col-md-6
+              [:h2 "Groups"]
+              (unordered-list (map group-link (find-groupnames (user :user))))]]))
 
 (defn forgot-password-form []
   (html-doc nil "Forgot password?"
-    [:h1 "Forgot password?"]
-    (form-to [:post "/forgot-password"]
-      (label :email-or-username "Email or username:")
-      (text-field :email-or-username)
-      (submit-button "Send new password"))))
+    [:div.small-section
+     [:h1 "Forgot password?"]
+     (form-to [:post "/forgot-password"]
+              (label :email-or-username "Email or Username")
+              (text-field {:placeholder "bob"
+                           :required true}
+                          :email-or-username)
+              (submit-button "Send new password"))]))
 
 (defn send-out [email]
   (.send email))

@@ -1,23 +1,7 @@
-/* COLORS:
- * FIXME: double check these
-brown:         #622c15
-search blue:   #4098cf
-link blue:     #00adef
-green:         #93c83f
-orange:        #f2511b
-gray:          #e6e7e9
-dark gray:     #3e3e3f
-lightish gray: #e2e4e3
-light gray:    #f2f3f4
-*/
-
 body {
   font-family: "museo-sans-rounded", Arial, "Liberation Sans", FreeSans, sans-serif;
   transition-timing-function: ease;
   transition-duration: 1s;
-}
-
-.with-large-header {
   background: #e2e4e3;
 }
 
@@ -28,6 +12,42 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+h1, h2, h3, h4 {
+  color: #393536;
+}
+
+h4 {
+  margin-bottom: 5px;
+}
+
+h1 {
+  font-size: 2.4em;
+  margin: 30px 0 15px;
+  padding: 0;
+}
+
+label, h2 {
+  color: #4f4c4c;
+  font-size: 1.2em;
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+/* .generic-input { */
+input, textarea {
+  background-color: #e9e9e9;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+h2 {
+  margin-top: 20px;
 }
 
 .home {
@@ -41,6 +61,63 @@ a:hover {
 
 .heavy {
   font-weight: 700;
+}
+
+.hint {
+  color: #717171;
+}
+
+.hint, .hint-link {
+  margin-bottom: 10px;
+  display: block;
+}
+
+.page-nav {
+  clear: left;
+  font-size: 1.2em;
+  /* FIXME: this should be margin instead */
+  padding-top: 30px;
+  word-spacing: 5px;
+  text-align: center;
+}
+
+.page-nav > span, .page-nav > em {
+  margin: 5px;
+}
+
+.page-nav > a {
+  padding: 5px;
+}
+
+/* FIXME: add active/hover states? */
+input[type=submit] {
+  font-size: 1.2em;
+  letter-spacing: 1px;
+  font-weight: 300;
+  margin-top: 10px;
+  border-radius: 4px;
+  background: #4098cf;
+  color: white;
+}
+
+/* override bootstrap's default overflow */
+pre {
+  overflow: visible;
+}
+
+footer {
+  background: #e2e4e3;
+  text-align: center;
+  font-weight: 400;
+  font-size: 1.1em;
+  padding: 40px 20px 50px;
+  clear: both;
+}
+
+footer a {
+  display: inline-block;
+  color: #393536;
+  margin: 0 5px;
 }
 
 .main-navigation {
@@ -70,15 +147,27 @@ a:hover {
   margin-left: 15px;
 }
 
+/* FIXME: bump the font/padding down by half on mobile
+ * (see the media query at the bottom)
+ */
 .hero, .small-header {
   padding: 15px 25px 50px;
   background-color: #622c15;
   text-align: center;
+}
+
+.hero h2 {
   color: white;
 }
 
 .small-header {
   padding: 20px 25px 60px;
+}
+
+.small-header input {
+  border-radius: 3px;
+  padding: 5px 10px;
+  margin-top: 5px;
 }
 
 .hero-text {
@@ -89,6 +178,24 @@ a:hover {
   padding-top: 30px;
 }
 
+/* FIXME: add active/hover states? */
+.hero input {
+  border-radius: 10px 0 0 10px;
+  padding: 15px 30px;
+  font-size: 1.4em;
+  letter-spacing: 1px;
+  font-weight: 300;
+}
+
+.hero input[type=search] {
+  width: 60%;
+}
+
+.hero input[type=submit] {
+  width: 150px;
+  border-radius: 0 10px 10px 0;
+}
+
 .getting-started {
   clear: both;
   font-size: 1.2em;
@@ -96,41 +203,15 @@ a:hover {
   height: 4em;
 }
 
-.hero .search-form-container {
+.search-form-container {
   white-space: nowrap;
   margin: 50px 0;
 }
 
-.hero .search-text, .hero .search-button {
-  padding: 15px 30px;
-  font-size: 1.4em;
-  letter-spacing: 1px;
-  font-weight: 300;
-}
-
-/* FIXME: add active/hover states? */
-.search-text {
-  box-sizing: border-box;
-  color: black;
-  width: 60%;
-  background-color: #e9e9e9;
-  border-radius: 10px 0 0 10px;
-  border: none;
-}
-
-.small-header .search-text {
-  border-radius: 3px;
-  padding: 5px 10px;
-  margin-top: 5px;
-}
-
-/* FIXME: add active/hover states? */
-.search-button {
-  min-width: 150px;
-  background: #4098cf;
-  color: white;
-  border-radius: 0 10px 10px 0;
-  border: none;
+#content-wrapper {
+  background: white;
+  margin: 0 -15px;
+  padding: 0 15px;
 }
 
 .push-information {
@@ -142,6 +223,27 @@ a:hover {
   margin-left: 15px;
 }
 
+.light-article {
+  margin-bottom: 80px;
+  padding: 0 35px;
+}
+
+/* thanks: http://css-tricks.com/snippets/css/clear-fix/ */
+.light-article:after {
+  visibility: hidden;
+  display: block;
+  content: "";
+  clear: both;
+  height: 0;
+}
+
+.small-section {
+  max-width: 550px;
+  margin-left: auto;
+  margin-right: auto;
+  margin: 0 auto 80px;
+}
+
 .push-example {
   padding: 25px;
   background: white;
@@ -151,12 +253,7 @@ a:hover {
   overflow-x: auto;
 }
 
-/* override bootstrap's default overflow */
-pre {
-  overflow: visible;
-}
-
-.push-example .tag {
+.string, .tag {
   color: #f2511b;
 }
 
@@ -167,8 +264,26 @@ pre {
   margin-top: 20px;
 }
 
-.recent-jars-header-container {
-  margin: 0 30px;
+#jar-info-bar {
+  border: solid #d3d3d3;
+  border-width: 1px 0;
+  padding: 10px 0;
+  text-align: center;
+}
+
+#jar-info-bar img {
+  margin-right: 10px;
+}
+
+#jar-info-bar li {
+  padding: 5px 15px;
+  display: inline-block;
+  border-left: 1px solid #d3d3d3;
+}
+
+#jar-info-bar li:first-child {
+  border: 0;
+  padding-left: 0;
 }
 
 .recent-jars-header {
@@ -184,11 +299,16 @@ pre {
   font-weight: 600;
 }
 
+.recent-jars-header-container {
+  margin: 0 30px;
+}
+
 .recent-jars-list {
   margin: 0 15px;
 }
 
 .recent-jar {
+  position: relative;
   cursor: pointer;
   background: white;
   border-top: 8px solid #87cf29;
@@ -196,6 +316,11 @@ pre {
   height: 150px;
   margin-bottom: 30px;
   transition: border-color 0.2s ease-in-out;
+}
+
+.total-downloads {
+  bottom: 0;
+  position: absolute;
 }
 
 .recent-jar:hover {
@@ -215,27 +340,79 @@ pre {
   font-size: 1.4em;
 }
 
+/* FIXME: should this be a class? */
+#jar-sidebar {
+  margin-top: 30px;
+  font-size: 1.1em;
+}
+
+/* FIXME: add classes? (dependency-item or something?) */
+#jar-sidebar > li {
+  min-height: 125px;
+  padding: 10px 4px;
+  border-top: 3px solid #4f4c4c;
+}
+
+/* FIXME: clean up these class names so they can be reused */
+.result {
+  position: relative;
+
+  height: 100px;
+  margin: 15px 0;
+  background-color: #f4f4f4;
+  border-radius: 10px;
+  padding: 10px 15px;
+}
+
+.details {
+  bottom: 10px;
+  position: absolute;
+}
+
 .recent-jar-title a {
   color: #4098cf;
+
+  /* FIXME: this doesn't work well on long names and mobile */
+  white-space: nowrap;
+
   /* make the entire box clickable
    *
    * this is the only link in this box
+   *
+   * FIXME: this doesn't seem to work when clicking on the description text
    */
   padding: 20px 90% 110px 20px;
   margin-left: -20px;
 }
 
-footer {
-  text-align: center;
-  font-weight: 400;
-  font-size: 1.1em;
-  padding: 40px 0 50px;
-  clear: both;
+.package-config-example {
+  background-color: #f4f4f4;
+  border-radius: 10px;
+  padding: 15px 10px;
 }
 
-footer a {
+.package-config-example:last-of-type {
+  margin-bottom: 20px;
+}
+
+.error {
+  color: #ff2929;
+  margin-bottom: 20px;
+}
+
+/* FIXME: prefer a bulleted style for error lists? */
+/* .error ul { */
+/*   list-style-type: disc; */
+/*   list-style-position: inside; */
+/* } */
+
+#jar-title h1 a {
   color: #393536;
-  margin: 0 5px;
+}
+
+#jar-title .description {
+  margin-bottom: 20px;
+  font-size: 1.1em;
 }
 
 /* See http://getbootstrap.com/css/#grid-media-queries for more information
@@ -243,11 +420,11 @@ footer a {
  */
 @media (max-width: 768px) {
   /* Hide the search button on small screens */
-  .search-button {
+  .hero input[type=submit] {
     display: none;
   }
 
-  .search-text {
+  .hero input[type=search] {
     border-radius: 10px;
     width: 90%;
   }

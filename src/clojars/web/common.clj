@@ -11,7 +11,7 @@
    "<![endif]-->"))
 
 (def footer
-  [:footer.col-md-12
+  [:footer.row
    (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
    (link-to "/projects" "projects")
    (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
@@ -41,27 +41,28 @@
     [:script "try{Typekit.load();}catch(e){}"]
     (raw (when-ie (include-js "/js/html5.js")))]
    [:body.container-fluid
-    [:header.small-header.row
-     [:h1.home.col-md-2.col-sm-2.col-xs-2 (link-to "/" "Clojars")]
-     [:div.search-form-container.col-md-6.col-sm-6.col-xs-6
-      [:form {:action "/search"}
-       [:input {:type "search"
-                :name "q"
-                :id "search"
-                :class "search search-text"
-                :placeholder "Search projects..."
-                :required true}]]]
-     [:nav.main-navigation.col-md-4.col-sm-4.col-xs-4
-      (if account
-        (unordered-list
-         [(link-to "/" "dashboard")
-          (link-to "/profile" "profile")
-          (link-to "/logout" "logout")])
-        (unordered-list
-         [(link-to "/login" "login")
-          (link-to "/register" "register")]))]]
-    body
-    footer]))
+    [:div#content-wrapper
+     [:header.small-header.row
+      [:h1.home.col-md-3.col-sm-3.col-xs-3.col-lg-3 (link-to "/" "Clojars")]
+      [:div.col-md-3.col-sm-3.col-xs-3.col-lg-3
+       [:form {:action "/search"}
+        [:input {:type "search"
+                 :name "q"
+                 :id "search"
+                 :class "search"
+                 :placeholder "Search projects..."
+                 :required true}]]]
+      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-6.col-lg-6
+       (if account
+         (unordered-list
+          [(link-to "/" "dashboard")
+           (link-to "/profile" "profile")
+           (link-to "/logout" "logout")])
+         (unordered-list
+          [(link-to "/login" "login")
+           (link-to "/register" "register")]))]]
+     body
+     footer]]))
 
 (defn html-doc-with-large-header [account title & body]
   (html5
@@ -83,7 +84,7 @@
     (include-js "//use.typekit.net/zhw0tse.js")
     [:script "try{Typekit.load();}catch(e){}"]
     (raw (when-ie (include-js "/js/html5.js")))]
-   [:body.container-fluid.with-large-header
+   [:body.container-fluid
     [:div.hero.row
      [:header
       [:h1.home.col-md-6.col-sm-6.col-xs-6 (link-to "/" "Clojars")]
@@ -104,17 +105,15 @@
         " community repository for "]
        [:div.col-md-12
         " open source Clojure libraries."]]]
-     [:div.search-form-container.col-md-12
+     [:div.search-form-container.col-md-12.col-xs-12.col-lg-12.col-sm-12
       [:form {:action "/search"}
        [:input {:type "search"
                 :name "q"
                 :id "search"
-                :class "search search-text"
                 :placeholder "Search projects..."
                 :required true}]
        [:input {:id "search-button"
                 :value "Search"
-                :class "search-button"
                 :type "submit"}]]]
      [:h2.getting-started.row
       [:div.col-md-12
@@ -161,13 +160,13 @@
                              "")))
 
 (def single-fork-notice
-  [:p.fork-notice
+  [:p.fork-notice.hint
    "Note: this artifact is a non-canonical fork. See "
    (link-to "https://github.com/ato/clojars-web/wiki/Groups" "the wiki")
    " for more details."])
 
 (def collection-fork-notice
-  [:p.fork-notice
+  [:p.fork-notice.hint
    "Note: artifacts in italics are non-canonical forks. See "
    (link-to "https://github.com/ato/clojars-web/wiki/Groups" "the wiki")
    " for more details."])
@@ -194,6 +193,7 @@
         page-range 3
         page-url "/projects?page="
         current-page (-> current-page (max 1) (min total-pages))
+
         main-div [:div.page-nav]
         previous-page (if (= current-page 1)
                         [[:span.previous-page.disabled previous-text]]

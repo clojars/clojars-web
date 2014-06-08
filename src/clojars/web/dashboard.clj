@@ -11,10 +11,9 @@
       [:h3.recent-jar-title
        (jar-link jar-map)]
       [:p.recent-jar-description (:description jar-map)]
-      [:p.total-downloads "Downloads: " (stats/download-count stats
-                                                              (:group_name jar-map)
-                                                              (:jar_name jar-map))]]]))
-
+      [:p.hint.total-downloads "Downloads: " (stats/download-count stats
+                                                                   (:group_name jar-map)
+                                                                   (:jar_name jar-map))]]]))
 
 (defn index-page [account]
   (html-doc-with-large-header account nil

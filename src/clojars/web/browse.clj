@@ -4,7 +4,7 @@
                                         collection-fork-notice]]
             [clojars.db :refer [browse-projects count-all-projects
                                 count-projects-before]]
-            [hiccup.form :refer [label submit-button]]
+            [hiccup.form :refer [label submit-button text-field submit-button]]
             [ring.util.response :refer [redirect]]))
 
 (defn browse-page [account page per-page]
@@ -12,31 +12,34 @@
         total-pages (-> (/ project-count per-page) Math/ceil .intValue)
         projects (browse-projects page per-page)]
     (html-doc account "All projects"
-     [:div.light-article
-      [:article
-       [:h1 "All projects"
-        [:form.browse-from {:method :get :action "/projects"}
-         (label :from "starting from")
-         [:input {:type :text :name :from :id :from
-                  :placeholder "Enter a few letters..."}]
-         [:input {:type :submit :value "Jump" :id :jump}]]]
-       collection-fork-notice
-       (page-description page per-page project-count)
-       [:ul
-        (for [[i jar] (map-indexed vector projects)]
-          [:li.browse-results
+     [:div.light-article.row
+      [:h1 "All projects"]
+      [:div.small-section
+       [:form.browse-from {:method :get :action "/projects"}
+        (label :from "Enter a few letters...")
+        (text-field {:placeholder "Enter a few letters..."
+                     :required true}
+                    :from)
+        (submit-button {:id :jump} "Jump")]]
+      collection-fork-notice
+      (page-description page per-page project-count)
+      [:ul.row
+       (for [[i jar] (map-indexed vector projects)]
+         [:li.col-md-4.col-lg-3.col-sm-6.col-xs-12
+          [:div.result
            [:a {:name i}]
            (jar-link jar) " " (:version jar)
            [:br]
-           (when (seq (:description jar))
-             [:span.desc (:description jar)
-              [:br]])
+           (if (seq (:description jar))
+             [:span.desc (:description jar)]
+             [:span.hint "No description given"])
+           [:br]
            [:span.details
             (user-link (:user jar))
             " "
             (if-let [created (:created jar)]
-              [:td (format-date created)])]])]
-       (page-nav page total-pages)]])))
+              [:td (format-date created)])]]])]
+      (page-nav page total-pages)])))
 
 (defn browse [account params]
   (let [per-page 20]

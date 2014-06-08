@@ -44,9 +44,7 @@
   (GET "/security" []
        (try-account
         (html-doc account "Security"
-                  [:div {:class "light-article"}
-                   [:article.clearfix
-                    (raw (slurp (io/resource "security.html")))]])))
+                  (raw (slurp (io/resource "security.html"))))))
   session/routes
   group/routes
   artifact/routes
@@ -60,8 +58,9 @@
         (not-found
          (html-doc account
                    "Page not found"
-                   [:h1 "Page not found"]
-                   [:p "Thundering typhoons!  I think we lost it.  Sorry!"])))))
+                   [:div.small-section
+                    [:h1 "Page not found"]
+                    [:p "Thundering typhoons!  I think we lost it.  Sorry!"]])))))
 
 (defn bad-attempt [attempts user]
   (let [failures (or (attempts user) 0)]
