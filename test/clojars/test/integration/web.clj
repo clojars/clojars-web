@@ -52,7 +52,7 @@
       {:name (str "tester" i "a") :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
   (-> (session web/clojars-app)
       (visit "/projects")
-      (fill-in "starting from" "tester/tester123")
+      (fill-in "Enter a few letters..." "tester/tester123")
       (press "Jump")
       (follow-redirect)
       (within [[:li.browse-results (enlive/nth-of-type 3)] [:span (enlive/nth-of-type 1)] :a]

@@ -27,55 +27,55 @@
       (within [:title]
               (has (text? "Register - Clojars")))
 
-      (fill-in "Email:" "test@example.org")
-      (fill-in "Username:" "dantheman")
+      (fill-in "Email" "test@example.org")
+      (fill-in "Username" "dantheman")
       (press "Register")
       (has (status? 200))
       (within [:article :div.error :ul :li]
               (has (text? "Password can't be blank")))
 
-      (fill-in "Password:" "password")
+      (fill-in "Password" "password")
       (press "Register")
       (has (status? 200))
       (within [:article :div.error :ul :li]
               (has (text? "Password and confirm password must match")))
 
-      (fill-in "Email:" "")
-      (fill-in "Password:" "password")
-      (fill-in "Confirm password:" "password")
+      (fill-in "Email" "")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
       (press "Register")
       (has (status? 200))
       (within [:article :div.error :ul :li]
               (has (text? "Email can't be blank")))
 
-      (fill-in "Email:" "test@example.org")
-      (fill-in "Username:" "")
-      (fill-in "Password:" "password")
-      (fill-in "Confirm password:" "password")
+      (fill-in "Email" "test@example.org")
+      (fill-in "Username" "")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
       (press "Register")
       (has (status? 200))
       (within [:article :div.error :ul :li]
               (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.Username can't be blank")))
-      (fill-in "Username:" "<script>")
-      (fill-in "Password:" "password")
-      (fill-in "Confirm password:" "password")
+      (fill-in "Username" "<script>")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
       (press "Register")
       (has (status? 200))
       (within [:article :div.error :ul :li]
               (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.")))
 
-      (fill-in "Username:" "fixture")
-      (fill-in "Password:" "password")
-      (fill-in "Confirm password:" "password")
+      (fill-in "Username" "fixture")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
       (press "Register")
       (has (status? 200))
       (within [:article :div.error :ul :li]
               (has (text? "Username is already taken")))
 
-      (fill-in "Username:" "dantheman")
-      (fill-in "Password:" "password")
-      (fill-in "Confirm password:" "password")
-      (fill-in "SSH public key:" "asdf")
+      (fill-in "Username" "dantheman")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
+      (fill-in "SSH public key" "asdf")
       (press "Register")
       (has (status? 200))
       (within [:article :div.error :ul :li]
@@ -158,7 +158,7 @@
           (visit "/")
           (follow "login")
           (follow "Forgot password?")
-          (fill-in "Email or username:" "fixture")
+          (fill-in "Email or Username" "fixture")
           (press "Send new password")
           (has (status? 200))
           (within [:article :p]

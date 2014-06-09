@@ -23,7 +23,6 @@
               (has (text? "[fake/test \"0.0.2\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))
-      (follow "show all versions (3 total)")
       (within [:.versions :ul]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
 
@@ -39,7 +38,6 @@
               (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
       (within [:span.commit-url]
               (has (text? " with this commit")))
-      (follow "show all versions (1 total)")
       (within [:.versions :ul]
               (has (text? "0.0.3-SNAPSHOT")))))
 

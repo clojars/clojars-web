@@ -16,7 +16,7 @@
 (deftest error-list-populates-errors-correctly
   (is (= nil (common/error-list nil)))
   (is (=
-        [:div {:class :error} [:strong "Blistering barnacles!"] "  Something's not shipshape:" [:ul '([:li "error"])]]
+        [:div.error [:strong "Blistering barnacles!"] "  Something's not shipshape:" [:ul '([:li "error"])]]
         (common/error-list ["error"]))))
 
 (deftest user-link-works
@@ -29,7 +29,7 @@
 
 (letfn [(cook-content [v]
           (conj (vec (butlast v)) (to-str (last v))))]
-  
+
   (deftest page-nav-renders-disabled-previous-page
     (is (=
          [:span {:class "previous-page disabled"} "&#8592; Previous"]
@@ -37,32 +37,32 @@
 
   (deftest page-nav-renders-active-previous-page
     (is (=
-         [:a {:href "/projects?page=1" :class "previous-page"} "&#8592; Previous"]
+         [:a {:href (java.net.URI. "/projects?page=1")} "(1)"]
          (-> (common/page-nav 2 3) (get 2) cook-content))))
 
   (deftest page-nav-renders-disabled-next-page
     (is (=
-         [:span {:class "next-page disabled"} "Next &#8594"]
+         [:span.next-page.disabled "Next &#8594"]
          (-> (common/page-nav 3 3) (last) cook-content))))
 
   (deftest page-nav-renders-active-next-page
     (is (=
-         [:a {:href "/projects?page=3" :class "next-page"} "Next &#8594"]
+         [:a.next-page {:href "/projects?page=3"} "Next &#8594"]
          (-> (common/page-nav 2 3) (last) cook-content)))))
 
 (deftest page-nav-renders-no-before-links
   (is (=
-        [:span :em]
+        [:em.current :a]
         (->> (-> (common/page-nav 1 3) (subvec 2 4)) (map first)))))
 
 (deftest page-nav-renders-some-before-links
   (is (=
-        [:a :em]
+        [:em.current :a]
         (->> (-> (common/page-nav 2 3) (subvec 3 5)) (map first)))))
 
 (deftest page-nav-renders-all-before-links
   (is (=
-        [:a :a :a :em]
+        [:a :a :em.current :a]
         (->> (-> (common/page-nav 5 10) (subvec 3 7)) (map first)))))
 
 (deftest page-nav-renders-no-after-links
@@ -72,22 +72,22 @@
 
 (deftest page-nav-renders-some-after-links
   (is (=
-        [:em :a]
+        [:a :a.next-page]
         (->> (-> (common/page-nav 3 4) (subvec 5 7)) (map first)))))
 
 (deftest page-nav-renders-all-after-links
   (is (=
-        [:em :a :a :a]
+        [:a :a :a :a.next-page]
         (->> (-> (common/page-nav 3 10) (subvec 5 9)) (map first)))))
 
 (deftest page-nav-handles-negative-page
   (is (=
-        [:span :em :a :a :a]
+        [:em.current :a :a :a.next-page]
       (->> (-> (common/page-nav -1 3) (subvec 2)) (map first)))))
 
 (deftest page-nav-handles-nonexistent-page
   (is (=
-        [:a :a :a :em :span]
+        [:a :a :em.current :span.next-page.disabled]
       (->> (-> (common/page-nav 4 3) (subvec 2)) (map first)))))
 
 (deftest page-description-on-first-page
