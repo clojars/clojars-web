@@ -14,7 +14,7 @@
       (register-as "dantheman" "test@example.org" "password" "")
       (follow-redirect)
       (has (status? 200))
-      (within [:article :h1]
+      (within [:#content-wrapper [:h1 (enlive/but (enlive/has-class "home"))]]
               (has (text? "Dashboard (dantheman)")))))
 
 (deftest bad-registration-info-should-show-error
@@ -180,7 +180,7 @@
               (login-as "fixture@example.org" password)
               (follow-redirect)
               (has (status? 200))
-              (within [:article :h1]
+              (within [:h1]
                       (has (text? "Dashboard (fixture)")))))))))
 
 (deftest member-can-add-user-to-group
@@ -192,7 +192,7 @@
       (fill-in [:#username] "fixture")
       (press "add member")
       ;;(follow-redirect)
-      (within [:ul [:li enlive/first-child] :a]
+      (within [[:ul (enlive/nth-of-type 2)] [:li enlive/first-child] :a]
               (has (text? "fixture")))))
 
 (deftest user-must-exist-to-be-added-to-group
@@ -208,5 +208,5 @@
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" "")
       (visit "/users/dantheman")
-      (within [:h1]
+      (within [:h1.col-md-12]
               (has (text? "dantheman")))))

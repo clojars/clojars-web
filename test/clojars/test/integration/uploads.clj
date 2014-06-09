@@ -59,12 +59,10 @@
   (-> (session clojars-app)
       (visit "/groups/org.clojars.dantheman")
       (has (status? 200))
-      (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
+      (within [[:ul enlive/last-of-type] [:li enlive/only-child] :a]
               (has (text? "dantheman")))
       (follow "org.clojars.dantheman/test")
-      (has (status? 200))
-      (within [:article [:p.homepage enlive/last-of-type]]
-              (has (text? "https://example.org")))))
+      (has (status? 200))))
 
 (deftest user-can-deploy-to-new-group
    (-> (session clojars-app)
@@ -88,12 +86,10 @@
    (-> (session clojars-app)
        (visit "/groups/fake")
        (has (status? 200))
-       (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
+       (within [[:ul enlive/last-of-type] [:li enlive/only-child] :a]
                (has (text? "dantheman")))
        (follow "fake/test")
-       (has (status? 200))
-       (within [:article [:p.homepage enlive/last-of-type]]
-               (has (text? "https://example.org")))))
+       (has (status? 200))))
 
 (deftest user-cannot-deploy-to-groups-without-permission
   (-> (session clojars-app)

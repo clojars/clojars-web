@@ -21,7 +21,7 @@
   (-> (session web/clojars-app)
       (visit "/groups/fake")
       (has (status? 200))
-      (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
+      (within [[:ul enlive/last-of-type] [:li enlive/only-child] :a]
               (has (text? "dantheman"))))
   (is (= 6
          (count
