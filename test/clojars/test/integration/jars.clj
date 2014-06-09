@@ -17,13 +17,11 @@
   (scp valid-ssh-key "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (-> (session web/clojars-app)
       (visit "/fake/test")
-      (within [:article :h1]
+      (within [:h1 :span :a]
               (has (text? "fake/test")))
-      (within [:.lein :pre]
+      (within [:.lein-small :pre]
               (has (text? "[fake/test \"0.0.2\"]")))
       (within [:ul#versions]
-              (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))
-      (within [:.versions :ul]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
 
 (deftest jars-with-only-snapshots-can-be-viewed
@@ -32,13 +30,13 @@
   (scp valid-ssh-key "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (-> (session web/clojars-app)
       (visit "/fake/test")
-      (within [:article :h1]
+      (within [:h1 :span :a]
               (has (text? "fake/test")))
-      (within [:.lein :pre]
+      (within [:.lein-small :pre]
               (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
       (within [:span.commit-url]
               (has (text? " with this commit")))
-      (within [:.versions :ul]
+      (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT")))))
 
 (deftest canonical-jars-can-be-viewed
@@ -49,9 +47,9 @@
   (scp valid-ssh-key "fake.jar" "fake-0.0.3-SNAPSHOT/fake.pom")
   (-> (session web/clojars-app)
       (visit "/fake")
-      (within [:article :h1]
+      (within [:h1 :span :a]
               (has (text? "fake")))
-      (within [:.lein :pre]
+      (within [:.lein-small :pre]
               (has (text? "[fake \"0.0.2\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
@@ -65,9 +63,9 @@
   (-> (session web/clojars-app)
       (visit "/fake/test")
       (follow "0.0.3-SNAPSHOT")
-      (within [:article :h1]
+      (within [:h1 :span :a]
               (has (text? "fake/test")))
-      (within [:.lein :pre]
+      (within [:.lein-small :pre]
               (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
@@ -81,9 +79,9 @@
   (-> (session web/clojars-app)
       (visit "/fake")
       (follow "0.0.1")
-      (within [:article :h1]
+      (within [:h1 :span :a]
               (has (text? "fake")))
-      (within [:.lein :pre]
+      (within [:.lein-small :pre]
               (has (text? "[fake \"0.0.1\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
