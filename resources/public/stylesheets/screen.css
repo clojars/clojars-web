@@ -1,7 +1,5 @@
 body {
   font-family: "museo-sans-rounded", Arial, "Liberation Sans", FreeSans, sans-serif;
-  transition-timing-function: ease;
-  transition-duration: 1s;
   background: #e2e4e3;
 }
 
