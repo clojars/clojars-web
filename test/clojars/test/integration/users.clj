@@ -31,13 +31,13 @@
       (fill-in "Username" "dantheman")
       (press "Register")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Password can't be blank")))
 
       (fill-in "Password" "password")
       (press "Register")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Password and confirm password must match")))
 
       (fill-in "Email" "")
@@ -45,7 +45,7 @@
       (fill-in "Confirm password" "password")
       (press "Register")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Email can't be blank")))
 
       (fill-in "Email" "test@example.org")
@@ -54,14 +54,14 @@
       (fill-in "Confirm password" "password")
       (press "Register")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.Username can't be blank")))
       (fill-in "Username" "<script>")
       (fill-in "Password" "password")
       (fill-in "Confirm password" "password")
       (press "Register")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.")))
 
       (fill-in "Username" "fixture")
@@ -69,7 +69,7 @@
       (fill-in "Confirm password" "password")
       (press "Register")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Username is already taken")))
 
       (fill-in "Username" "dantheman")
@@ -78,7 +78,7 @@
       (fill-in "SSH public key" "asdf")
       (press "Register")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Invalid SSH public key")))))
 
 (deftest user-can-update-info
@@ -91,7 +91,7 @@
       (fill-in "Confirm password:" "password2")
       (press "Update")
       (follow-redirect)
-      (within [:article :div#flash]
+      (within [:div#flash]
               (has (text? "Profile updated.")))
       (follow "logout")
       (follow-redirect)
@@ -101,7 +101,7 @@
       (login-as "fixture2@example.org" "password2")
       (follow-redirect)
       (has (status? 200))
-      (within [:article :h1]
+      (within [:h1]
               (has (text? "Dashboard (fixture)")))))
 
 (deftest user-can-update-just-ssh-key
@@ -119,7 +119,7 @@
       (login-as "fixture@example.org" "password")
       (follow-redirect)
       (has (status? 200))
-      (within [:article :h1]
+      (within [:h1]
               (has (text? "Dashboard (fixture)")))))
 
 (deftest bad-update-info-should-show-error
@@ -134,19 +134,19 @@
       (fill-in "Password:" "password")
       (press "Update")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Password and confirm password must match")))
 
       (fill-in "Email:" "")
       (press "Update")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Email can't be blank")))
 
       (fill-in "SSH public key:" "asdf")
       (press "Update")
       (has (status? 200))
-      (within [:article :div.error :ul :li]
+      (within [:div.error :ul :li]
               (has (text? "Invalid SSH public key")))))
 
 (deftest user-can-get-new-password
@@ -161,7 +161,7 @@
           (fill-in "Email or Username" "fixture")
           (press "Send new password")
           (has (status? 200))
-          (within [:article :p]
+          (within [:p]
                   (has (text? "If your account was found, you should get an email with a new password soon."))))
       (let [email (deref transport 100 nil)]
         (is email)
@@ -192,7 +192,7 @@
       (fill-in [:#username] "fixture")
       (press "add member")
       ;;(follow-redirect)
-      (within [:article :ul [:li enlive/first-child] :a]
+      (within [:ul [:li enlive/first-child] :a]
               (has (text? "fixture")))))
 
 (deftest user-must-exist-to-be-added-to-group
@@ -208,5 +208,5 @@
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" "")
       (visit "/users/dantheman")
-      (within [:article :h1]
+      (within [:h1]
               (has (text? "dantheman")))))

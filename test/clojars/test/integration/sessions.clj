@@ -16,7 +16,7 @@
       (login-as "fixture@example.org" "password")
       (follow-redirect)
       (has (status? 200))
-      (within [:article :div :p.error]
+      (within [:div :p.error]
               (has (text? "Incorrect username and/or password.")))))
 
 (deftest user-can-login-and-logout
@@ -45,5 +45,5 @@
       (login-as "fixture" "password")
       (follow-redirect)
       (has (status? 200))
-      (within [:article :div :p.error]
+      (within [:div :p.error]
               (has (text? "Incorrect username and/or password.")))))
