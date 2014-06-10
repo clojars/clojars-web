@@ -222,7 +222,7 @@
   (let [total-pages (-> (/ total per-page) Math/ceil .intValue)
         current-page (-> current-page (max 1) (min total-pages))
         upper (* per-page current-page)]
-   [:div.page-description
+   [:div {:class "page-description"}
      "Displaying projects "
      [:b (str (-> upper (- per-page) inc) " - " (min upper total))]
      " of "

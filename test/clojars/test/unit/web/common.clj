@@ -32,8 +32,8 @@
 
   (deftest page-nav-renders-disabled-previous-page
     (is (=
-         [:span {:class "previous-page disabled"} "&#8592; Previous"]
-         (-> (common/page-nav 1 3) (get 2) cook-content))))
+         [:span.previous-page.disabled "&#8592; Previous"]
+         (-> (common/page-nav 1 3) (get 1) cook-content))))
 
   (deftest page-nav-renders-active-previous-page
     (is (=
@@ -67,8 +67,8 @@
 
 (deftest page-nav-renders-no-after-links
   (is (=
-        [:em :span]
-        (->> (-> (common/page-nav 3 3) (subvec 5 7)) (map first)))))
+        [:em.current :span.next-page.disabled]
+        (->> (-> (common/page-nav 3 3) (subvec 4 6)) (map first)))))
 
 (deftest page-nav-renders-some-after-links
   (is (=

@@ -13,7 +13,7 @@
 (deftest server-errors-display-pretty-message
   (with-out-str (-> (session web/clojars-app)
                     (visit "/error")
-                    (within [:article :h1]
+                    (within [:div.small-section :> :h1]
                             (has (text? "Oops!"))))))
 
 (deftest server-errors-log-caught-exceptions
@@ -28,7 +28,7 @@
       {:name (str "tester" i) :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
    (-> (session web/clojars-app)
      (visit "/projects")
-     (within [:article :h1]
+     (within [:div.light-article :> :h1]
              (has (text? "All projects")))
      (within [:.page-description]
              (has (text? "Displaying projects 1 - 20 of 21")))
@@ -55,5 +55,7 @@
       (fill-in "Enter a few letters..." "tester/tester123")
       (press "Jump")
       (follow-redirect)
-      (within [[:li.browse-results (enlive/nth-of-type 3)] [:span (enlive/nth-of-type 1)] :a]
+      (within [[:ul.row enlive/last-of-type]
+               [:li (enlive/nth-of-type 4)]
+               [:a (enlive/nth-of-type 2)]]
               (has (text? "tester/tester123a")))))
