@@ -1,7 +1,7 @@
 (ns clojars.web.common
   (:require [hiccup.core :refer [html]]
             [hiccup.page :refer [include-css include-js]]
-            [hiccup.element :refer [link-to unordered-list]]
+            [hiccup.element :refer [link-to unordered-list image]]
             [clojars.web.safe-hiccup :refer [html5 raw form-to]]))
 
 (defn when-ie [& contents]
@@ -18,7 +18,12 @@
    (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
    (link-to "https://github.com/ato/clojars-web" "code")
    (link-to "/security" "security")
-   (link-to "https://github.com/ato/clojars-web/wiki/" "help")])
+   (link-to "https://github.com/ato/clojars-web/wiki/" "help")
+   [:div.row.bendyworks
+    "remixed by"
+    (link-to {:target "_blank"}
+             "http://www.bendyworks.com/"
+             (image "/images/bendyworks_logo_white.png" "Bendyworks Inc."))]])
 
 (defn html-doc [account title & body]
   (html5
