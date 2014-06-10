@@ -172,8 +172,9 @@
    " for more details."])
 
 (defn jar-link [jar]
-  [:span {:class (if (jar-fork? jar) "fork")}
-   (link-to (jar-url jar) (jar-name jar))])
+  (link-to {:class (when (jar-fork? jar) "fork")}
+           (jar-url jar)
+           (jar-name jar)))
 
 (defn user-link [username]
   (link-to (str "/users/" username) username))

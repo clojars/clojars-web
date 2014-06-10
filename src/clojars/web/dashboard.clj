@@ -6,7 +6,7 @@
 
 (defn recent-jar [jar-map]
   (let [stats (stats/all)]
-    [:li.col-md-4.col-sm-6
+    [:li.col-md-4.col-sm-6.col-xs-12.col-lg-4
      [:div.recent-jar
       [:h3.recent-jar-title
        (jar-link jar-map)]

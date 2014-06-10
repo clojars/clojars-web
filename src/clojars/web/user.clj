@@ -92,8 +92,7 @@
               (error-list errors)
               (form-to [:post "/profile"]
                        (label :email "Email:")
-                       [:input {:type :email :name :email :id
-                                :email :value (user :email)}]
+                       (email-field :email (user :email))
                        (label :password "Password:")
                        (password-field :password)
                        (label :confirm "Confirm password:")
