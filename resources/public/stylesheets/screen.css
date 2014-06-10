@@ -331,11 +331,29 @@ footer a {
 
 .recent-jar-description {
   font-size: 1.1em;
+  margin-top: 35px;
 }
 
 .recent-jar-title {
   margin-bottom: 10px;
   font-size: 1.4em;
+}
+
+.recent-jar-title a {
+  color: #4098cf;
+
+  /* FIXME: this doesn't work well on long names and mobile */
+  white-space: nowrap;
+
+  /* make the entire box clickable
+   *
+   * this is the only link in this box
+   */
+  width: 100%;
+  display: block;
+  padding: 20px 20px 110px;
+  margin: -20px 0 0 -20px;
+  position: absolute;
 }
 
 /* FIXME: should this be a class? */
@@ -365,22 +383,6 @@ footer a {
 .details {
   bottom: 10px;
   position: absolute;
-}
-
-.recent-jar-title a {
-  color: #4098cf;
-
-  /* FIXME: this doesn't work well on long names and mobile */
-  white-space: nowrap;
-
-  /* make the entire box clickable
-   *
-   * this is the only link in this box
-   *
-   * FIXME: this doesn't seem to work when clicking on the description text
-   */
-  padding: 20px 90% 110px 20px;
-  margin-left: -20px;
 }
 
 .package-config-example {
