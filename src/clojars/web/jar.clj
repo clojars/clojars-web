@@ -145,7 +145,7 @@
                   (when-not (empty? dependencies)
                     [:li dependencies]))
                 (when-let [homepage (:homepage jar)]
-                  [:li
+                  [:li.homepage
                    [:h4 "Homepage"]
                    (safe-link-to homepage homepage)])])]))
 

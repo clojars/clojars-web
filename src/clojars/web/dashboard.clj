@@ -38,9 +38,10 @@
 
 (defn dashboard [account]
   (html-doc account "Dashboard"
-    [:h1 (str "Dashboard (" account ")")]
-    [:h2 "Your projects"]
-    (unordered-list (map jar-link (jars-by-username account)))
-    (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add new project")
-    [:h2 "Your groups"]
-    (unordered-list (map group-link (find-groupnames account)))))
+    [:div.light-article.col-md-6
+     [:h1 (str "Dashboard (" account ")")]
+     [:h2 "Your projects"]
+     (unordered-list (map jar-link (jars-by-username account)))
+     (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add new project")
+     [:h2 "Your groups"]
+     (unordered-list (map group-link (find-groupnames account)))]))

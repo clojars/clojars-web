@@ -87,22 +87,24 @@
 (defn profile-form [account flash-msg & [errors]]
   (let [user (find-user account)]
     (html-doc account "Profile"
-              (flash flash-msg)
-              [:h1 "Profile"]
-              (error-list errors)
-              (form-to [:post "/profile"]
-                       (label :email "Email:")
-                       (email-field :email (user :email))
-                       (label :password "Password:")
-                       (password-field :password)
-                       (label :confirm "Confirm password:")
-                       (password-field :confirm)
-                       (label :ssh-key "SSH public key:")
-                       (text-area :ssh-key (user :ssh_key))
-                       [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
-                       (label :pgp-key "PGP public key:")
-                       (text-area :pgp-key (user :pgp_key))
-                       (submit-button "Update")))))
+              [:div.small-section
+               (flash flash-msg)
+               [:h1 "Profile"]
+               (error-list errors)
+               (form-to [:post "/profile"]
+                        (label :email "Email:")
+                        [:input {:type :email :name :email :id
+                                 :email :value (user :email)}]
+                        (label :password "Password:")
+                        (password-field :password)
+                        (label :confirm "Confirm password:")
+                        (password-field :confirm)
+                        (label :ssh-key "SSH public key:")
+                        (text-area :ssh-key (user :ssh_key))
+                        [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
+                        (label :pgp-key "PGP public key:")
+                        (text-area :pgp-key (user :pgp_key))
+                        (submit-button "Update"))])))
 
 (defn update-profile [account {:keys [email password confirm ssh-key pgp-key]}]
   (let [pgp-key (and pgp-key (.trim pgp-key))]

@@ -27,7 +27,7 @@
         (login-as login "password")
         (follow-redirect)
         (has (status? 200))
-        (within [:article :h1]
+        (within [:.light-article :> :h1]
                 (has (text? "Dashboard (fixture)")))
         (follow "logout")
         (follow-redirect)

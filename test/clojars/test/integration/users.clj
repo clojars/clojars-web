@@ -14,7 +14,7 @@
       (register-as "dantheman" "test@example.org" "password" "")
       (follow-redirect)
       (has (status? 200))
-      (within [:#content-wrapper [:h1 (enlive/but (enlive/has-class "home"))]]
+      (within [:div.light-article :> :h1]
               (has (text? "Dashboard (dantheman)")))))
 
 (deftest bad-registration-info-should-show-error
@@ -35,12 +35,15 @@
               (has (text? "Password can't be blank")))
 
       (fill-in "Password" "password")
+      (fill-in "Email" "test@example.com")
+      (fill-in "Username" "dantheman")
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
               (has (text? "Password and confirm password must match")))
 
       (fill-in "Email" "")
+      (fill-in "Username" "dantheman")
       (fill-in "Password" "password")
       (fill-in "Confirm password" "password")
       (press "Register")
@@ -101,7 +104,7 @@
       (login-as "fixture2@example.org" "password2")
       (follow-redirect)
       (has (status? 200))
-      (within [:h1]
+      (within [:div.light-article :> :h1]
               (has (text? "Dashboard (fixture)")))))
 
 (deftest user-can-update-just-ssh-key
@@ -119,7 +122,7 @@
       (login-as "fixture@example.org" "password")
       (follow-redirect)
       (has (status? 200))
-      (within [:h1]
+      (within [:div.light-article :> :h1]
               (has (text? "Dashboard (fixture)")))))
 
 (deftest bad-update-info-should-show-error
@@ -180,7 +183,7 @@
               (login-as "fixture@example.org" password)
               (follow-redirect)
               (has (status? 200))
-              (within [:h1]
+              (within [:div.light-article :> :h1]
                       (has (text? "Dashboard (fixture)")))))))))
 
 (deftest member-can-add-user-to-group
@@ -192,7 +195,10 @@
       (fill-in [:#username] "fixture")
       (press "add member")
       ;;(follow-redirect)
-      (within [[:ul (enlive/nth-of-type 2)] [:li enlive/first-child] :a]
+      (within [:div.small-article
+               :ul
+               [:li enlive/first-child]
+               :a]
               (has (text? "fixture")))))
 
 (deftest user-must-exist-to-be-added-to-group
@@ -208,5 +214,5 @@
   (-> (session web/clojars-app)
       (register-as "dantheman" "test@example.org" "password" "")
       (visit "/users/dantheman")
-      (within [:h1.col-md-12]
+      (within [:div.light-article :> :h1]
               (has (text? "dantheman")))))

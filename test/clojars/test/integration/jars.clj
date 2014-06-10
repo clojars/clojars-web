@@ -17,7 +17,7 @@
   (scp valid-ssh-key "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (-> (session web/clojars-app)
       (visit "/fake/test")
-      (within [:h1 :span :a]
+      (within [:div#jar-title :h1 :a]
               (has (text? "fake/test")))
       (within [:.lein-small :pre]
               (has (text? "[fake/test \"0.0.2\"]")))
@@ -30,7 +30,7 @@
   (scp valid-ssh-key "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (-> (session web/clojars-app)
       (visit "/fake/test")
-      (within [:h1 :span :a]
+      (within [:div#jar-title :h1 :a]
               (has (text? "fake/test")))
       (within [:.lein-small :pre]
               (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
@@ -47,7 +47,7 @@
   (scp valid-ssh-key "fake.jar" "fake-0.0.3-SNAPSHOT/fake.pom")
   (-> (session web/clojars-app)
       (visit "/fake")
-      (within [:h1 :span :a]
+      (within [:div#jar-title :h1 :a]
               (has (text? "fake")))
       (within [:.lein-small :pre]
               (has (text? "[fake \"0.0.2\"]")))
@@ -63,7 +63,7 @@
   (-> (session web/clojars-app)
       (visit "/fake/test")
       (follow "0.0.3-SNAPSHOT")
-      (within [:h1 :span :a]
+      (within [:div#jar-title :h1 :a]
               (has (text? "fake/test")))
       (within [:.lein-small :pre]
               (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
@@ -79,7 +79,7 @@
   (-> (session web/clojars-app)
       (visit "/fake")
       (follow "0.0.1")
-      (within [:h1 :span :a]
+      (within [:div#jar-title :h1 :a]
               (has (text? "fake")))
       (within [:.lein-small :pre]
               (has (text? "[fake \"0.0.1\"]")))
