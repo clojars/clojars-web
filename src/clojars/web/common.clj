@@ -118,7 +118,7 @@
      [:h2.getting-started.row
       [:div.col-md-12
        "To get started pushing your own project "
-       (link-to "/register" "create an account")
+       (link-to "/register" "register")
        " and then"]
       [:div.col-md-12
        " check out the "

@@ -54,7 +54,8 @@ h2 {
 }
 
 .home a {
-  color: #93c83f;
+  color: #867ec4;
+  text-decoration: none;
 }
 
 .heavy {
@@ -129,7 +130,7 @@ footer a {
 }
 
 .main-navigation a {
-  color: white;
+  color: #ffb33b;
   padding: 10px;
   border-radius: 10px;
   transition: background-color 0.2s ease-in-out;

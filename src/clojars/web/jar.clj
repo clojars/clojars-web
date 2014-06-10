@@ -7,7 +7,7 @@
             [hiccup.element :refer [link-to image]]
             [hiccup.form :refer [submit-button]]
             [clojars.web.safe-hiccup :refer [form-to]]
-            [clojars.maven :refer [jar-to-pom-map commit-url]]
+            [clojars.maven :refer [jar-to-pom-map commit-url github-info]]
             [clojars.auth :refer [authorized?]]
             [clojars.db :refer [find-jar jar-exists]]
             [clojars.promote :refer [blockers]]
@@ -69,10 +69,16 @@
               (let [stats (stats/all)]
                 [:ul#jar-info-bar
                  [:li
-                  (link-to {:target "_blank"}
-                           "https://github.com/"
-                           (image "/images/GitHub-Mark-16px.png" "GitHub")
-                           "github/repo")]
+                  (let [pom-map (jar-to-pom-map jar)]
+                    (if-let [gh-info ;; (github-info pom-map)
+                             "ztellman/aleph"]
+                      (link-to {:target "_blank"}
+                               (format "https://github.com/%s" gh-info)
+                               (image "/images/GitHub-Mark-16px.png" "GitHub")
+                               gh-info)
+                      [:p.github
+                       (image "/images/GitHub-Mark-16px.png" "GitHub")
+                       "N/A"]))]
                  [:li (stats/download-count stats
                                             (:group_name jar)
                                             (:jar_name jar))

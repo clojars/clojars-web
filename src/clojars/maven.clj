@@ -66,6 +66,13 @@
       (pom-to-map (str pom-file)))
     (catch IOException e (pst e) nil)))
 
+(defn github-info [pom-map]
+  (let [scm (:scm pom-map)
+        url (and scm (.getUrl scm))
+        github-re #"^https?://github.com/([^/]+/[^/]+)"
+        user-repo (->> (str url) (re-find github-re) second)]
+    user-repo))
+
 (defn commit-url [pom-map]
   (let [scm (:scm pom-map)
         url (and scm (.getUrl scm))
