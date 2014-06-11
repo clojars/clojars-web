@@ -195,7 +195,7 @@
       (fill-in [:#username] "fixture")
       (press "add member")
       ;;(follow-redirect)
-      (within [:div.small-article
+      (within [:div.small-section
                :ul
                [:li enlive/first-child]
                :a]
