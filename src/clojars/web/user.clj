@@ -92,17 +92,17 @@
                [:h1 "Profile"]
                (error-list errors)
                (form-to [:post "/profile"]
-                        (label :email "Email:")
+                        (label :email "Email")
                         [:input {:type :email :name :email :id
                                  :email :value (user :email)}]
-                        (label :password "Password:")
+                        (label :password "Password")
                         (password-field :password)
-                        (label :confirm "Confirm password:")
+                        (label :confirm "Confirm password")
                         (password-field :confirm)
-                        (label :ssh-key "SSH public key:")
+                        (label :ssh-key "SSH public key")
                         (text-area :ssh-key (user :ssh_key))
                         [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
-                        (label :pgp-key "PGP public key:")
+                        (label :pgp-key "PGP public key")
                         (text-area :pgp-key (user :pgp_key))
                         (submit-button "Update"))])))
 

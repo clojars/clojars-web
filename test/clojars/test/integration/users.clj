@@ -89,9 +89,9 @@
       (register-as "fixture" "fixture@example.org" "password" "")
       (follow-redirect)
       (follow "profile")
-      (fill-in "Email:" "fixture2@example.org")
-      (fill-in "Password:" "password2")
-      (fill-in "Confirm password:" "password2")
+      (fill-in "Email" "fixture2@example.org")
+      (fill-in "Password" "password2")
+      (fill-in "Confirm password" "password2")
       (press "Update")
       (follow-redirect)
       (within [:div#flash]
@@ -112,7 +112,7 @@
       (register-as "fixture" "fixture@example.org" "password" "")
       (follow-redirect)
       (follow "profile")
-      (fill-in "SSH public key:" "ssh-rsa AAAAB3Nza")
+      (fill-in "SSH public key" "ssh-rsa AAAAB3Nza")
       (press "Update")
       (follow-redirect)
       (within [:textarea]
@@ -134,19 +134,19 @@
       (within [:title]
               (has (text? "Profile - Clojars")))
 
-      (fill-in "Password:" "password")
+      (fill-in "Password" "password")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
               (has (text? "Password and confirm password must match")))
 
-      (fill-in "Email:" "")
+      (fill-in "Email" "")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
               (has (text? "Email can't be blank")))
 
-      (fill-in "SSH public key:" "asdf")
+      (fill-in "SSH public key" "asdf")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
