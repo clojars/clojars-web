@@ -18,13 +18,13 @@
 (defn index-page [account]
   (html-doc-with-large-header account nil
     [:article.row
-     [:div.push-information.col-md-6
+     [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
       [:h3.push-header "Push with Leiningen"]
       [:div.push-example
        [:pre.push-example-leiningen
         (tag "$") " lein pom\n"
         (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]]
-     [:div.push-information.col-md-6
+     [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
       [:h3.push-header "Maven Repository"]
       [:div.push-example
        [:pre
@@ -33,12 +33,13 @@
         (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
         (tag "</repository>")]]]]
     [:div.recent-jars-header-container.row
-     [:h2.recent-jars-header.col-md-12 "Recently pushed projects"]]
+     [:h2.recent-jars-header.col-md-12.col-lg-12.col-sm-12.col-xs-12
+      "Recently pushed projects"]]
     [:ul.recent-jars-list.row (map recent-jar (recent-jars))]))
 
 (defn dashboard [account]
   (html-doc account "Dashboard"
-    [:div.light-article.col-md-6
+    [:div.light-article.col-md-6.col-lg-6.col-xs-12.col-sm-6
      [:h1 (str "Dashboard (" account ")")]
      [:h3 (link-to "http://wiki.github.com/ato/clojars-web/pushing" "Add New Project")]
      [:h2 "Your projects"]
