@@ -173,30 +173,49 @@
                                       :version (:version v)))
                            (:version v))])]]]))
 
-(defn svg-template [jar-id version]
-  (let [width-px (+ 138 (* (+ (count jar-id) (count version)) 6))]
-    [:svg {:width (str (* width-px 0.044) "cm")
-           :height "0.88cm"
-           :viewBox (str "0 0 " width-px " 20")
-           :xmlns "http://www.w3.org/2000/svg"
-           :version "1.1"}
-     [:rect {:x 0, :y 0, :width width-px, :height 20,
-             :rx 3, :fill "#444444"}]
-     [:rect {:x 2, :y 2, :width (- width-px 4), :height 16,
-             :rx 3, :fill "#1f1f1f"}]
-
-     [:text {:x 7, :y 13, :font-family "monospace",
-             :font-size 10, :fill "white"}
-      [:tspan {:fill "#ffcfaf"} "["]
-      [:tspan {:fill "#ffffff"} jar-id]
-      [:tspan " "]
-      [:tspan {:fill "#cc9393"} (str \" version \")]
-      [:tspan {:fill "#ffcfaf"} "]"]]
-
-     [:text {:x (- width-px 90), :y 15, :font-family "Verdana",
-             :font-size 7, :fill "white"}
-      [:tspan "Powered by "]
-      [:tspan {:fill "#ffcfaf"} "clojars.org"]]]))
+(let [border-color "#9c92d9"
+      bg-color "#380036"
+      artifact-color  "#ffffff"
+      version-color "#27d3f1"
+      bracket-color "#ffb338"
+      powered-by-color "#ffffff"
+      clojars-color "#ffb338"]
+  (defn svg-template [jar-id version]
+    (let [width-px (+ 138 (* (+ (count jar-id) (count version)) 6))]
+      [:svg {:width (str (* width-px 0.044) "cm")
+             :height "0.90cm"
+             :viewBox (str "0 0 " width-px " 20")
+             :xmlns "http://www.w3.org/2000/svg"
+             :version "1.1"}
+       [:rect {:x 0,
+               :y 0,
+               :width width-px,
+               :height 20,
+               :rx 3,
+               :fill border-color}]
+       [:rect {:x 2,
+               :y 2,
+               :width (- width-px 4),
+               :height 16,
+               :rx 3,
+               :fill bg-color}]
+       [:text {:x 7,
+               :y 13,
+               :font-family "monospace",
+               :font-size 10,
+               :fill "#dddddd"}
+        [:tspan {:fill bracket-color} "["]
+        [:tspan {:fill artifact-color} jar-id]
+        [:tspan " "]
+        [:tspan {:fill version-color} (str \" version \")]
+        [:tspan {:fill bracket-color} "]"]]
+       [:text {:x (- width-px 55),
+               :y 14,
+               :font-family "Verdana",
+               :font-size 8,
+               :fill powered-by-color}
+        [:tspan "@"]
+        [:tspan {:fill clojars-color} "clojars.org"]]])))
 
 (defn make-latest-version-svg [group-id artifact-id]
   (let [jar (find-jar group-id artifact-id)]
