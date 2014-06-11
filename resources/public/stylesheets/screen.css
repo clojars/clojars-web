@@ -370,6 +370,17 @@ footer a {
   border-top: 3px solid #4f4c4c;
 }
 
+#jar-sidebar textarea {
+  font-family: monospace;
+  padding: 4px 5px;
+  color: #999;
+  background-color: white;
+  border: solid slategrey 1px;
+  resize: none;
+  margin-top: 0.5em;
+/*  white-space: nowrap;*/
+}
+
 /* FIXME: clean up these class names so they can be reused */
 .result {
   position: relative;

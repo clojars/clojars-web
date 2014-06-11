@@ -28,6 +28,18 @@
     (if (jar-exists (:group_name dep) (:jar_name dep)) (jar-url dep) (maven-jar-url dep))
     (str (jar-name dep) " " (:version dep))))
 
+(defn version-badge-url [jar]
+  (str (jar-url jar) "/latest-version.svg"))
+
+(defn badge-markdown [jar]
+  (str "[![Clojars Project]"
+       "(http://clojars.org/"
+       (:jar_name jar)
+       "/latest-version.svg)]"
+       "(http://clojars.org/"
+       (:jar_name jar)
+       ")"))
+
 (defn dependency-section [title id dependencies]
   (if (empty? dependencies) '()
     (list
@@ -159,7 +171,16 @@
                 (when-let [homepage (:homepage jar)]
                   [:li.homepage
                    [:h4 "Homepage"]
-                   (safe-link-to homepage homepage)])]])))
+                   (safe-link-to homepage homepage)])
+                [:li
+                 [:h4 "Version Badge"]
+                 [:p
+                  "Want to display the "
+                  (link-to (version-badge-url jar) "latest version")
+                  " of your project on Github? Use the markdown code below!"]
+                 [:textarea {:readonly "readonly" :rows 4} (badge-markdown jar)]
+                 ]
+                ])]))
 
 (defn show-versions [account jar versions]
   (html-doc account (str "all versions of "(jar-name jar))
