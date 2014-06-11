@@ -45,31 +45,40 @@
   (when (jar-fork? jar)
     single-fork-notice))
 
+(defn promoted? [jar]
+  (:promoted_at jar))
+
+(defn promoted-at [jar]
+  [:p (str "Promoted at " (java.util.Date. (:promoted_at jar)))])
+
+(defn promotion-issues [jar]
+  (seq (blockers (set/rename-keys jar {:group_name :group
+                                       :jar_name :name}))))
+
 (defn promotion-details [account jar]
-  (if (authorized? account (:group_name jar))
-    (list [:h3 "promotion"]
-          (if (:promoted_at jar)
-            [:p (str "Promoted at " (java.util.Date. (:promoted_at jar)))]
-            (if-let [issues (seq (blockers (set/rename-keys
-                                            jar {:group_name :group
-                                                 :jar_name :name})))]
-              [:ul#blockers
-               (for [i issues]
-                 [:li i])]
+  (when (authorized? account (:group_name jar))
+    (list [:h2 "Promotion"]
+          (if (promoted? jar)
+            (promoted-at jar)
+            (if-let [issues (promotion-issues jar)]
+              (list [:h3 "Issues Blocking Promotion"]
+                    [:ul#blockers
+                     (for [i issues]
+                       [:li i])])
               (form-to [:post (str "/" (:group_name jar) "/" (:jar_name jar)
                                    "/promote/" (:version jar))]
                        (submit-button "Promote")))))))
 
 (defn show-jar [account jar recent-versions count]
-  (html-doc account (str (:jar_name jar) " " (:version jar))
-            [:div.light-article.row
-             [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
-              [:h1 (jar-link jar)]
-              [:p.description (:description jar)]
-              (let [stats (stats/all)]
-                [:ul#jar-info-bar
-                 [:li
-                  (let [pom-map (jar-to-pom-map jar)]
+  (let [pom-map (jar-to-pom-map jar)]
+    (html-doc account (str (:jar_name jar) " " (:version jar))
+              [:div.light-article.row
+               [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
+                [:h1 (jar-link jar)]
+                [:p.description (:description jar)]
+                (let [stats (stats/all)]
+                  [:ul#jar-info-bar
+                   [:li
                     (if-let [gh-info (github-info pom-map)]
                       (link-to {:target "_blank"}
                                (format "https://github.com/%s" gh-info)
@@ -77,60 +86,58 @@
                                gh-info)
                       [:p.github
                        (image "/images/GitHub-Mark-16px.png" "GitHub")
-                       "N/A"]))]
-                 [:li (stats/download-count stats
-                                            (:group_name jar)
-                                            (:jar_name jar))
-                  " Downloads"]
-                 [:li (stats/download-count stats
-                                            (:group_name jar)
-                                            (:jar_name jar)
-                                            (:version jar))
-                  " This Version"]])
-              [:div.useit
-               [:h2 "Leiningen"]
-               [:div.lein-small.package-config-example
-                [:pre
-                 (tag "[")
-                 (jar-name jar)
-                 [:span.string " \""
-                  (:version jar) "\""] (tag "]") ]]
+                       "N/A"])]
+                   [:li (stats/download-count stats
+                                              (:group_name jar)
+                                              (:jar_name jar))
+                    " Downloads"]
+                   [:li (stats/download-count stats
+                                              (:group_name jar)
+                                              (:jar_name jar)
+                                              (:version jar))
+                    " This Version"]])
+                (when-not pom-map
+                  [:p.error "Oops. We hit an error opening the metadata POM file for this project "
+                   "so some details are not available."])
+                [:div.useit
+                 [:h2 "Leiningen"]
+                 [:div.lein-small.package-config-example
+                  [:pre
+                   (tag "[")
+                   (jar-name jar)
+                   [:span.string " \""
+                    (:version jar) "\""] (tag "]") ]]
 
-               [:h2 "Gradle"]
-               [:div.gradle-small.package-config-example
-                [:pre
-                 "compile "
-                 [:span.string
-                  \"
-                  (:group_name jar)
-                  ":"
-                  (:jar_name jar)
-                  ":"
-                  (:version jar)
-                  \"]]]
+                 [:h2 "Gradle"]
+                 [:div.gradle-small.package-config-example
+                  [:pre
+                   "compile "
+                   [:span.string
+                    \"
+                    (:group_name jar)
+                    ":"
+                    (:jar_name jar)
+                    ":"
+                    (:version jar)
+                    \"]]]
 
-               [:h2 "Maven"]
-               [:div.maven-small.package-config-example
-                [:pre
-                 (tag "<dependency>\n")
-                 (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
-                 (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
-                 (tag "  <version>") (:version jar) (tag "</version>\n")
-                 (tag "</dependency>")]]
-               (let [pom (jar-to-pom-map jar)]
+                 [:h2 "Maven"]
+                 [:div.maven-small.package-config-example
+                  [:pre
+                   (tag "<dependency>\n")
+                   (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
+                   (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
+                   (tag "  <version>") (:version jar) (tag "</version>\n")
+                   (tag "</dependency>")]]
                  (list
                   (fork-notice jar)
-                  (promotion-details account jar)
-                  (when-not pom
-                    [:p.error "Oops. We hit an error opening the metadata POM file for this project "
-                     "so some details are not available."])))]]
-             (let [pom (jar-to-pom-map jar)]
+                  (promotion-details account jar))]]
                [:ul#jar-sidebar.col-sm-3.col-xs-12.col-md-3.col-lg-3
                 [:li
                  [:h4 "Pushed by"]
                  (user-link (:user jar)) " on "
                  [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
-                 (if-let [url (commit-url pom)]
+                 (if-let [url (commit-url pom-map)]
                    [:span.commit-url " with " (link-to url "this commit")])]
                 [:li
                  [:h4 "Recent Versions"]
@@ -146,13 +153,13 @@
                                 (str "Show All Versions (" count " total)"))])]
                 (let [dependencies
                       (dependency-section "Dependencies" "dependencies"
-                                          (remove #(not= (:scope %) "compile") (:dependencies pom)))]
+                                          (remove #(not= (:scope %) "compile") (:dependencies pom-map)))]
                   (when-not (empty? dependencies)
                     [:li dependencies]))
                 (when-let [homepage (:homepage jar)]
                   [:li.homepage
                    [:h4 "Homepage"]
-                   (safe-link-to homepage homepage)])])]))
+                   (safe-link-to homepage homepage)])]])))
 
 (defn show-versions [account jar versions]
   (html-doc account (str "all versions of "(jar-name jar))

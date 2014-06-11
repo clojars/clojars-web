@@ -445,3 +445,7 @@ footer a {
 .result a.fork {
   font-style: italic;
 }
+
+ul#blockers li {
+  list-style-type: disc;
+}
