@@ -180,7 +180,7 @@
                   " of your project on Github? Use the markdown code below!"]
                  [:textarea {:readonly "readonly" :rows 4} (badge-markdown jar)]
                  ]
-                ])]))
+                ]])))
 
 (defn show-versions [account jar versions]
   (html-doc account (str "all versions of "(jar-name jar))
