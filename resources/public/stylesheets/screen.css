@@ -448,4 +448,22 @@ footer a {
 
 ul#blockers li {
   list-style-type: disc;
+  list-style-position: inside;
+}
+
+.dash-palette {
+  background: #f4f4f4;
+  border-radius: 10px;
+  padding: 0 10px 10px 10px;
+  min-height: 100px;
+}
+
+.dash-palette h2 {
+  padding-top: 10px;
+}
+
+.dash-palette ul {
+  list-style-type: disc;
+  color: #393536;
+  list-style-position: inside;
 }

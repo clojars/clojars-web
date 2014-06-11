@@ -39,10 +39,26 @@
 
 (defn dashboard [account]
   (html-doc account "Dashboard"
-    [:div.light-article.col-md-6.col-lg-6.col-xs-12.col-sm-6
+    [:div.light-article.col-md-12.col-lg-12.col-xs-12.col-sm-12
      [:h1 (str "Dashboard (" account ")")]
-     [:h3 (link-to "http://wiki.github.com/ato/clojars-web/pushing" "Add New Project")]
-     [:h2 "Your projects"]
-     (unordered-list (map jar-link (jars-by-username account)))
-     [:h2 "Your groups"]
-     (unordered-list (map group-link (find-groupnames account)))]))
+     [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
+      [:div.dash-palette
+       [:h2 "Your Projects"]
+       (if (seq (jars-by-username account))
+         (unordered-list (map jar-link (jars-by-username account)))
+         [:p "You don't have any projects, would you like to "
+          (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add one")
+          "?"])]]
+     [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
+      [:div.dash-palette
+       [:h2 "Your Groups"]
+       (unordered-list (map group-link (find-groupnames account)))]]
+     [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
+      [:div.dash-palette
+       [:h2 "FAQ"]
+       [:ul
+        [:li (link-to "https://github.com/ato/clojars-web/wiki/Tutorial" "How I create a new project?")]
+        [:li (link-to "http://wiki.github.com/ato/clojars-web/pushing" "How do I deploy to clojars?")]
+        [:li (link-to "https://github.com/ato/clojars-web/wiki/Data" "How can I access clojars data programatically?")]
+        [:li (link-to "https://github.com/ato/clojars-web/wiki/Groups" "What are groups?")]
+        [:li (link-to "https://github.com/ato/clojars-web/wiki/POM" "What does my POM need to look like?")]]]]]))
