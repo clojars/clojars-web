@@ -36,17 +36,18 @@
            [:div
             (if (some jar-fork? results)
               collection-fork-notice)
-            [:ul
+            [:ul.row
              (for [jar results]
                [:li.search-results
-                (jar-link {:jar_name (:artifact-id jar)
-                           :group_name (:group-id jar)}) " " (:version jar)
-                [:br]
-                (when (seq (:description jar))
-                  [:span.desc (:description jar)
-                   [:br]])
-                [:span.details (if-let [created (:created jar)]
-                                 [:td (format-date created)])]])]]))
+                [:div.result
+                 (jar-link {:jar_name (:artifact-id jar)
+                            :group_name (:group-id jar)}) " " (:version jar)
+                 [:br]
+                 (when (seq (:description jar))
+                   [:span.desc (:description jar)
+                    [:br]])
+                 [:span.details (if-let [created (:created jar)]
+                                  [:td (format-date created)])]]])]]))
        (catch Exception _
          (.printStackTrace _)
          [:p "Could not search; please check your query syntax."]))]))
