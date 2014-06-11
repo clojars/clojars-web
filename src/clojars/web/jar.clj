@@ -70,8 +70,7 @@
                 [:ul#jar-info-bar
                  [:li
                   (let [pom-map (jar-to-pom-map jar)]
-                    (if-let [gh-info ;; (github-info pom-map)
-                             "ztellman/aleph"]
+                    (if-let [gh-info (github-info pom-map)]
                       (link-to {:target "_blank"}
                                (format "https://github.com/%s" gh-info)
                                (image "/images/GitHub-Mark-16px.png" "GitHub")
