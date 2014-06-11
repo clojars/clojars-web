@@ -441,3 +441,7 @@ footer a {
   padding-top: 10px;
   color: #999;
 }
+
+.result a.fork {
+  font-style: italic;
+}
