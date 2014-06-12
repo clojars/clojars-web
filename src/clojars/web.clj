@@ -58,8 +58,9 @@
         (not-found
          (html-doc account
                    "Page not found"
-                   [:h1 "Page not found"]
-                   [:p "Thundering typhoons!  I think we lost it.  Sorry!"])))))
+                   [:div.small-section
+                    [:h1 "Page not found"]
+                    [:p "Thundering typhoons!  I think we lost it.  Sorry!"]])))))
 
 (defn bad-attempt [attempts user]
   (let [failures (or (attempts user) 0)]

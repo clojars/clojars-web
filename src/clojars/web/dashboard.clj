@@ -1,46 +1,64 @@
 (ns clojars.web.dashboard
-  (:require [clojars.web.common :refer [html-doc jar-link group-link tag]]
+  (:require [clojars.web.common :refer [html-doc html-doc-with-large-header jar-link group-link tag]]
             [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
+            [clojars.stats :as stats]
             [hiccup.element :refer [unordered-list link-to]]))
 
+(defn recent-jar [jar-map]
+  (let [stats (stats/all)]
+    [:li.col-md-4.col-sm-6.col-xs-12.col-lg-4
+     [:div.recent-jar
+      [:h3.recent-jar-title
+       (jar-link jar-map)]
+      [:p.recent-jar-description (:description jar-map)]
+      [:p.hint.total-downloads "Downloads: " (stats/download-count stats
+                                                                   (:group_name jar-map)
+                                                                   (:jar_name jar-map))]]]))
+
 (defn index-page [account]
-  (html-doc account nil
-    [:p "Clojars is a " [:strong "dead easy"] " community repository for"
-     " open source " (link-to "http://clojure.org/" "Clojure")
-     " libraries. "]
-    [:div {:class "useit"}
-     [:div {:class "lein"}
-      [:h3 "pushing with leiningen"]
-      [:pre
-       (tag "$") " lein pom\n"
-       (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]
-
-     "It's the " [:strong "default repository"] " for "
-     (link-to "http://leiningen.org" "Leiningen")
-     ", but you can use it with other build tools like "
-     (link-to "http://maven.apache.org/" "Maven") " as well."
-     [:div {:class "maven"}
-      [:h3 "maven repository"]
-      [:pre
-       (tag "<repository>\n")
-       (tag "  <id>") "clojars.org" (tag "</id>\n")
-       (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
-       (tag "</repository>")]]]
-
-    [:p "To " [:strong "get started"] " pushing your own projects "
-     (link-to "/register" "create an account")
-     " and then check out the "
-     (link-to "http://wiki.github.com/ato/clojars-web/tutorial"
-              "tutorial") ". Alternatively, "
-     (link-to "/projects" "browse") " the repository."]
-    [:h2 "Recently pushed projects"]
-    (unordered-list (map jar-link (recent-jars)))))
+  (html-doc-with-large-header account nil
+    [:article.row
+     [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
+      [:h3.push-header "Push with Leiningen"]
+      [:div.push-example
+       [:pre.push-example-leiningen
+        (tag "$") " lein pom\n"
+        (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]]
+     [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
+      [:h3.push-header "Maven Repository"]
+      [:div.push-example
+       [:pre
+        (tag "<repository>\n")
+        (tag "  <id>") "clojars.org" (tag "</id>\n")
+        (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
+        (tag "</repository>")]]]]
+    [:div.recent-jars-header-container.row
+     [:h2.recent-jars-header.col-md-12.col-lg-12.col-sm-12.col-xs-12
+      "Recently pushed projects"]]
+    [:ul.recent-jars-list.row (map recent-jar (recent-jars))]))
 
 (defn dashboard [account]
   (html-doc account "Dashboard"
-    [:h1 (str "Dashboard (" account ")")]
-    [:h2 "Your projects"]
-    (unordered-list (map jar-link (jars-by-username account)))
-    (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add new project")
-    [:h2 "Your groups"]
-    (unordered-list (map group-link (find-groupnames account)))))
+    [:div.light-article.col-md-12.col-lg-12.col-xs-12.col-sm-12
+     [:h1 (str "Dashboard (" account ")")]
+     [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
+      [:div.dash-palette
+       [:h2 "Your Projects"]
+       (if (seq (jars-by-username account))
+         (unordered-list (map jar-link (jars-by-username account)))
+         [:p "You don't have any projects, would you like to "
+          (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add one")
+          "?"])]]
+     [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
+      [:div.dash-palette
+       [:h2 "Your Groups"]
+       (unordered-list (map group-link (find-groupnames account)))]]
+     [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
+      [:div.dash-palette
+       [:h2 "FAQ"]
+       [:ul
+        [:li (link-to "https://github.com/ato/clojars-web/wiki/Tutorial" "How I create a new project?")]
+        [:li (link-to "http://wiki.github.com/ato/clojars-web/pushing" "How do I deploy to clojars?")]
+        [:li (link-to "https://github.com/ato/clojars-web/wiki/Data" "How can I access clojars data programatically?")]
+        [:li (link-to "https://github.com/ato/clojars-web/wiki/Groups" "What are groups?")]
+        [:li (link-to "https://github.com/ato/clojars-web/wiki/POM" "What does my POM need to look like?")]]]]]))

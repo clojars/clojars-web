@@ -21,7 +21,10 @@
   (-> (session web/clojars-app)
       (visit "/groups/fake")
       (has (status? 200))
-      (within [:article [:ul enlive/last-of-type] [:li enlive/last-child] :a]
+      (within [:body
+               [:ul enlive/last-of-type]
+               [:li enlive/only-child]
+               :a]
               (has (text? "dantheman"))))
   (is (= 6
          (count
@@ -44,9 +47,9 @@
         (login-as "dantheman" "password")
         (follow-redirect)
         (follow "profile")
-        (fill-in "Password:" "password")
-        (fill-in "Confirm password:" "password")
-        (fill-in "SSH public key:" new-ssh-key)
+        (fill-in "Password" "password")
+        (fill-in "Confirm password" "password")
+        (fill-in "SSH public key" new-ssh-key)
         (press "Update"))
     (is (thrown? Exception (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")))
     (is (re-find #"Success! Your jars are now available"
@@ -73,9 +76,9 @@
       (register-as "dantheman" "test@example.org" "password" valid-ssh-key)
       (follow-redirect)
       (follow "profile")
-      (fill-in "Password:" "password")
-      (fill-in "Confirm password:" "password")
-      (fill-in "SSH public key:" "")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
+      (fill-in "SSH public key" "")
       (press "Update"))
 
   (is (thrown? Exception (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom"))))
@@ -89,9 +92,9 @@
         (login-as "dantheman" "password")
         (follow-redirect)
         (follow "profile")
-        (fill-in "Password:" "password")
-        (fill-in "Confirm password:" "password")
-        (fill-in "SSH public key:" new-ssh-keys)
+        (fill-in "Password" "password")
+        (fill-in "Confirm password" "password")
+        (fill-in "SSH public key" new-ssh-keys)
         (press "Update"))
     (is (thrown? Exception (scp (str valid-ssh-key "1") "test.jar" "test-0.0.1/test.pom")))
     (is (= "Welcome to Clojars, dantheman!\n\nDeploying fake/test 0.0.1\n\nSuccess! Your jars are now available from http://clojars.org/\n"

@@ -9,8 +9,8 @@
   (-> state
       (visit "/")
       (follow "login")
-      (fill-in "Username or email:" user)
-      (fill-in "Password:" password)
+      (fill-in "Username" user)
+      (fill-in "Password" password)
       (press "Login")))
 
 (defn register-as
@@ -20,11 +20,11 @@
      (-> state
          (visit "/")
          (follow "register")
-         (fill-in "Email:" email)
-         (fill-in "Username:" user)
-         (fill-in "Password:" password)
-         (fill-in "Confirm password:" confirm)
-         (fill-in "SSH public key:" ssh-key)
+         (fill-in "Email" email)
+         (fill-in "Username" user)
+         (fill-in "Password" password)
+         (fill-in "Confirm password" confirm)
+         (fill-in "SSH public key" ssh-key)
          (press "Register"))))
 
 (defn scp-str-send-resource [filename]

@@ -1,7 +1,7 @@
 (ns clojars.web.common
   (:require [hiccup.core :refer [html]]
             [hiccup.page :refer [include-css include-js]]
-            [hiccup.element :refer [link-to unordered-list]]
+            [hiccup.element :refer [link-to unordered-list image]]
             [clojars.web.safe-hiccup :refer [html5 raw form-to]]))
 
 (defn when-ie [& contents]
@@ -10,6 +10,33 @@
    (html contents)
    "<![endif]-->"))
 
+(def footer
+  [:footer.row
+   (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
+   (link-to "/projects" "projects")
+   (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
+   (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
+   (link-to "https://github.com/ato/clojars-web" "code")
+   (link-to "/security" "security")
+   (link-to "https://github.com/ato/clojars-web/wiki/" "help")
+   [:div.row.bendyworks
+    "remixed by"
+    (link-to {:target "_blank"}
+             "http://www.bendyworks.com/"
+             (image "/images/bendyworks_logo_white.png" "Bendyworks Inc."))]])
+
+(defn google-analytics-js []
+  [:script "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-51806851-1', 'clojars.org');
+  ga('send', 'pageview');"])
+
+(defn typekit-js []
+  [:script "try{Typekit.load();}catch(e){}"])
+
 (defn html-doc [account title & body]
   (html5
    [:head
@@ -17,20 +44,33 @@
             :href "/opensearch.xml"
             :rel "search"}]
     [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
     [:title
      (when title
        (str title " - "))
      "Clojars"]
     (map #(include-css (str "/stylesheets/" %))
-         ["reset.css" "grid.css" "screen.css"])
+         ;; Bootstrap was customized to only include the 'grid' styles
+         ;; (then the default colors were removed)
+         ;; more info: http://getbootstrap.com/css/#grid
+         ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
+    (include-js "//use.typekit.net/zhw0tse.js")
+    (typekit-js)
+    (google-analytics-js)
     (raw (when-ie (include-js "/js/html5.js")))]
-   [:body
-    [:div {:class "container_12 header"}
-     [:header
-      [:hgroup {:class :grid_4}
-       [:h1 (link-to "/" "Clojars")]
-       [:h2 "Simple Clojure project repository"]]
-      [:nav
+   [:body.container-fluid
+    [:div#content-wrapper
+     [:header.small-header.row
+      [:h1.home.col-md-3.col-sm-3.col-xs-3.col-lg-3 (link-to "/" "Clojars")]
+      [:div.col-md-3.col-sm-3.col-xs-3.col-lg-3
+       [:form {:action "/search"}
+        [:input {:type "search"
+                 :name "q"
+                 :id "search"
+                 :class "search"
+                 :placeholder "Search projects..."
+                 :required true}]]]
+      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-6.col-lg-6
        (if account
          (unordered-list
           [(link-to "/" "dashboard")
@@ -38,22 +78,74 @@
            (link-to "/logout" "logout")])
          (unordered-list
           [(link-to "/login" "login")
-           (link-to "/register" "register")]))
-       (form-to [:get "/search"]
-                [:input {:name "q" :id "search" :class :search
-                         :placeholder "Search projects..."}])]]
-     [:div {:class :clear}]]
-    [:div {:class "container_12 article"}
-     [:article.clearfix
-      body]]
-    [:footer
-     (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
-     (link-to "/projects" "projects")
-     (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
-     (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
-     (link-to "https://github.com/ato/clojars-web" "code")
-     (link-to "/security" "security")
-     (link-to "https://github.com/ato/clojars-web/wiki/" "help")]]))
+           (link-to "/register" "register")]))]]
+     body
+     footer]]))
+
+(defn html-doc-with-large-header [account title & body]
+  (html5
+   [:head
+    [:link {:type "application/opensearchdescription+xml"
+            :href "/opensearch.xml"
+            :rel "search"}]
+    [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+    [:title
+     (when title
+       (str title " - "))
+     "Clojars"]
+    (map #(include-css (str "/stylesheets/" %))
+         ;; Bootstrap was customized to only include the 'grid' styles
+         ;; (then the default colors were removed)
+         ;; more info: http://getbootstrap.com/css/#grid
+         ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
+    (include-js "//use.typekit.net/zhw0tse.js")
+    [:script "try{Typekit.load();}catch(e){}"]
+    (raw (when-ie (include-js "/js/html5.js")))]
+   [:body.container-fluid
+    [:div.hero.row
+     [:header
+      [:h1.home.col-md-6.col-sm-6.col-xs-6 (link-to "/" "Clojars")]
+      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-6
+       (if account
+         (unordered-list
+          [(link-to "/" "dashboard")
+           (link-to "/profile" "profile")
+           (link-to "/logout" "logout")])
+         (unordered-list
+          [(link-to "/login" "login")
+           (link-to "/register" "register")]))]
+      [:h2.hero-text.row
+       [:div.col-md-12
+        [:span.heavy "Clojars"]
+        " is a "
+        [:span.heavy "dead easy"]
+        " community repository for "]
+       [:div.col-md-12
+        " open source Clojure libraries."]]]
+     [:div.search-form-container.col-md-12.col-xs-12.col-lg-12.col-sm-12
+      [:form {:action "/search"}
+       [:input {:type "search"
+                :name "q"
+                :id "search"
+                :placeholder "Search projects..."
+                :required true}]
+       [:input {:id "search-button"
+                :value "Search"
+                :type "submit"}]]]
+     [:h2.getting-started.row
+      [:div.col-md-12
+       "To get started pushing your own project "
+       (link-to "/register" "register")
+       " and then"]
+      [:div.col-md-12
+       " check out the "
+       (link-to "http://wiki.github.com/ato/clojars-web/tutorial" "tutorial")
+       ". Alternatively, "
+       (link-to "/projects" "browse the repository")
+       "."]]]
+    body
+    footer]))
 
 (defn flash [msg]
   (if msg
@@ -61,13 +153,13 @@
 
 (defn error-list [errors]
   (when errors
-    [:div {:class :error}
+    [:div.error
      [:strong "Blistering barnacles!"]
      "  Something's not shipshape:"
      (unordered-list errors)]))
 
 (defn tag [s]
-  (raw (html [:span {:class "tag"} s])))
+  (raw (html [:span.tag s])))
 
 (defn jar-url [jar]
   (if (= (:group_name jar) (:jar_name jar))
@@ -86,20 +178,21 @@
                              "")))
 
 (def single-fork-notice
-  [:p.fork-notice
+  [:p.fork-notice.hint
    "Note: this artifact is a non-canonical fork. See "
    (link-to "https://github.com/ato/clojars-web/wiki/Groups" "the wiki")
    " for more details."])
 
 (def collection-fork-notice
-  [:p.fork-notice
+  [:p.fork-notice.hint
    "Note: artifacts in italics are non-canonical forks. See "
    (link-to "https://github.com/ato/clojars-web/wiki/Groups" "the wiki")
    " for more details."])
 
 (defn jar-link [jar]
-  [:span {:class (if (jar-fork? jar) "fork")}
-   (link-to (jar-url jar) (jar-name jar))])
+  (link-to {:class (when (jar-fork? jar) "fork")}
+           (jar-url jar)
+           (jar-name jar)))
 
 (defn user-link [username]
   (link-to (str "/users/" username) username))
@@ -119,25 +212,26 @@
         page-range 3
         page-url "/projects?page="
         current-page (-> current-page (max 1) (min total-pages))
-        main-div [:div {:class "page-nav"}]
+
+        main-div [:div.page-nav]
         previous-page (if (= current-page 1)
-                        [[:span {:class "previous-page disabled"} previous-text]]
-                        [[:a
-                          {:href (str page-url (- current-page 1)) :class "previous-page"}
+                        [[:span.previous-page.disabled previous-text]]
+                        [[:a.previous-page
+                          {:href (str page-url (- current-page 1))}
                           previous-text]])
         before-current (->> (drop-while
                               #(< % 1)
                               (range (- current-page page-range) current-page))
                             (map #(link-to (str page-url %) %)))
-        current [[:em {:class "current"} (str current-page)]]
+        current [[:em.current (str current-page)]]
         after-current (->> (take-while
                              #(<= % total-pages)
                              (range (+ current-page 1) (+ current-page 1 page-range)))
                            (map #(link-to (str page-url %) %)))
         next-page (if (= current-page total-pages)
-                    [[:span {:class "next-page disabled"} next-text]]
-                    [[:a
-                      {:href (str page-url (+ current-page 1)) :class "next-page"}
+                    [[:span.next-page.disabled next-text]]
+                    [[:a.next-page
+                      {:href (str page-url (+ current-page 1))}
                       next-text]])]
     (vec
       (concat main-div previous-page before-current current after-current next-page))))

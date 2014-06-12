@@ -245,7 +245,7 @@
       (is (= ["group-name"]
              (db/find-groupnames "test-user")))))
 
-(deftest recent-jars-returns-5-most-recent-jars-only-most-recent-version
+(deftest recent-jars-returns-6-most-recent-jars-only-most-recent-version
   (let [name "tester"
         ms (long 0)
         jarmap {:name name :group name
