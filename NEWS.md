@@ -2,6 +2,10 @@
 
 Newest items at the top.  [More detailed announcements].
 
+## 2014-June
+
+* Design, color scheme and typography revamp. #214
+
 ## 2014-May
 
 * Improved search result quality. #210
