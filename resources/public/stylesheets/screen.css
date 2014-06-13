@@ -50,12 +50,23 @@ h2 {
 
 .home {
   text-align: left;
-  margin: 0;
+  display: flex;
 }
 
 .home a {
   color: #867ec4;
   text-decoration: none;
+}
+
+.home h1 {
+  display: inline-block;
+  margin: 0 0 0 0.5em;
+}
+
+.home p {
+  margin: 0;
+  display: inline-block;
+  padding-top: 10px;
 }
 
 .heavy {
