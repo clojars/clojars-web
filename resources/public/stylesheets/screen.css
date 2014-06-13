@@ -50,12 +50,23 @@ h2 {
 
 .home {
   text-align: left;
-  margin: 0;
+  display: flex;
 }
 
 .home a {
   color: #867ec4;
   text-decoration: none;
+}
+
+.home h1 {
+  display: inline-block;
+  margin: 0 0 0 0.5em;
+}
+
+.home p {
+  margin: 0;
+  display: inline-block;
+  padding-top: 10px;
 }
 
 .heavy {
@@ -144,6 +155,14 @@ footer a {
 .main-navigation li {
   display: inline;
   margin-left: 15px;
+}
+
+.hero header .home h1 {
+  padding-top: 20px;
+}
+
+.hero header .main-navigation {
+  padding-top: 22px;
 }
 
 /* FIXME: bump the font/padding down by half on mobile
@@ -445,6 +464,19 @@ footer a {
   .getting-started > .col-md-12, .hero-text > .col-md-12 {
     display: inline;
     padding: 0
+  }
+
+  .small-header .home h1 {
+    font-size: 1.3em;
+    padding-top: 10px;
+  }
+
+  .small-header .home h1 a {
+    padding-left: 5px;
+  }
+
+  .small-header .main-navigation {
+    font-size: 0.7em;
   }
 }
 
