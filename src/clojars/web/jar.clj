@@ -33,11 +33,11 @@
 
 (defn badge-markdown [jar]
   (str "[![Clojars Project]"
-       "(http://clojars.org/"
-       (:jar_name jar)
+       "(http://clojars.org"
+       (jar-url jar)
        "/latest-version.svg)]"
-       "(http://clojars.org/"
-       (:jar_name jar)
+       "(http://clojars.org"
+       (jar-url jar)
        ")"))
 
 (defn dependency-section [title id dependencies]
