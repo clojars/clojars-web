@@ -61,10 +61,10 @@
    [:body.container-fluid
     [:div#content-wrapper
      [:header.small-header.row
-      [:div.home.col-md-3.col-sm-3.col-xs-3.col-lg-3
+      [:div.home.col-md-3.col-sm-3.col-xs-6.col-lg-3
        (link-to "/" (image "/images/clojars-logo-tiny.png" "Clojars"))
        [:h1 (link-to "/" "Clojars")]]
-      [:div.col-md-3.col-sm-3.col-xs-3.col-lg-3
+      [:div.col-md-3.col-sm-3.col-xs-6.col-lg-3
        [:form {:action "/search"}
         [:input {:type "search"
                  :name "q"
@@ -72,7 +72,7 @@
                  :class "search"
                  :placeholder "Search projects..."
                  :required true}]]]
-      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-6.col-lg-6
+      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-12.col-lg-6
        (if account
          (unordered-list
           [(link-to "/" "dashboard")
@@ -107,11 +107,11 @@
    [:body.container-fluid
     [:div.hero.row
      [:header
-      [:div.home.col-md-6.col-sm-6.col-xs-6.col-lg-6
+      [:div.home.col-md-6.col-sm-6.col-xs-12.col-lg-6
        (link-to "/" (image "/images/clojars-logo-small.png" "Clojars"))
        [:h1
         (link-to "/" "Clojars")]]
-      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-6
+      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-12.col-lg-6
        (if account
          (unordered-list
           [(link-to "/" "dashboard")

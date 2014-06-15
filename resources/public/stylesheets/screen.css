@@ -460,10 +460,18 @@ footer a {
     width: 90%;
   }
 
+  .main-navigation {
+    text-align: center;
+  }
+
   /* reflow the 'hero' and 'getting started' text on small screens  */
   .getting-started > .col-md-12, .hero-text > .col-md-12 {
     display: inline;
     padding: 0
+  }
+
+  .small-header {
+    padding-bottom: 90px;
   }
 
   .small-header .home h1 {
