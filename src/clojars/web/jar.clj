@@ -89,8 +89,8 @@
                 [:h1 (jar-link jar)]
                 [:p.description (:description jar)]
                 (let [stats (stats/all)]
-                  [:ul#jar-info-bar
-                   [:li
+                  [:ul#jar-info-bar.row
+                   [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
                     (if-let [gh-info (github-info pom-map)]
                       (link-to {:target "_blank"}
                                (format "https://github.com/%s" gh-info)
@@ -99,11 +99,13 @@
                       [:p.github
                        (image "/images/GitHub-Mark-16px.png" "GitHub")
                        "N/A"])]
-                   [:li (stats/download-count stats
+                   [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+                    (stats/download-count stats
                                               (:group_name jar)
                                               (:jar_name jar))
                     " Downloads"]
-                   [:li (stats/download-count stats
+                   [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+                    (stats/download-count stats
                                               (:group_name jar)
                                               (:jar_name jar)
                                               (:version jar))

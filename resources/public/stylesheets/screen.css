@@ -283,6 +283,8 @@ footer a {
 }
 
 #jar-info-bar {
+  display: inline-block;
+  width: 100%;
   border: solid #d3d3d3;
   border-width: 1px 0;
   padding: 10px 0;
@@ -458,6 +460,18 @@ footer a {
   .hero input[type=search] {
     border-radius: 10px;
     width: 90%;
+  }
+
+  #jar-info-bar {
+    margin-left: 0;
+    padding: 0;
+  }
+
+  #jar-info-bar li {
+    margin: 0;
+    padding: 10px 0;
+    border-top: 1px solid #d3d3d3;
+    border-left: 0;
   }
 
   /* reflow the 'hero' and 'getting started' text on small screens  */
