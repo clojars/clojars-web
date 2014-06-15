@@ -113,39 +113,38 @@
                 (when-not pom-map
                   [:p.error "Oops. We hit an error opening the metadata POM file for this project "
                    "so some details are not available."])
-                [:div.useit
-                 [:h2 "Leiningen"]
-                 [:div.lein-small.package-config-example
-                  [:pre
-                   (tag "[")
-                   (jar-name jar)
-                   [:span.string " \""
-                    (:version jar) "\""] (tag "]") ]]
+                [:h2 "Leiningen"]
+                [:div.package-config-example
+                 [:pre
+                  (tag "[")
+                  (jar-name jar)
+                  [:span.string " \""
+                   (:version jar) "\""] (tag "]") ]]
 
-                 [:h2 "Gradle"]
-                 [:div.gradle-small.package-config-example
-                  [:pre
-                   "compile "
-                   [:span.string
-                    \"
-                    (:group_name jar)
-                    ":"
-                    (:jar_name jar)
-                    ":"
-                    (:version jar)
-                    \"]]]
+                [:h2 "Gradle"]
+                [:div.package-config-example
+                 [:pre
+                  "compile "
+                  [:span.string
+                   \"
+                   (:group_name jar)
+                   ":"
+                   (:jar_name jar)
+                   ":"
+                   (:version jar)
+                   \"]]]
 
-                 [:h2 "Maven"]
-                 [:div.maven-small.package-config-example
-                  [:pre
-                   (tag "<dependency>\n")
-                   (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
-                   (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
-                   (tag "  <version>") (:version jar) (tag "</version>\n")
-                   (tag "</dependency>")]]
-                 (list
-                  (fork-notice jar)
-                  (promotion-details account jar))]]
+                [:h2 "Maven"]
+                [:div.package-config-example
+                 [:pre
+                  (tag "<dependency>\n")
+                  (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
+                  (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
+                  (tag "  <version>") (:version jar) (tag "</version>\n")
+                  (tag "</dependency>")]]
+                (list
+                 (fork-notice jar)
+                 (promotion-details account jar))]
                [:ul#jar-sidebar.col-sm-3.col-xs-12.col-md-3.col-lg-3
                 [:li
                  [:h4 "Pushed by"]
