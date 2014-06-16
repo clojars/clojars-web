@@ -257,8 +257,6 @@ footer a {
 
 .small-section {
   max-width: 550px;
-  margin-left: auto;
-  margin-right: auto;
   margin: 0 auto 80px;
 }
 
@@ -457,13 +455,21 @@ footer a {
 
   .hero input[type=search] {
     border-radius: 10px;
-    width: 90%;
+    width: 75%;
+  }
+
+  .main-navigation {
+    text-align: center;
   }
 
   /* reflow the 'hero' and 'getting started' text on small screens  */
   .getting-started > .col-md-12, .hero-text > .col-md-12 {
     display: inline;
     padding: 0
+  }
+
+  .small-header {
+    padding-bottom: 90px;
   }
 
   .small-header .home h1 {
@@ -497,7 +503,7 @@ ul#blockers li {
 .dash-palette {
   background: #f4f4f4;
   border-radius: 10px;
-  padding: 0 10px 10px 10px;
+  padding: 0 10px 10px;
   min-height: 100px;
 }
 
@@ -506,7 +512,7 @@ ul#blockers li {
 }
 
 .dash-palette ul {
-  list-style-type: disc;
   color: #393536;
+  list-style-type: disc;
   list-style-position: inside;
 }
