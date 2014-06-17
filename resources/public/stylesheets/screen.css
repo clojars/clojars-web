@@ -53,6 +53,11 @@ h2 {
   display: flex;
 }
 
+hr {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
 .home a {
   color: #867ec4;
   text-decoration: none;
@@ -401,17 +406,12 @@ footer a {
 /* FIXME: clean up these class names so they can be reused */
 .result {
   position: relative;
-
-  height: 100px;
+  height: 125px;
   margin: 15px 0;
   background-color: #f4f4f4;
   border-radius: 10px;
   padding: 10px 15px;
-}
-
-.details {
-  bottom: 10px;
-  position: absolute;
+  overflow: auto;
 }
 
 .package-config-example {
