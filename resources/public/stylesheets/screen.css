@@ -336,11 +336,7 @@ footer a {
   height: 150px;
   margin-bottom: 30px;
   transition: border-color 0.2s ease-in-out;
-}
-
-.total-downloads {
-  bottom: 0;
-  position: absolute;
+  overflow: auto;
 }
 
 .recent-jar:hover {
@@ -353,7 +349,7 @@ footer a {
 
 .recent-jar-description {
   font-size: 1.1em;
-  margin-top: 35px;
+  margin: 35px 0 10px;
 }
 
 .recent-jar-title {
