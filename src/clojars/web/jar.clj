@@ -89,8 +89,8 @@
                 [:h1 (jar-link jar)]
                 [:p.description (:description jar)]
                 (let [stats (stats/all)]
-                  [:ul#jar-info-bar
-                   [:li
+                  [:ul#jar-info-bar.row
+                   [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
                     (if-let [gh-info (github-info pom-map)]
                       (link-to {:target "_blank"}
                                (format "https://github.com/%s" gh-info)
@@ -99,11 +99,13 @@
                       [:p.github
                        (image "/images/GitHub-Mark-16px.png" "GitHub")
                        "N/A"])]
-                   [:li (stats/download-count stats
+                   [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+                    (stats/download-count stats
                                               (:group_name jar)
                                               (:jar_name jar))
                     " Downloads"]
-                   [:li (stats/download-count stats
+                   [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+                    (stats/download-count stats
                                               (:group_name jar)
                                               (:jar_name jar)
                                               (:version jar))
@@ -111,39 +113,38 @@
                 (when-not pom-map
                   [:p.error "Oops. We hit an error opening the metadata POM file for this project "
                    "so some details are not available."])
-                [:div.useit
-                 [:h2 "Leiningen"]
-                 [:div.lein-small.package-config-example
-                  [:pre
-                   (tag "[")
-                   (jar-name jar)
-                   [:span.string " \""
-                    (:version jar) "\""] (tag "]") ]]
+                [:h2 "Leiningen"]
+                [:div.package-config-example
+                 [:pre
+                  (tag "[")
+                  (jar-name jar)
+                  [:span.string " \""
+                   (:version jar) "\""] (tag "]") ]]
 
-                 [:h2 "Gradle"]
-                 [:div.gradle-small.package-config-example
-                  [:pre
-                   "compile "
-                   [:span.string
-                    \"
-                    (:group_name jar)
-                    ":"
-                    (:jar_name jar)
-                    ":"
-                    (:version jar)
-                    \"]]]
+                [:h2 "Gradle"]
+                [:div.package-config-example
+                 [:pre
+                  "compile "
+                  [:span.string
+                   \"
+                   (:group_name jar)
+                   ":"
+                   (:jar_name jar)
+                   ":"
+                   (:version jar)
+                   \"]]]
 
-                 [:h2 "Maven"]
-                 [:div.maven-small.package-config-example
-                  [:pre
-                   (tag "<dependency>\n")
-                   (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
-                   (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
-                   (tag "  <version>") (:version jar) (tag "</version>\n")
-                   (tag "</dependency>")]]
-                 (list
-                  (fork-notice jar)
-                  (promotion-details account jar))]]
+                [:h2 "Maven"]
+                [:div.package-config-example
+                 [:pre
+                  (tag "<dependency>\n")
+                  (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
+                  (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
+                  (tag "  <version>") (:version jar) (tag "</version>\n")
+                  (tag "</dependency>")]]
+                (list
+                 (fork-notice jar)
+                 (promotion-details account jar))]
                [:ul#jar-sidebar.col-sm-3.col-xs-12.col-md-3.col-lg-3
                 [:li
                  [:h4 "Pushed by"]

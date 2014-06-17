@@ -53,6 +53,11 @@ h2 {
   display: flex;
 }
 
+hr {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
 .home a {
   color: #867ec4;
   text-decoration: none;
@@ -281,6 +286,8 @@ footer a {
 }
 
 #jar-info-bar {
+  display: inline-block;
+  width: 100%;
   border: solid #d3d3d3;
   border-width: 1px 0;
   padding: 10px 0;
@@ -332,11 +339,7 @@ footer a {
   height: 150px;
   margin-bottom: 30px;
   transition: border-color 0.2s ease-in-out;
-}
-
-.total-downloads {
-  bottom: 0;
-  position: absolute;
+  overflow: auto;
 }
 
 .recent-jar:hover {
@@ -349,7 +352,7 @@ footer a {
 
 .recent-jar-description {
   font-size: 1.1em;
-  margin-top: 35px;
+  margin: 35px 0 10px;
 }
 
 .recent-jar-title {
@@ -401,23 +404,19 @@ footer a {
 /* FIXME: clean up these class names so they can be reused */
 .result {
   position: relative;
-
-  height: 100px;
+  height: 125px;
   margin: 15px 0;
   background-color: #f4f4f4;
   border-radius: 10px;
   padding: 10px 15px;
-}
-
-.details {
-  bottom: 10px;
-  position: absolute;
+  overflow: auto;
 }
 
 .package-config-example {
   background-color: #f4f4f4;
   border-radius: 10px;
   padding: 15px 10px;
+  overflow-x: auto;
 }
 
 .package-config-example:last-of-type {
@@ -460,6 +459,18 @@ footer a {
 
   .main-navigation {
     text-align: center;
+  }
+
+  #jar-info-bar {
+    margin-left: 0;
+    padding: 0;
+  }
+
+  #jar-info-bar li {
+    margin: 0;
+    padding: 10px 0;
+    border-top: 1px solid #d3d3d3;
+    border-left: 0;
   }
 
   /* reflow the 'hero' and 'getting started' text on small screens  */

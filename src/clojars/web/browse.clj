@@ -33,7 +33,7 @@
            (if (seq (:description jar))
              [:span.desc (:description jar)]
              [:span.hint "No description given"])
-           [:br]
+           [:hr]
            [:span.details
             (user-link (:user jar))
             " "
