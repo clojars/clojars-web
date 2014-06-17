@@ -4,7 +4,8 @@
             [kerodon.test :refer :all]
             [clojars.test.integration.steps :refer :all]
             [clojars.web :as web]
-            [clojars.test.test-helper :as help]))
+            [clojars.test.test-helper :as help]
+            [net.cgrand.enlive-html :as html]))
 
 (use-fixtures :each help/default-fixture)
 
@@ -19,7 +20,7 @@
       (visit "/fake/test")
       (within [:div#jar-title :h1 :a]
               (has (text? "fake/test")))
-      (within [:.lein-small :pre]
+      (within [[:.package-config-example html/first-of-type] :pre]
               (has (text? "[fake/test \"0.0.2\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
@@ -32,7 +33,7 @@
       (visit "/fake/test")
       (within [:div#jar-title :h1 :a]
               (has (text? "fake/test")))
-      (within [:.lein-small :pre]
+      (within [[:.package-config-example html/first-of-type] :pre]
               (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
       (within [:span.commit-url]
               (has (text? " with this commit")))
@@ -49,7 +50,7 @@
       (visit "/fake")
       (within [:div#jar-title :h1 :a]
               (has (text? "fake")))
-      (within [:.lein-small :pre]
+      (within [[:.package-config-example html/first-of-type] :pre]
               (has (text? "[fake \"0.0.2\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
@@ -65,7 +66,7 @@
       (follow "0.0.3-SNAPSHOT")
       (within [:div#jar-title :h1 :a]
               (has (text? "fake/test")))
-      (within [:.lein-small :pre]
+      (within [[:.package-config-example html/first-of-type] :pre]
               (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
@@ -81,7 +82,7 @@
       (follow "0.0.1")
       (within [:div#jar-title :h1 :a]
               (has (text? "fake")))
-      (within [:.lein-small :pre]
+      (within [[:.package-config-example html/first-of-type] :pre]
               (has (text? "[fake \"0.0.1\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
