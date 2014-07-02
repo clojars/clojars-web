@@ -1,10 +1,14 @@
 (ns clojars.stats
-  (:require [clojars.config :as config]))
+  (:require [clojars.config :as config]
+            [clojure.java.io :as io]))
 
 (defn all []
-  (read (java.io.PushbackReader. (java.io.FileReader.
-                                  (str (config/config :stats-dir)
-                                       "/all.edn")))))
+  (let [path (str (config/config :stats-dir) "/all.edn")]
+    (if (.exists (io/as-file path))
+      (read (java.io.PushbackReader. (java.io.FileReader.
+                                      (str (config/config :stats-dir)
+                                           "/all.edn"))))
+      {})))
 
 (defn download-count [dls group-id artifact-id & [version]]
   (let [ds (dls [group-id artifact-id])]
