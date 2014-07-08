@@ -37,6 +37,54 @@
 (defn typekit-js []
   [:script "try{Typekit.load();}catch(e){}"])
 
+(defn html-doc-404 [account title & body]
+    (html5
+   [:head
+    [:link {:type "application/opensearchdescription+xml"
+            :href "/opensearch.xml"
+            :rel "search"}]
+    [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+    [:title
+     (when title
+       (str title " - "))
+     "Clojars"]
+    (map #(include-css (str "/stylesheets/" %))
+         ;; Bootstrap was customized to only include the 'grid' styles
+         ;; (then the default colors were removed)
+         ;; more info: http://getbootstrap.com/css/#grid
+         ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
+    (include-js "//use.typekit.net/zhw0tse.js")
+    (typekit-js)
+    (include-js "/js/jseyes.js")
+    (google-analytics-js)
+    (raw (when-ie (include-js "/js/html5.js")))]
+   [:body.container-fluid
+    [:div#content-wrapper
+     [:header.small-header.row
+      [:div.home.col-md-3.col-sm-3.col-xs-3.col-lg-3
+       (link-to "/" (image "/images/clojars-logo-tiny.png" "Clojars"))
+       [:h1 (link-to "/" "Clojars")]]
+      [:div.col-md-3.col-sm-3.col-xs-3.col-lg-3
+       [:form {:action "/search"}
+        [:input {:type "search"
+                 :name "q"
+                 :id "search"
+                 :class "search"
+                 :placeholder "Search projects..."
+                 :required true}]]]
+      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-6.col-lg-6
+       (if account
+         (unordered-list
+          [(link-to "/" "dashboard")
+           (link-to "/profile" "profile")
+           (link-to "/logout" "logout")])
+         (unordered-list
+          [(link-to "/login" "login")
+           (link-to "/register" "register")]))]]
+     body
+     footer]]))
+
 (defn html-doc [account title & body]
   (html5
    [:head

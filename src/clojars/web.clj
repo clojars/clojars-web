@@ -7,9 +7,10 @@
             [clojars.web.error-page :refer [wrap-exceptions]]
             [clojars.web.search :refer [search]]
             [clojars.web.browse :refer [browse]]
-            [clojars.web.common :refer [html-doc]]
+            [clojars.web.common :refer [html-doc html-doc-404]]
             [clojars.web.safe-hiccup :refer [raw]]
             [clojure.java.io :as io]
+            [hiccup.page :refer [include-js]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.file-info :refer [wrap-file-info]]
             [ring.middleware.flash :refer [wrap-flash]]
@@ -56,11 +57,39 @@
   (ANY "*" _
        (try-account
         (not-found
-         (html-doc account
+         (html-doc-404 account
                    "Page not found"
                    [:div.small-section
                     [:h1 "Page not found"]
-                    [:p "Thundering typhoons!  I think we lost it.  Sorry!"]])))))
+                    [:p "Thundering typhoons!  I think we lost it.  Sorry!"]
+                    [:div.rich-eyes
+                     [:script {:type "text/javascript"}
+                      (raw
+"x = new jseyes();
+x.link=\"/\";
+x.main.img=\"/images/rich-frame.png\";
+x.main.w=320;
+x.main.h=456;
+
+x.eye1.img=\"/images/blackeye.gif\";
+x.eye1.x=150;
+x.eye1.y=195;
+x.eye1.h=10;
+x.eye1.w=10;
+x.eye1.yr=5;
+x.eye1.xr=12;
+
+x.eye2.img=\"/images/blackeye.gif\";
+x.eye2.x=200;
+x.eye2.y=195;
+x.eye2.h=10;
+x.eye2.w=10;
+x.eye2.yr=5;
+x.eye2.xr=12;
+
+x.follow=100;
+
+x.write();")]]])))))
 
 (defn bad-attempt [attempts user]
   (let [failures (or (attempts user) 0)]
