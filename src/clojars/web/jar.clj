@@ -195,12 +195,12 @@
                                       :version (:version v)))
                            (:version v))])]]]))
 
-(let [border-color "#9c92d9"
-      bg-color "#380036"
-      artifact-color  "#ffffff"
-      version-color "#27d3f1"
+(let [border-color "#e2e4e3"
+      bg-color "#fff"
+      artifact-color  "#4098cf"
+      version-color "#87cf29"
       bracket-color "#ffb338"
-      powered-by-color "#ffffff"
+      ampersand-color "#888"
       clojars-color "#ffb338"]
   (defn svg-template [jar-id version]
     (let [width-px (+ 138 (* (+ (count jar-id) (count version)) 6))]
@@ -235,7 +235,7 @@
                :y 14,
                :font-family "Verdana",
                :font-size 8,
-               :fill powered-by-color}
+               :fill ampersand-color}
         [:tspan "@"]
         [:tspan {:fill clojars-color} "clojars.org"]]])))
 
