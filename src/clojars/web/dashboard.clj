@@ -22,8 +22,7 @@
       [:h3.push-header "Push with Leiningen"]
       [:div.push-example
        [:pre.push-example-leiningen
-        (tag "$") " lein pom\n"
-        (tag "$") " scp pom.xml mylib.jar clojars@clojars.org:"]]]
+        (tag "$") " lein deploy clojars\n"]]]
      [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
       [:h3.push-header "Maven Repository"]
       [:div.push-example
