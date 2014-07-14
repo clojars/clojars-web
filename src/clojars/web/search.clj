@@ -38,7 +38,7 @@
               collection-fork-notice)
             [:ul.row
              (for [jar results]
-               [:li.search-results
+               [:li.search-results.col-md-4.col-lg-3.col-sm-6.col-xs-12
                 [:div.result
                  (jar-link {:jar_name (:artifact-id jar)
                             :group_name (:group-id jar)}) " " (:version jar)

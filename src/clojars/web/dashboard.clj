@@ -5,12 +5,17 @@
             [hiccup.element :refer [unordered-list link-to]]))
 
 (defn recent-jar [jar-map]
-  (let [stats (stats/all)]
+  (let [stats (stats/all)
+        description (:description jar-map)
+        TRUNCATE_LENGTH 120]
     [:li.col-md-4.col-sm-6.col-xs-12.col-lg-4
      [:div.recent-jar
       [:h3.recent-jar-title
        (jar-link jar-map)]
-      [:p.recent-jar-description (:description jar-map)]
+      [:p.recent-jar-description
+       (if (> (.length description) TRUNCATE_LENGTH)
+         (str (subs description 0 TRUNCATE_LENGTH) "...")
+         description)]
       [:p.hint.total-downloads "Downloads: " (stats/download-count stats
                                                                    (:group_name jar-map)
                                                                    (:jar_name jar-map))]]]))
