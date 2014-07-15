@@ -170,7 +170,7 @@ footer a {
   padding-top: 22px;
 }
 
-/* FIXME: bump the font/padding down by half on mobile
+/* FIXME: bump the font down by half on mobile
  * (see the media query at the bottom)
  */
 .hero, .small-header {
@@ -328,18 +328,25 @@ footer a {
 
 .recent-jars-list {
   margin: 0 15px;
+  display: inline;
 }
 
 .recent-jar {
+  overflow-x: auto;
+  overflow-y: hidden;
   position: relative;
   cursor: pointer;
   background: white;
   border-top: 8px solid #87cf29;
   padding: 10px 20px;
-  height: 150px;
+  height: 175px;
   margin-bottom: 30px;
   transition: border-color 0.2s ease-in-out;
-  overflow: auto;
+}
+
+.total-downloads {
+  bottom: 0;
+  position: absolute;
 }
 
 .recent-jar:hover {
@@ -352,7 +359,7 @@ footer a {
 
 .recent-jar-description {
   font-size: 1.1em;
-  margin: 35px 0 10px;
+  margin-top: 35px;
 }
 
 .recent-jar-title {
@@ -404,7 +411,7 @@ footer a {
 /* FIXME: clean up these class names so they can be reused */
 .result {
   position: relative;
-  height: 125px;
+  height: 150px;
   margin: 15px 0;
   background-color: #f4f4f4;
   border-radius: 10px;
@@ -455,6 +462,26 @@ footer a {
   .hero input[type=search] {
     border-radius: 10px;
     width: 75%;
+  }
+
+  .hero, .small-header {
+    padding: 15px 15px 50px;
+  }
+
+  .push-information {
+    padding: 40px 15px 0;
+  }
+
+  .light-article {
+    padding: 0 15px;
+  }
+
+  .recent-jars-list {
+    padding: 0;
+  }
+
+  .recent-jar {
+    height: 200px;
   }
 
   .main-navigation {
