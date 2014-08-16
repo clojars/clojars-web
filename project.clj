@@ -22,7 +22,7 @@
                   :exclusions [org.clojure/clojure]]
                  [clj-time "0.3.8"]
                  [com.cemerick/friend "0.1.4"]
-                 [clj-stacktrace "0.2.5"]
+                 [clj-stacktrace "0.2.6"]
                  [ring-anti-forgery "0.2.1"]
                  [valip "0.2.0"]
                  [clucy "0.3.0"]
