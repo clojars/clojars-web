@@ -13,7 +13,7 @@
       [:h3.recent-jar-title
        (jar-link jar-map)]
       [:p.recent-jar-description
-       (if (> (.length description) truncate-length)
+       (if (> (count description) truncate-length)
          (str (subs description 0 truncate-length) "...")
          description)]
       [:p.hint.total-downloads "Downloads: " (stats/download-count stats
