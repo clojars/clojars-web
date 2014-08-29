@@ -14,4 +14,5 @@ home
 
 /.lein-deps-sum
 /.lein-failures
+/.nrepl-port
 /local-resources
