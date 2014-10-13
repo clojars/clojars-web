@@ -50,6 +50,15 @@
       (.delete sent-file)
       (throw e))))
 
+(defn pom? [filename]
+  (.endsWith filename ".pom"))
+
+(defn get-pom-info [contents info]
+  (-> contents
+      StringReader.
+      maven/pom-to-map
+      (merge info)))
+
 (defroutes routes
   (PUT ["/:group/:artifact/:file"
         :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
@@ -77,15 +86,13 @@
                                   artifact version filename)]
                 (ev/validate-deploy groupname artifact version filename)
                 (db/check-and-add-group account groupname)
-                (if (.endsWith filename ".pom")
-                  (let [contents (slurp body)
-                        pom-info (-> contents
-                                     StringReader.
-                                     maven/pom-to-map
-                                     (merge info))]
-                    (db/add-jar account pom-info)
-                    (try-save-to-file file contents))
-                  (try-save-to-file file body))
+                (let [contents (if (pom? filename)
+                                 (let [contents (slurp body)]
+                                   (db/add-jar account (get-pom-info contents info))
+                                   contents)
+                                 body
+                                 )]
+                  (try-save-to-file file contents))
                 ;; Be consistent with scp only recording pom or jar
                 (when (some #(.endsWith filename %) [".pom" ".jar"])
                   (ev/record-deploy {:group-id groupname
