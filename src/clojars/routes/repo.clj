@@ -43,6 +43,13 @@
       .mkdirs)
   (io/copy input sent-file))
 
+(defn try-save-to-file [sent-file input]
+  (try
+    (save-to-file sent-file input)
+    (catch java.io.IOException e
+      (.delete sent-file)
+      (throw e))))
+
 (defroutes routes
   (PUT ["/:group/:artifact/:file"
         :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
@@ -72,19 +79,13 @@
                 (db/check-and-add-group account groupname)
                 (if (.endsWith filename ".pom")
                   (let [contents (slurp body)
-                        pom-info (merge (maven/pom-to-map
-                                         (StringReader. contents)) info)]
+                        pom-info (-> contents
+                                     StringReader.
+                                     maven/pom-to-map
+                                     (merge info))]
                     (db/add-jar account pom-info)
-                    (try
-                      (save-to-file file contents)
-                      (catch java.io.IOException e
-                        (.delete file)
-                        (throw e))))
-                  (try
-                    (save-to-file file body)
-                    (catch java.io.IOException e
-                      (.delete file)
-                      (throw e))))
+                    (try-save-to-file file contents))
+                  (try-save-to-file file body))
                 ;; Be consistent with scp only recording pom or jar
                 (when (some #(.endsWith filename %) [".pom" ".jar"])
                   (ev/record-deploy {:group-id groupname
