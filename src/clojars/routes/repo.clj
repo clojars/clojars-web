@@ -73,41 +73,42 @@
        (pst e#)
        {:status 403 :headers {} :body (.getMessage e#)})))
 
+(defmacro put-req [groupname & body]
+  `(with-account
+     (require-authorization
+      ~groupname
+      (with-error-handling
+        ~@body))))
+
 ;; web handlers
 (defroutes routes
   (PUT ["/:group/:artifact/:file"
         :group #"[^\.]+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
        {body :body {:keys [group artifact file]} :params}
        (let [groupname (string/replace group "/" ".")]
-         (with-account
-           (require-authorization
-            groupname
-            (with-error-handling
-              (let [file (io/file (config :repo) group artifact file)]
-
-                (try-save-to-file file body))
-              )))))
+         (put-req
+          groupname
+          (let [file (io/file (config :repo) group artifact file)]
+            (try-save-to-file file body))
+            )))
   (PUT ["/:group/:artifact/:version/:filename"
         :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
         :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
        {body :body {:keys [group artifact version filename]} :params}
        (let [groupname (string/replace group "/" ".")]
-         (with-account
-           (require-authorization
-            groupname
-            (with-error-handling
-              (let [file (io/file (config :repo) group artifact version filename)
-                    info {:group groupname
-                          :name  artifact
-                          :version version}]
-                (ev/validate-deploy groupname artifact version filename)
-                (db/check-and-add-group account groupname)
+         (put-req
+          groupname
+          (let [file (io/file (config :repo) group artifact version filename)
+                info {:group groupname
+                      :name  artifact
+                      :version version}]
+            (ev/validate-deploy groupname artifact version filename)
+            (db/check-and-add-group account groupname)
 
-                (try-save-to-file file (body-and-add-pom body filename info account))
-
-                ;; Be consistent with scp only recording pom or jar
-                (when (some #(.endsWith filename %) [".pom" ".jar"])
-                  (ev/record-deploy info account file))))))))
+            (try-save-to-file file (body-and-add-pom body filename info account))
+            ;; Be consistent with scp only recording pom or jar
+            (when (some #(.endsWith filename %) [".pom" ".jar"])
+              (ev/record-deploy info account file))))))
   (PUT "*" _ {:status 400 :headers {}})
   (not-found "Page not found"))
 
