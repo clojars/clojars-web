@@ -89,6 +89,7 @@
          (put-req
           groupname
           (let [file (io/file (config :repo) group artifact file)]
+            (db/check-and-add-group account groupname)
             (try-save-to-file file body))
             )))
   (PUT ["/:group/:artifact/:version/:filename"
