@@ -73,7 +73,7 @@
              (fn [id]
                (if-let [{:keys [user password]}
                         (db/find-user-by-user-or-email id)]
-                 (when (not (empty? password))
+                 (when-not (empty? password)
                    (swap! attempts dissoc user)
                    {:username user :password password})
                  (do (swap! attempts bad-attempt id) nil))))))

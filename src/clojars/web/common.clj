@@ -224,15 +224,17 @@
                         [[:a.previous-page
                           {:href (str page-url (- current-page 1))}
                           previous-text]])
-        before-current (->> (drop-while
-                              #(< % 1)
-                              (range (- current-page page-range) current-page))
-                            (map #(link-to (str page-url %) %)))
+        before-current (map
+                        #(link-to (str page-url %) %)
+                        (drop-while
+                         #(< % 1)
+                         (range (- current-page page-range) current-page)))
         current [[:em.current (str current-page)]]
-        after-current (->> (take-while
-                             #(<= % total-pages)
-                             (range (+ current-page 1) (+ current-page 1 page-range)))
-                           (map #(link-to (str page-url %) %)))
+        after-current (map
+                       #(link-to (str page-url %) %)
+                       (take-while
+                        #(<= % total-pages)
+                        (range (inc current-page) (+ current-page 1 page-range))))
         next-page (if (= current-page total-pages)
                     [[:span.next-page.disabled next-text]]
                     [[:a.next-page
