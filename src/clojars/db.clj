@@ -36,7 +36,7 @@
 (defn rand-string
   "Generates a random string of [A-z0-9] of length n."
   [n]
-  (apply str (repeatedly n #(rand-nth constituent-chars))))
+  (str/join (repeatedly n #(rand-nth constituent-chars))))
 
 (defn get-time []
   (Date.))
@@ -223,7 +223,7 @@
     (map
       #(find-jar (:group_name %) (:jar_name %))
       (all-projects
-        (* (- current-page 1) per-page)
+        (* (dec current-page) per-page)
         per-page))))
 
 (defn add-user [email username password ssh-key pgp-key]

@@ -86,7 +86,7 @@
    (str (:name jarmap) ".jar")])
 
 (defn file-repo [path]
-  (.toString (.toURI (File. path))))
+  (str (.toURI (File. path))))
 
 (defn finish-deploy [#^NGContext ctx, files]
   (let [account (first (.getArgs ctx))

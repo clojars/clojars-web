@@ -116,8 +116,8 @@
                            (update-user-validations confirm))]
       (profile-form account nil (apply concat (vals  errors)))
       (do (update-user account email account password ssh-key pgp-key)
-          (-> (redirect "/profile")
-              (assoc :flash "Profile updated."))))))
+          (assoc (redirect "/profile")
+            :flash "Profile updated.")))))
 
 (defn show-user [account user]
   (html-doc account (user :user)

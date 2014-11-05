@@ -94,7 +94,7 @@
                         (.getStrings cache reader "artifact-id"))
                download-score (fn [i]
                                 (let [score
-                                      (+ 1
+                                      (inc
                                          (* download-score-weight
                                             (/ (apply
                                                 (comp inc stats/download-count)
