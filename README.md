@@ -79,14 +79,14 @@ Options may be read from a file using the `-f` switch, setting the
 Clojure map:
 
     {:db {:classname "org.sqlite.JDBC"
-	  :subprotocol "sqlite"
-	  :subname "data/dev_db"}
+          :subprotocol "sqlite"
+          :subname "data/dev_db"}
      :key-file "data/dev_authorized_keys"
      :repo "data/dev_repo"
      :bcrypt-work-factor 12
      :mail {:hostname "localhost"
-	    :from "noreply@clojars.org"
-	    :ssl false}}
+            :from "noreply@clojars.org"
+            :ssl false}}
 
 The classpath option can be used with Leiningen 2 profiles.  When
 running out of a source checkout using `lein run` the configuration
@@ -106,6 +106,9 @@ you can use like this:
     mkdir -p data
     rm -f data/dev_db
     gunzip -c clojars-test-data.sql.gz | sqlite3 data/dev_db
+
+After this you should still run `lein migrate` to update the db schema to
+the latest version.
 
 If you want all the actual jar files as well you can grab them via
 [rsync](http://github.com/ato/clojars-web/wiki/Data).
