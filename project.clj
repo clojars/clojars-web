@@ -13,7 +13,7 @@
                  [ring/ring-jetty-adapter "1.1.1"]
                  [hiccup "1.0.3"]
                  [cheshire "3.0.0"]
-                 [korma "0.3.0-beta10"]
+                 [korma "0.3.0"]
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.7.2"]
                  [org.apache.commons/commons-email "1.2"]
