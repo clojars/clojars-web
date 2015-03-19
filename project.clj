@@ -1,5 +1,5 @@
 (defproject clojars-web "0.15.11-SNAPSHOT"
-  :dependencies [[org.clojure/clojure "1.5.1"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
@@ -27,7 +27,8 @@
                  [valip "0.2.0"]
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.3"]
-                 [org.bouncycastle/bcpg-jdk15on "1.47"]]
+                 [org.bouncycastle/bcpg-jdk15on "1.47"]
+                 [mvxcvi/clj-pgp "0.8.0"]]
   :profiles {:dev {:dependencies [[kerodon "0.0.7"]
                                   [nailgun-shim "0.0.1"]]
                    :resource-paths ["local-resources"]}}

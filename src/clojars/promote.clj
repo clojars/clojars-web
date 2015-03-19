@@ -9,7 +9,9 @@
             [clojure.set :as set]
             [korma.db :as korma]
             [cemerick.pomegranate.aether :as aether]
-            [korma.core :refer [select fields where update set-fields]])
+            [korma.core :refer [select fields where update set-fields]]
+            [clj-pgp.core :as pgp]
+            [clj-pgp.signature :as pgp-sig])
   (:import (java.util.concurrent LinkedBlockingQueue)
            (org.springframework.aws.maven SimpleStorageServiceWagon)
            (java.io File ByteArrayInputStream PrintWriter)
@@ -27,21 +29,16 @@
     (io/copy in bs)
     bs))
 
+(defn decode-signature [data]
+  ; File could be signed with multiple signatures.
+  ; In this case it isn't
+  (first (pgp/decode-signatures data)))
+
 (defn verify [sig-file data public-key]
   (if public-key
-    (-> sig-file
-        io/input-stream
-        ArmoredInputStream.
-        PGPObjectFactory.
-        .nextObject
-        (.get 0)
-        (doto
-            (.initVerify public-key "BC")
-          (.update (-> data
-                       io/input-stream
-                       to-byte-stream
-                       .toByteArray)))
-        .verify)))
+    (let [sig (decode-signature (slurp sig-file)) ]
+      (if (= (pgp/key-id sig) (pgp/key-id public-key))
+        (pgp-sig/verify data sig public-key)))))
 
 (defn parse-keys [s]
   (try
