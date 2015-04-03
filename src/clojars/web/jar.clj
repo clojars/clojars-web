@@ -246,3 +246,8 @@
      "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">"
      (svg-template (jar-name jar) (:version jar)))))
+
+(defn make-latest-version-json [group-id artifact-id]
+  "Return the latest version of a JAR as JSON"
+  (let [jar (find-jar group-id artifact-id)]
+    (str "{\"version\":\"" (:version jar) "\"}")))

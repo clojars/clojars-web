@@ -54,11 +54,18 @@
        [group-id artifact-id version]
        (show-version group-id artifact-id version))
 
-  (GET ["/:artifact-id/latest-version.svg" :artifact-id #"[^/]+"]
-       [artifact-id]
-       (-> (response/response (view/make-latest-version-svg artifact-id artifact-id))
-           (response/header "Cache-Control" "no-cache")
-           (response/content-type "image/svg+xml")))
+  (GET ["/:artifact-id/latest-version.:file-format"
+        :artifact-id #"[^/]+"
+        :file-format #"(svg|json)$"]
+       [artifact-id file-format]
+       (cond
+         (= file-format "json") (-> (response/response (view/make-latest-version-json artifact-id artifact-id))
+                                    (response/header "Cache-Control" "no-cache")
+                                    (response/content-type "application/json; charset=UTF-8"))
+         (= file-format "svg") (-> (response/response (view/make-latest-version-svg artifact-id artifact-id))
+                                    (response/header "Cache-Control" "no-cache")
+                                    (response/content-type "image/svg+xml"))))
+
   (GET ["/:group-id/:artifact-id/latest-version.svg"
         :group-id #"[^/]+" :artifact-id #"[^/]+"]
        [group-id artifact-id]
