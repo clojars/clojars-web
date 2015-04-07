@@ -158,6 +158,18 @@
                         :password "password"}}
    :local-repo help/local-repo))
 
+(deftest user-can-deploy-snapshot-with-dot
+  (-> (session clojars-app)
+      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+  (aether/deploy
+   :coordinates '[org.clojars.dantheman/test.thing "0.0.3-SNAPSHOT"]
+   :jar-file (io/file (io/resource "test.jar"))
+   :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
+   :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+                        :username "dantheman"
+                        :password "password"}}
+   :local-repo help/local-repo))
+
 (deftest anonymous-cannot-deploy
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
         #"Unauthorized"

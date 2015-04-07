@@ -90,11 +90,10 @@
           groupname
           (let [file (io/file (config :repo) group artifact file)]
             (db/check-and-add-group account groupname)
-            (try-save-to-file file body))
-            )))
+            (try-save-to-file file body)))))
   (PUT ["/:group/:artifact/:version/:filename"
         :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
-        :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
+        :filename #"[^/]+(\.pom|\.jar|\.xml|\.sha1|\.md5|\.asc)$"]
        {body :body {:keys [group artifact version filename]} :params}
        (let [groupname (string/replace group "/" ".")]
          (put-req
