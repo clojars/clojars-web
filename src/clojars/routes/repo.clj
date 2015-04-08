@@ -83,7 +83,7 @@
 ;; web handlers
 (defroutes routes
   (PUT ["/:group/:artifact/:file"
-        :group #"[^\.]+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
+        :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
        {body :body {:keys [group artifact file]} :params}
        (let [groupname (string/replace group "/" ".")]
          (put-req
@@ -93,7 +93,7 @@
             (try-save-to-file file body)))))
   (PUT ["/:group/:artifact/:version/:filename"
         :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
-        :filename #"[^/]+(\.pom|\.jar|\.xml|\.sha1|\.md5|\.asc)$"]
+        :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
        {body :body {:keys [group artifact version filename]} :params}
        (let [groupname (string/replace group "/" ".")]
          (put-req
