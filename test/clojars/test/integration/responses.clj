@@ -11,12 +11,19 @@
 
 (deftest respond-404
   (-> (session web/clojars-app)
-      (visit "/nonexistant-route")
+      (visit "/nonexistent-route")
+      (has (status? 404))
+      (within [:title]
+              (has (text? "Page not found - Clojars")))))
+
+(deftest respond-404-for-non-existent-group
+  (-> (session web/clojars-app)
+      (visit "/groups/nonexistent.group")
       (has (status? 404))
       (within [:title]
               (has (text? "Page not found - Clojars")))))
 
 (deftest respond-405-for-puts
   (-> (session web/clojars-app)
-      (visit "/nonexistant-route" :request-method :put)
+      (visit "/nonexistent-route" :request-method :put)
       (has (status? 405))))

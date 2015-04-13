@@ -6,11 +6,11 @@
 
 (defroutes routes
   (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
-       (if-let [membernames (db/group-membernames groupname)]
+       (if-let [membernames (seq (db/group-membernames groupname))]
          (auth/try-account
           (view/show-group account groupname membernames))))
   (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username]
-        (if-let [membernames (db/group-membernames groupname)]
+        (if-let [membernames (seq (db/group-membernames groupname))]
           (auth/try-account
            (auth/require-authorization
             groupname
