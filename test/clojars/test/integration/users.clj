@@ -195,11 +195,8 @@
       (fill-in [:#username] "fixture")
       (press "add member")
       ;;(follow-redirect)
-      (within [:div.small-section
-               :ul
-               [:li enlive/first-child]
-               :a]
-              (has (text? "fixture")))))
+      (within [:div.small-section :ul]
+              (has (text? "danthemanfixture")))))
 
 (deftest user-must-exist-to-be-added-to-group
   (-> (session web/clojars-app)

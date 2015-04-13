@@ -13,7 +13,7 @@
      [:h2 "Projects"]
      (unordered-list (map jar-link (jars-by-groupname groupname)))
      [:h2 "Members"]
-     (unordered-list (map user-link membernames))
+     (unordered-list (map user-link (sort membernames)))
      (error-list errors)
      (when (authorized? account groupname)
        [:div.add-member
