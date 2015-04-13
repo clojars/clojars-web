@@ -80,35 +80,47 @@
       (with-error-handling
         ~@body))))
 
+(defn- handle-versioned-upload [body group artifact version filename]
+  (let [groupname (string/replace group "/" ".")]
+    (put-req
+      groupname
+      (let [file (io/file (config :repo) group artifact version filename)
+            info {:group groupname
+                  :name  artifact
+                  :version version}]
+        (ev/validate-deploy groupname artifact version filename)
+        (db/check-and-add-group account groupname)
+
+        (try-save-to-file file (body-and-add-pom body filename info account))
+        ;; Be consistent with scp only recording pom or jar
+        (when (some #(.endsWith filename %) [".pom" ".jar"])
+          (ev/record-deploy info account file))))))
+
 ;; web handlers
 (defroutes routes
   (PUT ["/:group/:artifact/:file"
         :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
        {body :body {:keys [group artifact file]} :params}
-       (let [groupname (string/replace group "/" ".")]
-         (put-req
-          groupname
-          (let [file (io/file (config :repo) group artifact file)]
-            (db/check-and-add-group account groupname)
-            (try-save-to-file file body)))))
+       (if (re-find #"-SNAPSHOT$" artifact)
+         ;; SNAPSHOT metadata will hit this route, but should be
+         ;; treated as a versioned file upload.
+         ;; See: https://github.com/ato/clojars-web/issues/319
+         (let [version artifact
+               group-parts (string/split group #"/")
+               group (string/join "/" (butlast group-parts))
+               artifact (last group-parts)]
+           (handle-versioned-upload body group artifact version file))
+         (let [groupname (string/replace group "/" ".")]
+           (put-req
+             groupname
+             (let [file (io/file (config :repo) group artifact file)]
+               (db/check-and-add-group account groupname)
+               (try-save-to-file file body))))))
   (PUT ["/:group/:artifact/:version/:filename"
         :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
         :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
        {body :body {:keys [group artifact version filename]} :params}
-       (let [groupname (string/replace group "/" ".")]
-         (put-req
-          groupname
-          (let [file (io/file (config :repo) group artifact version filename)
-                info {:group groupname
-                      :name  artifact
-                      :version version}]
-            (ev/validate-deploy groupname artifact version filename)
-            (db/check-and-add-group account groupname)
-
-            (try-save-to-file file (body-and-add-pom body filename info account))
-            ;; Be consistent with scp only recording pom or jar
-            (when (some #(.endsWith filename %) [".pom" ".jar"])
-              (ev/record-deploy info account file))))))
+       (handle-versioned-upload body group artifact version filename))
   (PUT "*" _ {:status 400 :headers {}})
   (not-found "Page not found"))
 
