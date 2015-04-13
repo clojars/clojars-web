@@ -61,10 +61,9 @@
     blockers
     (conj blockers (str "Missing file " (.getName file)))))
 
-(defn check-version [blockers version]
+(defn check-version [version]
   (if (re-find #"-SNAPSHOT$" version)
-    (conj blockers "Snapshot versions cannot be promoted")
-    blockers))
+    "Snapshot versions cannot be promoted"))
 
 (defn check-field [blockers info field pred]
   (if (pred (field info))
@@ -100,8 +99,9 @@
                     (maven/pom-to-map pom))
                   (catch Exception e
                     (.printStackTrace e) {}))]
-    (-> []
-        (check-version version)
+    (if-let [version-blocker (check-version version)]
+      [version-blocker]
+      (-> []
         (check-file jar)
         (check-file pom)
 
@@ -112,7 +112,7 @@
 
         (signed? jar keys)
         (signed? pom keys)
-        (unpromoted? info))))
+        (unpromoted? info)))))
 
 (defn- add-coords [{:keys [group name version classifier] :as info}
                    files extension]

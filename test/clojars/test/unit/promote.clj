@@ -16,11 +16,9 @@
              (file-for "robert" "hooke" version extension))))
 
 (deftest test-snapshot-blockers
-  (is (= ["Snapshot versions cannot be promoted"
-          "Missing file hooke-1.2.0-SNAPSHOT.jar"
-          "Missing file hooke-1.2.0-SNAPSHOT.pom"]
-         (take 3 (blockers {:group "robert" :name "hooke"
-                            :version "1.2.0-SNAPSHOT"})))))
+  (is (= ["Snapshot versions cannot be promoted"]
+         (blockers {:group "robert" :name "hooke"
+                    :version "1.2.0-SNAPSHOT"}))))
 
 (deftest test-metadata-blockers
   (copy-resource "1.1.1")
