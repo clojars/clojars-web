@@ -129,14 +129,16 @@
                         :password "password"}}
    :local-repo help/local-repo)
   (is (thrown-with-msg?
-       org.sonatype.aether.deployment.DeploymentException
-       #"Unauthorized"
-       (aether/deploy
-        :coordinates '[org.clojars.fixture/test "0.0.1"]
-        :jar-file (io/file (io/resource "test.jar"))
-        :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-        :repository {"test" {:url (str "http://localhost:" test-port "/repo")}}
-        :local-repo help/local-repo))))
+        org.sonatype.aether.deployment.DeploymentException
+        #"Forbidden"
+        (aether/deploy
+          :coordinates '[org.clojars.dantheman/test "0.0.1"]
+          :jar-file (io/file (io/resource "test.jar"))
+          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+          :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+                               :username "dantheman"
+                               :password "password"}}
+          :local-repo help/local-repo))))
 
 (deftest user-can-redeploy-snapshots
   (-> (session clojars-app)
