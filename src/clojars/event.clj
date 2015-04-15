@@ -13,6 +13,9 @@
   (when-not (re-matches re x)
     (throw (Exception. (str message " (" re ")")))))
 
+(defn snapshot-version? [version]
+  (.endsWith version "-SNAPSHOT"))
+
 (defn validate-deploy [group-id artifact-id version filename]
   ;; We're on purpose *at least* as restrictive as the recommendations on
   ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -33,8 +36,9 @@
   (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
                   (str "Version strings must consist solely of letters, "
                        "numbers, dots, pluses, hyphens and underscores."))
-  (when (.exists (io/file (config :repo) (string/replace group-id "." "/")
-                   artifact-id version filename))
+  (when (and (not (snapshot-version? version))
+          (.exists (io/file (config :repo) (string/replace group-id "." "/")
+                     artifact-id version filename)))
     (throw (ex-info "Redeploying non-snapshots is not allowed." {:status 403}))))
 
 (defn event-log-file [type]

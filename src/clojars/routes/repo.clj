@@ -101,7 +101,7 @@
   (PUT ["/:group/:artifact/:file"
         :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
        {body :body {:keys [group artifact file]} :params}
-       (if (re-find #"-SNAPSHOT$" artifact)
+       (if (ev/snapshot-version? artifact)
          ;; SNAPSHOT metadata will hit this route, but should be
          ;; treated as a versioned file upload.
          ;; See: https://github.com/ato/clojars-web/issues/319
