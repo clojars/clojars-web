@@ -18,10 +18,11 @@
       [group-id artifact-id]
       (let [stats (stats/all)]
         (some-> (db/find-jar group-id artifact-id)
-                (assoc :recent-versions (db/recent-versions group-id artifact-id)
-                       :total-downloads (stats/download-count stats group-id artifact-id))
-                (update-in [:recent-versions] (fn [versions]
-                                                (map #(assoc % :downloads (stats/download-count stats group-id artifact-id (:version %)))
+                (assoc :recent_versions (db/recent-versions group-id artifact-id)
+                       :downloads (stats/download-count stats group-id artifact-id))
+                (update-in [:recent_versions] (fn [versions]
+                                                (map (fn [version]
+                                                       (assoc version :downloads (stats/download-count stats group-id artifact-id (:version version))))
                                                      versions)))
                 (json/generate-string))))
     (ANY "*" _
