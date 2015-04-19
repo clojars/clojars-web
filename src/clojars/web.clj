@@ -27,7 +27,8 @@
             [clojars.routes.user :as user]
             [clojars.routes.artifact :as artifact]
             [clojars.routes.group :as group]
-            [clojars.routes.repo :as repo]))
+            [clojars.routes.repo :as repo]
+            [clojars.routes.api :as api]))
 
 (defroutes main-routes
   (GET "/" _
@@ -51,6 +52,7 @@
   ;; user routes must go after artifact routes
   ;; since they both catch /:identifier
   user/routes
+  api/routes
   (GET "/error" _ (throw (Exception. "What!? You really want an error?")))
   (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
   (ANY "*" _
