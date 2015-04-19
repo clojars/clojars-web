@@ -28,5 +28,6 @@
   (admin/init)
   (start-nailgun))
 
-;; (def server (run-jetty #'clojars-app {:port 8080 :join? false}))
-;; (.stop server)
+(comment
+  (def server (run-jetty #'clojars-app {:port 8080 :join? false}))
+  (.stop server))
