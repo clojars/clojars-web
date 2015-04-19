@@ -13,7 +13,8 @@
             [clojars.promote :refer [blockers]]
             [clojars.stats :as stats]
             [clojure.set :as set]
-            [ring.util.codec :refer [url-encode]]))
+            [ring.util.codec :refer [url-encode]]
+            [cheshire.core :as json]))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
@@ -250,4 +251,4 @@
 (defn make-latest-version-json [group-id artifact-id]
   "Return the latest version of a JAR as JSON"
   (let [jar (find-jar group-id artifact-id)]
-    (str "{\"version\":\"" (:version jar) "\"}")))
+    (json/generate-string (select-keys jar [:version]))))

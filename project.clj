@@ -12,7 +12,7 @@
                   :exclusions [org.clojure/core.incubator]]
                  [ring/ring-jetty-adapter "1.1.1"]
                  [hiccup "1.0.3"]
-                 [cheshire "3.0.0"]
+                 [cheshire "5.4.0"]
                  [korma "0.3.0-beta10"]
                  [org.clojars.ato/nailgun "0.7.1"]
                  [org.xerial/sqlite-jdbc "3.7.2"]
