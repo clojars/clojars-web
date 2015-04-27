@@ -111,7 +111,8 @@
                (str "download-count="
                     (download-score i))))))))))
 
-(defn search [query]
+; http://stackoverflow.com/questions/963781/how-to-achieve-pagination-in-lucene
+(defn search [query & {:keys [page] :or {page 1}}]
   (if (empty? query)
     []
     (with-open [index (clucy/disk-index (config :index-path))]
@@ -122,16 +123,17 @@
                                      clucy/*analyzer*)
                 query  (.parse parser query)
                 query  (CustomScoreQuery. query (download-values))
-                hits   (.search searcher query 25)
+                hits   (.search searcher query (* 25 page))
                 highlighter (#'clucy/make-highlighter query searcher nil)]
             (doall
-             (with-meta (for [hit (.scoreDocs hits)]
-                          (#'clucy/document->map
-                           (.doc searcher (.doc hit))
-                           (.score hit)
-                           highlighter))
-               {:_total-hits (.totalHits hits)
-                :_max-score (.getMaxScore hits)}))))))))
+             (let [dhits (drop (* 25 (- page 1)) (.scoreDocs hits))]
+               (with-meta (for [hit dhits]
+                            (#'clucy/document->map
+                             (.doc searcher (.doc hit))
+                             (.score hit)
+                             highlighter))
+                 {:_total-hits (.totalHits hits)
+                  :_max-score (.getMaxScore hits)})))))))))
 
 (defn -main [& [repo]]
   (index-repo (or repo (config :repo))))

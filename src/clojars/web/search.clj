@@ -1,7 +1,7 @@
 (ns clojars.web.search
   (:require [clojars.web.common :refer [html-doc jar-link jar-fork?
                                         collection-fork-notice user-link
-                                        format-date]]
+                                        format-date page-nav]]
             [clojars.search :as search]
             [cheshire.core :as json]))
 
@@ -25,12 +25,12 @@
    :headers {"Content-Type" "application/json; charset=UTF-8"}
    :body (json-gen query)})
 
-(defn html-search [account query]
+(defn html-search [account query page]
   (html-doc account (str query " - search")
     [:div.light-article.row
      [:h1 "Search for '" query "'"]
      (try
-       (let [results (search/search query)]
+       (let [results (search/search query :page page)]
          (if (empty? results)
            [:p "No results."]
            [:div
@@ -47,13 +47,16 @@
                    [:span.desc (:description jar)
                     [:br]])
                  [:span.details (if-let [created (:created jar)]
-                                  [:td (format-date created)])]]])]]))
+                                  [:td (format-date created)])]]])]
+            (page-nav page (:_total-hits (meta results)) :base-path (str "/search?q=" query "&page="))
+            ]))
        (catch Exception _
          (.printStackTrace _)
          [:p "Could not search; please check your query syntax."]))]))
 
 (defn search [account params]
-  (let [q (params :q)]
+  (let [q (params :q)
+        page (or (params :page) 1)]
     (if (= (params :format) "json")
       (json-search q)
-      (html-search account q))))
+      (html-search account q page))))
