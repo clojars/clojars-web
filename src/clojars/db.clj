@@ -6,7 +6,8 @@
             [korma.db :refer [defdb transaction rollback]]
             [korma.core :refer [defentity select group fields order join
                                 modifier exec-raw where limit values with
-                                has-many raw insert update set-fields offset]]
+                                has-many raw insert update delete set-fields
+                                offset]]
             [cemerick.friend.credentials :as creds])
   (:import java.security.MessageDigest
            java.util.Date
@@ -330,3 +331,26 @@
                :homepage   homepage
                :authors    (str/join ", " (map #(.replace % "," "")
                                             authors))}))))
+
+(defn delete-jars [group-id & [jar-id version]]
+  (let [column-mappings {:group-id :group_name
+                         :jar-id   :jar_name}
+        coords {:group_name group-id}
+        coords (if jar-id
+                 (assoc coords :jar_name jar-id)
+                 coords)
+        coords (if version
+                 (assoc coords :version version)
+                 coords)]
+    (serialize-task :delete-jars
+      (delete jars (where coords))))
+  ;; TODO: record an event?
+  )
+
+;; does not delete jars in the group. should it?
+(defn delete-groups [group-id]
+  (serialize-task :delete-groups
+    (delete groups
+      (where {:name group-id})))
+  ;; TODO: record an event?
+  )

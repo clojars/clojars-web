@@ -109,6 +109,54 @@
            (first (db/jars-by-groupname name))
            (first (db/jars-by-username "test-user"))))))
 
+(deftest jars-can-be-deleted-by-group
+  (let [group "foo"
+        jar {:name "one" :group group :version "1.0"
+             :description "An dog awesome and non-existent test jar."
+             :homepage "http://clojars.org/"
+             :authors ["Alex Osborne" "a little fish"]}]
+    (db/add-jar "test-user" jar)
+    (db/add-jar "test-user"
+      (assoc jar
+        :name "two"))
+    (db/add-jar "test-user"
+      (assoc jar
+        :group "another"))
+    (is (= 2 (count (db/jars-by-groupname group))))
+    (db/delete-jars group)
+    (is (empty? (db/jars-by-groupname group)))
+    (is (= 1 (count (db/jars-by-groupname "another"))))))
+
+(deftest jars-can-be-deleted-by-group-and-jar-id
+  (let [group "foo"
+        jar {:name "one" :group group :version "1.0"
+             :description "An dog awesome and non-existent test jar."
+             :homepage "http://clojars.org/"
+             :authors ["Alex Osborne" "a little fish"]}]
+    (db/add-jar "test-user" jar)
+    (db/add-jar "test-user"
+      (assoc jar
+        :name "two"))
+    (is (= 2 (count (db/jars-by-groupname group))))
+    (db/delete-jars group "one")
+    (is (= 1 (count (db/jars-by-groupname group))))))
+
+(deftest jars-can-be-deleted-by-group-and-jar-id-and-version
+  (let [group "foo"
+        jar {:name "one" :group group :version "1.0"
+             :description "An dog awesome and non-existent test jar."
+             :homepage "http://clojars.org/"
+             :authors ["Alex Osborne" "a little fish"]}]
+    (db/add-jar "test-user" jar)
+    (db/jars-by-groupname group)
+    (db/add-jar "test-user"
+      (assoc jar
+        :version "2.0"))
+    (db/jars-by-groupname group)
+    (is (= "2.0" (-> (db/jars-by-groupname group) first :version)))
+    (db/delete-jars group "one" "2.0")
+    (is (= "1.0" (-> (db/jars-by-groupname group) first :version)))))
+
 (deftest jars-by-group-only-returns-most-recent-version
   (let [name "tester"
         jarmap {:name name :group name :version "1" }

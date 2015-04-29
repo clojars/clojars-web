@@ -64,6 +64,7 @@
    ["DATABASE_URL" :db]
    ["MAIL_URL" :mail parse-mail-uri]
    ["REPO" :repo]
+   ["DELETION_BACKUP_DIR" :deletion-backup-dir]
    ["KEY_FILE" :key-file]
    ["NREPL_PORT" :nrepl-port #(Integer/parseInt %)]
    ["NAILGUN_BIND" :nailgun-bind]

@@ -4,7 +4,7 @@
             [clojars.web :refer [clojars-app]]
             [clojars.promote :as promote]
             [clojars.config :refer [config configure]]
-            [clojure.tools.nrepl.server :as nrepl])
+            [clojars.admin :as admin])
   (:import com.martiansoftware.nailgun.NGServer
            java.net.InetAddress)
   (:gen-class))
@@ -25,8 +25,8 @@
   (alter-var-root #'*read-eval* (constantly false))
   (configure args)
   (start-jetty)
-  (nrepl/start-server :port (:nrepl-port config) :bind "127.0.0.1")
-  (start-nailgun))
+  (start-nailgun)
+  (admin/init config))
 
 ;; (def server (run-jetty #'clojars-app {:port 8080 :join? false}))
 ;; (.stop server)
