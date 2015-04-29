@@ -10,7 +10,8 @@
             [cemerick.friend.credentials :as creds])
   (:import java.security.MessageDigest
            java.util.Date
-           java.io.File))
+           java.io.File
+           java.util.concurrent.Executors))
 
 (def ^{:private true} ssh-options
   "no-agent-forwarding,no-port-forwarding,no-pty,no-X11-forwarding")
@@ -226,15 +227,47 @@
         (* (dec current-page) per-page)
         per-page))))
 
+(def write-executor (memoize #(Executors/newSingleThreadExecutor)))
+
+(def ^:private ^:dynamic *in-executor* nil)
+
+(defn serialize-task* [task-name task]
+  (if *in-executor*
+    (task)
+    (binding [*in-executor* true]
+      (let [bound-f (bound-fn []
+                      (try
+                        (task)
+                        (catch Throwable e
+                          e)))
+            response (deref
+                        (.submit (write-executor) bound-f)
+                        10000 ::timeout)]
+        (cond
+          (= response ::timeout) (throw
+                                   (ex-info
+                                     "Timed out waiting for serialized task to run"
+                                     {:name task-name}))
+          (instance? Throwable response) (throw
+                                           (ex-info "Serialized task failed"
+                                             {:name task-name}
+                                             response))
+          :default response)))))
+
+(defmacro serialize-task [name & body]
+  `(serialize-task* ~name
+     (fn [] ~@body)))
+
 (defn add-user [email username password ssh-key pgp-key]
   (let [record {:email email, :user username, :password (bcrypt password)
                 :ssh_key ssh-key, :pgp_key pgp-key}
         group (str "org.clojars." username)]
-    (insert users (values (assoc record
-                            :created (get-time)
-                            ;;TODO: remove salt field
-                            :salt "")))
-    (insert groups (values {:name group :user username}))
+    (serialize-task :add-user
+      (insert users (values (assoc record
+                              :created (get-time)
+                              ;;TODO: remove salt field
+                              :salt "")))
+      (insert groups (values {:name group :user username})))
     (ev/record :user (clojure.set/rename-keys record {:user :username
                                                       :ssh_key :ssh-key
                                                       :pgp_key :pgp-key}))
@@ -249,19 +282,21 @@
         fields (if (empty? password)
                  fields
                  (assoc fields :password (bcrypt password)))]
-    (update users
-            (set-fields (assoc fields :salt ""))
-            (where {:user account}))
+    (serialize-task :update-user
+      (update users
+        (set-fields (assoc fields :salt ""))
+        (where {:user account})))
     (ev/record :user (clojure.set/rename-keys fields {:user :username
                                                       :ssh_key :ssh-key
                                                       :pgp_key :pgp-key})))
   (write-key-file (:key-file config)))
 
 (defn add-member [group-id username added-by]
-  (insert groups
-          (values {:name group-id
-                   :user username
-                   :added_by added-by}))
+  (serialize-task :add-member
+    (insert groups
+      (values {:name group-id
+               :user username
+               :added_by added-by})))
   (ev/record :membership {:group-id group-id :username username
                           :added-by added-by}))
 
@@ -284,13 +319,14 @@
 (defn add-jar [account {:keys [group name version
                                description homepage authors]}]
   (check-and-add-group account group)
-  (insert jars
-          (values {:group_name group
-                   :jar_name   name
-                   :version    version
-                   :user       account
-                   :created    (get-time)
-                   :description description
-                   :homepage   homepage
-                   :authors    (str/join ", " (map #(.replace % "," "")
-                                                   authors))})))
+  (serialize-task :add-jar
+    (insert jars
+      (values {:group_name group
+               :jar_name   name
+               :version    version
+               :user       account
+               :created    (get-time)
+               :description description
+               :homepage   homepage
+               :authors    (str/join ", " (map #(.replace % "," "")
+                                            authors))}))))
