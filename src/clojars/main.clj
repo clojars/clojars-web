@@ -25,8 +25,8 @@
   (alter-var-root #'*read-eval* (constantly false))
   (configure args)
   (start-jetty)
-  (start-nailgun)
-  (admin/init config))
+  (admin/init)
+  (start-nailgun))
 
 ;; (def server (run-jetty #'clojars-app {:port 8080 :join? false}))
 ;; (.stop server)

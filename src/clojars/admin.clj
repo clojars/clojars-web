@@ -55,7 +55,7 @@
           #_(apply db/delete-jars coords)))
       (println "No artifacts found under" group-id jar-id version))))
 
-(defn init [cfg]
+(defn init []
   (when-let [port (:nrepl-port config)]
-    (println "clojars-web: starting nrepl on localhost:" port)
+    (printf "clojars-web: starting nrepl on localhost:%s\n" port)
     (nrepl/start-server :port port :bind "127.0.0.1")))
