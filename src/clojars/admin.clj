@@ -8,7 +8,7 @@
            java.text.SimpleDateFormat))
 
 (defn current-date-str []
-  (.format (SimpleDateFormat. "YYYYMMdd") (db/get-time)))
+  (.format (SimpleDateFormat. "yyyyMMdd") (db/get-time)))
 
 (defn repo->backup [parts]
   (let [backup (doto (io/file (:deletion-backup-dir config))
