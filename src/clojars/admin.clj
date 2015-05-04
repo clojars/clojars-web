@@ -52,7 +52,7 @@
         (fn []
           (println "Deleting" pretty-coords)
           (repo->backup [group-id jar-id version])
-          (apply db/delete-jars coords)))
+          (apply db/delete-jars group-id jar-id (if version [version] []))))
       (println "No artifacts found under" group-id jar-id version))))
 
 (defn init []
