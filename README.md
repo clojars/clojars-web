@@ -98,20 +98,22 @@ Test data
 ---------
 
 If you'd like to hack on the UI or search it might be useful to have
-production-like metadata.  I've put up a production database dump
-(with password hashes and email addresses stripped of course) which
-you can use like this:
+production-like metadata. To create that, use
+`clojars.dev.setup/-main` to create test users, import an existing
+maven repository (your local `~/.m2/repository/` works well), and
+setup a search index:
 
-    wget http://meshy.org/~ato/clojars-test-data.sql.gz
-    mkdir -p data
-    rm -f data/dev_db
-    gunzip -c clojars-test-data.sql.gz | sqlite3 data/dev_db
+    $ cp -r ~/.m2/repository data/dev_repo
+    $ lein run -m clojars.dev.setup
 
-After this you should still run `lein migrate` to update the db schema to
-the latest version.
+If you want to use the actual repo from clojars.org, you can grab it
+via [rsync](http://github.com/ato/clojars-web/wiki/Data).
 
-If you want all the actual jar files as well you can grab them via
-[rsync](http://github.com/ato/clojars-web/wiki/Data).
+Note that this setup task isn't perfect - SNAPSHOTS won't have
+version-specific metadata (which won't matter for the operation of
+clojars, but may matter if you try to use the resulting repo as a real
+repo), and versions will be listed out of order on the project pages,
+but it should be good enough to test with.
 
 SSH integration
 ---------------
