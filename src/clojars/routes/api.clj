@@ -2,8 +2,9 @@
   (:require [clojure.set :refer [rename-keys]]
             [compojure.core :refer [GET ANY defroutes context]]
             [compojure.route :refer [not-found]]
+            [ring.middleware.format-response :refer [wrap-restful-response]]
+            [ring.util.response :refer [response]]
             [clojars.db :as db]
-            [clojars.web.common :as common]
             [clojars.stats :as stats]
             [cheshire.core :as json]
             [korma.core :refer [exec-raw]]))
@@ -48,7 +49,7 @@
              [groupname]]
               :results))
 
-(defroutes routes
+(defroutes handler
   (context "/api" []
     (GET ["/groups/:group-id", :group-id #"[^/]+"] [group-id]
       (let [stats (stats/all)]
@@ -58,13 +59,16 @@
                             (rename-keys {:version :latest_version})
                             (dissoc :id :created :promoted_at)
                             (assoc :downloads (stats/download-count stats group-id (:jar_name jar)))))))
-            json/generate-string)))
+            response)))
     (GET ["/artifacts/:artifact-id", :artifact-id #"[^/]+"] [artifact-id]
-      (get-artifact artifact-id artifact-id))
+      (response (get-artifact artifact-id artifact-id)))
     (GET ["/artifacts/:group-id/:artifact-id", :group-id #"[^/]+", :artifact-id #"[^/]+"] [group-id artifact-id]
-      (get-artifact group-id artifact-id))
+      (response (get-artifact group-id artifact-id)))
     (GET "/users/:username" [username]
-      (-> {:groups (db/find-groupnames username)}
-          json/generate-string))
+      (response (-> {:groups (db/find-groupnames username)})))
     (ANY "*" _
       (not-found nil))))
+
+(def routes
+  (-> handler
+      (wrap-restful-response :formats [:json :yaml :transit-json])))

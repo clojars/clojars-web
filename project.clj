@@ -8,9 +8,9 @@
                   :exclusions
                   [org.apache.httpcomponents/httpcore]]
                  [s3-wagon-private "1.0.0"]
-                 [compojure "1.1.5"
-                  :exclusions [org.clojure/core.incubator]]
+                 [compojure "1.3.3"]
                  [ring/ring-jetty-adapter "1.1.1"]
+                 [ring-middleware-format "0.5.0"]
                  [hiccup "1.0.3"]
                  [cheshire "5.4.0"]
                  [korma "0.3.0-beta10"]
@@ -20,8 +20,9 @@
                  [commons-codec "1.6"]
                  [net.cgrand/regex "1.0.1"
                   :exclusions [org.clojure/clojure]]
-                 [clj-time "0.3.8"]
-                 [com.cemerick/friend "0.1.4"]
+                 [clj-time "0.9.0"]
+                 [com.cemerick/friend "0.2.1"
+                  :exclusions [org.clojure/core.cache]]
                  [clj-stacktrace "0.2.6"]
                  [ring-anti-forgery "0.2.1"]
                  [valip "0.2.0"]
