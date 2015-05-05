@@ -115,41 +115,6 @@ clojars, but may matter if you try to use the resulting repo as a real
 repo), and versions will be listed out of order on the project pages,
 but it should be good enough to test with.
 
-SSH integration
----------------
-
-The SSH integration is kind of a hack and needs improvement.
-Currently it uses [Nailgun](http://martiansoftware.com/nailgun/) but
-the current setup has threading problems due to the way it does IO.
-
-Basically `clojars.scp` implements the [SCP protocol](http://blogs.sun.com/janp/entry/how_the_scp_protocol_works)
-and acts as a Nailgun "nail" so it can be called from the
-command-line.  Clojars writes an SSH `authorized_keys` file
-with a line for each user's public key setting the login command to
-`ng --nailgun-port 8700 clojars.scp USERNAME`.
-
-To set it up:
-
-1. Install the Nailgun `ng` C program.  Just unpack the Nailgun source
-and run `make` then copy the `ng` executable somewhere like `/usr/local/bin`
-
-2. Create a "clojars" unix account with a disabled password.
-
-3. Disable password authentication for that user by adding this to
-`/etc/ssh/sshd_config`:
-
-        Match User clojars
-        PasswordAuthentication no
-
-4. Symlink in the authorized_keys file the webapp generates:
-
-        cd /home/clojars
-        mkdir .ssh
-        cd .ssh
-        ln -s ...../clojars-web/data/authorized_keys authorized_keys
-
-5. When running the webapp enable the nailgun server: `--nailgun-port 8700`
-
 
 License
 -------
