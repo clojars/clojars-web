@@ -105,7 +105,8 @@
                  :allow-anon? false
                  :unauthenticated-handler
                  (partial workflows/http-basic-deny "clojars")})
-               (repo/wrap-file (:repo config))))
+               (repo/wrap-file (:repo config))
+               (repo/wrap-reject-double-dot)))
   (-> main-routes
       (friend/authenticate
        {:credential-fn credential-fn

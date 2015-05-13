@@ -131,3 +131,9 @@
       (let [path (codec/url-decode (:path-info req))]
         (or (response/file-response path {:root dir})
             (app req))))))
+
+(defn wrap-reject-double-dot [f]
+  (fn [req]
+    (if (re-find #"\.\." (:uri req))
+      {:status 400 :headers {}}
+      (f req))))
