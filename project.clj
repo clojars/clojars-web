@@ -31,7 +31,8 @@
                  [org.bouncycastle/bcpg-jdk15on "1.47"]
                  [mvxcvi/clj-pgp "0.8.0"]]
   :profiles {:dev {:dependencies [[kerodon "0.0.7"]
-                                  [nailgun-shim "0.0.1"]]
+                                  [nailgun-shim "0.0.1"]
+                                  [clj-http-lite "0.2.1"]]
                    :resource-paths ["local-resources"]}}
   :plugins [[lein-ring "0.8.5"]]
   :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
