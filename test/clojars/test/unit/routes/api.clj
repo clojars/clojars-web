@@ -22,6 +22,14 @@
     (is (= "0.1.0" (:latest_release (first jars))))
     (is (= "0.1.0" (:latest_version (first jars))))))
 
+(deftest latest-release
+  (add-jar 0 "0.1.0")
+  (add-jar 1 "0.2.0")
+  (let [jars (api/jars-by-groupname jarname)]
+    (is (= 1 (count jars)))
+    (is (= "0.2.0" (:latest_release (first jars))))
+    (is (= "0.2.0" (:latest_version (first jars))))))
+
 (deftest only-snapshot
   (add-jar 0 "0.1.0-SNAPSHOT")
   (let [jars (api/jars-by-groupname jarname)]
