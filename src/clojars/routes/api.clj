@@ -24,7 +24,7 @@
 
 (defn jars-by-groupname [groupname]
     (exec-raw [(str
-              "select j.jar_name, j.group_name, authors, scm, homepage, description, user, "
+              "select j.jar_name, j.group_name, homepage, description, user, "
               "j.version as latest_version, r.version as latest_release "
               "from jars j "
               ;; Find the latest version
