@@ -3,13 +3,15 @@
   (:require [clojars.db :as db]
             [clojars.db.migrate :as migrate]
             [clojars.config :refer [config]]
+            [clojars.web :as web]
             [korma.db :as kdb]
             [clucy.core :as clucy]
             [clojars.search :as search]
             [clojure.test :as test]
             [clojure.java.shell :as sh]
             [clojure.java.io :as io]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [ring.adapter.jetty :as jetty]))
 
 (def local-repo (io/file (System/getProperty "java.io.tmpdir")
                          "clojars" "test" "local-repo"))
@@ -87,3 +89,22 @@
 (defn index-fixture [f]
   (make-index! [])
   (f))
+
+(declare test-port)
+
+(defn run-test-app
+  ([f]
+   (run-test-app nil f))
+  ([verbose? f]
+   (let [server (jetty/run-jetty
+                  (if verbose?
+                    #'web/clojars-app
+                    #(binding [*out* (java.io.StringWriter.)]
+                       (#'web/clojars-app %)))
+                  {:port 0 :join? false})
+         port (-> server .getConnectors first .getLocalPort)]
+     (with-redefs [test-port port]
+       (try
+         (f)
+         (finally
+           (.stop server)))))))

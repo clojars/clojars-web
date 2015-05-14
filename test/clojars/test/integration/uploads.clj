@@ -8,26 +8,10 @@
             [clojars.test.test-helper :as help]
             [clojure.java.io :as io]
             [cemerick.pomegranate.aether :as aether]
-            [ring.adapter.jetty :as jetty]
             [net.cgrand.enlive-html :as enlive]
             [clojure.data.codec.base64 :as base64]))
 
-(declare test-port)
-
-(defn- run-test-app
-  [f]
-  (let [server (jetty/run-jetty
-                #(binding [*out* (java.io.StringWriter.)]
-                   (#'clojars-app %))
-                {:port 0 :join? false})
-        port (-> server .getConnectors first .getLocalPort)]
-    (with-redefs [test-port port]
-      (try
-        (f)
-        (finally
-          (.stop server))))))
-
-(use-fixtures :once run-test-app)
+(use-fixtures :once help/run-test-app)
 (use-fixtures :each help/default-fixture help/index-fixture)
 
 (deftest user-can-register-and-deploy
@@ -39,7 +23,7 @@
    :coordinates '[org.clojars.dantheman/test "1.0.0"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-   :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo)
@@ -54,7 +38,7 @@
          (aether/resolve-dependencies
           :coordinates '[[org.clojars.dantheman/test "1.0.0"]]
           :repositories {"test" {:url
-                                 (str "http://localhost:" test-port "/repo")}}
+                                 (str "http://localhost:" help/test-port "/repo")}}
           :local-repo help/local-repo2)))
   (-> (session clojars-app)
       (visit "/groups/org.clojars.dantheman")
@@ -78,7 +62,7 @@
     :coordinates '[fake/test "0.0.1"]
     :jar-file (io/file (io/resource "test.jar"))
     :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-    :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                          :username "dantheman"
                          :password "password"}}
     :local-repo help/local-repo)
@@ -86,7 +70,7 @@
           (aether/resolve-dependencies
            :coordinates '[[fake/test "0.0.1"]]
            :repositories {"test" {:url
-                                  (str "http://localhost:" test-port "/repo")}}
+                                  (str "http://localhost:" help/test-port "/repo")}}
            :local-repo help/local-repo2)))
    (-> (session clojars-app)
        (visit "/groups/fake")
@@ -112,7 +96,7 @@
          :coordinates '[org.clojars.fixture/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo))))
@@ -124,7 +108,7 @@
    :coordinates '[org.clojars.dantheman/test "0.0.1"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-   :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo)
@@ -135,7 +119,7 @@
           :coordinates '[org.clojars.dantheman/test "0.0.1"]
           :jar-file (io/file (io/resource "test.jar"))
           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-          :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+          :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                                :username "dantheman"
                                :password "password"}}
           :local-repo help/local-repo))))
@@ -147,7 +131,7 @@
    :coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
-   :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo)
@@ -155,7 +139,7 @@
    :coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
-   :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo))
@@ -167,7 +151,7 @@
    :coordinates '[org.clojars.dantheman/test.thing "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
-   :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo))
@@ -179,7 +163,7 @@
          :coordinates '[fake/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" test-port "/repo")}}
+         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")}}
          :local-repo help/local-repo))))
 
 (deftest bad-login-cannot-deploy
@@ -188,7 +172,7 @@
          :coordinates '[fake/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                               :username "guest"
                               :password "password"}}
          :local-repo help/local-repo))))
@@ -202,7 +186,7 @@
          :coordinates '[faKE/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo))))
@@ -216,7 +200,7 @@
          :coordinates '[fake/test "1.α.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" test-port "/repo")
+         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo))))
