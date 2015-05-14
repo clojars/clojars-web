@@ -23,31 +23,30 @@
     (not-found nil)))
 
 (defn jars-by-groupname [groupname]
-  (exec-raw [(str
-               "select j.*, j2.version as latest_release "
-               "from jars j "
-               ;; Find the latest version
-               "join "
-               "(select jar_name, max(created) as created "
-               "from jars "
-               "group by group_name, jar_name) l "
-               "on j.jar_name = l.jar_name "
-               "and j.created = l.created "
-               ;; Find the latest release
-               "join "
-               "(select jar_name, max(created) as created "
-               "from jars "
-               "where version not like '%-SNAPSHOT' "
-               "group by group_name, jar_name) r "
-               "on j.jar_name = r.jar_name "
-               ;; Join with latest release
-               "join "
-               "(select jar_name, created, version from jars) as j2 "
-               "on j2.jar_name = j.jar_name "
-               "and j2.created = r.created "
-               "where j.group_name = ? "
-               "order by j.group_name asc, j.jar_name asc")
-             [groupname]]
+    (exec-raw [(str
+              "select j.jar_name, j.group_name, authors, scm, homepage, description, user, "
+              "j.version as latest_version, r.version as latest_release "
+              "from jars j "
+              ;; Find the latest version
+              "join "
+              "(select jar_name, group_name, max(created) as created "
+              "from jars "
+              "group by group_name, jar_name) l "
+              "on j.jar_name = l.jar_name "
+              "and j.group_name = l.group_name "
+              ;; Find basic info for latest version
+              "and j.created = l.created "
+              ;; Find the latest release
+              "left join "
+              "(select jar_name, group_name, version, max(created) as created "
+              "from jars "
+              "where version not like '%-SNAPSHOT' "
+              "group by group_name, jar_name) r "
+              "on j.jar_name = r.jar_name "
+              "and j.group_name = r.group_name "
+              "where j.group_name = ? "
+              "order by j.group_name asc, j.jar_name asc")
+               [groupname]]
     :results))
 
 (defroutes handler
@@ -57,10 +56,8 @@
         (let [stats (stats/all)]
           (response
             (map (fn [jar]
-                   (-> jar
-                     (rename-keys {:version :latest_version})
-                     (dissoc :id :created :promoted_at)
-                     (assoc :downloads (stats/download-count stats group-id (:jar_name jar)))))
+                   (assoc jar
+                     :downloads (stats/download-count stats group-id (:jar_name jar))))
               jars)))
         (not-found nil)))
     (GET ["/artifacts/:artifact-id", :artifact-id #"[^/]+"] [artifact-id]
