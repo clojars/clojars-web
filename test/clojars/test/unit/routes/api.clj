@@ -17,44 +17,60 @@
 
 (deftest only-release
   (add-jar 0 "0.1.0")
-  (let [jars (api/jars-by-groupname jarname)]
-    (is (= 1 (count jars)))
-    (is (= "0.1.0" (:latest_release (first jars))))
-    (is (= "0.1.0" (:latest_version (first jars))))))
+  (doseq [args [[jarname] [jarname jarname]]]
+    (let [jars (apply api/find-jars args)]
+      (is (= 1 (count jars)))
+      (is (= "0.1.0" (:latest_release (first jars))))
+      (is (= "0.1.0" (:latest_version (first jars)))))))
 
 (deftest latest-release
   (add-jar 0 "0.1.0")
   (add-jar 1 "0.2.0")
-  (let [jars (api/jars-by-groupname jarname)]
-    (is (= 1 (count jars)))
-    (is (= "0.2.0" (:latest_release (first jars))))
-    (is (= "0.2.0" (:latest_version (first jars))))))
+  (doseq [args [[jarname] [jarname jarname]]]
+    (let [jars (apply api/find-jars args)]
+      (is (= 1 (count jars)))
+      (is (= "0.2.0" (:latest_release (first jars))))
+      (is (= "0.2.0" (:latest_version (first jars)))))))
 
 (deftest only-snapshot
   (add-jar 0 "0.1.0-SNAPSHOT")
-  (let [jars (api/jars-by-groupname jarname)]
-    (is (= 1 (count jars)))
-    (is (not (:latest_release (first jars))))
-    (is (= "0.1.0-SNAPSHOT" (:latest_version (first jars))))))
+  (doseq [args [[jarname] [jarname jarname]]]
+    (let [jars (apply api/find-jars args)]
+      (is (= 1 (count jars)))
+      (is (not (:latest_release (first jars))))
+      (is (= "0.1.0-SNAPSHOT" (:latest_version (first jars)))))))
 
 (deftest newer-snapshot
   (add-jar 0 "0.1.0")
   (add-jar 1 "0.1.1-SNAPSHOT")
-  (let [jars (api/jars-by-groupname jarname)]
-    (is (= 1 (count jars)))
-    (is (= "0.1.0" (:latest_release (first jars))))
-    (is (= "0.1.1-SNAPSHOT" (:latest_version (first jars))))))
+  (doseq [args [[jarname] [jarname jarname]]]
+    (let [jars (apply api/find-jars args)]
+      (is (= 1 (count jars)))
+      (is (= "0.1.0" (:latest_release (first jars))))
+      (is (= "0.1.1-SNAPSHOT" (:latest_version (first jars)))))))
 
 (deftest older-snapshot
   (add-jar 0 "0.1.0-SNAPSHOT")
   (add-jar 1 "0.1.0")
-  (let [jars (api/jars-by-groupname jarname)]
-    (is (= 1 (count jars)))
-    (is (= "0.1.0" (:latest_release (first jars))))
-    (is (= "0.1.0" (:latest_version (first jars))))))
+  (doseq [args [[jarname] [jarname jarname]]]
+    (let [jars (apply api/find-jars args)]
+      (is (= 1 (count jars)))
+      (is (= "0.1.0" (:latest_release (first jars))))
+      (is (= "0.1.0" (:latest_version (first jars)))))))
 
 (deftest same-jarname-multiple-groups
   (add-jar 0 "0.1.0")
   (add-jar 1 "0.1.0" :group "tester2")
-  (let [jars (api/jars-by-groupname jarname)]
-    (is (= 1 (count jars)))))
+  (doseq [args [[jarname] [jarname jarname] ["tester2" jarname]]]
+    (let [jars (apply api/find-jars args)]
+      (is (= 1 (count jars))))))
+
+(deftest multiple-jars-in-same-group
+  (add-jar 0 "0.1.0")
+  (add-jar 0 "0.1.0" :name "other")
+  (let [jars (api/find-jars jarname)]
+      (is (= 2 (count jars)))
+      (is (= #{jarname "other"} (set (map :jar_name jars)))))
+  (let [jars (api/find-jars jarname jarname)]
+      (is (= 1 (count jars)))
+      (is (= jarname (-> jars first :jar_name)))))

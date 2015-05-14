@@ -55,8 +55,11 @@
               :latest_release "0.0.2"
               :jar_name "test"
               :group_name "fake"
-              :user "dantheman"}
-             (select-keys (first body) [:latest_release :latest_version :jar_name :group_name :user])))))
+              :user "dantheman"
+              :description nil
+              :homepage nil
+              :downloads 0}
+             (first body)))))
 
   (testing "get non-existent group"
     (assert-404 [:groups "does-not-exist"]))
@@ -64,14 +67,18 @@
   (testing "get artifact"
     (let [resp (get-api [:artifacts "fake" "test"] {:accept :json})
           body (json/parse-string (:body resp) true)]
-      (is (= {:version "0.0.2"
+      (is (= {:latest_version "0.0.3-SNAPSHOT"
+              :latest_release "0.0.2"
               :jar_name "test"
               :group_name "fake"
               :user "dantheman"
+              :description nil
+              :homepage nil
+              :downloads 0
               :recent_versions [{:downloads 0 :version "0.0.3-SNAPSHOT"}
                                 {:downloads 0 :version "0.0.2"}
                                 {:downloads 0 :version "0.0.1"}]}
-             (select-keys body [:jar_name :group_name :version :recent_versions :user])))))
+            body))))
 
   (testing "get non-existent artifact"
     (assert-404 [:artifacts "does-not-exist"])
