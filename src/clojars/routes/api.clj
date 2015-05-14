@@ -25,7 +25,7 @@
 (defn jars-by-groupname [groupname]
     (exec-raw [(str
               "select j.jar_name, j.group_name, homepage, description, user, "
-              "j.version as latest_version, r.version as latest_release "
+              "j.version as latest_version, r2.version as latest_release "
               "from jars j "
               ;; Find the latest version
               "join "
@@ -36,14 +36,20 @@
               "and j.group_name = l.group_name "
               ;; Find basic info for latest version
               "and j.created = l.created "
-              ;; Find the latest release
+              ;; Find the created ts for latest release
               "left join "
-              "(select jar_name, group_name, version, max(created) as created "
+              "(select jar_name, group_name, max(created) as created "
               "from jars "
               "where version not like '%-SNAPSHOT' "
               "group by group_name, jar_name) r "
               "on j.jar_name = r.jar_name "
               "and j.group_name = r.group_name "
+              ;; Find version for latest release
+              "left join "
+              "(select jar_name, group_name, version, created from jars) as r2 "
+              "on j.jar_name = r2.jar_name "
+              "and j.group_name = r2.group_name "
+              "and r.created = r2.created "
               "where j.group_name = ? "
               "order by j.group_name asc, j.jar_name asc")
                [groupname]]
