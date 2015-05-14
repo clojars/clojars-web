@@ -6,7 +6,6 @@
             [ring.util.response :refer [response]]
             [clojars.db :as db]
             [clojars.stats :as stats]
-            [cheshire.core :as json]
             [korma.core :refer [exec-raw]]))
 
 (defn get-artifact [group-id artifact-id]
@@ -18,8 +17,7 @@
             (update-in [:recent_versions] (fn [versions]
                                             (map (fn [version]
                                                    (assoc version :downloads (stats/download-count stats group-id artifact-id (:version version))))
-                                                 versions)))
-            json/generate-string)))
+                                                 versions))))))
 
 (defn jars-by-groupname [groupname]
     (exec-raw [(str
@@ -71,4 +69,4 @@
 
 (def routes
   (-> handler
-      (wrap-restful-response :formats [:json :yaml :transit-json])))
+      (wrap-restful-response :formats [:json :edn :yaml :transit-json])))
