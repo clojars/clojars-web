@@ -20,6 +20,15 @@
 (defn get-content-type [resp]
   (some-> resp :headers (get "content-type") (string/split #";") first))
 
+(defn assert-404 [& get-args]
+  (try
+    (let [resp (apply get-api get-args)]
+      ;; this will never succeed, but gives a better error message
+      ;; when it fails
+      (is (= 404 (:status resp))))
+    (catch clojure.lang.ExceptionInfo e
+      (is (= 404 (-> e ex-data :object :status))))))
+
 (deftest utils-test
   (is (= (get-content-type {:headers {"content-type" "application/json"}}) "application/json"))
   (is (= (get-content-type {:headers {"content-type" "application/json;charset=utf-8"}}) "application/json")))
@@ -49,6 +58,9 @@
               :user "dantheman"}
              (select-keys (first body) [:latest_release :latest_version :jar_name :group_name :user])))))
 
+  (testing "get non-existent group"
+    (assert-404 [:groups "does-not-exist"]))
+
   (testing "get artifact"
     (let [resp (get-api [:artifacts "fake" "test"] {:accept :json})
           body (json/parse-string (:body resp) true)]
@@ -61,8 +73,15 @@
                                 {:downloads 0 :version "0.0.1"}]}
              (select-keys body [:jar_name :group_name :version :recent_versions :user])))))
 
+  (testing "get non-existent artifact"
+    (assert-404 [:artifacts "does-not-exist"])
+    (assert-404 [:artifacts "does-not" "exist"]))
+
   (testing "get user"
     (let [resp (get-api [:users "dantheman"])
           body (json/parse-string (:body resp) true)]
       (is (= {:groups ["org.clojars.dantheman" "fake"]}
-             body)))))
+             body))))
+
+  (testing "get non-existent user"
+    (assert-404 [:users "danethemane"])))
