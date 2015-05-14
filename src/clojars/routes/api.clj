@@ -22,11 +22,11 @@
 (defn jars-by-groupname [groupname]
     (exec-raw [(str
               "select j.jar_name, j.group_name, authors, scm, homepage, description, user, "
-              "l.version as latest_version, r.version as latest_release "
+              "j.version as latest_version, r.version as latest_release "
               "from jars j "
               ;; Find the latest version
               "join "
-              "(select jar_name, group_name, version, max(created) as created "
+              "(select jar_name, group_name, max(created) as created "
               "from jars "
               "group by group_name, jar_name) l "
               "on j.jar_name = l.jar_name "
