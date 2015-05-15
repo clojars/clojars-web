@@ -38,9 +38,7 @@ it. Regardless of how you run it, you first need to do some setup:
 1. Install [Leiningen](http://github.com/technomancy/leiningen)
    * Mac OS X Homebrew: `brew install leiningen`
 
-2. Install [SQLite3](http://www.sqlite.org/)
-   * Debian: `apt-get install sqlite3`
-   * Mac OS X Homebrew: `brew install sqlite`
+2. Create the data directory tree: `mkdir -p data/events`
 
 3. Run the DB migrations: `lein migrate`
 
