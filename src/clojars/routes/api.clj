@@ -21,6 +21,7 @@
             "(select jar_name, group_name, max(created) as created "
             "from jars "
             "where group_name = ? "
+            (when artifact-id "and jar_name = ? ")
             "group by group_name, jar_name) l "
             "on j.jar_name = l.jar_name "
             "and j.group_name = l.group_name "
@@ -32,6 +33,7 @@
             "from jars "
             "where version not like '%-SNAPSHOT' "
             "and group_name = ? "
+            (when artifact-id "and jar_name = ? ")
             "group by group_name, jar_name) r "
             "on j.jar_name = r.jar_name "
             "and j.group_name = r.group_name "
@@ -39,6 +41,7 @@
             "left join "
             "(select jar_name, group_name, version, created from jars "
             "where group_name = ? "
+            (when artifact-id "and jar_name = ? ")
             ") as r2 "
             "on j.jar_name = r2.jar_name "
             "and j.group_name = r2.group_name "
@@ -48,7 +51,7 @@
             "order by j.group_name asc, j.jar_name asc"]
         (remove nil?)
         (apply str))
-      (remove nil? [group-id group-id group-id group-id artifact-id])]
+      (->> [group-id artifact-id] cycle (take 8) (remove nil?))]
      :results)))
 
 (defn get-artifact [group-id artifact-id]
