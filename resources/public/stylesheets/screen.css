@@ -265,6 +265,14 @@ footer a {
   margin: 0 auto 80px;
 }
 
+#flash {
+  font-weight: bold;
+  padding: 10px;
+  margin: 10px;
+  background-color: #ffb33b;
+  border-radius: 10px;
+}
+
 .push-example {
   padding: 25px;
   background: white;
