@@ -35,6 +35,12 @@
 
 (def renames {:name :artifact-id :group :group-id})
 
+(defn delete-from-index [group-id & [artifact-id]]
+  (with-open [index (clucy/disk-index (config :index-path))]
+    (clucy/search-and-delete  index
+      (cond-> (str "group-id:" group-id)
+        artifact-id (str " AND artifact-id:" artifact-id)))))
+
 (defn index-pom [index pom-file]
   (let [pom (-> (mvn/pom-to-map pom-file)
                 (set/rename-keys renames)

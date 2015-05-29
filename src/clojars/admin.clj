@@ -1,6 +1,7 @@
 (ns clojars.admin
   (:require [clojars.config :refer [config]]
             [clojars.db :as db]
+            [clojars.search :as search]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.nrepl.server :as nrepl])
@@ -40,7 +41,8 @@
         (println "Deleting" group-id)
         (repo->backup [group-id])
         (db/delete-jars group-id)
-        (db/delete-groups group-id)))
+        (db/delete-groups group-id)
+        (search/delete-from-index group-id)))
     (println "No group found under" group-id)))
 
 (defn delete-jars [group-id jar-id & [version]]
@@ -56,7 +58,8 @@
         (fn []
           (println "Deleting" pretty-coords)
           (repo->backup [group-id jar-id version])
-          (apply db/delete-jars group-id jar-id (if version [version] []))))
+          (apply db/delete-jars group-id jar-id (if version [version] []))
+          (search/delete-from-index group-id jar-id)))
       (println "No artifacts found under" group-id jar-id version))))
 
 (defn init []
