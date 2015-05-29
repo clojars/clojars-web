@@ -14,9 +14,13 @@
   (let [backup (doto (io/file (:deletion-backup-dir config))
                  (.mkdirs))
         parts' (vec (remove nil? parts))]
-    (FileUtils/moveDirectory
-      (apply io/file (:repo config) (str/replace (first parts') "." "/") (rest parts'))
-      (io/file backup (str/join "-" (conj parts' (current-date-str)))))))
+    (try
+      (FileUtils/moveDirectory
+        (apply io/file (:repo config)
+                   (str/replace (first parts') "." "/") (rest parts'))
+        (io/file backup (str/join "-" (conj parts' (current-date-str)))))
+      (catch Exception e
+        (printf "WARNING: failed to backup %s: %s\n" parts' (.getMessage e))))))
 
 (defn help []
   (println
