@@ -164,12 +164,12 @@
     footer]))
 
 (defn flash [msg]
-  (if msg
-    [:div#flash msg]))
+  (when msg
+    [:div#flash.info msg]))
 
 (defn error-list [errors]
   (when errors
-    [:div.error
+    [:div#flash.error
      [:strong "Blistering barnacles!"]
      "  Something's not shipshape:"
      (unordered-list errors)]))

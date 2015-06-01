@@ -265,14 +265,6 @@ footer a {
   margin: 0 auto 80px;
 }
 
-#flash {
-  font-weight: bold;
-  padding: 10px;
-  margin: 10px;
-  background-color: #ffb33b;
-  border-radius: 10px;
-}
-
 .push-example {
   padding: 25px;
   background: white;
@@ -438,9 +430,19 @@ footer a {
   margin-bottom: 20px;
 }
 
-.error {
-  color: #ff2929;
-  margin-bottom: 20px;
+#flash {
+  font-weight: bold;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 10px;
+}
+
+#flash.info {
+      background-color: #ffb33b;
+}
+
+#flash.error {
+    background-color: #ff2929;
 }
 
 /* FIXME: prefer a bulleted style for error lists? */
