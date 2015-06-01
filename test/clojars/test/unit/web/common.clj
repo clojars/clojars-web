@@ -16,7 +16,7 @@
 (deftest error-list-populates-errors-correctly
   (is (= nil (common/error-list nil)))
   (is (=
-        [:div.error [:strong "Blistering barnacles!"] "  Something's not shipshape:" [:ul '([:li "error"])]]
+        [:div#flash.error [:strong "Blistering barnacles!"] "  Something's not shipshape:" [:ul '([:li "error"])]]
         (common/error-list ["error"]))))
 
 (deftest user-link-works
