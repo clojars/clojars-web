@@ -562,3 +562,7 @@ ul#blockers li {
   list-style-type: disc;
   list-style-position: inside;
 }
+
+#ssh-key {
+    display: none;
+}

@@ -41,14 +41,20 @@
                       (password-field {:placeholder "confirm your password"
                                        :required true}
                                       :confirm)
-                      (label :ssh-key "SSH public key")
-                      [:p.hint
-                       " (" (link-to
-                             "http://wiki.github.com/ato/clojars-web/ssh-keys"
-                             "what's this?") ")"]
-                      (text-area :ssh-key ssh-key)
-                      [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
-                      (label :pgp-key "PGP public key:")
+                      ;; put this in a div so we can hide it - we
+                      ;; currently rely on being able to set an
+                      ;; ssh-key for integ tests
+                      [:div#ssh-key
+                       (label :ssh-key "SSH public key")
+                       ;; [:p.hint
+                       ;;  " (" (link-to
+                       ;;        "http://wiki.github.com/ato/clojars-web/ssh-keys"
+                       ;;        "what's this?") ")"]
+                       (text-area :ssh-key ssh-key)
+                       ;; [:p.hint "Entering multiple SSH keys? Put
+                       ;; them on separate lines."]
+                       ]
+                       (label :pgp-key "PGP public key")
                       (text-area :pgp-key pgp-key)
                       (submit-button "Register"))]))
 
@@ -99,9 +105,9 @@
                         (password-field :password)
                         (label :confirm "Confirm password")
                         (password-field :confirm)
-                        (label :ssh-key "SSH public key")
-                        (text-area :ssh-key (user :ssh_key))
-                        [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
+                        ;; (label :ssh-key "SSH public key")
+                        ;; (text-area :ssh-key (user :ssh_key))
+                        ;; [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
                         (label :pgp-key "PGP public key")
                         (text-area :pgp-key (user :pgp_key))
                         (submit-button "Update"))])))
@@ -111,11 +117,11 @@
     (if-let [errors (apply validate {:email email
                                      :username account
                                      :password password
-                                     :ssh-key ssh-key
+                                     ;; :ssh-key ssh-key
                                      :pgp-key pgp-key}
                            (update-user-validations confirm))]
-      (profile-form account nil (apply concat (vals  errors)))
-      (do (update-user account email account password ssh-key pgp-key)
+      (profile-form account nil (apply concat (vals errors)))
+      (do (update-user account email account password (or ssh-key "") pgp-key)
           (assoc (redirect "/profile")
             :flash "Profile updated.")))))
 

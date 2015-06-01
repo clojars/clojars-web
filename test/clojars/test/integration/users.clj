@@ -75,14 +75,15 @@
       (within [:div.error :ul :li]
               (has (text? "Username is already taken")))
 
-      (fill-in "Username" "dantheman")
-      (fill-in "Password" "password")
-      (fill-in "Confirm password" "password")
-      (fill-in "SSH public key" "asdf")
-      (press "Register")
-      (has (status? 200))
-      (within [:div.error :ul :li]
-              (has (text? "Invalid SSH public key")))))
+      ;; (fill-in "Username" "dantheman")
+      ;; (fill-in "Password" "password")
+      ;; (fill-in "Confirm password" "password")
+      ;; (fill-in "SSH public key" "asdf")
+      ;; (press "Register")
+      ;; (has (status? 200))
+      ;; (within [:div.error :ul :li]
+      ;;         (has (text? "Invalid SSH public key")))
+      ))
 
 (deftest user-can-update-info
   (-> (session web/clojars-app)
@@ -107,23 +108,23 @@
       (within [:div.light-article :> :h1]
               (has (text? "Dashboard (fixture)")))))
 
-(deftest user-can-update-just-ssh-key
-  (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password" "")
-      (follow-redirect)
-      (follow "profile")
-      (fill-in "SSH public key" "ssh-rsa AAAAB3Nza")
-      (press "Update")
-      (follow-redirect)
-      (within [:textarea]
-              (has (text? "ssh-rsa AAAAB3Nza")))
-      (follow "logout")
-      (follow-redirect)
-      (login-as "fixture@example.org" "password")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:div.light-article :> :h1]
-              (has (text? "Dashboard (fixture)")))))
+;; (deftest user-can-update-just-ssh-key
+;;   (-> (session web/clojars-app)
+;;       (register-as "fixture" "fixture@example.org" "password" "")
+;;       (follow-redirect)
+;;       (follow "profile")
+;;       (fill-in "SSH public key" "ssh-rsa AAAAB3Nza")
+;;       (press "Update")
+;;       (follow-redirect)
+;;       (within [:textarea]
+;;               (has (text? "ssh-rsa AAAAB3Nza")))
+;;       (follow "logout")
+;;       (follow-redirect)
+;;       (login-as "fixture@example.org" "password")
+;;       (follow-redirect)
+;;       (has (status? 200))
+;;       (within [:div.light-article :> :h1]
+;;               (has (text? "Dashboard (fixture)")))))
 
 (deftest bad-update-info-should-show-error
   (-> (session web/clojars-app)
@@ -146,11 +147,12 @@
       (within [:div.error :ul :li]
               (has (text? "Email can't be blank")))
 
-      (fill-in "SSH public key" "asdf")
-      (press "Update")
-      (has (status? 200))
-      (within [:div.error :ul :li]
-              (has (text? "Invalid SSH public key")))))
+      ;; (fill-in "SSH public key" "asdf")
+      ;; (press "Update")
+      ;; (has (status? 200))
+      ;; (within [:div.error :ul :li]
+      ;;         (has (text? "Invalid SSH public key")))
+      ))
 
 (deftest user-can-get-new-password
   (let [transport (promise)]
