@@ -19,7 +19,12 @@
    (link-to "https://github.com/ato/clojars-web" "code")
    (link-to "/security" "security")
    (link-to "https://github.com/ato/clojars-web/wiki/" "help")
-   [:div.row.bendyworks
+   [:div.row.sponsors
+    "sponsored by"
+    (link-to {:target "_blank"}
+             "http://www.redhat.com/"
+             (image "/images/rht-logo.png" "Red Hat, Inc."))]
+   [:div.row.sponsors
     "remixed by"
     (link-to {:target "_blank"}
              "http://www.bendyworks.com/"
