@@ -54,7 +54,8 @@
                        ;; [:p.hint "Entering multiple SSH keys? Put
                        ;; them on separate lines."]
                        ]
-                       (label :pgp-key "PGP public key")
+                      (label :pgp-key "PGP public key")
+                      [:p.hint "Optional - needed only if you sign releases"]
                       (text-area :pgp-key pgp-key)
                       (submit-button "Register"))]))
 
@@ -109,6 +110,7 @@
                         ;; (text-area :ssh-key (user :ssh_key))
                         ;; [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
                         (label :pgp-key "PGP public key")
+                        [:p.hint "Optional - needed only if you sign releases"]
                         (text-area :pgp-key (user :pgp_key))
                         (submit-button "Update"))])))
 
