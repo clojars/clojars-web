@@ -98,9 +98,26 @@
     [:link {:type "application/opensearchdescription+xml"
             :href "/opensearch.xml"
             :rel "search"}]
-    [:link {:type "image/png"
-            :href "/favicon.png"
-            :rel "icon"}]
+
+    [:link {:rel "apple-touch-icon" :sizes "57x57" :href "/apple-touch-icon-57x57.png?v=47K2kprJd7"}]
+    [:link {:rel "apple-touch-icon" :sizes "60x60" :href "/apple-touch-icon-60x60.png?v=47K2kprJd7"}]
+    [:link {:rel "apple-touch-icon" :sizes "72x72" :href "/apple-touch-icon-72x72.png?v=47K2kprJd7"}]
+    [:link {:rel "apple-touch-icon" :sizes "76x76" :href "/apple-touch-icon-76x76.png?v=47K2kprJd7"}]
+    [:link {:rel "apple-touch-icon" :sizes "114x114" :href "/apple-touch-icon-114x114.png?v=47K2kprJd7"}]
+    [:link {:rel "apple-touch-icon" :sizes "120x120" :href "/apple-touch-icon-120x120.png?v=47K2kprJd7"}]
+    [:link {:rel "apple-touch-icon" :sizes "144x144" :href "/apple-touch-icon-144x144.png?v=47K2kprJd7"}]
+    [:link {:rel "apple-touch-icon" :sizes "152x152" :href "/apple-touch-icon-152x152.png?v=47K2kprJd7"}]
+    [:link {:rel "icon" :type "image/png" :href "/favicon-32x32.png?v=47K2kprJd7" :sizes "32x32"}]
+    [:link {:rel "icon" :type "image/png" :href "/favicon-96x96.png?v=47K2kprJd7" :sizes "96x96"}]
+    [:link {:rel "icon" :type "image/png" :href "/favicon-16x16.png?v=47K2kprJd7" :sizes "16x16"}]
+    [:link {:rel "manifest" :href "/manifest.json?v=47K2kprJd7"}]
+    [:link {:rel "shortcut icon" :href "/favicon.ico?v=47K2kprJd7"}]
+    [:meta {:name "apple-mobile-web-app-title" :content "Clojars"}]
+    [:meta {:name "application-name" :content "Clojars"}]
+    [:meta {:name "msapplication-TileColor" :content "#da532c"}]
+    [:meta {:name "msapplication-TileImage" :content "/mstile-144x144.png?v=47K2kprJd7"}]
+    [:meta {:name "theme-color" :content "#ffffff"}]
+
     [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
     [:title
