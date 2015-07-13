@@ -1,12 +1,14 @@
 (defproject clojars-web "0.16.6-SNAPSHOT"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.2.1"]
+                 [yeller-clojure-client "1.2.1"]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
                   [org.codehaus.plexus/plexus-utils]]
                  [com.cemerick/pomegranate "0.0.13"
                   :exclusions
-                  [org.apache.httpcomponents/httpcore]]
+                  [org.apache.httpcomponents/httpcore
+                   commons-logging]]
                  [s3-wagon-private "1.0.0"]
                  [compojure "1.3.3"]
                  [ring/ring-jetty-adapter "1.1.1"]
@@ -22,10 +24,13 @@
                   :exclusions [org.clojure/clojure]]
                  [clj-time "0.9.0"]
                  [com.cemerick/friend "0.2.1"
-                  :exclusions [org.clojure/core.cache]]
+                  :exclusions [org.clojure/core.cache
+                               org.apache.httpcomponents/httpclient
+                               org.apache.httpcomponents/httpcore
+                               commons-logging]]
                  [clj-stacktrace "0.2.6"]
                  [ring-anti-forgery "0.2.1"]
-                 [valip "0.2.0"]
+                 [valip "0.2.0" :exclusions [commons-logging]]
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [org.bouncycastle/bcpg-jdk15on "1.47"]

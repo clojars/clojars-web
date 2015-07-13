@@ -4,7 +4,8 @@
             [clojars.web :refer [clojars-app]]
             [clojars.promote :as promote]
             [clojars.config :refer [config configure]]
-            [clojars.admin :as admin])
+            [clojars.admin :as admin]
+            [clojars.errors :as errors])
   (:import com.martiansoftware.nailgun.NGServer
            java.net.InetAddress)
   (:gen-class))
@@ -24,6 +25,7 @@
 (defn -main [& args]
   (alter-var-root #'*read-eval* (constantly false))
   (configure args)
+  (errors/register-global-exception-handler!)
   (start-jetty)
   (admin/init)
   (start-nailgun))

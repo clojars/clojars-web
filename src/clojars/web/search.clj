@@ -49,7 +49,6 @@
                  [:span.details (if-let [created (:created jar)]
                                   [:td (format-date created)])]]])]]))
        (catch Exception _
-         (.printStackTrace _)
          [:p "Could not search; please check your query syntax."]))]))
 
 (defn search [account params]

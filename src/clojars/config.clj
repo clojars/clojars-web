@@ -18,7 +18,8 @@
    :mail {:hostname "127.0.0.1"
           :ssl false
           :from "noreply@clojars.org"}
-   :bcrypt-work-factor 12})
+   :bcrypt-work-factor 12
+   :yeller-environment "development"})
 
 (defn parse-resource [f]
   (when-let [r (io/resource f)] (read-string (slurp r))))
@@ -71,7 +72,9 @@
    ["NAILGUN_PORT" :nailgun-port #(Integer/parseInt %)]
    ["RELEASES_URL" :releases-url]
    ["RELEASES_ACCESS_KEY" :releases-access-key]
-   ["RELEASES_SECRET_KEY" :releases-secret-key]])
+   ["RELEASES_SECRET_KEY" :releases-secret-key]
+   ["YELLER_ENV" :yeller-environment]
+   ["YELLER_TOKEN" :yeller-token]])
 
 (defn parse-env []
   (reduce

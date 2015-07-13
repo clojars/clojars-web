@@ -2,9 +2,9 @@
   (:require [clojars.db :as db]
             [clojars.config :refer [config]]
             [clojars.auth :refer [try-account]]
+            [clojars.errors :refer [wrap-exceptions]]
             [clojars.friend.registration :as registration]
             [clojars.web.dashboard :refer [dashboard index-page]]
-            [clojars.web.error-page :refer [wrap-exceptions]]
             [clojars.web.search :refer [search]]
             [clojars.web.browse :refer [browse]]
             [clojars.web.common :refer [html-doc]]
@@ -113,7 +113,6 @@
         :workflows [(workflows/interactive-form)
                     registration/workflow]})
       (wrap-anti-forgery)
-      (wrap-exceptions)
       (wrap-x-frame-options)
       (wrap-keyword-params)
       (wrap-params)
@@ -121,4 +120,5 @@
       (wrap-flash)
       (wrap-secure-session)
       (wrap-resource "public")
-      (wrap-file-info)))
+      (wrap-file-info)
+      (wrap-exceptions)))

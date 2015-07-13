@@ -4,13 +4,13 @@
             [clojars.config :refer [config]]
             [clojars.maven :as maven]
             [clojars.event :as ev]
+            [clojars.errors :refer [report-error]]
             [compojure.core :refer [defroutes PUT ANY]]
             [compojure.route :refer [not-found]]
             [clojure.java.io :as io]
             [clojure.string :as string]
             [ring.util.codec :as codec]
-            [ring.util.response :as response]
-            [clj-stacktrace.repl :refer [pst]])
+            [ring.util.response :as response])
   (:import java.io.StringReader))
 
 (defn versions [group-id artifact-id]
@@ -70,7 +70,7 @@
      ;; should we only do 201 if the file didn't already exist?
      {:status 201 :headers {} :body nil}
      (catch Exception e#
-       (pst e#)
+       (report-error e#)
        {:status 403 :headers {} :body (.getMessage e#)})))
 
 (defmacro put-req [groupname & body]

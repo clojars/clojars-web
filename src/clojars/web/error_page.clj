@@ -16,12 +16,3 @@
                   [:pre.stacktrace (with-out-str (pst throwable))]]))
       (status 500)
       (content-type "text/html")))
-
-(defn wrap-exceptions [app]
-  (fn [req]
-    (try
-      (app req)
-      (catch Throwable t
-        (println (str "A server error has occured: " (.getMessage t)))
-        (pst t)
-        (error-page-response t)))))

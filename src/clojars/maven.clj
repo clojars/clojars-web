@@ -2,7 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojars.config :refer [config]]
             [clojure.string :refer [split]]
-            [clj-stacktrace.repl :refer [pst]])
+            [clojars.errors :refer [report-error]])
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
            java.io.IOException))
@@ -64,7 +64,9 @@
                      (snapshot-pom-file jar)
                      (io/file (directory-for jar) (format "%s-%s.%s" jar_name version "pom")))]
       (pom-to-map (str pom-file)))
-    (catch IOException e (pst e) nil)))
+    (catch IOException e
+      (report-error e)
+      nil)))
 
 (defn github-info [pom-map]
   (let [scm (:scm pom-map)

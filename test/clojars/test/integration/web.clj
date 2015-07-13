@@ -17,9 +17,11 @@
                             (has (text? "Oops!"))))))
 
 (deftest server-errors-log-caught-exceptions
-  (let [output (with-out-str (-> (session web/clojars-app)
-                                 (visit "/error")))]
-    (is (re-find #"^A server error has occured:.*" output))))
+  (let [err (atom nil)]
+    (with-redefs [clojars.errors/report-error (fn [e & _] (reset! err e))]
+      (-> (session web/clojars-app)
+        (visit "/error")
+        (is (re-find #"You really want an error" (.getMessage @err)))))))
 
 (deftest browse-page-renders-multiple-pages
   (doseq [i (range 21)]
