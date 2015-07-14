@@ -10,11 +10,18 @@
 
 (use-fixtures :each help/default-fixture)
 
-(deftest server-errors-display-pretty-message
+(deftest server-errors-display-error-page
   (with-out-str (-> (session web/clojars-app)
                     (visit "/error")
                     (within [:div.small-section :> :h1]
-                            (has (text? "Oops!"))))))
+                      (has (text? "Oops!"))))))
+
+(deftest error-page-includes-error-id
+  (with-redefs [clojars.errors/error-id (constantly "ERROR")]
+    (with-out-str (-> (session web/clojars-app)
+                    (visit "/error")
+                    (within [:div.small-section :> :pre.error-id]
+                      (has (text? "error-id:\"ERROR\"")))))))
 
 (deftest server-errors-log-caught-exceptions
   (let [err (atom nil)]
