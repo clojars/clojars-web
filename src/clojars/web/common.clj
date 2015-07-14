@@ -20,15 +20,14 @@
    (link-to "/security" "security")
    (link-to "https://github.com/ato/clojars-web/wiki/" "help")
    [:div.row.sponsors
-    "sponsored by"
-    (link-to {:target "_blank"}
-             "http://www.redhat.com/"
-             (image "/images/rht-logo.png" "Red Hat, Inc."))]
-   [:div.row.sponsors
-    "sponsored by"
-    (link-to {:target "_blank"}
-             "http://yellerapp.com/"
-             (image "/images/yeller-logo.png" "Yeller"))]
+    [:div "sponsored by"]
+    [:div
+     (link-to {:target "_blank"}
+       "http://www.redhat.com/"
+       (image "/images/rht-logo.png" "Red Hat, Inc."))
+     (link-to {:target "_blank"}
+       "http://yellerapp.com/"
+       (image "/images/yeller-logo.png" "Yeller"))]]
    [:div.row.sponsors
     "remixed by"
     (link-to {:target "_blank"}
