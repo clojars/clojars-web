@@ -25,6 +25,11 @@
              "http://www.redhat.com/"
              (image "/images/rht-logo.png" "Red Hat, Inc."))]
    [:div.row.sponsors
+    "sponsored by"
+    (link-to {:target "_blank"}
+             "http://yellerapp.com/"
+             (image "/images/yeller-logo.png" "Yeller"))]
+   [:div.row.sponsors
     "remixed by"
     (link-to {:target "_blank"}
              "http://www.bendyworks.com/"
