@@ -23,7 +23,9 @@ and the #leiningen channel on irc.freenode.org.
 If you'd like contribute a change please send a GitHub pull request
 for a topic branch.  Feel free to open a pull request early with a
 "not ready for merging" note or ask on the mailing list or IRC to get
-feedback from other contributors.
+feedback from other contributors. If you are looking for a task to
+work on, take a look at issues labeled
+[ready](https://github.com/ato/clojars-web/labels/ready).
 
 We try to make releases fairly soon after merging contributions,
 but post to the mailing list if it's been a week or two and you'd like
@@ -117,6 +119,8 @@ but it should be good enough to test with.
 License
 -------
 
-Copyright © 2009-2012 Alex Osborne, Phil Hagelberg, Nelson Morris and [contributors](https://github.com/ato/clojars-web/graphs/contributors).
+Copyright © 2009-2015 Alex Osborne, Phil Hagelberg, Nelson Morris,
+Toby Crawley and
+[contributors](https://github.com/ato/clojars-web/graphs/contributors).
 
 Distributed under the Eclipse Public License, the same as Clojure. See the file COPYING.
