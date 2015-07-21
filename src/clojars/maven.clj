@@ -65,7 +65,7 @@
                      (io/file (directory-for jar) (format "%s-%s.%s" jar_name version "pom")))]
       (pom-to-map (str pom-file)))
     (catch IOException e
-      (report-error e)
+      (report-error (ex-info "Failed to create pom map" jar e))
       nil)))
 
 (defn github-info [pom-map]
