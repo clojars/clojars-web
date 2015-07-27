@@ -38,7 +38,10 @@
           (index-page account))))
   (GET "/search" {:keys [params]}
        (try-account
-        (search account params)))
+        (let [validated-params (if (:page params)
+                                 (assoc params :page (Integer. (:page params)))
+                                 params)]
+          (search account validated-params))))
   (GET "/projects" {:keys [params]}
        (try-account
         (browse account params)))

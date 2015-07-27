@@ -129,10 +129,10 @@
                                      clucy/*analyzer*)
                 query  (.parse parser query)
                 query  (CustomScoreQuery. query (download-values))
-                hits   (.search searcher query (* 25 page))
+                hits   (.search searcher query (* 24 page))
                 highlighter (#'clucy/make-highlighter query searcher nil)]
             (doall
-             (let [dhits (drop (* 25 (- page 1)) (.scoreDocs hits))]
+             (let [dhits (take 24 (drop (* 24 (- page 1)) (.scoreDocs hits)))]
                (with-meta (for [hit dhits]
                             (#'clucy/document->map
                              (.doc searcher (.doc hit))

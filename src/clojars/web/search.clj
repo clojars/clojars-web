@@ -48,7 +48,7 @@
                     [:br]])
                  [:span.details (if-let [created (:created jar)]
                                   [:td (format-date created)])]]])]
-            (page-nav page (:_total-hits (meta results)) :base-path (str "/search?q=" query "&page="))
+            (page-nav (Integer. page) (int (Math/ceil (/ (:_total-hits (meta results)) 24))) :base-path (str "/search?q=" query "&page="))
             ]))
        (catch Exception _
          [:p "Could not search; please check your query syntax."]))]))
