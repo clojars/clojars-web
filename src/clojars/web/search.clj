@@ -30,10 +30,13 @@
     [:div.light-article.row
      [:h1 "Search for '" query "'"]
      (try
-       (let [results (search/search query :page page)]
+       (let [results (search/search query :page page)
+             {:keys [total-hits results-per-page offset]} (meta results)]
          (if (empty? results)
            [:p "No results."]
            [:div
+            [:p (format "Total results: %s, showing %s - %s"
+                  total-hits (inc offset) (+ offset (count results)))]
             (if (some jar-fork? results)
               collection-fork-notice)
             [:ul.row
@@ -48,8 +51,9 @@
                     [:br]])
                  [:span.details (if-let [created (:created jar)]
                                   [:td (format-date created)])]]])]
-            (page-nav (Integer. page) (int (Math/ceil (/ (:_total-hits (meta results)) 24))) :base-path (str "/search?q=" query "&page="))
-            ]))
+            (page-nav (Integer. page)
+              (int (Math/ceil (/ total-hits results-per-page)))
+              :base-path (str "/search?q=" query "&page="))]))
        (catch Exception _
          [:p "Could not search; please check your query syntax."]))]))
 

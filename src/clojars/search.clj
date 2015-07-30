@@ -124,22 +124,26 @@
     (with-open [index (clucy/disk-index (config :index-path))]
       (binding [clucy/*analyzer* analyzer]
         (with-open [searcher (IndexSearcher. index)]
-          (let [parser (QueryParser. clucy/*version*
+          (let [per-page 24
+                offset (* per-page (- page 1))
+                parser (QueryParser. clucy/*version*
                                      "_content"
                                      clucy/*analyzer*)
                 query  (.parse parser query)
                 query  (CustomScoreQuery. query (download-values))
-                hits   (.search searcher query (* 24 page))
+                hits   (.search searcher query (* per-page page))
                 highlighter (#'clucy/make-highlighter query searcher nil)]
             (doall
-             (let [dhits (take 24 (drop (* 24 (- page 1)) (.scoreDocs hits)))]
+             (let [dhits (take per-page (drop offset (.scoreDocs hits)))]
                (with-meta (for [hit dhits]
                             (#'clucy/document->map
                              (.doc searcher (.doc hit))
                              (.score hit)
                              highlighter))
-                 {:_total-hits (.totalHits hits)
-                  :_max-score (.getMaxScore hits)})))))))))
+                 {:total-hits (.totalHits hits)
+                  :max-score (.getMaxScore hits)
+                  :results-per-page per-page
+                  :offset offset})))))))))
 
 (defn -main [& [repo]]
   (index-repo (or repo (config :repo))))
