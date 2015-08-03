@@ -114,7 +114,7 @@
    :local-repo help/local-repo)
   (is (thrown-with-msg?
         org.sonatype.aether.deployment.DeploymentException
-        #"Forbidden"
+        #"Forbidden - redeploying non-snapshots"
         (aether/deploy
           :coordinates '[org.clojars.dantheman/test "0.0.1"]
           :jar-file (io/file (io/resource "test.jar"))
@@ -177,13 +177,27 @@
                               :password "password"}}
          :local-repo help/local-repo))))
 
-(deftest deploy-requires-lowercase
+(deftest deploy-requires-lowercase-group
   (-> (session clojars-app)
       (register-as "dantheman" "test@example.org" "password" ""))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-        #"Forbidden"
+        #"Forbidden - group names must consist solely of lowercase"
         (aether/deploy
          :coordinates '[faKE/test "1.0.0"]
+         :jar-file (io/file (io/resource "test.jar"))
+         :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+                              :username "dantheman"
+                              :password "password"}}
+         :local-repo help/local-repo))))
+
+(deftest deploy-requires-lowercase-project
+  (-> (session clojars-app)
+      (register-as "dantheman" "test@example.org" "password" ""))
+  (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+        #"Forbidden - project names must consist solely of lowercase"
+        (aether/deploy
+         :coordinates '[fake/teST "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
          :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
@@ -195,7 +209,7 @@
   (-> (session clojars-app)
       (register-as "dantheman" "test@example.org" "password" ""))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-        #"Forbidden"
+        #"Forbidden - version strings must consist solely of letters"
         (aether/deploy
          :coordinates '[fake/test "1.α.0"]
          :jar-file (io/file (io/resource "test.jar"))

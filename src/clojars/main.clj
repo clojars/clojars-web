@@ -5,13 +5,15 @@
             [clojars.promote :as promote]
             [clojars.config :refer [config configure]]
             [clojars.admin :as admin]
-            [clojars.errors :as errors])
+            [clojars.errors :as errors]
+            [clojars.ring-servlet-patch :refer [patch-ring-servlet!]])
   (:import com.martiansoftware.nailgun.NGServer
            java.net.InetAddress)
   (:gen-class))
 
-(defn start-jetty []
-  (when-let [port (:port config)]
+(defn start-jetty [& [port]]
+  (patch-ring-servlet!)
+  (when-let [port (or port (:port config))]
     (println "clojars-web: starting jetty on" (str "http://" (:bind config) ":" port))
     (run-jetty #'clojars-app {:host (:bind config)
                             :port port
@@ -31,5 +33,5 @@
   (start-nailgun))
 
 (comment
-  (def server (run-jetty #'clojars-app {:port 8080 :join? false}))
+  (def server (start-jetty 8080))
   (.stop server))

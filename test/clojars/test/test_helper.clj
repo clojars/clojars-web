@@ -4,6 +4,7 @@
             [clojars.db.migrate :as migrate]
             [clojars.config :refer [config]]
             [clojars.web :as web]
+            [clojars.main :as main]
             [korma.db :as kdb]
             [clucy.core :as clucy]
             [clojars.search :as search]
@@ -96,12 +97,12 @@
   ([f]
    (run-test-app nil f))
   ([verbose? f]
-   (let [server (jetty/run-jetty
-                  (if verbose?
-                    #'web/clojars-app
-                    #(binding [*out* (java.io.StringWriter.)]
-                       (#'web/clojars-app %)))
-                  {:port 0 :join? false})
+   (when-not verbose?
+     (alter-var-root #'web/clojars-app
+       (fn [app]
+         #(binding [*out* (java.io.StringWriter.)]
+            (app %)))))
+   (let [server (main/start-jetty 0)
          port (-> server .getConnectors first .getLocalPort)]
      (with-redefs [test-port port]
        (try

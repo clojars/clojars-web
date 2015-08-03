@@ -71,7 +71,11 @@
      {:status 201 :headers {} :body nil}
      (catch Exception e#
        (report-error e#)
-       {:status 403 :headers {} :body (.getMessage e#)})))
+       (let [data# (ex-data e#)]
+         {:status (or (:status data#) 403)
+          :status-message (:status-message data#)
+          :headers {}
+          :body (.getMessage e#)}))))
 
 (defmacro put-req [groupname & body]
   `(with-account

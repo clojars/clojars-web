@@ -18,37 +18,43 @@
 (defn snapshot-version? [version]
   (.endsWith version "-SNAPSHOT"))
 
+(defn assert-non-redeploy [group-id artifact-id version filename]
+  (when (and (not (snapshot-version? version))
+          (.exists (io/file (config :repo) (string/replace group-id "." "/")
+                     artifact-id version filename)))
+    (throw (ex-info "redeploying non-snapshots is not allowed" {}))))
+
 (defn validate-deploy [group-id artifact-id version filename]
-  (let [project-meta {:group-id group-id
-                      :artifact-id artifact-id
-                      :version version}]
-    (try
-      ;; We're on purpose *at least* as restrictive as the recommendations on
-      ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
-      ;; If you want loosen these please include in your proposal the
-      ;; ramifications on usability, security and compatiblity with filesystems,
-      ;; OSes, URLs and tools.
-      (validate-regex artifact-id #"^[a-z0-9_.-]+$"
-        (str "Project names must consist solely of lowercase "
-          "letters, numbers, hyphens and underscores."))
-      (validate-regex group-id #"^[a-z0-9_.-]+$"
-        (str "Group names must consist solely of lowercase "
-          "letters, numbers, hyphens and underscores."))
-      ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
-      ;; bar one broken non-ascii exception only these characters have been used.
-      ;; Even if we manage to support obscure characters some filesystems do not
-      ;; and some tools fail to escape URLs properly.  So to keep things nice and
-      ;; compatible for everyone let's lock it down.
-      (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
-        (str "Version strings must consist solely of letters, "
-          "numbers, dots, pluses, hyphens and underscores."))
-      (catch Exception e
-        (throw (ex-info (.getMessage e) (merge project-meta (ex-data e))))))
-    (when (and (not (snapshot-version? version))
-            (.exists (io/file (config :repo) (string/replace group-id "." "/")
-                       artifact-id version filename)))
-      (throw (ex-info "Redeploying non-snapshots is not allowed."
-               (assoc project-meta :status 403 :file filename))))))
+  (try
+    ;; We're on purpose *at least* as restrictive as the recommendations on
+    ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
+    ;; If you want loosen these please include in your proposal the
+    ;; ramifications on usability, security and compatiblity with filesystems,
+    ;; OSes, URLs and tools.
+    (validate-regex artifact-id #"^[a-z0-9_.-]+$"
+      (str "project names must consist solely of lowercase "
+        "letters, numbers, hyphens and underscores"))
+    (validate-regex group-id #"^[a-z0-9_.-]+$"
+      (str "group names must consist solely of lowercase "
+        "letters, numbers, hyphens and underscores"))
+    ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
+    ;; bar one broken non-ascii exception only these characters have been used.
+    ;; Even if we manage to support obscure characters some filesystems do not
+    ;; and some tools fail to escape URLs properly.  So to keep things nice and
+    ;; compatible for everyone let's lock it down.
+    (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
+      (str "version strings must consist solely of letters, "
+        "numbers, dots, pluses, hyphens and underscores"))
+    (assert-non-redeploy group-id artifact-id version filename)
+    (catch Exception e
+      (throw (ex-info (.getMessage e)
+               (assoc (ex-data e)
+                 :status 403
+                 :status-message (str "Forbidden - " (.getMessage e))
+                 :group-id group-id
+                 :artifact-id artifact-id
+                 :version version
+                 :file filename))))))
 
 (defn event-log-file [type]
   (io/file (config :event-dir) (str (name type) ".clj")))
