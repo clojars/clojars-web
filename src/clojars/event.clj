@@ -11,9 +11,8 @@
 
 (defn- validate-regex [x re message]
   (when-not (re-matches re x)
-    (throw (ex-info (str message " (" re ")")
-             {:value x
-              :regex re}))))
+    (throw (ex-info message {:value x
+                             :regex re}))))
 
 (defn snapshot-version? [version]
   (.endsWith version "-SNAPSHOT"))
@@ -22,7 +21,8 @@
   (when (and (not (snapshot-version? version))
           (.exists (io/file (config :repo) (string/replace group-id "." "/")
                      artifact-id version filename)))
-    (throw (ex-info "redeploying non-snapshots is not allowed" {}))))
+    (throw (ex-info "redeploying non-snapshots is not allowed (see http://git.io/vO2Tg)"
+             {}))))
 
 (defn validate-deploy [group-id artifact-id version filename]
   (try
@@ -33,10 +33,10 @@
     ;; OSes, URLs and tools.
     (validate-regex artifact-id #"^[a-z0-9_.-]+$"
       (str "project names must consist solely of lowercase "
-        "letters, numbers, hyphens and underscores"))
+        "letters, numbers, hyphens and underscores (see http://git.io/vO2Uy)"))
     (validate-regex group-id #"^[a-z0-9_.-]+$"
       (str "group names must consist solely of lowercase "
-        "letters, numbers, hyphens and underscores"))
+        "letters, numbers, hyphens and underscores (see http://git.io/vO2Uy)"))
     ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
     ;; bar one broken non-ascii exception only these characters have been used.
     ;; Even if we manage to support obscure characters some filesystems do not
@@ -44,17 +44,18 @@
     ;; compatible for everyone let's lock it down.
     (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
       (str "version strings must consist solely of letters, "
-        "numbers, dots, pluses, hyphens and underscores"))
+        "numbers, dots, pluses, hyphens and underscores (see http://git.io/vO2TO)"))
     (assert-non-redeploy group-id artifact-id version filename)
     (catch Exception e
       (throw (ex-info (.getMessage e)
-               (assoc (ex-data e)
-                 :status 403
-                 :status-message (str "Forbidden - " (.getMessage e))
-                 :group-id group-id
-                 :artifact-id artifact-id
-                 :version version
-                 :file filename))))))
+               (merge
+                 {:status 403
+                  :status-message (str "Forbidden - " (.getMessage e))
+                  :group-id group-id
+                  :artifact-id artifact-id
+                  :version version
+                  :file filename}
+                 (ex-data e)))))))
 
 (defn event-log-file [type]
   (io/file (config :event-dir) (str (name type) ".clj")))
