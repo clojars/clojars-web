@@ -1,4 +1,4 @@
-(defproject clojars-web "0.17.2-SNAPSHOT"
+(defproject clojars-web "0.17.2"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [yeller-clojure-client "1.2.1"]
