@@ -1,11 +1,12 @@
 (ns clojars.web.user
-  (:require [clojars.db :refer [find-user group-membernames add-user
+  (:require [clojars.db :as db :refer [find-user group-membernames add-user
                                 reserved-names update-user jars-by-username
                                 find-groupnames find-user-by-user-or-email
                                 rand-string split-keys]]
             [clojars.web.common :refer [html-doc error-list jar-link
                                         flash group-link]]
-            [clojure.string :refer [blank?]]
+            [clojars.config :refer [config]]
+            [clojure.string :as string :refer [blank?]]
             [hiccup.element :refer [link-to unordered-list]]
             [hiccup.form :refer [label text-field
                                  password-field text-area
@@ -147,17 +148,60 @@
               (text-field {:placeholder "bob"
                            :required true}
                           :email-or-username)
-              (submit-button "Send new password"))]))
-
+              (submit-button "I want to reset my password"))]))
 
 (defn forgot-password [{:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email email-or-username)]
-    (let [new-password (rand-string 15)]
-      (update-user (user :user) (user :email) (user :user) new-password
-                   (user :ssh_key) (user :pgp_key))
+    (let [reset-code (db/set-password-reset-code! email-or-username)
+          base-url (:base-url config)
+          reset-password-url (str base-url "/password-resets/" reset-code)]
       (email/send-email (user :email)
         "Password reset for Clojars"
-        (str "Hello,\n\nYour new password for Clojars is: " new-password "\n\nKeep it safe this time."))))
+        (->> ["Hello,"
+              "We received a request from someone, hopefully you, to reset the password of your clojars user."
+              "To contine with the reset password process, click on the following link:"
+              reset-password-url]
+             (interpose "\n\n")
+             (apply str)))))
   (html-doc nil "Forgot password?"
     [:h1 "Forgot password?"]
-    [:p "If your account was found, you should get an email with a new password soon."]))
+    [:p "If your account was found, you should get an email with a link to reset your password soon."]))
+
+(defn edit-password-form [reset-code & [errors]]
+  (if-let [user (db/find-user-by-password-reset-code reset-code)]
+    (html-doc nil "Reset your password"
+      [:div.small-section
+       [:h1 "Reset your password"]
+       (error-list errors)
+       (form-to [:post (str "/password-resets/" reset-code)]
+                (label :email-or-username "Your email")
+                (text-field {:value (:email user)
+                             :disabled "disabled"}
+                            :ignored-email)
+                (label :password "New password")
+                (password-field {:placeholder "keep it secret, keep it safe"
+                                 :required true}
+                                :password)
+                (label :confirm "Confirm new password")
+                (password-field {:placeholder "confirm your password"
+                                 :required true}
+                                :confirm)
+                (submit-button "Update my password"))])
+    (html-doc nil "Reset your password"
+      [:h1 "Reset your password"]
+      [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"])))
+
+(defn update-password-validations [confirm]
+  [[:reset-code #(or (blank? %) (db/find-user-by-password-reset-code %)) "The reset code does not exist or it has expired."]
+   [:reset-code pred/present? "Reset code can't be blank."]
+   [:password #(= % confirm) "Password and confirm password must match"]])
+
+(defn edit-password [reset-code {:keys [password confirm]}]
+  (if-let [errors (apply validate {:password password
+                                   :reset-code reset-code}
+                         (update-password-validations confirm))]
+    (edit-password-form reset-code (apply concat (vals errors)))
+    (do
+      (db/update-user-password reset-code password)
+      (assoc (redirect "/login")
+             :flash "Your password was updated."))))

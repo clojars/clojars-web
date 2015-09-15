@@ -156,7 +156,7 @@
 
 (deftest user-can-get-new-password
   (let [transport (promise)]
-    (with-redefs [clojars.web.user/send-out (fn [x] (deliver transport x))]
+    (with-redefs [clojars.email/send-out (fn [x] (deliver transport x))]
       (-> (session web/clojars-app)
           (register-as "fixture" "fixture@example.org" "password" ""))
       (-> (session web/clojars-app)
@@ -164,10 +164,10 @@
           (follow "login")
           (follow "Forgot password?")
           (fill-in "Email or Username" "fixture")
-          (press "Send new password")
+          (press "I want to reset my password")
           (has (status? 200))
           (within [:p]
-                  (has (text? "If your account was found, you should get an email with a new password soon."))))
+                  (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
       (let [email (deref transport 100 nil)]
         (is email)
         (let [from (.getFromAddress email)]
@@ -178,15 +178,37 @@
         (is (= (.getSubject email)
                "Password reset for Clojars"))
         (.buildMimeMessage email)
-        (let [[msg password] (re-find
-                              #"Hello,\n\nYour new password for Clojars is: ([^ ]+)\n\nKeep it safe this time."
-                              (.getContent (.getMimeMessage email)))]
+        (let [password "some-secret!"
+
+              [_ reset-password-link]
+              (re-find
+                #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of your clojars user.\n\nTo contine with the reset password process, click on the following link:\n\n([^ ]+)"
+                (.getContent (.getMimeMessage email)))]
+          (is (seq reset-password-link))
           (-> (session web/clojars-app)
+              (visit reset-password-link)
+              (has (status? 200))
+              (fill-in "New password" password)
+              (fill-in "Confirm new password" password)
+              (press "Update my password")
+              (follow-redirect)
+              (has (status? 200))
+              (within [:div.small-section :> :h1]
+                (has (text? "Login")))
+
+              ; can login with new password
               (login-as "fixture@example.org" password)
               (follow-redirect)
               (has (status? 200))
               (within [:div.light-article :> :h1]
                       (has (text? "Dashboard (fixture)")))))))))
+
+(deftest bad-reset-code-shows-message
+  (-> (session web/clojars-app)
+      (visit "/password-resets/this-code-does-not-exist")
+      (has (status? 200))
+      (within [:p]
+        (has (text? "The reset code was not found. Please ask for a new code in the forgot password page")))))
 
 (deftest member-can-add-user-to-group
   (-> (session web/clojars-app)

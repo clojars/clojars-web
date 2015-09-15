@@ -303,6 +303,16 @@
                                                       :pgp_key :pgp-key})))
   (write-key-file (:key-file config)))
 
+(defn update-user-password [reset-code password]
+  (assert (not (str/blank? reset-code)))
+  (let [fields {:password (bcrypt password)
+                :password_reset_code nil
+                :password_reset_code_created_at nil}]
+    (serialize-task :update-user-password
+      (update users
+        (set-fields (assoc fields :salt ""))
+        (where {:password_reset_code reset-code})))))
+
 ;; Password resets
 ;; Reference:
 ;; https://github.com/xavi/noir-auth-app/blob/master/src/noir_auth_app/models/user.clj
