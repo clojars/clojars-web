@@ -1,6 +1,5 @@
 (ns clojars.web.user
-  (:require [clojars.config :as config]
-            [clojars.db :refer [find-user group-membernames add-user
+  (:require [clojars.db :refer [find-user group-membernames add-user
                                 reserved-names update-user jars-by-username
                                 find-groupnames find-user-by-user-or-email
                                 rand-string split-keys]]
@@ -13,10 +12,10 @@
                                  submit-button
                                  email-field]]
             [clojars.web.safe-hiccup :refer [form-to]]
+            [clojars.email :as email]
             [ring.util.response :refer [response redirect]]
             [valip.core :refer [validate]]
-            [valip.predicates :as pred])
-  (:import [org.apache.commons.mail SimpleEmail]))
+            [valip.predicates :as pred]))
 
 (defn register-form [ & [errors email username ssh-key pgp-key]]
   (html-doc nil "Register"
@@ -150,31 +149,13 @@
                           :email-or-username)
               (submit-button "Send new password"))]))
 
-(defn send-out [email]
-  (.send email))
-
-;; TODO: move this to another file?
-(defn send-mail [to subject message]
-  (let [{:keys [hostname username password port ssl from]} (config/config :mail)
-        mail (doto (SimpleEmail.)
-               (.setHostName (or hostname "localhost"))
-               (.setSslSmtpPort (str (or port 25)))
-               (.setSmtpPort (or port 25))
-               (.setSSL (or ssl false))
-               (.setFrom (or from "noreply@clojars.org") "Clojars")
-               (.addTo to)
-               (.setSubject subject)
-               (.setMsg message))]
-    (when (and username password)
-      (.setAuthentication mail username password))
-    (send-out mail)))
 
 (defn forgot-password [{:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email email-or-username)]
     (let [new-password (rand-string 15)]
       (update-user (user :user) (user :email) (user :user) new-password
                    (user :ssh_key) (user :pgp_key))
-      (send-mail (user :email)
+      (email/send-email (user :email)
         "Password reset for Clojars"
         (str "Hello,\n\nYour new password for Clojars is: " new-password "\n\nKeep it safe this time."))))
   (html-doc nil "Forgot password?"
