@@ -25,6 +25,12 @@
 (defn add-added-by []
   (sql/do-commands "ALTER TABLE groups ADD COLUMN added_by TEXT"))
 
+(defn add-password-reset-code []
+  (sql/do-commands "ALTER TABLE users ADD COLUMN password_reset_code TEXT"))
+
+(defn add-password-reset-code-created-at []
+  (sql/do-commands "ALTER TABLE users ADD COLUMN password_reset_code_created_at DATE"))
+
 ;; migrations mechanics
 
 (defn run-and-record [migration]
@@ -58,4 +64,6 @@
            #'add-promoted-field
            #'add-jars-index
            #'add-pgp-key
-           #'add-added-by))
+           #'add-added-by
+           #'add-password-reset-code
+           #'add-password-reset-code-created-at))
