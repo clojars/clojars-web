@@ -2,6 +2,7 @@
   (:require [clojars.db :as db]
             [clojure.java.jdbc :as jdbc]
             [clojars.test.test-helper :as help]
+            [clj-time.core :as time]
             [clojure.test :refer :all]))
 
 (use-fixtures :each help/default-fixture help/index-fixture)
@@ -27,6 +28,22 @@
 
 (deftest user-does-not-exist
   (is (not (db/find-user-by-user-or-email "test2@example.com"))))
+
+(deftest added-users-can-be-found-by-password-reset-code-except-when-expired
+  (let [email "test@example.com"
+        name "testuser"
+        password "password"
+        ssh-key "asdf"
+        pgp-key "aoeu"]
+      (db/add-user email name password ssh-key pgp-key)
+      (let [reset-code (db/set-password-reset-code! "test@example.com")]
+        (is (submap {:email email
+                     :user name
+                     :password_reset_code reset-code}
+                    (db/find-user-by-password-reset-code reset-code)))
+
+        (time/do-at (-> 1 time/days time/from-now)
+          (is (not (db/find-user-by-password-reset-code reset-code)))))))
 
 (deftest updated-users-can-be-found
   (let [email "test@example.com"

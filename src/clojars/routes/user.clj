@@ -25,6 +25,12 @@
   (POST "/forgot-password" {:keys [params]}
         (view/forgot-password params))
 
+  (GET "/password-resets/:reset-code" [reset-code]
+       (view/edit-password-form reset-code))
+
+  (POST "/password-resets/:reset-code" {{:keys [reset-code password confirm]} :params}
+        (view/edit-password reset-code {:password password :confirm confirm}))
+
   (GET "/users/:username" [username]
        (show username))
   (GET "/:username" [username]

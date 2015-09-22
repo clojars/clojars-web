@@ -1,6 +1,8 @@
 (ns clojars.db
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [clj-time.core :as time]
+            [clj-time.coerce :as time.coerce]
             [clojars.event :as ev]
             [clojars.config :refer [config]]
             [korma.db :refer [defdb transaction rollback]]
@@ -11,6 +13,7 @@
             [cemerick.friend.credentials :as creds])
   (:import java.security.MessageDigest
            java.util.Date
+           java.security.SecureRandom
            java.io.File
            java.util.concurrent.Executors))
 
@@ -84,6 +87,14 @@
 (defn find-user-by-user-or-email [username-or-email]
   (first (select users (where (or {:user username-or-email}
                                   {:email username-or-email})))))
+
+(defn find-user-by-password-reset-code [reset-code]
+  (when-let [user (and (seq reset-code)
+                       (first (select users
+                                (where {:password_reset_code reset-code}))))]
+    (when (> (:password_reset_code_created_at user)
+             (-> 1 time/days time/ago time.coerce/to-long))
+      user)))
 
 (defn find-groupnames [username]
   (map :name (select groups (fields :name) (where {:user username}))))
@@ -291,6 +302,47 @@
                                                       :ssh_key :ssh-key
                                                       :pgp_key :pgp-key})))
   (write-key-file (:key-file config)))
+
+(defn update-user-password [reset-code password]
+  (assert (not (str/blank? reset-code)))
+  (let [fields {:password (bcrypt password)
+                :password_reset_code nil
+                :password_reset_code_created_at nil}]
+    (serialize-task :update-user-password
+      (update users
+        (set-fields (assoc fields :salt ""))
+        (where {:password_reset_code reset-code})))))
+
+;; Password resets
+;; Reference:
+;; https://github.com/xavi/noir-auth-app/blob/master/src/noir_auth_app/models/user.clj
+;; https://github.com/weavejester/crypto-random/blob/master/src/crypto/random.clj
+;; https://jira.atlassian.com/browse/CWD-1897?focusedCommentId=196759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-196759
+
+(defn generate-secure-token [size]
+  ; http://clojuredocs.org/clojure_core/clojure.core/byte-array
+  (let [seed (byte-array size)]
+       ; http://docs.oracle.com/javase/6/docs/api/java/security/SecureRandom.html
+       (.nextBytes (SecureRandom/getInstance "SHA1PRNG") seed)
+       seed))
+
+; About the parameter name (a-byte-array instead of byte-array) see
+; Critiquing Clojure, All the good names are taken
+; http://items.sjbach.com/567/critiquing-clojure#6
+(defn hexadecimalize [a-byte-array]
+  ; converts byte array to hex string
+  ; http://stackoverflow.com/a/8015558/974795
+  (str/lower-case (apply str (map #(format "%02X" %) a-byte-array))))
+
+(defn set-password-reset-code! [username-or-email]
+  (let [reset-code (hexadecimalize (generate-secure-token 20))]
+    (serialize-task :set-password-reset-code
+      (update users
+        (set-fields {:password_reset_code reset-code
+                     :password_reset_code_created_at (get-time)})
+        (where (or {:user username-or-email}
+                   {:email username-or-email}))))
+    reset-code))
 
 (defn add-member [group-id username added-by]
   (serialize-task :add-member
