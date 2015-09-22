@@ -164,7 +164,7 @@
           (follow "login")
           (follow "Forgot password?")
           (fill-in "Email or Username" "fixture")
-          (press "I want to reset my password")
+          (press "Email me a password reset link")
           (has (status? 200))
           (within [:p]
                   (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))

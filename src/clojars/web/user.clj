@@ -148,7 +148,7 @@
               (text-field {:placeholder "bob"
                            :required true}
                           :email-or-username)
-              (submit-button "I want to reset my password"))]))
+              (submit-button "Email me a password reset link"))]))
 
 (defn forgot-password [{:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email email-or-username)]

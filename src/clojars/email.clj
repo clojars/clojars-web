@@ -5,7 +5,6 @@
 (defn send-out [email]
   (.send email))
 
-;; TODO: move this to another file?
 (defn send-email [to subject message]
   (let [{:keys [hostname username password port ssl from]} (config/config :mail)
         mail (doto (SimpleEmail.)
@@ -20,4 +19,3 @@
     (when (and username password)
       (.setAuthentication mail username password))
     (send-out mail)))
-

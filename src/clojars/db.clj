@@ -320,19 +320,15 @@
 ;; https://jira.atlassian.com/browse/CWD-1897?focusedCommentId=196759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-196759
 
 (defn generate-secure-token [size]
-  ; http://clojuredocs.org/clojure_core/clojure.core/byte-array
   (let [seed (byte-array size)]
-       ; http://docs.oracle.com/javase/6/docs/api/java/security/SecureRandom.html
-       (.nextBytes (SecureRandom/getInstance "SHA1PRNG") seed)
-       seed))
+    ;; http://docs.oracle.com/javase/6/docs/api/java/security/SecureRandom.html
+    (.nextBytes (SecureRandom/getInstance "SHA1PRNG") seed)
+    seed))
 
-; About the parameter name (a-byte-array instead of byte-array) see
-; Critiquing Clojure, All the good names are taken
-; http://items.sjbach.com/567/critiquing-clojure#6
-(defn hexadecimalize [a-byte-array]
+(defn hexadecimalize [byte-array]
   ; converts byte array to hex string
   ; http://stackoverflow.com/a/8015558/974795
-  (str/lower-case (apply str (map #(format "%02X" %) a-byte-array))))
+  (str/lower-case (apply str (map #(format "%02X" %) byte-array))))
 
 (defn set-password-reset-code! [username-or-email]
   (let [reset-code (hexadecimalize (generate-secure-token 20))]

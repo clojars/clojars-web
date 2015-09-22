@@ -11,7 +11,7 @@
    :db {:classname "org.sqlite.JDBC"
         :subprotocol "sqlite"
         :subname "data/db"}
-   :base-url "http://clojars.org"
+   :base-url "https://clojars.org"
    :event-dir "data/events"
    :stats-dir "data/stats"
    :index-path "data/index"
