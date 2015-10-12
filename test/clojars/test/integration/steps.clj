@@ -1,9 +1,13 @@
 (ns clojars.test.integration.steps
-  (:require [kerodon.core :refer :all]
-            [clojure.test :as test]
+  (:require [cemerick.pomegranate.aether :as aether]
+            [clojars.config :as config]
+            [clojars.db :as db]
+            [clojars.maven :as maven]
             [clojure.java.io :as io]
-            [clojars.scp :as scp]
-            [clojars.config :as config]))
+            [clojure.test :as test]
+            [kerodon.core :refer :all]
+            [clojars.config :refer [config]])
+  (:import java.io.File))
 
 (defn login-as [state user password]
   (-> state
@@ -14,9 +18,9 @@
       (press "Login")))
 
 (defn register-as
-  ([state user email password ssh-key]
-     (register-as state user email password password ssh-key))
-  ([state user email password confirm ssh-key]
+  ([state user email password]
+     (register-as state user email password password))
+  ([state user email password confirm]
      (-> state
          (visit "/")
          (follow "register")
@@ -24,37 +28,18 @@
          (fill-in "Username" user)
          (fill-in "Password" password)
          (fill-in "Confirm password" confirm)
-         (fill-in "SSH public key" ssh-key)
          (press "Register"))))
 
-(defn scp-str-send-resource [filename]
-  (let [contents (slurp (io/resource filename))]
-    (str "C0644 " (count contents) " " filename "\n" contents)))
+(defn file-repo [path]
+  (str (.toURI (File. path))))
 
-(def valid-ssh-key "ssh-test 0")
-
-(defn find-user [key]
-  (let [[string user]
-        (re-find
-         (re-pattern
-          (str "command=\"ng --nailgun-port 8700 clojars.scp (.*)\",no-agent-forwarding,no-port-forwarding,no-pty,no-X11-forwarding " key "\n"))
-         (slurp (:key-file config/config)))]
-    user))
-
-(defn scp [key & resources]
-  (let [shim (proxy [com.martiansoftware.nailgun.NGContextShim] [])
-        user (find-user key)
-        bytes (java.io.ByteArrayOutputStream.)
-        in (java.io.ByteArrayInputStream.
-            (.getBytes (apply str (map scp-str-send-resource resources))
-                       "UTF-8"))
-        out (java.io.PrintStream. (java.io.ByteArrayOutputStream.))]
-    (set! (.err shim) (java.io.PrintStream. bytes))
-    (set! (.in shim) in)
-    (set! (.out shim) out)
-    (.setArgs shim (into-array [user]))
-    (try
-      (with-out-str
-         (scp/nail shim))
-      (catch Exception e))
-    (.toString bytes)))
+(defn inject-artifacts-into-repo! [user jar pom]
+  (let [pom-file (io/resource pom)
+        jarmap (maven/pom-to-map pom-file)]
+    (db/add-jar user jarmap)
+    (aether/deploy :coordinates [(keyword (:group jarmap)
+                                          (:name jarmap))
+                                 (:version jarmap)]
+                   :jar-file (io/resource jar)
+                   :pom-file pom-file
+                   :repository {"local" (file-repo (:repo config))})))

@@ -5,7 +5,6 @@
       :subprotocol "sqlite"
       :subname "data/dev_db"}
  :base-url "http://localhost:8080"
- :key-file "data/dev_authorized_keys"
  :repo "data/dev_repo"
  :deletion-backup-dir "data/dev_deleted_items"
  :bcrypt-work-factor 12

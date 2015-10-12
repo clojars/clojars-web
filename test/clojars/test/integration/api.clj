@@ -1,6 +1,6 @@
 (ns clojars.test.integration.api
   (:require [clj-http.lite.client :as client]
-            [clojars.test.integration.steps :refer [register-as scp valid-ssh-key]]
+            [clojars.test.integration.steps :refer [register-as inject-artifacts-into-repo!]]
             [clojars.test.test-helper :as help]
             [clojars.web :as web]
             [clojure.string :as str]
@@ -35,11 +35,11 @@
 
 (deftest an-api-test
   (-> (session web/clojars-app)
-      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
-  (scp valid-ssh-key "test.jar" "test-0.0.1/test.pom")
-  (scp valid-ssh-key "test.jar" "test-0.0.2/test.pom")
-  (scp valid-ssh-key "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
-  (scp valid-ssh-key "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
+      (register-as "dantheman" "test@example.org" "password"))
+  (inject-artifacts-into-repo! "dantheman" "test.jar" "test-0.0.1/test.pom")
+  (inject-artifacts-into-repo! "dantheman" "test.jar" "test-0.0.2/test.pom")
+  (inject-artifacts-into-repo! "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
+  (inject-artifacts-into-repo! "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
 
   (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/transit+json"]]
     (testing f

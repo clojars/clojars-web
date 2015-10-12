@@ -21,7 +21,7 @@
 
 (deftest user-can-login-and-logout
   (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password" ""))
+      (register-as "fixture" "fixture@example.org" "password"))
   (doseq [login ["fixture@example.org" "fixture"]]
     (-> (session web/clojars-app)
         (login-as login "password")
@@ -37,7 +37,7 @@
 
 (deftest user-with-password-wipe-gets-message
   (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password" ""))
+      (register-as "fixture" "fixture@example.org" "password"))
   (korma/update db/users
                 (korma/set-fields {:password ""})
                 (korma/where {:user "fixture"}))

@@ -17,9 +17,6 @@
            java.io.File
            java.util.concurrent.Executors))
 
-(def ^{:private true} ssh-options
-  "no-agent-forwarding,no-port-forwarding,no-pty,no-X11-forwarding")
-
 (def reserved-names
   #{"clojure" "clojars" "clojar" "register" "login"
     "pages" "logout" "password" "username" "user"
@@ -68,18 +65,6 @@
                           ;; milliseconds, .setQueryTimeout takes seconds!
                           (.setQueryTimeout 30)))))))
 
-(defn split-keys [s]
-  (map str/trim (str/split s #"\s*\n\s*")))
-
-(defn write-key-file [path]
-  (locking (:key-file config)
-    (let [new-file (File. (str path ".new"))]
-      (with-open [f (io/writer new-file)]
-        (doseq [{:keys [user ssh_key]} (select users (fields :user :ssh_key))
-                key (remove str/blank? (split-keys ssh_key))]
-          (.write f (str "command=\"ng --nailgun-port 8700 clojars.scp " user
-                         "\"," ssh-options " " key "\n"))))
-      (.renameTo new-file (File. path)))))
 
 (defn find-user [username]
   (first (select users (where {:user username}))))
@@ -270,38 +255,36 @@
   `(serialize-task* ~name
      (fn [] ~@body)))
 
-(defn add-user [email username password ssh-key pgp-key]
-  (let [record {:email email, :user username, :password (bcrypt password)
-                :ssh_key ssh-key, :pgp_key pgp-key}
+(defn add-user [email username password pgp-key]
+  (let [record {:email email, :user username, :password (bcrypt password),
+                :pgp_key pgp-key}
         group (str "org.clojars." username)]
     (serialize-task :add-user
       (insert users (values (assoc record
                               :created (get-time)
-                              ;;TODO: remove salt field
+                              ;;TODO: remove salt and ssh_key field
+                              :ssh_key ""
                               :salt "")))
       (insert groups (values {:name group :user username})))
     (ev/record :user (clojure.set/rename-keys record {:user :username
-                                                      :ssh_key :ssh-key
                                                       :pgp_key :pgp-key}))
     (ev/record :membership {:group-id group :username username :added-by nil})
-    (write-key-file (:key-file config))))
+    record))
 
-(defn update-user [account email username password ssh-key pgp-key]
+(defn update-user [account email username password pgp-key]
   (let [fields {:email email
                 :user username
-                :ssh_key ssh-key
                 :pgp_key pgp-key}
         fields (if (empty? password)
                  fields
                  (assoc fields :password (bcrypt password)))]
     (serialize-task :update-user
       (update users
-        (set-fields (assoc fields :salt ""))
+        (set-fields (assoc fields :salt "" :ssh_key ""))
         (where {:user account})))
     (ev/record :user (clojure.set/rename-keys fields {:user :username
-                                                      :ssh_key :ssh-key
-                                                      :pgp_key :pgp-key})))
-  (write-key-file (:key-file config)))
+                                                      :pgp_key :pgp-key}))
+    fields))
 
 (defn update-user-password [reset-code password]
   (assert (not (str/blank? reset-code)))

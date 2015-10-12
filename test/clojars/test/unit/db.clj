@@ -14,13 +14,11 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"
-        ssh-key "asdf"
         pgp-key "aoeu"
         ms (long 0)]
-      (is (db/add-user email name password ssh-key pgp-key))
+      (is (db/add-user email name password pgp-key))
       (are [x] (submap {:email email
-                        :user name
-                        :ssh_key ssh-key}
+                        :user name}
                        x)
            (db/find-user name)
            (db/find-user-by-user-or-email name)
@@ -33,9 +31,8 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"
-        ssh-key "asdf"
         pgp-key "aoeu"]
-      (db/add-user email name password ssh-key pgp-key)
+      (db/add-user email name password pgp-key)
       (let [reset-code (db/set-password-reset-code! "test@example.com")]
         (is (submap {:email email
                      :user name
@@ -49,23 +46,18 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"
-        ssh-key "asdf"
         pgp-key "aoeu"
         ms (long 0)
         email2 "test2@example.com"
         name2 "testuser2"
         password2 "password2"
-        ssh-key2 "asdf2"
         pgp-key2 "aoeu2"]
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. ms))]
-      ;;TODO: What should be done about the key-file?
-      (is (db/add-user email name password ssh-key pgp-key))
+      (is (db/add-user email name password pgp-key))
       (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 1)))]
-        ;;TODO: What should be done about the key-file?
-        (is (db/update-user name email2 name2 password2 ssh-key2 pgp-key2))
+        (is (db/update-user name email2 name2 password2 pgp-key2))
         (are [x] (submap {:email email2
                           :user name2
-                          :ssh_key ssh-key2
                           :pgp_key pgp-key2
                           :created ms}
                          x)
@@ -78,10 +70,8 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"
-        ssh-key "asdf"
         pgp-key "aoeu"]
-    ;;TODO: What should be done about the key-file?
-    (is (db/add-user email name password ssh-key pgp-key))
+    (is (db/add-user email name password pgp-key))
     (is (= ["testuser"]
            (db/group-membernames (str "org.clojars." name))))
     (is (= ["org.clojars.testuser"]
@@ -91,10 +81,8 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"
-        ssh-key "asdf"
         pgp-key "aoeu"]
-    ;;TODO: What should be done about the key-file?
-    (db/add-user email name password ssh-key pgp-key)
+    (db/add-user email name password pgp-key)
     (db/add-member "test-group" name "some-dude")
     (is (= ["testuser"] (db/group-membernames "test-group")))
     (is (some #{"test-group"} (db/find-groupnames name)))))

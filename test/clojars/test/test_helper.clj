@@ -22,7 +22,6 @@
 (def test-config {:db {:classname "org.sqlite.JDBC"
                        :subprotocol "sqlite"
                        :subname "data/test/db"}
-                  :key-file "data/test/authorized_keys"
                   :repo "data/test/repo"
                   :event-dir "data/test/events"
                   :stats-dir "data/test/stats"

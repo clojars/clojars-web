@@ -2,7 +2,7 @@
   (:require [clojars.db :as db :refer [find-user group-membernames add-user
                                 reserved-names update-user jars-by-username
                                 find-groupnames find-user-by-user-or-email
-                                rand-string split-keys]]
+                                rand-string]]
             [clojars.web.common :refer [html-doc error-list jar-link
                                         flash group-link]]
             [clojars.config :refer [config]]
@@ -18,7 +18,7 @@
             [valip.core :refer [validate]]
             [valip.predicates :as pred]))
 
-(defn register-form [ & [errors email username ssh-key pgp-key]]
+(defn register-form [ & [errors email username pgp-key]]
   (html-doc nil "Register"
             [:div.small-section
              [:h1 "Register"]
@@ -41,19 +41,6 @@
                       (password-field {:placeholder "confirm your password"
                                        :required true}
                                       :confirm)
-                      ;; put this in a div so we can hide it - we
-                      ;; currently rely on being able to set an
-                      ;; ssh-key for integ tests
-                      [:div#ssh-key
-                       (label :ssh-key "SSH public key")
-                       ;; [:p.hint
-                       ;;  " (" (link-to
-                       ;;        "http://wiki.github.com/ato/clojars-web/ssh-keys"
-                       ;;        "what's this?") ")"]
-                       (text-area :ssh-key ssh-key)
-                       ;; [:p.hint "Entering multiple SSH keys? Put
-                       ;; them on separate lines."]
-                       ]
                       (label :pgp-key "PGP public key")
                       [:p.hint "Optional - needed only if you sign releases"]
                       (text-area :pgp-key pgp-key)
@@ -68,9 +55,6 @@
   (and (.startsWith key "-----BEGIN PGP PUBLIC KEY BLOCK-----")
        (.endsWith key "-----END PGP PUBLIC KEY BLOCK-----")))
 
-(defn valid-ssh-key? [key]
-  (every? #(re-matches #"(ssh-\w+ \S+|\d+ \d+ \D+).*\s*" %) (split-keys key)))
-
 (defn update-user-validations [confirm]
   [[:email pred/present? "Email can't be blank"]
    [:username #(re-matches #"[a-z0-9_-]+" %)
@@ -78,8 +62,6 @@
          "letters, numbers, hyphens and underscores.")]
    [:username pred/present? "Username can't be blank"]
    [:password #(= % confirm) "Password and confirm password must match"]
-   [:ssh-key #(or (blank? %) (valid-ssh-key? %))
-    "Invalid SSH public key"]
    [:pgp-key #(or (blank? %) (valid-pgp-key? %))
     "Invalid PGP public key"]])
 
@@ -106,24 +88,20 @@
                         (password-field :password)
                         (label :confirm "Confirm password")
                         (password-field :confirm)
-                        ;; (label :ssh-key "SSH public key")
-                        ;; (text-area :ssh-key (user :ssh_key))
-                        ;; [:p.hint "Entering multiple SSH keys? Put them on separate lines."]
                         (label :pgp-key "PGP public key")
                         [:p.hint "Optional - needed only if you sign releases"]
                         (text-area :pgp-key (user :pgp_key))
                         (submit-button "Update"))])))
 
-(defn update-profile [account {:keys [email password confirm ssh-key pgp-key]}]
+(defn update-profile [account {:keys [email password confirm pgp-key]}]
   (let [pgp-key (and pgp-key (.trim pgp-key))]
     (if-let [errors (apply validate {:email email
                                      :username account
                                      :password password
-                                     ;; :ssh-key ssh-key
                                      :pgp-key pgp-key}
                            (update-user-validations confirm))]
       (profile-form account nil (apply concat (vals errors)))
-      (do (update-user account email account password (or ssh-key "") pgp-key)
+      (do (update-user account email account password pgp-key)
           (assoc (redirect "/profile")
             :flash "Profile updated.")))))
 

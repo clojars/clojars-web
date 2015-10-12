@@ -11,7 +11,7 @@
 
 (deftest user-can-register
   (-> (session web/clojars-app)
-      (register-as "dantheman" "test@example.org" "password" "")
+      (register-as "dantheman" "test@example.org" "password")
       (follow-redirect)
       (has (status? 200))
       (within [:div.light-article :> :h1]
@@ -19,7 +19,7 @@
 
 (deftest bad-registration-info-should-show-error
   (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password" ""))
+      (register-as "fixture" "fixture@example.org" "password"))
   (-> (session web/clojars-app)
       (visit "/")
       (follow "register")
@@ -73,21 +73,11 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Username is already taken")))
-
-      ;; (fill-in "Username" "dantheman")
-      ;; (fill-in "Password" "password")
-      ;; (fill-in "Confirm password" "password")
-      ;; (fill-in "SSH public key" "asdf")
-      ;; (press "Register")
-      ;; (has (status? 200))
-      ;; (within [:div.error :ul :li]
-      ;;         (has (text? "Invalid SSH public key")))
-      ))
+              (has (text? "Username is already taken")))))
 
 (deftest user-can-update-info
   (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password" "")
+      (register-as "fixture" "fixture@example.org" "password")
       (follow-redirect)
       (follow "profile")
       (fill-in "Email" "fixture2@example.org")
@@ -108,27 +98,9 @@
       (within [:div.light-article :> :h1]
               (has (text? "Dashboard (fixture)")))))
 
-;; (deftest user-can-update-just-ssh-key
-;;   (-> (session web/clojars-app)
-;;       (register-as "fixture" "fixture@example.org" "password" "")
-;;       (follow-redirect)
-;;       (follow "profile")
-;;       (fill-in "SSH public key" "ssh-rsa AAAAB3Nza")
-;;       (press "Update")
-;;       (follow-redirect)
-;;       (within [:textarea]
-;;               (has (text? "ssh-rsa AAAAB3Nza")))
-;;       (follow "logout")
-;;       (follow-redirect)
-;;       (login-as "fixture@example.org" "password")
-;;       (follow-redirect)
-;;       (has (status? 200))
-;;       (within [:div.light-article :> :h1]
-;;               (has (text? "Dashboard (fixture)")))))
-
 (deftest bad-update-info-should-show-error
   (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password" "")
+      (register-as "fixture" "fixture@example.org" "password")
       (follow-redirect)
       (follow "profile")
       (has (status? 200))
@@ -145,20 +117,13 @@
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Email can't be blank")))
-
-      ;; (fill-in "SSH public key" "asdf")
-      ;; (press "Update")
-      ;; (has (status? 200))
-      ;; (within [:div.error :ul :li]
-      ;;         (has (text? "Invalid SSH public key")))
-      ))
+              (has (text? "Email can't be blank")))))
 
 (deftest user-can-get-new-password
   (let [transport (promise)]
     (with-redefs [clojars.email/send-out (fn [x] (deliver transport x))]
       (-> (session web/clojars-app)
-          (register-as "fixture" "fixture@example.org" "password" ""))
+          (register-as "fixture" "fixture@example.org" "password"))
       (-> (session web/clojars-app)
           (visit "/")
           (follow "login")
@@ -212,9 +177,9 @@
 
 (deftest member-can-add-user-to-group
   (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password" ""))
+      (register-as "fixture" "fixture@example.org" "password"))
   (-> (session web/clojars-app)
-      (register-as "dantheman" "test@example.org" "password" "")
+      (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       (press "add member")
@@ -224,7 +189,7 @@
 
 (deftest user-must-exist-to-be-added-to-group
   (-> (session web/clojars-app)
-      (register-as "dantheman" "test@example.org" "password" "")
+      (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       (press "add member")
@@ -233,7 +198,7 @@
 
 (deftest users-can-be-viewed
   (-> (session web/clojars-app)
-      (register-as "dantheman" "test@example.org" "password" "")
+      (register-as "dantheman" "test@example.org" "password")
       (visit "/users/dantheman")
       (within [:div.light-article :> :h1]
               (has (text? "dantheman")))))
