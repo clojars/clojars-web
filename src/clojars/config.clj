@@ -12,7 +12,6 @@
         :subprotocol "sqlite"
         :subname "data/db"}
    :base-url "https://clojars.org"
-   :event-dir "data/events"
    :stats-dir "data/stats"
    :index-path "data/index"
    :nrepl-port 7991
@@ -128,5 +127,4 @@
       (println "Some options can be set using these environment variables:")
       (println (str/join " " (map first env-vars)))
       (System/exit 0))
-    (.mkdirs (io/file (:event-dir options)))
     (alter-var-root #'config (fn [_] options))))

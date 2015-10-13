@@ -40,9 +40,7 @@ it. Regardless of how you run it, you first need to do some setup:
 1. Install [Leiningen](http://github.com/technomancy/leiningen)
    * Mac OS X Homebrew: `brew install leiningen`
 
-2. Create the data directory tree: `mkdir -p data/events`
-
-3. Run the DB migrations: `lein migrate`
+2. Run the DB migrations: `lein migrate`
 
 To run the application using Leinigen 2:
 

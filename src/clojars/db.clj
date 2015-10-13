@@ -3,7 +3,6 @@
             [clojure.java.io :as io]
             [clj-time.core :as time]
             [clj-time.coerce :as time.coerce]
-            [clojars.event :as ev]
             [clojars.config :refer [config]]
             [korma.db :refer [defdb transaction rollback]]
             [korma.core :refer [defentity select group fields order join
@@ -266,9 +265,6 @@
                               :ssh_key ""
                               :salt "")))
       (insert groups (values {:name group :user username})))
-    (ev/record :user (clojure.set/rename-keys record {:user :username
-                                                      :pgp_key :pgp-key}))
-    (ev/record :membership {:group-id group :username username :added-by nil})
     record))
 
 (defn update-user [account email username password pgp-key]
@@ -282,8 +278,6 @@
       (update users
         (set-fields (assoc fields :salt "" :ssh_key ""))
         (where {:user account})))
-    (ev/record :user (clojure.set/rename-keys fields {:user :username
-                                                      :pgp_key :pgp-key}))
     fields))
 
 (defn update-user-password [reset-code password]
@@ -328,9 +322,7 @@
     (insert groups
       (values {:name group-id
                :user username
-               :added_by added-by})))
-  (ev/record :membership {:group-id group-id :username username
-                          :added-by added-by}))
+               :added_by added-by}))))
 
 (defn check-and-add-group [account groupname]
   (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)
@@ -374,14 +366,10 @@
                  (assoc coords :version version)
                  coords)]
     (serialize-task :delete-jars
-      (delete jars (where coords))))
-  ;; TODO: record an event?
-  )
+      (delete jars (where coords)))))
 
 ;; does not delete jars in the group. should it?
 (defn delete-groups [group-id]
   (serialize-task :delete-groups
     (delete groups
-      (where {:name group-id})))
-  ;; TODO: record an event?
-  )
+      (where {:name group-id}))))
