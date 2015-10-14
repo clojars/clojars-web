@@ -1,6 +1,6 @@
 (defproject clojars-web "0.18.1-SNAPSHOT"
   :min-lein-version "2.0.0"
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [yeller-clojure-client "1.2.1"]
                  [org.apache.maven/maven-model "3.0.4"
@@ -12,7 +12,6 @@
                    commons-logging]]
                  [s3-wagon-private "1.0.0"]
                  [compojure "1.3.3"]
-                 [ring/ring-jetty-adapter "1.1.1"]
                  [ring-middleware-format "0.5.0"]
                  [hiccup "1.0.3"]
                  [cheshire "5.4.0"]
@@ -35,8 +34,11 @@
                  [org.bouncycastle/bcpg-jdk15on "1.47"]
                  [mvxcvi/clj-pgp "0.8.0"]
                  [yesql "0.5.1"]
-                 [com.zaxxer/HikariCP "2.4.1"]
-                 [org.slf4j/slf4j-nop "1.7.7"]]
+                 [com.stuartsierra/component "0.2.3"]
+                 [duct/hikaricp-component "0.1.0"]
+                 [duct "0.4.4"]
+                 [meta-merge "0.1.1"]
+                 [ring-jetty-component "0.3.0"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"
   :release-tasks [["vcs" "assert-committed"]
@@ -53,7 +55,13 @@
    :uberjar {:aot :all}
    :profiles/dev  {}
    :profiles/test {}
-   :project/dev   {:dependencies [[kerodon "0.7.0"]
-                                  [clj-http-lite "0.2.1"]]
+   :project/dev   {:source-paths ["dev"]
+                   :repl-options {:init-ns user}
+                   :dependencies [[reloaded.repl "0.2.0"]
+                                  [org.clojure/tools.namespace "0.2.11"]
+                                  [eftest "0.1.0"]
+                                  [kerodon "0.7.0"
+                                   :exclusions [org.apache.httpcomponents/httpcore]]
+                                  [clj-http-lite "0.3.0"]]
                    :resource-paths ["local-resources"]}
    :project/test  {}})

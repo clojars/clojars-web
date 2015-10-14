@@ -133,3 +133,6 @@
        (wrap-resource "public")
        (wrap-file-info)
        wrap-exceptions)))
+
+(defn handler-optioned [{:keys [db] :as opts}]
+  (clojars-app (:spec db)))

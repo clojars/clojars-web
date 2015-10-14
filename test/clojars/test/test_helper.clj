@@ -1,23 +1,24 @@
 (ns clojars.test.test-helper
   (:import java.io.File)
-  (:require [clojars.db :as db]
+  (:require [clojars
+             [config :refer [config]]
+             [db :as db]
+             [search :as search]
+             [system :as system]]
             [clojars.db.migrate :as migrate]
-            [clojars.config :refer [config]]
-            [clojars.web :as web]
-            [clojars.main :as main]
-            [clojars.dev.setup :as setup]
+            [clojure.java
+             [io :as io]
+             [jdbc :as jdbc]]
             [clucy.core :as clucy]
-            [clojure.java.shell :as sh]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.java.io :as io]
-            [clojars.search :as search]))
+            [com.stuartsierra.component :as component]))
 
 (def local-repo (io/file (System/getProperty "java.io.tmpdir")
                          "clojars" "test" "local-repo"))
 (def local-repo2 (io/file (System/getProperty "java.io.tmpdir")
                          "clojars" "test" "local-repo2"))
 
-(def test-config {:bind "127.0.0.1"
+(def test-config {:port 0
+                  :bind "127.0.0.1"
                   :db {:classname "org.sqlite.JDBC"
                        :subprotocol "sqlite"
                        :subname ":memory:"}
@@ -80,7 +81,6 @@
     (try
       (with-out-str
         (migrate/migrate *db*))
-      (setup/reset-db! *db*)
       (f)
       (finally (.close (:connection *db*))))))
 
@@ -88,10 +88,12 @@
 
 (defn run-test-app
   ([f]
-   (let [server (main/start-jetty *db* 0)
+   (let [system (component/start (assoc (system/new-system test-config)
+                                        :db {:spec *db*}))
+         server (get-in system [:http :server])
          port (-> server .getConnectors first .getLocalPort)]
      (with-redefs [test-port port]
        (try
          (f)
          (finally
-           (.stop server)))))))
+           (component/stop system)))))))
