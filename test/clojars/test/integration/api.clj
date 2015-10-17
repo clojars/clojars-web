@@ -9,8 +9,10 @@
             [clojure.string :as string]
             [cheshire.core :as json]))
 
-(use-fixtures :once help/run-test-app #_(partial help/run-test-app :verbose))
-(use-fixtures :each help/default-fixture)
+(use-fixtures :each
+  help/default-fixture
+  help/with-clean-database
+  help/run-test-app)
 
 (defn get-api [parts & [opts]]
   (-> (str "http://localhost:" help/test-port "/api/"
@@ -34,12 +36,12 @@
   (is (= (get-content-type {:headers {"content-type" "application/json;charset=utf-8"}}) "application/json")))
 
 (deftest an-api-test
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (register-as "dantheman" "test@example.org" "password"))
-  (inject-artifacts-into-repo! "dantheman" "test.jar" "test-0.0.1/test.pom")
-  (inject-artifacts-into-repo! "dantheman" "test.jar" "test-0.0.2/test.pom")
-  (inject-artifacts-into-repo! "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
-  (inject-artifacts-into-repo! "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
+  (inject-artifacts-into-repo! help/*db* "dantheman" "test.jar" "test-0.0.1/test.pom")
+  (inject-artifacts-into-repo! help/*db* "dantheman" "test.jar" "test-0.0.2/test.pom")
+  (inject-artifacts-into-repo! help/*db* "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
+  (inject-artifacts-into-repo! help/*db* "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
 
   (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/transit+json"]]
     (testing f

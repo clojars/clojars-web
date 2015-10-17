@@ -7,10 +7,12 @@
             [clojars.test.test-helper :as help]
             [net.cgrand.enlive-html :as enlive]))
 
-(use-fixtures :each help/default-fixture)
+(use-fixtures :each
+  help/default-fixture
+  help/with-clean-database)
 
 (deftest user-can-register
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (register-as "dantheman" "test@example.org" "password")
       (follow-redirect)
       (has (status? 200))
@@ -18,9 +20,9 @@
               (has (text? "Dashboard (dantheman)")))))
 
 (deftest bad-registration-info-should-show-error
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (register-as "fixture" "fixture@example.org" "password"))
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (visit "/")
       (follow "register")
       (has (status? 200))
@@ -76,7 +78,7 @@
               (has (text? "Username is already taken")))))
 
 (deftest user-can-update-info
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (register-as "fixture" "fixture@example.org" "password")
       (follow-redirect)
       (follow "profile")
@@ -99,7 +101,7 @@
               (has (text? "Dashboard (fixture)")))))
 
 (deftest bad-update-info-should-show-error
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (register-as "fixture" "fixture@example.org" "password")
       (follow-redirect)
       (follow "profile")
@@ -122,9 +124,9 @@
 (deftest user-can-get-new-password
   (let [transport (promise)]
     (with-redefs [clojars.email/send-out (fn [x] (deliver transport x))]
-      (-> (session web/clojars-app)
+      (-> (session (web/clojars-app help/*db*))
           (register-as "fixture" "fixture@example.org" "password"))
-      (-> (session web/clojars-app)
+      (-> (session (web/clojars-app help/*db*))
           (visit "/")
           (follow "login")
           (follow "Forgot password?")
@@ -150,7 +152,7 @@
                 #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of your clojars user.\n\nTo contine with the reset password process, click on the following link:\n\n([^ ]+)"
                 (.getContent (.getMimeMessage email)))]
           (is (seq reset-password-link))
-          (-> (session web/clojars-app)
+          (-> (session (web/clojars-app help/*db*))
               (visit reset-password-link)
               (has (status? 200))
               (fill-in "New password" password)
@@ -169,16 +171,16 @@
                       (has (text? "Dashboard (fixture)")))))))))
 
 (deftest bad-reset-code-shows-message
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (visit "/password-resets/this-code-does-not-exist")
       (has (status? 200))
       (within [:p]
         (has (text? "The reset code was not found. Please ask for a new code in the forgot password page")))))
 
 (deftest member-can-add-user-to-group
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (register-as "fixture" "fixture@example.org" "password"))
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
@@ -188,7 +190,7 @@
               (has (text? "danthemanfixture")))))
 
 (deftest user-must-exist-to-be-added-to-group
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
@@ -197,7 +199,7 @@
               (has (text? "No such user: fixture")))))
 
 (deftest users-can-be-viewed
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (register-as "dantheman" "test@example.org" "password")
       (visit "/users/dantheman")
       (within [:div.light-article :> :h1]

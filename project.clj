@@ -37,9 +37,7 @@
   :profiles {:dev {:dependencies [[kerodon "0.7.0"]
                                   [clj-http-lite "0.2.1"]]
                    :resource-paths ["local-resources"]}}
-  :plugins [[lein-ring "0.8.5"]]
   :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
-  :ring {:handler clojars.web/clojars-app}
   :main clojars.main
   :min-lein-version "2.0.0"
   :release-tasks [["vcs" "assert-committed"]

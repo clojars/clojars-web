@@ -54,12 +54,6 @@ To build a standalone jar for deploying to a server:
 
 2. Run the webapp: `java -jar target/clojars-web-*-standalone.jar`
 
-To run the application in auto-reload mode, from the console:
-
-1. Run `lein ring server`
-
-and that's it, it should automatically open a browser in [localhost:3000](http://localhost:3000).
-
 If you'd like to run it out of an editor/IDE environment you can
 probably eval a call to the `-main` function in
 `src/clojars/main.clj`.

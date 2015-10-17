@@ -55,10 +55,10 @@
       maven/pom-to-map
       (merge info)))
 
-(defn- body-and-add-pom [body filename info account]
+(defn- body-and-add-pom [db body filename info account]
   (if (pom? filename)
     (let [contents (slurp body)]
-      (db/add-jar account (get-pom-info contents info))
+      (db/add-jar db account (get-pom-info contents info))
       contents)
     body))
 
@@ -74,9 +74,11 @@
           :headers {"status-message" (:status-message data#)}
           :body (.getMessage e#)}))))
 
-(defmacro put-req [groupname & body]
+
+(defmacro put-req [db groupname & body]
   `(with-account
      (require-authorization
+      ~db
       ~groupname
       (with-error-handling
         ~@body))))
@@ -129,49 +131,52 @@
                   :file filename}
                  (ex-data e)))))))
 
-(defn- handle-versioned-upload [body group artifact version filename]
+(defn- handle-versioned-upload [db body group artifact version filename]
   (let [groupname (string/replace group "/" ".")]
     (put-req
+      db
       groupname
       (let [file (io/file (config :repo) group artifact version filename)
             info {:group groupname
                   :name  artifact
                   :version version}]
         (validate-deploy groupname artifact version filename)
-        (db/check-and-add-group account groupname)
+        (db/check-and-add-group db account groupname)
 
-        (try-save-to-file file (body-and-add-pom body filename info account))
+        (try-save-to-file file (body-and-add-pom db body filename info account))
         (when (pom? filename)
           (with-open [index (clucy/disk-index (config :index-path))]
             (search/index-pom index file)))))))
 
 ;; web handlers
-(defroutes routes
-  (PUT ["/:group/:artifact/:file"
-        :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
-       {body :body {:keys [group artifact file]} :params}
-       (if (snapshot-version? artifact)
-         ;; SNAPSHOT metadata will hit this route, but should be
-         ;; treated as a versioned file upload.
-         ;; See: https://github.com/ato/clojars-web/issues/319
-         (let [version artifact
-               group-parts (string/split group #"/")
-               group (string/join "/" (butlast group-parts))
-               artifact (last group-parts)]
-           (handle-versioned-upload body group artifact version file))
-         (let [groupname (string/replace group "/" ".")]
-           (put-req
+(defn routes [db]
+  (compojure/routes
+   (PUT ["/:group/:artifact/:file"
+         :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
+        {body :body {:keys [group artifact file]} :params}
+        (if (snapshot-version? artifact)
+          ;; SNAPSHOT metadata will hit this route, but should be
+          ;; treated as a versioned file upload.
+          ;; See: https://github.com/ato/clojars-web/issues/319
+          (let [version artifact
+                group-parts (string/split group #"/")
+                group (string/join "/" (butlast group-parts))
+                artifact (last group-parts)]
+            (handle-versioned-upload db body group artifact version file))
+          (let [groupname (string/replace group "/" ".")]
+            (put-req
+             db
              groupname
              (let [file (io/file (config :repo) group artifact file)]
-               (db/check-and-add-group account groupname)
+               (db/check-and-add-group db account groupname)
                (try-save-to-file file body))))))
-  (PUT ["/:group/:artifact/:version/:filename"
-        :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
-        :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
-       {body :body {:keys [group artifact version filename]} :params}
-       (handle-versioned-upload body group artifact version filename))
-  (PUT "*" _ {:status 400 :headers {}})
-  (not-found "Page not found"))
+   (PUT ["/:group/:artifact/:version/:filename"
+         :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
+         :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
+        {body :body {:keys [group artifact version filename]} :params}
+        (handle-versioned-upload db body group artifact version filename))
+   (PUT "*" _ {:status 400 :headers {}})
+   (not-found "Page not found")))
 
 (defn wrap-file [app dir]
   (fn [req]

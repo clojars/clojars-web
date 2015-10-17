@@ -1,6 +1,5 @@
 (ns clojars.test.integration.sessions
-  (:require [clojars.config :as config]
-            [clojars.db :as db]
+  (:require [clojars.db :as db]
             [clojars.test.integration.steps :refer :all]
             [clojars.db :as db]
             [clojars.web :as web]
@@ -12,10 +11,12 @@
             [clojure.java.jdbc :as jdbc]
             [net.cgrand.enlive-html :as enlive]))
 
-(use-fixtures :each help/default-fixture)
+(use-fixtures :each
+  help/default-fixture
+  help/with-clean-database)
 
 (deftest user-cant-login-with-bad-user-pass-combo
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (login-as "fixture@example.org" "password")
       (follow-redirect)
       (has (status? 200))
@@ -23,29 +24,31 @@
               (has (text? "Incorrect username and/or password.")))))
 
 (deftest user-can-login-and-logout
-  (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password"))
-  (doseq [login ["fixture@example.org" "fixture"]]
-    (-> (session web/clojars-app)
-        (login-as login "password")
-        (follow-redirect)
-        (has (status? 200))
-        (within [:.light-article :> :h1]
-                (has (text? "Dashboard (fixture)")))
-        (follow "logout")
-        (follow-redirect)
-        (has (status? 200))
-        (within [:nav [:li enlive/first-child] :a]
-                (has (text? "login"))))))
+  (let [app (web/clojars-app help/*db*)]
+    (-> (session app)
+        (register-as "fixture" "fixture@example.org" "password"))
+    (doseq [login ["fixture@example.org" "fixture"]]
+      (-> (session app)
+          (login-as login "password")
+          (follow-redirect)
+          (has (status? 200))
+          (within [:.light-article :> :h1]
+                  (has (text? "Dashboard (fixture)")))
+          (follow "logout")
+          (follow-redirect)
+          (has (status? 200))
+          (within [:nav [:li enlive/first-child] :a]
+                  (has (text? "login")))))))
 
 (deftest user-with-password-wipe-gets-message
-  (-> (session web/clojars-app)
-      (register-as "fixture" "fixture@example.org" "password"))
-  (jdbc/db-do-commands (:db config/config)
-                       "update users set password='' where user = 'fixture'")
-  (-> (session web/clojars-app)
-      (login-as "fixture" "password")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:div :p.error]
-              (has (text? "Incorrect username and/or password.")))))
+  (let [app (web/clojars-app help/*db*)]
+    (-> (session app)
+        (register-as "fixture" "fixture@example.org" "password"))
+    (jdbc/db-do-commands help/*db*
+                         "update users set password='' where user = 'fixture'")
+    (-> (session app)
+        (login-as "fixture" "password")
+        (follow-redirect)
+        (has (status? 200))
+        (within [:div :p.error]
+                (has (text? "Incorrect username and/or password."))))))

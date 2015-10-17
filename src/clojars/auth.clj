@@ -9,13 +9,13 @@
   `(let [~'account (:username (friend/current-authentication))]
      ~body))
 
-(defn authorized? [account group]
+(defn authorized? [db account group]
   (if account
-    (let [names (group-membernames group)]
+    (let [names (group-membernames db group)]
       (or (some #{account} names) (empty? names)))))
 
-(defmacro require-authorization [group & body]
-  `(if (authorized? ~'account ~group)
+(defmacro require-authorization [db group & body]
+  `(if (authorized? ~db ~'account ~group)
      (do ~@body)
      (friend/throw-unauthorized friend/*identity*
                                 {:cemerick.friend/exprs (quote [~@body])

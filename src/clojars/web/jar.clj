@@ -24,9 +24,9 @@
    (url-encode (apply format "artifactdetails|%s|%s|%s|jar"
         ((juxt :group_name :jar_name :version) jar)))))
 
-(defn dependency-link [dep]
+(defn dependency-link [db dep]
   (link-to
-    (if (jar-exists (:group_name dep) (:jar_name dep)) (jar-url dep) (maven-jar-url dep))
+    (if (jar-exists db (:group_name dep) (:jar_name dep)) (jar-url dep) (maven-jar-url dep))
     (str (jar-name dep) " " (:version dep))))
 
 (defn version-badge-url [jar]
@@ -41,13 +41,13 @@
        (jar-url jar)
        ")"))
 
-(defn dependency-section [title id dependencies]
+(defn dependency-section [db title id dependencies]
   (if (empty? dependencies) '()
     (list
     [:h3 title]
     [(keyword (str "ul#" id))
      (for [dep dependencies]
-       [:li (dependency-link dep)])])))
+       [:li (dependency-link db dep)])])))
 
 ; handles link-to throwing an exception when given a non-url
 (defn safe-link-to [url text]
@@ -64,16 +64,16 @@
 (defn promoted-at [jar]
   [:p (str "Promoted at " (java.util.Date. (:promoted_at jar)))])
 
-(defn promotion-issues [jar]
-  (seq (blockers (set/rename-keys jar {:group_name :group
-                                       :jar_name :name}))))
+(defn promotion-issues [db jar]
+  (seq (blockers db (set/rename-keys jar {:group_name :group
+                                          :jar_name :name}))))
 
-(defn promotion-details [account jar]
-  (when (authorized? account (:group_name jar))
+(defn promotion-details [db account jar]
+  (when (authorized? db account (:group_name jar))
     (list [:h2 "Promotion"]
           (if (promoted? jar)
             (promoted-at jar)
-            (if-let [issues (promotion-issues jar)]
+            (if-let [issues (promotion-issues db jar)]
               (list [:h3 "Issues Blocking Promotion"]
                     [:ul#blockers
                      (for [i issues]
@@ -82,9 +82,9 @@
                                    "/promote/" (:version jar))]
                        (submit-button "Promote")))))))
 
-(defn show-jar [account jar recent-versions count]
-  (let [pom-map (jar-to-pom-map jar)]
-    (html-doc account (str (:jar_name jar) " " (:version jar))
+(defn show-jar [db account jar recent-versions count]
+  (html-doc account (str (:jar_name jar) " " (:version jar))
+            (let [pom-map (jar-to-pom-map jar)]
               [:div.light-article.row
                [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
                 [:h1 (jar-link jar)]
@@ -145,7 +145,7 @@
                   (tag "</dependency>")]]
                 (list
                  (fork-notice jar)
-                 (promotion-details account jar))]
+                 (promotion-details db account jar))]
                [:ul#jar-sidebar.col-sm-3.col-xs-12.col-md-3.col-lg-3
                 [:li
                  [:h4 "Pushed by"]
@@ -166,7 +166,7 @@
                    [:p (link-to (str (jar-url jar) "/versions")
                                 (str "Show All Versions (" count " total)"))])]
                 (let [dependencies
-                      (dependency-section "Dependencies" "dependencies"
+                      (dependency-section db "Dependencies" "dependencies"
                                           (remove #(not= (:scope %) "compile") (:dependencies pom-map)))]
                   (when-not (empty? dependencies)
                     [:li dependencies]))
@@ -240,16 +240,15 @@
         [:tspan "@"]
         [:tspan {:fill clojars-color} "clojars.org"]]])))
 
-(defn make-latest-version-svg [group-id artifact-id]
-  (let [jar (find-jar group-id artifact-id)]
+(defn make-latest-version-svg [db group-id artifact-id]
+  (let [jar (find-jar db group-id artifact-id)]
     (hiccup.core/html
      "<?xml version=\"1.0\" standalone=\"no\"?>"
      "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">"
      (svg-template (jar-name jar) (:version jar)))))
 
-(defn make-latest-version-json
+(defn make-latest-version-json [db group-id artifact-id]
   "Return the latest version of a JAR as JSON"
-  [group-id artifact-id]
-  (let [jar (find-jar group-id artifact-id)]
+  (let [jar (find-jar db group-id artifact-id)]
     (json/generate-string (select-keys jar [:version]))))

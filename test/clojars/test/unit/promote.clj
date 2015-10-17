@@ -7,7 +7,9 @@
             [clojars.config :refer [config]]
             [clojars.test.test-helper :as help]))
 
-(use-fixtures :each help/default-fixture)
+(use-fixtures :each
+  help/default-fixture
+  help/with-clean-database)
 
 (defn copy-resource [version & [extension]]
   (let [extension (or extension "pom")]
@@ -17,18 +19,21 @@
 
 (deftest test-snapshot-blockers
   (is (= ["Snapshot versions cannot be promoted"]
-         (blockers {:group "robert" :name "hooke"
+         (blockers help/*db*
+                   {:group "robert" :name "hooke"
                     :version "1.2.0-SNAPSHOT"}))))
 
 (deftest test-metadata-blockers
   (copy-resource "1.1.1")
   (is (clojure.set/subset? #{"Missing url" "Missing description"}
-                           (set (blockers {:group "robert" :name "hooke"
+                           (set (blockers help/*db*
+                                          {:group "robert" :name "hooke"
                                            :version "1.1.1"})))))
 
 (deftest test-unsigned
   (copy-resource "1.1.2")
-  (let [b (blockers {:group "robert" :name "hooke" :version "1.1.2"})]
+  (let [b (blockers help/*db*
+                    {:group "robert" :name "hooke" :version "1.1.2"})]
     (is (some #(.endsWith % "hooke-1.1.2.pom is not signed.") b))
     (is (some #(.endsWith % "hooke-1.1.2.jar is not signed.") b))
     (is (some #(= % "Missing file hooke-1.1.2.jar") b))))
@@ -39,10 +44,11 @@
            (file-for "robert" "hooke" "1.1.2" "jar"))
   (copy-resource "1.1.2" "jar.asc")
   (copy-resource "1.1.2" "pom.asc")
-  (db/add-user "test@ex.com" "testuser" "password"
+  (db/add-user help/*db* "test@ex.com" "testuser" "password"
                (slurp (io/resource "pubring.gpg")))
-  (db/add-member "robert" "testuser" nil)
-  (is (empty? (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))
+  (db/add-member help/*db* "robert" "testuser" nil)
+  (is (empty? (blockers help/*db*
+                        {:group "robert" :name "hooke" :version "1.1.2"}))))
 
 (deftest test-failed-signature
   (copy-resource "1.1.2")
@@ -50,13 +56,14 @@
            (file-for "robert" "hooke" "1.1.2" "jar"))
   (copy-resource "1.1.2" "jar.asc")
   (copy-resource "1.1.2" "pom.asc")
-  (db/add-user "test@ex.com" "testuser" "password"
+  (db/add-user help/*db* "test@ex.com" "testuser" "password"
                (slurp (io/resource "pubring.gpg")))
-  (db/add-member "robert" "testuser" nil)
+  (db/add-member help/*db* "robert" "testuser" nil)
   (is (= [(str "Could not verify signature of "
                (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.jar. "
                "Ensure your public key is in your profile.")]
-         (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))
+         (blockers help/*db*
+                   {:group "robert" :name "hooke" :version "1.1.2"}))))
 
 (deftest test-no-key
   (copy-resource "1.1.2")
@@ -64,12 +71,13 @@
            (file-for "robert" "hooke" "1.1.2" "jar"))
   (copy-resource "1.1.2" "jar.asc")
   (copy-resource "1.1.2" "pom.asc")
-  (db/add-user "test@ex.com" "testuser" "password" "")
-  (db/add-member "robert" "testuser" nil)
+  (db/add-user help/*db* "test@ex.com" "testuser" "password" "")
+  (db/add-member help/*db* "robert" "testuser" nil)
   (is (= [(str "Could not verify signature of "
                (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.jar. "
                "Ensure your public key is in your profile.")
           (str "Could not verify signature of "
                (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.pom. "
                "Ensure your public key is in your profile.")]
-         (blockers {:group "robert" :name "hooke" :version "1.1.2"}))))
+         (blockers help/*db*
+                   {:group "robert" :name "hooke" :version "1.1.2"}))))

@@ -7,23 +7,25 @@
             [clojars.test.test-helper :as help]
             [net.cgrand.enlive-html :as enlive]))
 
-(use-fixtures :each help/default-fixture)
+(use-fixtures :each
+  help/using-test-config
+  help/with-clean-database)
 
 (deftest respond-404
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (visit "/nonexistent-route")
       (has (status? 404))
       (within [:title]
               (has (text? "Page not found - Clojars")))))
 
 (deftest respond-404-for-non-existent-group
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (visit "/groups/nonexistent.group")
       (has (status? 404))
       (within [:title]
               (has (text? "Page not found - Clojars")))))
 
 (deftest respond-405-for-puts
-  (-> (session web/clojars-app)
+  (-> (session (web/clojars-app help/*db*))
       (visit "/nonexistent-route" :request-method :put)
       (has (status? 405))))

@@ -20,7 +20,7 @@
                                                                    (:group_name jar-map)
                                                                    (:jar_name jar-map))]]]))
 
-(defn index-page [account]
+(defn index-page [db account]
   (html-doc-with-large-header account nil
     [:article.row
      [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
@@ -39,24 +39,25 @@
     [:div.recent-jars-header-container.row
      [:h2.recent-jars-header.col-md-12.col-lg-12.col-sm-12.col-xs-12
       "Recently pushed projects"]]
-    [:ul.recent-jars-list.row (map recent-jar (recent-jars))]))
+    [:ul.recent-jars-list.row (map recent-jar (recent-jars db))]))
 
-(defn dashboard [account]
+(defn dashboard [db account]
   (html-doc account "Dashboard"
     [:div.light-article.col-md-12.col-lg-12.col-xs-12.col-sm-12
      [:h1 (str "Dashboard (" account ")")]
      [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
       [:div.dash-palette
        [:h2 "Your Projects"]
-       (if (seq (jars-by-username account))
-         (unordered-list (map jar-link (jars-by-username account)))
-         [:p "You don't have any projects, would you like to "
-          (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add one")
-          "?"])]]
+       (let [jars (jars-by-username db account)]
+         (if (seq jars)
+           (unordered-list (map jar-link jars))
+           [:p "You don't have any projects, would you like to "
+            (link-to "http://wiki.github.com/ato/clojars-web/pushing" "add one")
+            "?"]))]]
      [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
       [:div.dash-palette
        [:h2 "Your Groups"]
-       (unordered-list (map group-link (find-groupnames account)))]]
+       (unordered-list (map group-link (find-groupnames db account)))]]
      [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
       [:div.dash-palette
        [:h2 "FAQ"]

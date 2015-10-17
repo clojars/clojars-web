@@ -1,10 +1,9 @@
 (ns clojars.test.integration.steps
   (:require [cemerick.pomegranate.aether :as aether]
-            [clojars.config :as config]
             [clojars.db :as db]
             [clojars.maven :as maven]
+            [clojars.test.test-helper :as help]
             [clojure.java.io :as io]
-            [clojure.test :as test]
             [kerodon.core :refer :all]
             [clojars.config :refer [config]])
   (:import java.io.File))
@@ -33,13 +32,14 @@
 (defn file-repo [path]
   (str (.toURI (File. path))))
 
-(defn inject-artifacts-into-repo! [user jar pom]
+(defn inject-artifacts-into-repo! [db user jar pom]
   (let [pom-file (io/resource pom)
         jarmap (maven/pom-to-map pom-file)]
-    (db/add-jar user jarmap)
+    (db/add-jar db user jarmap)
     (aether/deploy :coordinates [(keyword (:group jarmap)
                                           (:name jarmap))
                                  (:version jarmap)]
                    :jar-file (io/resource jar)
                    :pom-file pom-file
+                   :local-repo help/local-repo
                    :repository {"local" (file-repo (:repo config))})))

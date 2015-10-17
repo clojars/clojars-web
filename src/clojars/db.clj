@@ -42,109 +42,109 @@
 (defn bcrypt [s]
   (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor config)))
 
-(defn find-user [username]
+(defn find-user [db username]
   (sql/find-user {:username username}
-                 {:connection (:db config)
+                 {:connection db
                   :result-set-fn first}))
 
-(defn find-user-by-user-or-email [username-or-email]
+(defn find-user-by-user-or-email [db username-or-email]
   (sql/find-user-by-user-or-email {:username_or_email username-or-email}
-                                  {:connection (:db config)
+                                  {:connection db
                                    :result-set-fn first}))
 
-(defn find-user-by-password-reset-code [reset-code]
+(defn find-user-by-password-reset-code [db reset-code]
   (sql/find-user-by-password-reset-code {:reset_code reset-code
                                          :reset_code_created_at
                                          (-> 1 time/days time/ago time.coerce/to-long)}
-                                        {:connection (:db config)
+                                        {:connection db
                                          :result-set-fn first}))
 
-(defn find-groupnames [username]
+(defn find-groupnames [db username]
   (sql/find-groupnames {:username username}
-                       {:connection (:db config)
+                       {:connection db
                         :row-fn :name}))
 
-(defn group-membernames [groupname]
+(defn group-membernames [db groupname]
   (sql/group-membernames {:groupname groupname}
-                         {:connection (:db config)
+                         {:connection db
                           :row-fn :user}))
 
-(defn group-keys [groupname]
+(defn group-keys [db groupname]
   (sql/group-keys {:groupname groupname}
-                  {:connection (:db config)
+                  {:connection db
                    :row-fn :pgp_key}))
 
-(defn jars-by-username [username]
+(defn jars-by-username [db username]
   (sql/jars-by-username {:username username}
-                        {:connection (:db config)}))
+                        {:connection db}))
 
-(defn jars-by-groupname [groupname]
+(defn jars-by-groupname [db groupname]
   (sql/jars-by-groupname {:groupname groupname}
-                         {:connection (:db config)}))
+                         {:connection db}))
 
 (defn recent-versions
-  ([groupname jarname]
+  ([db groupname jarname]
    (sql/recent-versions {:groupname groupname
                          :jarname jarname}
-                        {:connection (:db config)}))
-  ([groupname jarname num]
+                        {:connection db}))
+  ([db groupname jarname num]
    (sql/recent-versions-limit {:groupname groupname
                                :jarname jarname
                                :num num}
-                              {:connection (:db config)})))
+                              {:connection db})))
 
-(defn count-versions [groupname jarname]
+(defn count-versions [db groupname jarname]
   (sql/count-versions {:groupname groupname
                        :jarname jarname}
-                      {:connection (:db config)
+                      {:connection db
                        :result-set-fn first
                        :row-fn :count}))
 
-(defn recent-jars []
-  (sql/recent-jars {} {:connection (:db config)}))
+(defn recent-jars [db]
+  (sql/recent-jars {} {:connection db}))
 
-(defn jar-exists [groupname jarname]
+(defn jar-exists [db groupname jarname]
   (sql/jar-exists {:groupname groupname
                    :jarname jarname}
-                  {:connection (:db config)
+                  {:connection db
                    :result-set-fn first
                    :row-fn #(= % 1)}))
 
 (defn find-jar
-  ([groupname jarname]
+  ([db groupname jarname]
    (sql/find-jar {:groupname groupname
                   :jarname jarname}
-                 {:connection (:db config)
+                 {:connection db
                   :result-set-fn first}))
-  ([groupname jarname version]
+  ([db groupname jarname version]
    (sql/find-jar-versioned {:groupname groupname
                             :jarname jarname
                             :version version}
-                           {:connection (:db config)
+                           {:connection db
                             :result-set-fn first})))
 
-(defn all-projects [offset-num limit-num]
+(defn all-projects [db offset-num limit-num]
   (sql/all-projects {:num limit-num
                      :offset offset-num}
-                    {:connection (:db config)}))
+                    {:connection db}))
 
-(defn count-all-projects []
+(defn count-all-projects [db]
   (sql/count-all-projects {}
-                          {:connection (:db config)
+                          {:connection db
                            :result-set-fn first
                            :row-fn :count}))
 
-(defn count-projects-before [s]
+(defn count-projects-before [db s]
   (sql/count-projects-before {:s s}
-                             {:connection (:db config)
+                             {:connection db
                               :result-set-fn first
                               :row-fn :count}))
 
-(defn browse-projects [current-page per-page]
+(defn browse-projects [db current-page per-page]
   (vec
    (map
-    #(find-jar (:group_name %) (:jar_name %))
-    (all-projects
+    #(find-jar db (:group_name %) (:jar_name %))
+    (all-projects db
      (* (dec current-page) per-page)
      per-page))))
 
@@ -179,18 +179,18 @@
   `(serialize-task* ~name
                     (fn [] ~@body)))
 
-(defn add-user [email username password pgp-key]
+(defn add-user [db email username password pgp-key]
   (let [record {:email email, :username username, :password (bcrypt password),
                 :pgp_key pgp-key :created (get-time)}
         groupname (str "org.clojars." username)]
     (serialize-task :add-user
                     (sql/insert-user! record
-                                      {:connection (:db config)})
+                                      {:connection db})
                     (sql/insert-group! {:groupname groupname :username username}
-                                       {:connection (:db config)}))
+                                       {:connection db}))
     record))
 
-(defn update-user [account email username password pgp-key]
+(defn update-user [db account email username password pgp-key]
   (let [fields {:email email
                 :username username
                 :pgp_key pgp-key
@@ -200,15 +200,15 @@
                  (assoc fields :password (bcrypt password)))]
     (serialize-task :update-user
                     (sql/update-user! fields
-                                      {:connection (:db config)}))
+                                      {:connection db}))
     fields))
 
-(defn update-user-password [reset-code password]
+(defn update-user-password [db reset-code password]
   (assert (not (str/blank? reset-code)))
   (serialize-task :update-user-password
                     (sql/update-user-password! {:password (bcrypt password)
                                                 :reset_code reset-code}
-                                               {:connection (:db config)})))
+                                               {:connection db})))
 
   ;; Password resets
   ;; Reference:
@@ -226,41 +226,41 @@
                                         ; http://stackoverflow.com/a/8015558/974795
   (str/lower-case (apply str (map #(format "%02X" %) byte-array))))
 
-(defn set-password-reset-code! [username-or-email]
+(defn set-password-reset-code! [db username-or-email]
   (let [reset-code (hexadecimalize (generate-secure-token 20))]
     (serialize-task :set-password-reset-code
                     (sql/set-password-reset-code! {:reset_code reset-code
                                                    :reset_code_created_at (get-time)
                                                    :username_or_email username-or-email}
-                                                  {:connection (:db config)}))
+                                                  {:connection db}))
     reset-code))
 
-(defn add-member [groupname username added-by]
+(defn add-member [db groupname username added-by]
   (serialize-task :add-member
                   (sql/add-member! {:groupname groupname
                                     :username username
                                     :added_by added-by}
-                                   {:connection (:db config)})))
+                                   {:connection db})))
 
-(defn check-and-add-group [account groupname]
+(defn check-and-add-group [db account groupname]
   (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)
     (throw (Exception. (str "Group names must consist of lowercase "
                             "letters, numbers, hyphens, underscores "
                             "and full-stops."))))
-  (let [members (group-membernames groupname)]
+  (let [members (group-membernames db groupname)]
     (if (empty? members)
       (if (reserved-names groupname)
         (throw (Exception. (str "The group name "
                                 groupname
                                 " is already taken.")))
-        (add-member groupname account "clojars"))
+        (add-member db groupname account "clojars"))
       (when-not (some #{account} members)
         (throw (Exception. (str "You don't have access to the "
                                 groupname " group.")))))))
 
-(defn add-jar [account {:keys [group name version
+(defn add-jar [db account {:keys [group name version
                                description homepage authors]}]
-  (check-and-add-group account group)
+  (check-and-add-group db account group)
   (serialize-task :add-jar
                   (sql/add-jar! {:groupname group
                                  :jarname   name
@@ -271,49 +271,50 @@
                                  :homepage   homepage
                                  :authors    (str/join ", " (map #(.replace % "," "")
                                                                  authors))}
-                                {:connection (:db config)})))
+                                {:connection db})))
 
-(defn delete-jars [group-id & [jar-id version]]
+(defn delete-jars [db group-id & [jar-id version]]
   (serialize-task :delete-jars
                   (let [coords {:group_id group-id}]
                     (if jar-id
                       (let [coords (assoc coords :jar_id jar-id)]
                         (if version
                           (sql/delete-jar-version! (assoc coords :version version)
-                                                   {:connection (:db config)})
+                                                   {:connection db})
                           (sql/delete-jars! coords
-                                            {:connection (:db config)})))
+                                            {:connection db})))
                       (sql/delete-groups-jars! coords
-                                               {:connection (:db config)})))))
+                                        {:connection db})))))
 
 ;; does not delete jars in the group. should it?
-(defn delete-groups [group-id]
+(defn delete-groups [db group-id]
   (serialize-task :delete-groups
                   (sql/delete-group! {:group_id group-id}
-                                     {:connection (:db config)})))
+                                     {:connection db})))
 
 (defn find-jars-information
-  ([group-id]
-   (find-jars-information group-id nil))
-  ([group-id artifact-id]
+  ([db group-id]
+   (find-jars-information db group-id nil))
+  ([db group-id artifact-id]
    (if artifact-id
      (sql/find-jars-information {:group_id group-id
                                  :artifact_id artifact-id}
-                                {:connection (:db config)})
+                                {:connection db})
      (sql/find-groups-jars-information {:group_id group-id}
-                                       {:connection (:db config)}))))
+                                       {:connection db}))))
 
-(defn promote [group name version]
+(defn promote [db group name version]
   (serialize-task :promote
                   (sql/promote! {:group_id group
                                  :artifact_id name
                                  :version version
-                                 :promoted_at (get-time)})))
+                                 :promoted_at (get-time)}
+                                {:connection db})))
 
-(defn promoted? [group-id artifact-id version]
+(defn promoted? [db group-id artifact-id version]
   (sql/promoted {:group_id group-id
                  :artifact_id artifact-id
                  :version version}
-                {:connection (:db config)
+                {:connection db
                  :result-set-fn first
                  :row-fn :promoted_at}))

@@ -47,15 +47,23 @@
   (when-not (.exists (io/file db))
     (.mkdirs (.getParentFile (io/file db)))))
 
-(defn migrate [& migrations]
-  (ensure-db-directory-exists (:subname (config :db)))
-  (try (sql/db-do-commands (:db config)
+(def migrations
+  [#'initial-schema
+   #'add-promoted-field
+   #'add-jars-index
+   #'add-pgp-key
+   #'add-added-by
+   #'add-password-reset-code
+   #'add-password-reset-code-created-at])
+
+(defn migrate [db]
+  (try (sql/db-do-commands db
                            (sql/create-table-ddl "migrations"
                                                  [:name :varchar "NOT NULL"]
                                                  [:created_at :timestamp
                                                   "NOT NULL"  "DEFAULT CURRENT_TIMESTAMP"])) 
        (catch Exception _))
-  (sql/with-db-transaction [trans (:db config)]
+  (sql/with-db-transaction [trans db]
     (let [has-run? (sql/query trans ["SELECT name FROM migrations"]
                               :row-fn :name
                               :result-set-fn set)]
@@ -65,10 +73,6 @@
 
 
 (defn -main []
-  (migrate #'initial-schema
-           #'add-promoted-field
-           #'add-jars-index
-           #'add-pgp-key
-           #'add-added-by
-           #'add-password-reset-code
-           #'add-password-reset-code-created-at))
+  (let [db (:db config)]
+    (ensure-db-directory-exists (:subname db))
+    (migrate db)))

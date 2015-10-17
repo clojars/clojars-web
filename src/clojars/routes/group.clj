@@ -1,28 +1,31 @@
 (ns clojars.routes.group
-  (:require [compojure.core :refer [GET POST defroutes]]
+  (:require [clojars
+             [auth :as auth]
+             [db :as db]]
             [clojars.web.group :as view]
-            [clojars.db :as db]
-            [clojars.auth :as auth]))
+            [compojure.core :as compojure :refer [GET POST]]))
 
-(defroutes routes
-  (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
-       (if-let [membernames (seq (db/group-membernames groupname))]
-         (auth/try-account
-          (view/show-group account groupname membernames))))
-  (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username]
-        (if-let [membernames (seq (db/group-membernames groupname))]
+(defn routes [db]
+  (compojure/routes
+   (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
+        (if-let [membernames (seq (db/group-membernames db groupname))]
           (auth/try-account
-           (auth/require-authorization
-            groupname
-            (cond
-             (some #{username} membernames)
-             (view/show-group account groupname membernames
-                              "They're already a member!")
-             (db/find-user username)
-             (do (db/add-member groupname username account)
-                 (view/show-group account groupname
-                                  (conj membernames username)))
-             :else
-             (view/show-group account groupname membernames
-                              (str "No such user: "
-                                   username))))))))
+           (view/show-group db account groupname membernames))))
+   (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username]
+         (if-let [membernames (seq (db/group-membernames db groupname))]
+           (auth/try-account
+            (auth/require-authorization
+             db
+             groupname
+             (cond
+               (some #{username} membernames)
+               (view/show-group db account groupname membernames
+                                "They're already a member!")
+               (db/find-user db username)
+               (do (db/add-member db groupname username account)
+                   (view/show-group db account groupname
+                                    (conj membernames username)))
+               :else
+               (view/show-group db account groupname membernames
+                                (str "No such user: "
+                                     username)))))))))

@@ -5,6 +5,7 @@
             [clojars.config :refer [config]]
             [clojars.web :as web]
             [clojars.main :as main]
+            [clojars.dev.setup :as setup]
             [clucy.core :as clucy]
             [clojure.java.shell :as sh]
             [clojure.java.jdbc :as jdbc]
@@ -16,9 +17,10 @@
 (def local-repo2 (io/file (System/getProperty "java.io.tmpdir")
                          "clojars" "test" "local-repo2"))
 
-(def test-config {:db {:classname "org.sqlite.JDBC"
+(def test-config {:bind "127.0.0.1"
+                  :db {:classname "org.sqlite.JDBC"
                        :subprotocol "sqlite"
-                       :subname "data/test/db"}
+                       :subname ":memory:"}
                   :repo "data/test/repo"
                   :stats-dir "data/test/stats"
                   :index-path "data/test/index"
@@ -44,14 +46,6 @@
           (delete-file-recursively child)))
       (io/delete-file f))))
 
-(defonce migrate
-  (delay
-   (let [db (:subname (:db config))]
-     (when-not (.exists (io/file db))
-       (.mkdirs (.getParentFile (io/file db)))
-       (sh/sh "sqlite3" db :in (slurp "clojars.sql"))))
-   (migrate/-main)))
-
 (defn make-download-count! [m]
   (spit (io/file (config :stats-dir) "all.edn")
         (pr-str m)))
@@ -69,31 +63,32 @@
 (defn default-fixture [f]
   (using-test-config
    (fn []
-     (force migrate)
      (delete-file-recursively (io/file (config :repo)))
      (delete-file-recursively (io/file (config :stats-dir)))
      (.mkdirs (io/file (config :stats-dir)))
      (make-download-count! {})
-     (jdbc/db-do-commands (:db config)
-                          "delete from users;" "delete from jars;" "delete from groups;")
      (f))))
 
 (defn index-fixture [f]
   (make-index! [])
   (f))
 
+(declare ^:dynamic *db*)
+
+(defn with-clean-database [f]
+  (binding [*db* {:connection (jdbc/get-connection (:db test-config))}]
+    (try
+      (with-out-str
+        (migrate/migrate *db*))
+      (setup/reset-db! *db*)
+      (f)
+      (finally (.close (:connection *db*))))))
+
 (declare test-port)
 
 (defn run-test-app
   ([f]
-   (run-test-app nil f))
-  ([verbose? f]
-   (when-not verbose?
-     (alter-var-root #'web/clojars-app
-       (fn [app]
-         #(binding [*out* (java.io.StringWriter.)]
-            (app %)))))
-   (let [server (main/start-jetty 0)
+   (let [server (main/start-jetty *db* 0)
          port (-> server .getConnectors first .getLocalPort)]
      (with-redefs [test-port port]
        (try

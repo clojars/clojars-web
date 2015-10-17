@@ -6,17 +6,18 @@
             [clojars.db :refer [add-user]]
             [valip.core :refer [validate]]))
 
-(defn register [{:keys [email username password confirm pgp-key]}]
+(defn register [db {:keys [email username password confirm pgp-key]}]
   (if-let [errors (apply validate {:email email
                                    :username username
                                    :password password
                                    :pgp-key pgp-key}
-                         (new-user-validations confirm))]
+                         (new-user-validations db confirm))]
     (response (register-form (apply concat (vals errors)) email username))
-    (do (add-user email username password pgp-key)
+    (do (add-user db email username password pgp-key)
         (workflow/make-auth {:identity username :username username}))))
 
-(defn workflow [{:keys [uri request-method params]}]
-  (when (and (= uri "/register")
-             (= request-method :post))
-    (register params)))
+(defn workflow [db]
+  (fn [{:keys [uri request-method params]}]
+    (when (and (= uri "/register")
+               (= request-method :post))
+      (register db params))))

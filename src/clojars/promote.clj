@@ -80,16 +80,16 @@
                             " Ensure your public key is in your profile.")))
       (conj blockers (str file " is not signed.")))))
 
-(defn unpromoted? [blockers {:keys [group name version]}]
-  (let [[{:keys [promoted_at]}] (db/promoted? group name version)]
+(defn unpromoted? [blockers db {:keys [group name version]}]
+  (let [[{:keys [promoted_at]}] (db/promoted? db group name version)]
     (if promoted_at
       (conj blockers "Already promoted.")
       blockers)))
 
-(defn blockers [{:keys [group name version]}]
+(defn blockers [db {:keys [group name version]}]
   (let [jar (file-for group name version "jar")
         pom (file-for group name version "pom")
-        keys (remove nil? (db/group-keys group))
+        keys (remove nil? (db/group-keys db group))
         info (try (when (.exists pom)
                     (maven/pom-to-map pom))
                   (catch Exception e
@@ -107,7 +107,7 @@
 
         (signed? jar keys)
         (signed? pom keys)
-        (unpromoted? info)))))
+        (unpromoted? db info)))))
 
 (defn- add-coords [{:keys [group name version classifier] :as info}
                    files extension]
@@ -126,25 +126,15 @@
                              :transfer-listener :stdout
                              :repository {"releases" releases-repo})))
 
-(defn promote [{:keys [group name version] :as info}]
+(defn promote [db {:keys [group name version] :as info}]
   (println "checking" group "/" name "for promotion...")
-  (let [blockers (blockers info)]
+  (let [blockers (blockers db info)]
     (if (empty? blockers)
       (if (config :releases-url)
         (do
           (println "Promoting" info)
           (deploy-to-s3 info)
-          (db/promote group name version))
+          (db/promote db group name version))
         (println "Didn't promote since :releases-url wasn't set."))
       (do (println "...failed.")
           blockers))))
-
-(defonce queue (LinkedBlockingQueue.))
-
-(defn start []
-  (.start (Thread. #(loop []
-                      (locking #'promote
-                        (try (promote (.take queue))
-                             (catch Exception e
-                               (.printStackTrace e))))
-                      (recur)))))
