@@ -31,7 +31,7 @@
                  [ring-anti-forgery "0.2.1"]
                  [valip "0.2.0" :exclusions [commons-logging]]
                  [clucy "0.3.0"]
-                 [org.clojure/tools.nrepl "0.2.3"]
+                 [org.clojure/tools.nrepl "0.2.11"]
                  [org.bouncycastle/bcpg-jdk15on "1.47"]
                  [mvxcvi/clj-pgp "0.8.0"]]
   :profiles {:dev {:dependencies [[kerodon "0.0.7"]
