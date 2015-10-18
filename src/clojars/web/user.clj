@@ -82,8 +82,11 @@
                (error-list errors)
                (form-to [:post "/profile"]
                         (label :email "Email")
-                        [:input {:type :email :name :email :id
-                                 :email :value (user :email)}]
+                        [:input {:type :email :name :email :id :email
+                                 :value (user :email)}]
+                        (label :newusername "Username")
+                        [:input {:type :newusername :name :newusername :id :newusername
+                                 :value (user :user)}]
                         (label :password "Password")
                         (password-field :password)
                         (label :confirm "Confirm password")
@@ -93,17 +96,22 @@
                         (text-area :pgp-key (user :pgp_key))
                         (submit-button "Update"))])))
 
-(defn update-profile [account {:keys [email password confirm pgp-key]}]
+(defn update-profile [account {:keys [email newusername password confirm pgp-key]}]
   (let [pgp-key (and pgp-key (.trim pgp-key))]
     (if-let [errors (apply validate {:email email
-                                     :username account
+                                     :username newusername
                                      :password password
                                      :pgp-key pgp-key}
-                           (update-user-validations confirm))]
+                           (if (= account newusername)
+                             (update-user-validations confirm)
+                             (new-user-validations confirm)))]
       (profile-form account nil (apply concat (vals errors)))
-      (do (update-user account email account password pgp-key)
-          (assoc (redirect "/profile")
-            :flash "Profile updated.")))))
+      (do (update-user account email newusername password pgp-key)
+          (if (= account newusername)
+            (assoc (redirect "/profile")
+              :flash "Profile updated.")
+            (assoc (redirect "/login")
+              :flash "Your username was updated."))))))
 
 (defn show-user [account user]
   (html-doc account (user :user)
