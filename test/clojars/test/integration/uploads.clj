@@ -16,7 +16,7 @@
 
 (deftest user-can-register-and-deploy
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" ""))
+      (register-as "dantheman" "test@example.org" "password"))
   (help/delete-file-recursively help/local-repo)
   (help/delete-file-recursively help/local-repo2)
   (aether/deploy
@@ -55,7 +55,7 @@
 
 (deftest user-can-deploy-to-new-group
    (-> (session clojars-app)
-       (register-as "dantheman" "test@example.org" "password" ""))
+       (register-as "dantheman" "test@example.org" "password"))
    (help/delete-file-recursively help/local-repo)
    (help/delete-file-recursively help/local-repo2)
    (aether/deploy
@@ -87,9 +87,9 @@
 
 (deftest user-cannot-deploy-to-groups-without-permission
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+      (register-as "dantheman" "test@example.org" "password"))
   (-> (session clojars-app)
-      (register-as "fixture" "fixture@example.org" "password" valid-ssh-key))
+      (register-as "fixture" "fixture@example.org" "password"))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
         #"Forbidden"
         (aether/deploy
@@ -103,7 +103,7 @@
 
 (deftest user-cannot-redeploy
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+      (register-as "dantheman" "test@example.org" "password"))
   (aether/deploy
    :coordinates '[org.clojars.dantheman/test "0.0.1"]
    :jar-file (io/file (io/resource "test.jar"))
@@ -126,7 +126,7 @@
 
 (deftest user-can-redeploy-snapshots
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+      (register-as "dantheman" "test@example.org" "password"))
   (aether/deploy
    :coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
@@ -146,7 +146,7 @@
 
 (deftest user-can-deploy-snapshot-with-dot
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" valid-ssh-key))
+      (register-as "dantheman" "test@example.org" "password"))
   (aether/deploy
    :coordinates '[org.clojars.dantheman/test.thing "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
@@ -179,7 +179,7 @@
 
 (deftest deploy-requires-lowercase-group
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" ""))
+      (register-as "dantheman" "test@example.org" "password"))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
         #"Forbidden - group names must consist solely of lowercase"
         (aether/deploy
@@ -193,7 +193,7 @@
 
 (deftest deploy-requires-lowercase-project
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" ""))
+      (register-as "dantheman" "test@example.org" "password"))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
         #"Forbidden - project names must consist solely of lowercase"
         (aether/deploy
@@ -207,7 +207,7 @@
 
 (deftest deploy-requires-ascii-version
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" ""))
+      (register-as "dantheman" "test@example.org" "password"))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
         #"Forbidden - version strings must consist solely of letters"
         (aether/deploy
@@ -221,7 +221,7 @@
 
 (deftest put-on-html-fails
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" "")
+      (register-as "dantheman" "test@example.org" "password")
       (visit "/repo/group/artifact/1.0.0/injection.html"
              :request-method :put
              :headers {"authorization"
@@ -235,7 +235,7 @@
 
 (deftest put-using-dotdot-fails
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" "")
+      (register-as "dantheman" "test@example.org" "password")
       (visit "/repo/../artifact/1.0.0/test.jar" :request-method :put
              :headers {"authorization"
                        (str "Basic "
@@ -277,7 +277,7 @@
 
 (deftest does-not-write-incomplete-file
   (-> (session clojars-app)
-      (register-as "dantheman" "test@example.org" "password" ""))
+      (register-as "dantheman" "test@example.org" "password"))
   (with-out-str
     (-> (session clojars-app)
         (visit "/repo/group3/artifact3/1.0.0/test.jar"

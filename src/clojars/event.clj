@@ -125,10 +125,10 @@
       (doseq [{:keys [name user]} groups]
         (record :membership {:group-id name :username user :added-by nil})))
     (sql/with-query-results users ["SELECT * FROM users"]
-      (doseq [{:keys [user password email created ssh_key pgp_key]} users]
+      (doseq [{:keys [user password email created pgp_key]} users]
         (record :user {:username user :email email
                        :password (or sanitize? password)
-                       :ssh-key ssh_key :pgp-key pgp_key
+                       :pgp-key pgp_key
                        :at created :from "sqlite"})))
     (sql/with-query-results jars ["SELECT * FROM jars"]
       (doseq [{:keys [jar_name group_name version user]} jars]

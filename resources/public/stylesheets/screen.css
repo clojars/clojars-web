@@ -565,10 +565,6 @@ ul#blockers li {
   list-style-position: inside;
 }
 
-#ssh-key {
-    display: none;
-}
-
 pre.error-id {
     background: #e2e4e3;
     text-align: center;

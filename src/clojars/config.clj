@@ -67,7 +67,6 @@
    ["MAIL_URL" :mail parse-mail-uri]
    ["REPO" :repo]
    ["DELETION_BACKUP_DIR" :deletion-backup-dir]
-   ["KEY_FILE" :key-file]
    ["NREPL_PORT" :nrepl-port #(Integer/parseInt %)]
    ["NAILGUN_BIND" :nailgun-bind]
    ["NAILGUN_PORT" :nailgun-port #(Integer/parseInt %)]
@@ -96,7 +95,6 @@
        ["--db" "Database URL like sqlite:data/db"]
        ["--mail" "SMTP URL like smtps://user:pass@host:port?from=me@example.org"]
        ["--repo" "Path to store jar files in"]
-       ["--key-file" "SSH authorized_keys file to write to"]
        ["--nailgun-port" "Listen port for nailgun (for scp)" :parse-fn #(Integer/parseInt %)]
        ["--nailgun-bind" "Bind address for nailgun" :default (:nailgun-bind defaults)]
        ["--bcrypt-work-factor" "Difficulty factor for bcrypt password hashing"
