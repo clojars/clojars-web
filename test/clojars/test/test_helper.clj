@@ -1,5 +1,5 @@
 (ns clojars.test.test-helper
-  (import java.io.File)
+  (:import java.io.File)
   (:require [clojars.db :as db]
             [clojars.db.migrate :as migrate]
             [clojars.config :refer [config]]

@@ -58,13 +58,6 @@
                                  :jar_name "test"
                                  :version "0.1-SNAPSHOT"}))))
 
-(deftest snapshot-pom-file-handles-no-patch-version
-  (is (=
-        (expected-file "fake" "test" "0.1-SNAPSHOT" "test-0.1")
-        (snapshot-pom-file-with {:group_name "fake"
-                                 :jar_name "test"
-                                 :version "0.1-SNAPSHOT"}))))
-
 (deftest snapshot-pom-file-handles-release-candidate-version
   (is (=
         (expected-file "fake" "test" "0.2.1-alpha-SNAPSHOT" "test-0.2.1-alpha")

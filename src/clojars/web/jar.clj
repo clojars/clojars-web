@@ -248,7 +248,8 @@
  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">"
      (svg-template (jar-name jar) (:version jar)))))
 
-(defn make-latest-version-json [group-id artifact-id]
+(defn make-latest-version-json
   "Return the latest version of a JAR as JSON"
+  [group-id artifact-id]
   (let [jar (find-jar group-id artifact-id)]
     (json/generate-string (select-keys jar [:version]))))
