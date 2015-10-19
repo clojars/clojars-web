@@ -5,14 +5,11 @@
             [clojars.config :refer [config]]
             [clojars.web :as web]
             [clojars.main :as main]
-            [korma.db :as kdb]
             [clucy.core :as clucy]
-            [clojars.search :as search]
-            [clojure.test :as test]
             [clojure.java.shell :as sh]
-            [clojure.java.io :as io]
             [clojure.java.jdbc :as jdbc]
-            [ring.adapter.jetty :as jetty]))
+            [clojure.java.io :as io]
+            [clojars.search :as search]))
 
 (def local-repo (io/file (System/getProperty "java.io.tmpdir")
                          "clojars" "test" "local-repo"))
@@ -77,11 +74,9 @@
      (delete-file-recursively (io/file (config :stats-dir)))
      (.mkdirs (io/file (config :stats-dir)))
      (make-download-count! {})
-     (with-redefs [kdb/_default (atom {:pool (:db config)})]
-       (jdbc/with-connection (:pool @kdb/_default)
-         (jdbc/do-commands
-          "delete from users;" "delete from jars;" "delete from groups;"))
-       (f)))))
+     (jdbc/db-do-commands (:db config)
+                          "delete from users;" "delete from jars;" "delete from groups;")
+     (f))))
 
 (defn index-fixture [f]
   (make-index! [])

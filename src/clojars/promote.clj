@@ -7,9 +7,7 @@
             [clojure.java.jdbc :as sql]
             [clojure.string :as str]
             [clojure.set :as set]
-            [korma.db :as korma]
             [cemerick.pomegranate.aether :as aether]
-            [korma.core :refer [select fields where update set-fields]]
             [clj-pgp.core :as pgp]
             [clj-pgp.signature :as pgp-sig])
   (:import (java.util.concurrent LinkedBlockingQueue)
@@ -83,10 +81,7 @@
       (conj blockers (str file " is not signed.")))))
 
 (defn unpromoted? [blockers {:keys [group name version]}]
-  (let [[{:keys [promoted_at]}] (select db/jars (fields :promoted_at)
-                                        (where {:group_name group
-                                                :jar_name name
-                                                :version version}))]
+  (let [[{:keys [promoted_at]}] (db/promoted? group name version)]
     (if promoted_at
       (conj blockers "Already promoted.")
       blockers)))
@@ -139,10 +134,7 @@
         (do
           (println "Promoting" info)
           (deploy-to-s3 info)
-          (db/serialize-task :promote
-            (update db/jars
-              (set-fields {:promoted_at (java.util.Date.)})
-              (where {:group_name group :jar_name name :version version}))))
+          (db/promote group name version))
         (println "Didn't promote since :releases-url wasn't set."))
       (do (println "...failed.")
           blockers))))

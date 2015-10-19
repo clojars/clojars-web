@@ -5,16 +5,16 @@
             [clojars.search :as search]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [korma.core :refer [delete]])
+            [clojars.db.sql :as sql])
   (:import [org.apache.maven.artifact.repository.metadata Metadata Versioning]
            [org.apache.maven.artifact.repository.metadata.io.xpp3
             MetadataXpp3Reader
             MetadataXpp3Writer]))
 
 (defn reset-db! []
-  (delete db/jars)
-  (delete db/groups)
-  (delete db/users))
+  (sql/clear-jars! {} {:connection (:db config)})
+  (sql/clear-groups!{} {:connection (:db config)})
+  (sql/clear-users! {} {:connection (:db config)}))
 
 (defn add-test-users
   "Adds n test users of the form test0/test0."

@@ -4,11 +4,8 @@
             [clj-time.core :as time]
             [clj-time.coerce :as time.coerce]
             [clojars.config :refer [config]]
-            [korma.db :refer [defdb transaction rollback]]
-            [korma.core :refer [defentity select group fields order join
-                                modifier exec-raw where limit values with
-                                has-many raw insert update delete set-fields
-                                offset]]
+            [clojure.java.jdbc :as jdbc]
+            [clojars.db.sql :as sql]
             [cemerick.friend.credentials :as creds])
   (:import java.security.MessageDigest
            java.util.Date
@@ -45,183 +42,111 @@
 (defn bcrypt [s]
   (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor config)))
 
-(defdb mydb (:db config))
-(defentity users)
-(defentity groups)
-(defentity jars)
-
-;; über-hack to work around hard-coded sqlite busy-timeout:
-;; https://github.com/ato/clojars-web/issues/105
-;; http://sqlite.org/c3ref/busy_timeout.html
-;; https://bitbucket.org/xerial/sqlite-jdbc/issue/27
-(defonce _
-  (alter-var-root #'clojure.java.jdbc.internal/prepare-statement*
-                  (fn [prepare]
-                    (fn timeout-prepare [& args]
-                      (let [stmt (apply prepare args)]
-                        (doto stmt
-                          ;; Note that while .getQueryTimeout returns
-                          ;; milliseconds, .setQueryTimeout takes seconds!
-                          (.setQueryTimeout 30)))))))
-
-
 (defn find-user [username]
-  (first (select users (where {:user username}))))
+  (sql/find-user {:username username}
+                 {:connection (:db config)
+                  :result-set-fn first}))
 
 (defn find-user-by-user-or-email [username-or-email]
-  (first (select users (where (or {:user username-or-email}
-                                  {:email username-or-email})))))
+  (sql/find-user-by-user-or-email {:username_or_email username-or-email}
+                                  {:connection (:db config)
+                                   :result-set-fn first}))
 
 (defn find-user-by-password-reset-code [reset-code]
-  (when-let [user (and (seq reset-code)
-                       (first (select users
-                                (where {:password_reset_code reset-code}))))]
-    (when (> (:password_reset_code_created_at user)
-             (-> 1 time/days time/ago time.coerce/to-long))
-      user)))
+  (sql/find-user-by-password-reset-code {:reset_code reset-code
+                                         :reset_code_created_at
+                                         (-> 1 time/days time/ago time.coerce/to-long)}
+                                        {:connection (:db config)
+                                         :result-set-fn first}))
 
 (defn find-groupnames [username]
-  (map :name (select groups (fields :name) (where {:user username}))))
+  (sql/find-groupnames {:username username}
+                       {:connection (:db config)
+                        :row-fn :name}))
 
 (defn group-membernames [groupname]
-  (map :user (select groups (fields :user) (where {:name groupname}))))
+  (sql/group-membernames {:groupname groupname}
+                         {:connection (:db config)
+                          :row-fn :user}))
 
 (defn group-keys [groupname]
-  (map :pgp_key (select users (fields :pgp_key)
-                        (join groups (= :users.user :groups.user))
-                        (where {:groups.name groupname}))))
+  (sql/group-keys {:groupname groupname}
+                  {:connection (:db config)
+                   :row-fn :pgp_key}))
 
 (defn jars-by-username [username]
-  (exec-raw [(str
-              "select j.* "
-              "from jars j "
-              "join "
-              "(select group_name, jar_name, max(created) as created "
-              "from jars "
-              "group by group_name, jar_name) l "
-              "on j.group_name = l.group_name "
-              "and j.jar_name = l.jar_name "
-              "and j.created = l.created "
-              "where j.user = ?"
-              "order by j.group_name asc, j.jar_name asc")
-             [username]]
-            :results))
+  (sql/jars-by-username {:username username}
+                        {:connection (:db config)}))
 
 (defn jars-by-groupname [groupname]
-    (exec-raw [(str
-              "select j.* "
-              "from jars j "
-              "join "
-              "(select jar_name, max(created) as created "
-              "from jars "
-              "group by group_name, jar_name) l "
-              "on j.jar_name = l.jar_name "
-              "and j.created = l.created "
-              "where j.group_name = ? "
-              "order by j.group_name asc, j.jar_name asc")
-             [groupname]]
-              :results))
+  (sql/jars-by-groupname {:groupname groupname}
+                         {:connection (:db config)}))
 
 (defn recent-versions
   ([groupname jarname]
-     (select jars
-             (modifier "distinct")
-             (fields :version)
-             (where {:group_name groupname
-                     :jar_name jarname})
-             (order :created :desc)))
+   (sql/recent-versions {:groupname groupname
+                         :jarname jarname}
+                        {:connection (:db config)}))
   ([groupname jarname num]
-     (select jars
-             (modifier "distinct")
-             (fields :version)
-             (where {:group_name groupname
-                     :jar_name jarname})
-             (order :created :desc)
-             (limit num))))
+   (sql/recent-versions-limit {:groupname groupname
+                               :jarname jarname
+                               :num num}
+                              {:connection (:db config)})))
 
 (defn count-versions [groupname jarname]
-  (-> (exec-raw [(str "select count(distinct version) count from jars"
-                      " where group_name = ? and jar_name = ?")
-                 [groupname jarname]] :results)
-      first
-      :count))
+  (sql/count-versions {:groupname groupname
+                       :jarname jarname}
+                      {:connection (:db config)
+                       :result-set-fn first
+                       :row-fn :count}))
 
 (defn recent-jars []
-  (exec-raw (str
-             "select j.* "
-             "from jars j "
-             "join "
-             "(select group_name, jar_name, max(created) as created "
-             "from jars "
-             "group by group_name, jar_name) l "
-             "on j.group_name = l.group_name "
-             "and j.jar_name = l.jar_name "
-             "and j.created = l.created "
-             "order by l.created desc "
-             "limit 6")
-            :results))
+  (sql/recent-jars {} {:connection (:db config)}))
 
 (defn jar-exists [groupname jarname]
-  (-> (exec-raw
-        [(str "select exists(select 1 from jars where group_name = ? and jar_name = ?)")
-          [groupname jarname]] :results)
-  first vals first (= 1)))
+  (sql/jar-exists {:groupname groupname
+                   :jarname jarname}
+                  {:connection (:db config)
+                   :result-set-fn first
+                   :row-fn #(= % 1)}))
 
 (defn find-jar
   ([groupname jarname]
-     (or (first (select jars
-                        (where (and {:group_name groupname
-                                     :jar_name jarname}
-                                    (raw "version not like '%-SNAPSHOT'")))
-                        (order :created :desc)
-                        (limit 1)))
-         (first (select jars
-                        (where (and {:group_name groupname
-                                     :jar_name jarname
-                                     :version [like "%-SNAPSHOT"]}))
-                        (order :created :desc)
-                        (limit 1)))))
+   (sql/find-jar {:groupname groupname
+                  :jarname jarname}
+                 {:connection (:db config)
+                  :result-set-fn first}))
   ([groupname jarname version]
-     (first (select jars
-                    (where (and {:group_name groupname
-                                 :jar_name jarname
-                                 :version version}))
-                    (order :created :desc)
-                    (limit 1)))))
+   (sql/find-jar-versioned {:groupname groupname
+                            :jarname jarname
+                            :version version}
+                           {:connection (:db config)
+                            :result-set-fn first})))
 
 (defn all-projects [offset-num limit-num]
-  (select jars
-    (modifier "distinct")
-    (fields :group_name :jar_name)
-    (order :group_name :asc)
-    (order :jar_name :asc)
-    (limit limit-num)
-    (offset offset-num)))
+  (sql/all-projects {:num limit-num
+                     :offset offset-num}
+                    {:connection (:db config)}))
 
 (defn count-all-projects []
-  (-> (exec-raw
-        "select count(*) count from (select distinct group_name, jar_name from jars order by group_name, jar_name)"
-        :results)
-      first
-      :count))
+  (sql/count-all-projects {}
+                          {:connection (:db config)
+                           :result-set-fn first
+                           :row-fn :count}))
 
 (defn count-projects-before [s]
-  (-> (exec-raw
-       [(str "select count(*) count from"
-              " (select distinct group_name, jar_name from jars"
-              "  order by group_name, jar_name)"
-              " where group_name || '/' || jar_name < ?")
-        [s]] :results)
-      first
-      :count))
+  (sql/count-projects-before {:s s}
+                             {:connection (:db config)
+                              :result-set-fn first
+                              :row-fn :count}))
 
 (defn browse-projects [current-page per-page]
   (vec
-    (map
-      #(find-jar (:group_name %) (:jar_name %))
-      (all-projects
-        (* (dec current-page) per-page)
-        per-page))))
+   (map
+    #(find-jar (:group_name %) (:jar_name %))
+    (all-projects
+     (* (dec current-page) per-page)
+     per-page))))
 
 (def write-executor (memoize #(Executors/newSingleThreadExecutor)))
 
@@ -237,65 +162,59 @@
                         (catch Throwable e
                           e)))
             response (deref
-                        (.submit (write-executor) bound-f)
-                        10000 ::timeout)]
+                      (.submit (write-executor) bound-f)
+                      10000 ::timeout)]
         (cond
           (= response ::timeout) (throw
-                                   (ex-info
-                                     "Timed out waiting for serialized task to run"
-                                     {:name task-name}))
+                                  (ex-info
+                                   "Timed out waiting for serialized task to run"
+                                   {:name task-name}))
           (instance? Throwable response) (throw
-                                           (ex-info "Serialized task failed"
-                                             {:name task-name}
-                                             response))
+                                          (ex-info "Serialized task failed"
+                                                   {:name task-name}
+                                                   response))
           :default response)))))
 
 (defmacro serialize-task [name & body]
   `(serialize-task* ~name
-     (fn [] ~@body)))
+                    (fn [] ~@body)))
 
 (defn add-user [email username password pgp-key]
-  (let [record {:email email, :user username, :password (bcrypt password),
-                :pgp_key pgp-key}
-        group (str "org.clojars." username)]
+  (let [record {:email email, :username username, :password (bcrypt password),
+                :pgp_key pgp-key :created (get-time)}
+        groupname (str "org.clojars." username)]
     (serialize-task :add-user
-      (insert users (values (assoc record
-                              :created (get-time)
-                              ;;TODO: remove salt and ssh_key field
-                              :ssh_key ""
-                              :salt "")))
-      (insert groups (values {:name group :user username})))
+                    (sql/insert-user! record
+                                      {:connection (:db config)})
+                    (sql/insert-group! {:groupname groupname :username username}
+                                       {:connection (:db config)}))
     record))
 
 (defn update-user [account email username password pgp-key]
   (let [fields {:email email
-                :user username
-                :pgp_key pgp-key}
+                :username username
+                :pgp_key pgp-key
+                :account account}
         fields (if (empty? password)
                  fields
                  (assoc fields :password (bcrypt password)))]
     (serialize-task :update-user
-      (update users
-        (set-fields (assoc fields :salt "" :ssh_key ""))
-        (where {:user account})))
+                    (sql/update-user! fields
+                                      {:connection (:db config)}))
     fields))
 
 (defn update-user-password [reset-code password]
   (assert (not (str/blank? reset-code)))
-  (let [fields {:password (bcrypt password)
-                :password_reset_code nil
-                :password_reset_code_created_at nil}]
-    (serialize-task :update-user-password
-      (update users
-        (set-fields (assoc fields :salt ""))
-        (where {:password_reset_code reset-code})))))
+  (serialize-task :update-user-password
+                    (sql/update-user-password! {:password (bcrypt password)
+                                                :reset_code reset-code}
+                                               {:connection (:db config)})))
 
-;; Password resets
-;; Reference:
-;; https://github.com/xavi/noir-auth-app/blob/master/src/noir_auth_app/models/user.clj
-;; https://github.com/weavejester/crypto-random/blob/master/src/crypto/random.clj
-;; https://jira.atlassian.com/browse/CWD-1897?focusedCommentId=196759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-196759
-
+  ;; Password resets
+  ;; Reference:
+  ;; https://github.com/xavi/noir-auth-app/blob/master/src/noir_auth_app/models/user.clj
+  ;; https://github.com/weavejester/crypto-random/blob/master/src/crypto/random.clj
+  ;; https://jira.atlassian.com/browse/CWD-1897?focusedCommentId=196759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-196759
 (defn generate-secure-token [size]
   (let [seed (byte-array size)]
     ;; http://docs.oracle.com/javase/6/docs/api/java/security/SecureRandom.html
@@ -303,26 +222,25 @@
     seed))
 
 (defn hexadecimalize [byte-array]
-  ; converts byte array to hex string
-  ; http://stackoverflow.com/a/8015558/974795
+                                        ; converts byte array to hex string
+                                        ; http://stackoverflow.com/a/8015558/974795
   (str/lower-case (apply str (map #(format "%02X" %) byte-array))))
 
 (defn set-password-reset-code! [username-or-email]
   (let [reset-code (hexadecimalize (generate-secure-token 20))]
     (serialize-task :set-password-reset-code
-      (update users
-        (set-fields {:password_reset_code reset-code
-                     :password_reset_code_created_at (get-time)})
-        (where (or {:user username-or-email}
-                   {:email username-or-email}))))
+                    (sql/set-password-reset-code! {:reset_code reset-code
+                                                   :reset_code_created_at (get-time)
+                                                   :username_or_email username-or-email}
+                                                  {:connection (:db config)}))
     reset-code))
 
-(defn add-member [group-id username added-by]
+(defn add-member [groupname username added-by]
   (serialize-task :add-member
-    (insert groups
-      (values {:name group-id
-               :user username
-               :added_by added-by}))))
+                  (sql/add-member! {:groupname groupname
+                                    :username username
+                                    :added_by added-by}
+                                   {:connection (:db config)})))
 
 (defn check-and-add-group [account groupname]
   (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)
@@ -344,32 +262,58 @@
                                description homepage authors]}]
   (check-and-add-group account group)
   (serialize-task :add-jar
-    (insert jars
-      (values {:group_name group
-               :jar_name   name
-               :version    version
-               :user       account
-               :created    (get-time)
-               :description description
-               :homepage   homepage
-               :authors    (str/join ", " (map #(.replace % "," "")
-                                            authors))}))))
+                  (sql/add-jar! {:groupname group
+                                 :jarname   name
+                                 :version   version
+                                 :user      account
+                                 :created    (get-time)
+                                 :description description
+                                 :homepage   homepage
+                                 :authors    (str/join ", " (map #(.replace % "," "")
+                                                                 authors))}
+                                {:connection (:db config)})))
 
 (defn delete-jars [group-id & [jar-id version]]
-  (let [column-mappings {:group-id :group_name
-                         :jar-id   :jar_name}
-        coords {:group_name group-id}
-        coords (if jar-id
-                 (assoc coords :jar_name jar-id)
-                 coords)
-        coords (if version
-                 (assoc coords :version version)
-                 coords)]
-    (serialize-task :delete-jars
-      (delete jars (where coords)))))
+  (serialize-task :delete-jars
+                  (let [coords {:group_id group-id}]
+                    (if jar-id
+                      (let [coords (assoc coords :jar_id jar-id)]
+                        (if version
+                          (sql/delete-jar-version! (assoc coords :version version)
+                                                   {:connection (:db config)})
+                          (sql/delete-jars! coords
+                                            {:connection (:db config)})))
+                      (sql/delete-groups-jars! coords
+                                               {:connection (:db config)})))))
 
 ;; does not delete jars in the group. should it?
 (defn delete-groups [group-id]
   (serialize-task :delete-groups
-    (delete groups
-      (where {:name group-id}))))
+                  (sql/delete-group! {:group_id group-id}
+                                     {:connection (:db config)})))
+
+(defn find-jars-information
+  ([group-id]
+   (find-jars-information group-id nil))
+  ([group-id artifact-id]
+   (if artifact-id
+     (sql/find-jars-information {:group_id group-id
+                                 :artifact_id artifact-id}
+                                {:connection (:db config)})
+     (sql/find-groups-jars-information {:group_id group-id}
+                                       {:connection (:db config)}))))
+
+(defn promote [group name version]
+  (serialize-task :promote
+                  (sql/promote! {:group_id group
+                                 :artifact_id name
+                                 :version version
+                                 :promoted_at (get-time)})))
+
+(defn promoted? [group-id artifact-id version]
+  (sql/promoted {:group_id group-id
+                 :artifact_id artifact-id
+                 :version version}
+                {:connection (:db config)
+                 :result-set-fn first
+                 :row-fn :promoted_at}))

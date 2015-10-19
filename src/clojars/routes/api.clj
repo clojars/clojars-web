@@ -5,57 +5,10 @@
             [ring.middleware.format-response :refer [wrap-restful-response]]
             [ring.util.response :refer [response]]
             [clojars.db :as db]
-            [clojars.stats :as stats]
-            [korma.core :refer [exec-raw]]))
-
-(defn find-jars
-  ([group-id]
-   (find-jars group-id nil))
-  ([group-id artifact-id]
-   (exec-raw
-     [(->> ["select j.jar_name, j.group_name, homepage, description, user, "
-            "j.version as latest_version, r2.version as latest_release "
-            "from jars j "
-            ;; Find the latest version
-            "join "
-            "(select jar_name, group_name, max(created) as created "
-            "from jars "
-            "where group_name = ? "
-            (when artifact-id "and jar_name = ? ")
-            "group by group_name, jar_name) l "
-            "on j.jar_name = l.jar_name "
-            "and j.group_name = l.group_name "
-            ;; Find basic info for latest version
-            "and j.created = l.created "
-            ;; Find the created ts for latest release
-            "left join "
-            "(select jar_name, group_name, max(created) as created "
-            "from jars "
-            "where version not like '%-SNAPSHOT' "
-            "and group_name = ? "
-            (when artifact-id "and jar_name = ? ")
-            "group by group_name, jar_name) r "
-            "on j.jar_name = r.jar_name "
-            "and j.group_name = r.group_name "
-            ;; Find version for latest release
-            "left join "
-            "(select jar_name, group_name, version, created from jars "
-            "where group_name = ? "
-            (when artifact-id "and jar_name = ? ")
-            ") as r2 "
-            "on j.jar_name = r2.jar_name "
-            "and j.group_name = r2.group_name "
-            "and r.created = r2.created "
-            "where j.group_name = ? "
-            (when artifact-id "and j.jar_name = ? ")
-            "order by j.group_name asc, j.jar_name asc"]
-        (remove nil?)
-        (apply str))
-      (->> [group-id artifact-id] cycle (take 8) (remove nil?))]
-     :results)))
+            [clojars.stats :as stats]))
 
 (defn get-artifact [group-id artifact-id]
-  (if-let [artifact (first (find-jars group-id artifact-id))]
+  (if-let [artifact (first (db/find-jars-information group-id artifact-id))]
     (let [stats (stats/all)]
       (-> artifact
         (assoc
@@ -73,7 +26,7 @@
 (defroutes handler
   (context "/api" []
     (GET ["/groups/:group-id", :group-id #"[^/]+"] [group-id]
-      (if-let [jars (seq (find-jars group-id))]
+      (if-let [jars (seq (db/find-jars-information group-id))]
         (let [stats (stats/all)]
           (response
             (map (fn [jar]

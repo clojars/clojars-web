@@ -15,8 +15,7 @@
                  [ring-middleware-format "0.5.0"]
                  [hiccup "1.0.3"]
                  [cheshire "5.4.0"]
-                 [korma "0.3.0-beta10"]
-                 [org.xerial/sqlite-jdbc "3.7.2"]
+                 [org.xerial/sqlite-jdbc "3.8.11.2"]
                  [org.apache.commons/commons-email "1.2"]
                  [commons-codec "1.6"]
                  [net.cgrand/regex "1.0.1"
@@ -33,7 +32,8 @@
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.11"]
                  [org.bouncycastle/bcpg-jdk15on "1.47"]
-                 [mvxcvi/clj-pgp "0.8.0"]]
+                 [mvxcvi/clj-pgp "0.8.0"]
+                 [yesql "0.5.1"]]
   :profiles {:dev {:dependencies [[kerodon "0.7.0"]
                                   [clj-http-lite "0.2.1"]]
                    :resource-paths ["local-resources"]}}
