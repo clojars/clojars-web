@@ -271,6 +271,17 @@
     (ev/record :membership {:group-id group :username username :added-by nil})
     record))
 
+(defn- update-username [account username]
+  (update jars
+    (set-fields {:user username})
+    (where {:user account}))
+  (update groups
+    (set-fields {:user username})
+    (where {:user account}))
+  (update groups
+    (set-fields {:added_by username})
+    (where {:added_by account})))
+
 (defn update-user [account email username password pgp-key]
   (let [fields {:email email
                 :user username
@@ -281,7 +292,8 @@
     (serialize-task :update-user
       (update users
         (set-fields (assoc fields :salt "" :ssh_key ""))
-        (where {:user account})))
+        (where {:user account}))
+      (update-username account username))
     (ev/record :user (clojure.set/rename-keys fields {:user :username
                                                       :pgp_key :pgp-key}))
     fields))

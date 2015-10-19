@@ -1,14 +1,15 @@
 (ns clojars.web.login
-  (:require [clojars.web.common :refer [html-doc]]
+  (:require [clojars.web.common :refer [html-doc flash]]
             [hiccup.element :refer [link-to]]
             [hiccup.form :refer [label text-field
                                  password-field submit-button]]
             [ring.util.response :refer [redirect]]
             [clojars.web.safe-hiccup :refer [form-to]]))
 
-(defn login-form [login_failed username]
+(defn login-form [login_failed username flash-msg]
   (html-doc nil "Login"
    [:div.small-section
+    (flash flash-msg)
     [:h1 "Login"]
     [:p.hint "Don't have an account? "
      (link-to "/register" "Sign up!")]
