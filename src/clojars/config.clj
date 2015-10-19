@@ -7,7 +7,6 @@
 (def default-config
   {:port 8080
    :bind "0.0.0.0"
-   :nailgun-bind "127.0.0.1"
    :db {:classname "org.sqlite.JDBC"
         :subprotocol "sqlite"
         :subname "data/db"}
@@ -68,8 +67,6 @@
    ["REPO" :repo]
    ["DELETION_BACKUP_DIR" :deletion-backup-dir]
    ["NREPL_PORT" :nrepl-port #(Integer/parseInt %)]
-   ["NAILGUN_BIND" :nailgun-bind]
-   ["NAILGUN_PORT" :nailgun-port #(Integer/parseInt %)]
    ["RELEASES_URL" :releases-url]
    ["RELEASES_ACCESS_KEY" :releases-access-key]
    ["RELEASES_SECRET_KEY" :releases-secret-key]
@@ -95,8 +92,6 @@
        ["--db" "Database URL like sqlite:data/db"]
        ["--mail" "SMTP URL like smtps://user:pass@host:port?from=me@example.org"]
        ["--repo" "Path to store jar files in"]
-       ["--nailgun-port" "Listen port for nailgun (for scp)" :parse-fn #(Integer/parseInt %)]
-       ["--nailgun-bind" "Bind address for nailgun" :default (:nailgun-bind defaults)]
        ["--bcrypt-work-factor" "Difficulty factor for bcrypt password hashing"
         :parse-fn #(Integer/parseInt %) :default (:bcrypt-work-factor defaults)]))
 
