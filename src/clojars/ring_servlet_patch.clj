@@ -1,24 +1,27 @@
 (ns clojars.ring-servlet-patch
   (:require [ring.util.servlet :as ring-servlet])
-  (:import (javax.servlet.http HttpServlet
-             HttpServletRequest
-             HttpServletResponse)))
+  (:import [javax.servlet.http
+            HttpServlet
+            HttpServletRequest
+            HttpServletResponse
+            HttpServletResponseWrapper]
+           [org.eclipse.jetty.server Request]
+           [org.eclipse.jetty.server.handler AbstractHandler]))
 
-(defn update-servlet-response-with-message
-  "A replacement for ring.util.servlet/update-servlet-response that can
-  set the optional status message, which is the only mechanism we have to
-  report true failure reasons to aether."
-  [^HttpServletResponse response {:keys [status status-message headers body]}]
-  (when-not response
-    (throw (Exception. "Null response given.")))
-  (when status
-    (if status-message
-      (.setStatus response status status-message)
-      (.setStatus response status)))
-  (doto response
-    (#'ring-servlet/set-headers headers)
-    (#'ring-servlet/set-body body)))
 
-(defn patch-ring-servlet! []
-  (alter-var-root #'ring-servlet/update-servlet-response
-    (constantly update-servlet-response-with-message)))
+(defn response-wrapper [response]
+  (proxy [HttpServletResponseWrapper] [response]
+    (setHeader [name value]
+      (if (and (= name "status-message") value)
+        (.setStatus response (.getStatus response) value)
+        (proxy-super setHeader name value)))))
+
+(defn ^AbstractHandler handler-wrapper [handler]
+  (proxy [AbstractHandler] []
+    (handle [target ^Request base-request request response]
+      (let [response (response-wrapper response)]
+        (.handle handler target base-request request response)))))
+
+(defn use-status-message-header [server]
+  (let [handler (.getHandler server)]
+    (.setHandler server (handler-wrapper handler))))

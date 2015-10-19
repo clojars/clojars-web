@@ -5,16 +5,17 @@
             [clojars.config :refer [config configure]]
             [clojars.admin :as admin]
             [clojars.errors :as errors]
-            [clojars.ring-servlet-patch :refer [patch-ring-servlet!]])
+            [clojars.ring-servlet-patch :as patch])
   (:gen-class))
 
+
 (defn start-jetty [& [port]]
-  (patch-ring-servlet!)
   (when-let [port (or port (:port config))]
     (println "clojars-web: starting jetty on" (str "http://" (:bind config) ":" port))
     (run-jetty #'clojars-app {:host (:bind config)
-                            :port port
-                            :join? false})))
+                              :port port
+                              :join? false
+                              :configurator patch/use-status-message-header})))
 
 (defn -main [& args]
   (alter-var-root #'*read-eval* (constantly false))

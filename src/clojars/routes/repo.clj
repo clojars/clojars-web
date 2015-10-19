@@ -66,8 +66,7 @@
        (report-error e#)
        (let [data# (ex-data e#)]
          {:status (or (:status data#) 403)
-          :status-message (:status-message data#)
-          :headers {}
+          :headers {"status-message" (:status-message data#)}
           :body (.getMessage e#)}))))
 
 (defmacro put-req [groupname & body]
