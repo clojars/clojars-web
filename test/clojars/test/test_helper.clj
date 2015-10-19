@@ -23,7 +23,6 @@
                        :subprotocol "sqlite"
                        :subname "data/test/db"}
                   :repo "data/test/repo"
-                  :event-dir "data/test/events"
                   :stats-dir "data/test/stats"
                   :index-path "data/test/index"
                   :bcrypt-work-factor 12
@@ -75,8 +74,6 @@
    (fn []
      (force migrate)
      (delete-file-recursively (io/file (config :repo)))
-     (delete-file-recursively (io/file (config :event-dir)))
-     (.mkdirs (io/file (config :event-dir)))
      (delete-file-recursively (io/file (config :stats-dir)))
      (.mkdirs (io/file (config :stats-dir)))
      (make-download-count! {})
