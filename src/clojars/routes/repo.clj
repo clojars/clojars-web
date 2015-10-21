@@ -1,15 +1,20 @@
 (ns clojars.routes.repo
-  (:require [clojars.auth :refer [with-account require-authorization]]
-            [clojars.db :as db]
-            [clojars.config :refer [config]]
-            [clojars.maven :as maven]
-            [clojars.errors :refer [report-error]]
-            [compojure.core :refer [defroutes PUT ANY]]
-            [compojure.route :refer [not-found]]
+  (:require [clojars
+             [auth :refer [require-authorization with-account]]
+             [config :refer [config]]
+             [db :as db]
+             [errors :refer [report-error]]
+             [maven :as maven]
+             [search :as search]]
             [clojure.java.io :as io]
             [clojure.string :as string]
-            [ring.util.codec :as codec]
-            [ring.util.response :as response])
+            [clucy.core :as clucy]
+            [compojure
+             [core :as compojure :refer [PUT defroutes]]
+             [route :refer [not-found]]]
+            [ring.util
+             [codec :as codec]
+             [response :as response]])
   (:import java.io.StringReader))
 
 (defn versions [group-id artifact-id]
@@ -135,7 +140,10 @@
         (validate-deploy groupname artifact version filename)
         (db/check-and-add-group account groupname)
 
-        (try-save-to-file file (body-and-add-pom body filename info account))))))
+        (try-save-to-file file (body-and-add-pom body filename info account))
+        (when (pom? filename)
+          (with-open [index (clucy/disk-index (config :index-path))]
+            (search/index-pom index file)))))))
 
 ;; web handlers
 (defroutes routes

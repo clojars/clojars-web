@@ -34,7 +34,7 @@
                  [org.clojure/tools.nrepl "0.2.11"]
                  [org.bouncycastle/bcpg-jdk15on "1.47"]
                  [mvxcvi/clj-pgp "0.8.0"]]
-  :profiles {:dev {:dependencies [[kerodon "0.0.7"]
+  :profiles {:dev {:dependencies [[kerodon "0.7.0"]
                                   [clj-http-lite "0.2.1"]]
                    :resource-paths ["local-resources"]}}
   :plugins [[lein-ring "0.8.5"]]
@@ -49,3 +49,4 @@
                   ["change" "version" "leiningen.release/bump-version"]
                   ["vcs" "commit"]
                   ["vcs" "push"]])
+

@@ -1,15 +1,17 @@
 (ns clojars.test.integration.uploads
-  (:require [clojure.test :refer :all]
-            [kerodon.core :refer :all]
-            [kerodon.test :refer :all]
-            [clojars.config :refer [config]]
-            [clojars.web :refer [clojars-app]]
+  (:require [cemerick.pomegranate.aether :as aether]
+            [clojars
+             [config :refer [config]]
+             [web :as web :refer [clojars-app]]]
             [clojars.test.integration.steps :refer :all]
             [clojars.test.test-helper :as help]
+            [clojure.data.codec.base64 :as base64]
             [clojure.java.io :as io]
-            [cemerick.pomegranate.aether :as aether]
-            [net.cgrand.enlive-html :as enlive]
-            [clojure.data.codec.base64 :as base64]))
+            [clojure.test :refer :all]
+            [kerodon
+             [core :refer :all]
+             [test :refer :all]]
+            [net.cgrand.enlive-html :as enlive]))
 
 (use-fixtures :once help/run-test-app)
 (use-fixtures :each help/default-fixture help/index-fixture)
@@ -51,7 +53,15 @@
       (follow "org.clojars.dantheman/test")
       (has (status? 200))
       (within [:#jar-sidebar :li.homepage :a]
-              (has (text? "https://example.org")))))
+              (has (text? "https://example.org"))))
+  (-> (session clojars-app)
+      (visit "/")
+      (fill-in [:#search] "test")
+      (press [:#search-button])
+      ;; the pom is used as is, even if the data is wrong
+      ;; https://github.com/ato/clojars-web/issues/358
+      (within [:div.result]
+              (has (text? "fake/test 0.0.1")))))
 
 (deftest user-can-deploy-to-new-group
    (-> (session clojars-app)
@@ -283,7 +293,9 @@
         (visit "/repo/group3/artifact3/1.0.0/test.jar"
                :body (proxy [java.io.InputStream] []
                        (read
-                         ([_] (throw (java.io.IOException.)))))
+                         ([] (throw (java.io.IOException.)))
+                         ([^bytes bytes] (throw (java.io.IOException.)))
+                         ([^bytes bytes off len] (throw (java.io.IOException.)))))
                :request-method :put
                :content-length 1000
                :content-type "txt/plain"
