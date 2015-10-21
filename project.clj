@@ -1,4 +1,5 @@
 (defproject clojars-web "0.18.1-SNAPSHOT"
+  :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [yeller-clojure-client "1.2.1"]
@@ -36,17 +37,23 @@
                  [yesql "0.5.1"]
                  [com.zaxxer/HikariCP "2.4.1"]
                  [org.slf4j/slf4j-nop "1.7.7"]]
-  :profiles {:dev {:dependencies [[kerodon "0.7.0"]
-                                  [clj-http-lite "0.2.1"]]
-                   :resource-paths ["local-resources"]}}
-  :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
-  :main clojars.main
-  :min-lein-version "2.0.0"
+  :main ^:skip-aot clojars.main
+  :target-path "target/%s/"
   :release-tasks [["vcs" "assert-committed"]
                   ["change" "version" "leiningen.release/bump-version" "release"]
                   ["vcs" "commit"]
                   ["vcs" "tag"]
                   ["change" "version" "leiningen.release/bump-version"]
                   ["vcs" "commit"]
-                  ["vcs" "push"]])
-
+                  ["vcs" "push"]]
+  :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
+  :profiles
+  {:dev  [:project/dev  :profiles/dev]
+   :test [:project/test :profiles/test]
+   :uberjar {:aot :all}
+   :profiles/dev  {}
+   :profiles/test {}
+   :project/dev   {:dependencies [[kerodon "0.7.0"]
+                                  [clj-http-lite "0.2.1"]]
+                   :resource-paths ["local-resources"]}
+   :project/test  {}})
