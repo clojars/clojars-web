@@ -16,7 +16,7 @@
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.2/test.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
-  (-> (session (web/clojars-app help/*db*))
+  (-> (session (help/app))
       (visit "/fake/test")
       (within [:div#jar-title :h1 :a]
               (has (text? "fake/test")))
@@ -27,7 +27,7 @@
 
 (deftest jars-with-only-snapshots-can-be-viewed
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
-  (-> (session (web/clojars-app help/*db*))
+  (-> (session (help/app))
       (visit "/fake/test")
       (within [:div#jar-title :h1 :a]
               (has (text? "fake/test")))
@@ -42,7 +42,7 @@
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.1/fake.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.2/fake.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.3-SNAPSHOT/fake.pom")
-  (-> (session (web/clojars-app help/*db*))
+  (-> (session (help/app))
       (visit "/fake")
       (within [:div#jar-title :h1 :a]
               (has (text? "fake")))
@@ -55,7 +55,7 @@
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.1/test.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.2/test.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
-  (-> (session (web/clojars-app help/*db*))
+  (-> (session (help/app))
       (visit "/fake/test")
       (follow "0.0.3-SNAPSHOT")
       (within [:div#jar-title :h1 :a]
@@ -69,7 +69,7 @@
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.1/fake.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.2/fake.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.3-SNAPSHOT/fake.pom")
-  (-> (session (web/clojars-app help/*db*))
+  (-> (session (help/app))
       (visit "/fake")
       (follow "0.0.1")
       (within [:div#jar-title :h1 :a]
@@ -83,7 +83,7 @@
 (deftest canonical-jars-can-view-dependencies
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.1/fake.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.2/fake.pom")
-  (-> (session (web/clojars-app help/*db*))
+  (-> (session (help/app))
       (visit "/fake")
       (within [:ul#dependencies]
                (has (text? "org.clojure/clojure 1.3.0-beta1")))))

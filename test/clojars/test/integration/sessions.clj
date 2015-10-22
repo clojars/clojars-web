@@ -16,7 +16,7 @@
   help/with-clean-database)
 
 (deftest user-cant-login-with-bad-user-pass-combo
-  (-> (session (web/clojars-app help/*db*))
+  (-> (session (help/app))
       (login-as "fixture@example.org" "password")
       (follow-redirect)
       (has (status? 200))
@@ -24,7 +24,7 @@
               (has (text? "Incorrect username and/or password.")))))
 
 (deftest user-can-login-and-logout
-  (let [app (web/clojars-app help/*db*)]
+  (let [app (help/app)]
     (-> (session app)
         (register-as "fixture" "fixture@example.org" "password"))
     (doseq [login ["fixture@example.org" "fixture"]]
@@ -41,7 +41,7 @@
                   (has (text? "login")))))))
 
 (deftest user-with-password-wipe-gets-message
-  (let [app (web/clojars-app help/*db*)]
+  (let [app (help/app)]
     (-> (session app)
         (register-as "fixture" "fixture@example.org" "password"))
     (jdbc/db-do-commands help/*db*

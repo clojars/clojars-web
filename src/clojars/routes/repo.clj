@@ -180,12 +180,12 @@
       {:status 400 :headers {}}
       (f req))))
 
-(defn wrap-exceptions [app]
+(defn wrap-exceptions [app reporter]
   (fn [req]
     (try
       (app req)
       (catch Exception e
-        (report-error e)
+        (report-error reporter e)
         (let [data (ex-data e)]
           {:status (or (:status data) 403)
            :headers {"status-message" (:status-message data)}

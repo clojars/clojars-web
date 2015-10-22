@@ -3,8 +3,10 @@
   (:require [clojars
              [config :refer [config]]
              [db :as db]
+             [errors :as errors]
              [search :as search]
-             [system :as system]]
+             [system :as system]
+             [web :as web]]
             [clojars.db.migrate :as migrate]
             [clojure.java
              [io :as io]
@@ -74,6 +76,10 @@
   (make-index! [])
   (f))
 
+(defn quiet-reporter []
+  (reify errors/ErrorReporter
+    (-report-error [t e ex id])))
+
 (declare ^:dynamic *db*)
 
 (defn with-clean-database [f]
@@ -84,12 +90,16 @@
       (f)
       (finally (.close (:connection *db*))))))
 
+(defn app []
+  (web/clojars-app *db* (quiet-reporter)))
+
 (declare test-port)
 
 (defn run-test-app
   ([f]
    (let [system (component/start (assoc (system/new-system test-config)
-                                        :db {:spec *db*}))
+                                        :db {:spec *db*}
+                                        :error-reporter (quiet-reporter)))
          server (get-in system [:http :server])
          port (-> server .getConnectors first .getLocalPort)]
      (with-redefs [test-port port]

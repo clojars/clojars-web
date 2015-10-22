@@ -38,4 +38,4 @@
         (component/system-using
          {:http [:app]
           :app  [:clojars-app]
-          :clojars-app [:db]}))))
+          :clojars-app [:db :error-reporter]}))))

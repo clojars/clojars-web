@@ -82,9 +82,9 @@
                                    "/promote/" (:version jar))]
                        (submit-button "Promote")))))))
 
-(defn show-jar [db account jar recent-versions count]
+(defn show-jar [db reporter account jar recent-versions count]
   (html-doc account (str (:jar_name jar) " " (:version jar))
-            (let [pom-map (jar-to-pom-map jar)]
+            (let [pom-map (jar-to-pom-map reporter jar)]
               [:div.light-article.row
                [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
                 [:h1 (jar-link jar)]

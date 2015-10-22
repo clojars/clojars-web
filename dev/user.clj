@@ -1,32 +1,39 @@
 (ns user
-  (:require [clojure.repl :refer :all]
-            [clojure.pprint :refer [pprint]]
-            [clojure.tools.namespace.repl :refer [refresh]]
+  (:require [clojars
+             [config :as config]
+             [errors :as errors]
+             [system :as system]]
+            [clojars.db.migrate :as migrate]
             [clojure.java.io :as io]
-            [com.stuartsierra.component :as component]
+            [clojure.tools.namespace.repl :refer [refresh]]
             [eftest.runner :as eftest]
             [meta-merge.core :refer [meta-merge]]
-            [reloaded.repl :refer [system init start stop go reset]]
-            [clojars.config :as config]
-            [clojars.system :as system]
-            [clojars.db.migrate :as migrate]))
+            [reloaded.repl :refer [system init stop go clear]]))
 
 (def dev-env
   {:app {:middleware []}})
 
 
 (defn new-system []
+  (refresh)
   (config/configure [])
-  (system/new-system (meta-merge config/config dev-env)))
+  (assoc (system/new-system (meta-merge config/config dev-env))
+         :error-reporter (errors/->StdOutReporter)))
 
 (ns-unmap *ns* 'test)
 
+(defn reset []
+  (if system
+    (do (clear)
+        (go))
+    (refresh)))
+
 (defn test [& tests]
   (let [tests (if (empty? tests)
-                (eftest/find-tests "test")
-                tests)]
-    (eftest/run-tests tests {:report eftest.report.pretty/report
-                             :multithread? false})))
+                  (eftest/find-tests "test")
+                  tests)]
+        (eftest/run-tests tests {:report eftest.report.pretty/report
+                                 :multithread? false})))
 
 (when (io/resource "local.clj")
   (load "local"))

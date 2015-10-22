@@ -18,16 +18,16 @@
   (every? #(.contains % "HttpOnly") (res cookies)))
 
 (deftest https-cookies-are-secure
-  (let [res ((web/clojars-app help/*db*) (assoc (request :get "/") :scheme :https))]
+  (let [res ((help/app) (assoc (request :get "/") :scheme :https))]
     (is (cookies-secure? res))
     (is (cookies-http-only? res))))
 
 (deftest forwarded-https-cookies-are-secure
-  (let [res ((web/clojars-app help/*db*) (-> (request :get "/")
+  (let [res ((help/app) (-> (request :get "/")
                                        (header "x-forward-proto" "https")))]
     (is (cookies-secure? res))
     (is (cookies-http-only? res))))
 
 (deftest regular-cookies-are-http-only
-  (let [res ((web/clojars-app help/*db*) (request :get "/"))]
+  (let [res ((help/app) (request :get "/"))]
     (is (cookies-http-only? res))))

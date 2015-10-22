@@ -8,10 +8,11 @@
             [ring.util.response :as response]
             [clojure.set :as set]))
 
-(defn show [db group-id artifact-id]
+(defn show [db reporter group-id artifact-id]
   (if-let [artifact (db/find-jar db group-id artifact-id)]
     (auth/try-account
      (view/show-jar db
+                    reporter
                     account
                     artifact
                     (db/recent-versions db group-id artifact-id 5)
@@ -24,10 +25,11 @@
                          artifact
                          (db/recent-versions db group-id artifact-id)))))
 
-(defn show-version [db group-id artifact-id version]
+(defn show-version [db reporter group-id artifact-id version]
   (if-let [artifact (db/find-jar db group-id artifact-id version)]
     (auth/try-account
      (view/show-jar db
+                    reporter
                     account
                     artifact
                     (db/recent-versions db group-id artifact-id 5)
@@ -46,13 +48,13 @@
                               (response/header "Cache-Control" "no-cache")
                               (response/content-type "image/svg+xml")))))
 
-(defn routes [db]
+(defn routes [db reporter]
   (compojure/routes
    (GET ["/:artifact-id", :artifact-id #"[^/]+"] [artifact-id]
-        (show db artifact-id artifact-id))
+        (show db reporter artifact-id artifact-id))
    (GET ["/:group-id/:artifact-id", :group-id #"[^/]+" :artifact-id #"[^/]+"]
         [group-id artifact-id]
-        (show db group-id artifact-id))
+        (show db reporter group-id artifact-id))
 
    (GET ["/:artifact-id/versions" :artifact-id #"[^/]+"] [artifact-id]
         (list-versions db artifact-id artifact-id))
@@ -64,11 +66,11 @@
    (GET ["/:artifact-id/versions/:version"
          :artifact-id #"[^/]+" :version #"[^/]+"]
         [artifact-id version]
-        (show-version db artifact-id artifact-id version))
+        (show-version db reporter artifact-id artifact-id version))
    (GET ["/:group-id/:artifact-id/versions/:version"
          :group-id #"[^/]+" :artifact-id #"[^/]+" :version #"[^/]+"]
         [group-id artifact-id version]
-        (show-version db group-id artifact-id version))
+        (show-version db reporter group-id artifact-id version))
 
    (GET ["/:artifact-id/latest-version.:file-format"
          :artifact-id #"[^/]+"

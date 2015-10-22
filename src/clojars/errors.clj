@@ -4,42 +4,50 @@
             [clojars.config :refer [config]]
             [clj-stacktrace.repl :refer [pst]]
             [clojars.web.error-page :as error-page])
-  (:import java.util.UUID))
+  (:import java.util.UUID
+           com.yellerapp.client.YellerHTTPClient))
 
-(def client
-  (delay
-    (when-let [token (:yeller-token config)]
-      (println "clojars-web: enabling yeller client")
-      (yeller/client {:token token}))))
+
+(defprotocol ErrorReporter
+  (-report-error [reporter e extra id]))
+
+(extend-protocol ErrorReporter
+  YellerHTTPClient
+  (-report-error [client e extra id]
+    (yeller/report client e (assoc-in extra [:custom-data :error-id] id))))
+
+(defrecord StdOutReporter []
+  ErrorReporter
+  (-report-error [_ e _ id]
+    (println "ERROR ID:" id)
+    (pst e)))
+
+(defrecord MultiReporter [reporters]
+  ErrorReporter
+  (-report-error [reporter e extra id]
+    (run! #(-report-error % e extra id) reporters)))
+
+(defn multiple-reporters [& reporters]
+  (->MultiReporter reporters))
 
 (defn error-id []
   (str (UUID/randomUUID)))
 
 (defn report-error
-  ([e]
-   (report-error e nil))
-  ([e extra]
+  ([reporter e]
+   (report-error reporter e nil))
+  ([reporter e extra]
    (let [id (error-id)]
-     (println "ERROR ID:" id)
-     (pst e)
-     (when-let [c @client]
-       (yeller/report c e
-         (-> extra
-           (assoc :environment (:yeller-environment config))
-           (assoc-in [:custom-data :error-id] id))))
+     (-report-error reporter e extra id)
      id)))
 
-(defn report-ring-error [e request]
-  (report-error e (yeller-ring/format-extra nil request)))
+(defn report-ring-error [reporter e request]
+  (report-error reporter e (yeller-ring/format-extra nil request)))
 
-(defn wrap-exceptions [app]
+(defn wrap-exceptions [app reporter]
   (fn [req]
     (try
       (app req)
       (catch Throwable t
-        (->> (report-ring-error t req)
-          (error-page/error-page-response))))))
-
-(defn register-global-exception-handler! []
-  (when-let [c @client]
-    (Thread/setDefaultUncaughtExceptionHandler c)))
+        (->> (report-ring-error reporter t req)
+             (error-page/error-page-response))))))

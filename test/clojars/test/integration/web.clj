@@ -13,22 +13,22 @@
   help/with-clean-database)
 
 (deftest server-errors-display-error-page
-  (with-out-str (-> (session (web/clojars-app help/*db*))
+  (with-out-str (-> (session (help/app))
              (visit "/error")
                     (within [:div.small-section :> :h1]
                       (has (text? "Oops!"))))))
 
 (deftest error-page-includes-error-id
   (with-redefs [clojars.errors/error-id (constantly "ERROR")]
-    (with-out-str (-> (session (web/clojars-app help/*db*))
+    (with-out-str (-> (session (help/app))
                     (visit "/error")
                     (within [:div.small-section :> :pre.error-id]
                       (has (text? "error-id:\"ERROR\"")))))))
 
 (deftest server-errors-log-caught-exceptions
   (let [err (atom nil)]
-    (with-redefs [clojars.errors/report-error (fn [e & _] (reset! err e))]
-      (-> (session (web/clojars-app help/*db*))
+    (with-redefs [clojars.errors/report-error (fn [r e & _] (reset! err e))]
+      (-> (session (help/app))
         (visit "/error"))
       (is (re-find #"You really want an error" (.getMessage @err))))))
 
@@ -38,7 +38,7 @@
      help/*db*
       "test-user"
       {:name (str "tester" i) :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
-   (-> (session (web/clojars-app help/*db*))
+   (-> (session (help/app))
      (visit "/projects")
      (within [:div.light-article :> :h1]
              (has (text? "All projects")))
@@ -63,7 +63,7 @@
      help/*db*
       "test-user"
       {:name (str "tester" i "a") :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
-  (-> (session (web/clojars-app help/*db*))
+  (-> (session (help/app))
       (visit "/projects")
       (fill-in "Enter a few letters..." "tester/tester123")
       (press "Jump")

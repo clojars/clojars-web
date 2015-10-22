@@ -36,7 +36,7 @@
              [resource :refer [wrap-resource]]
              [session :refer [wrap-session]]]))
 
-(defn main-routes [db]
+(defn main-routes [db reporter]
   (routes
    (GET "/" _
         (try-account
@@ -58,7 +58,7 @@
                    (raw (slurp (io/resource "security.html"))))))
    session/routes
    (group/routes db)
-   (artifact/routes db)
+   (artifact/routes db reporter)
    ;; user routes must go after artifact routes
    ;; since they both catch /:identifier
    (user/routes db)
@@ -106,7 +106,7 @@
         (secure-session req)
         (regular-session req)))))
 
-(defn clojars-app [db]
+(defn clojars-app [db reporter]
   (routes
    (context "/repo" _
             (-> (repo/routes db)
@@ -116,10 +116,10 @@
                   :allow-anon? false
                   :unauthenticated-handler
                   (partial workflows/http-basic-deny "clojars")})
-                (repo/wrap-exceptions)
+                (repo/wrap-exceptions reporter)
                 (repo/wrap-file (:repo config))
                 (repo/wrap-reject-double-dot)))
-   (-> (main-routes db)
+   (-> (main-routes db reporter)
        (friend/authenticate
         {:credential-fn (credential-fn db)
          :workflows [(workflows/interactive-form)
@@ -133,7 +133,7 @@
        (wrap-secure-session)
        (wrap-resource "public")
        (wrap-file-info)
-       wrap-exceptions)))
+       (wrap-exceptions reporter))))
 
-(defn handler-optioned [{:keys [db] :as opts}]
-  (clojars-app (:spec db)))
+(defn handler-optioned [{:keys [db error-reporter] :as opts}]
+  (clojars-app (:spec db) error-reporter))
