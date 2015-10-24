@@ -62,26 +62,14 @@
       contents)
     body))
 
-(defmacro with-error-handling [& body]
-  `(try
-     ~@body
-     ;; should we only do 201 if the file didn't already exist?
-     {:status 201 :headers {} :body nil}
-     (catch Exception e#
-       (report-error e#)
-       (let [data# (ex-data e#)]
-         {:status (or (:status data#) 403)
-          :headers {"status-message" (:status-message data#)}
-          :body (.getMessage e#)}))))
-
-
 (defmacro put-req [db groupname & body]
   `(with-account
      (require-authorization
       ~db
       ~groupname
-      (with-error-handling
-        ~@body))))
+      ~@body
+      ;; should we only do 201 if the file didn't already exist?
+      {:status 201 :headers {} :body nil})))
 
 (defn- validate-regex [x re message]
   (when-not (re-matches re x)
@@ -191,3 +179,14 @@
     (if (re-find #"\.\." (:uri req))
       {:status 400 :headers {}}
       (f req))))
+
+(defn wrap-exceptions [app]
+  (fn [req]
+    (try
+      (app req)
+      (catch Exception e
+        (report-error e)
+        (let [data (ex-data e)]
+          {:status (or (:status data) 403)
+           :headers {"status-message" (:status-message data)}
+           :body (.getMessage e)})))))

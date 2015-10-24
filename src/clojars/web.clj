@@ -116,6 +116,7 @@
                   :allow-anon? false
                   :unauthenticated-handler
                   (partial workflows/http-basic-deny "clojars")})
+                (repo/wrap-exceptions)
                 (repo/wrap-file (:repo config))
                 (repo/wrap-reject-double-dot)))
    (-> (main-routes db)
