@@ -28,10 +28,11 @@
              [route :refer [not-found]]]
             [ring.middleware
              [anti-forgery :refer [wrap-anti-forgery]]
-             [file-info :refer [wrap-file-info]]
+             [content-type :refer [wrap-content-type]]
              [flash :refer [wrap-flash]]
              [keyword-params :refer [wrap-keyword-params]]
              [multipart-params :refer [wrap-multipart-params]]
+             [not-modified :refer [wrap-not-modified]]
              [params :refer [wrap-params]]
              [resource :refer [wrap-resource]]
              [session :refer [wrap-session]]]))
@@ -132,7 +133,8 @@
        (wrap-flash)
        (wrap-secure-session)
        (wrap-resource "public")
-       (wrap-file-info)
+       (wrap-content-type)
+       (wrap-not-modified)
        (wrap-exceptions reporter))))
 
 (defn handler-optioned [{:keys [db error-reporter stats search]}]
