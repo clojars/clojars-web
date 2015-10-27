@@ -36,5 +36,5 @@
     (admin/init db)))
 
 (comment
-  (def server (start-jetty 8080))
+  (def server (start-jetty (jdbc-url (:db config)) 8080))
   (.stop server))
