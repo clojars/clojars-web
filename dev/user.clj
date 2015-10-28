@@ -32,7 +32,7 @@
   (load "local"))
 
 (defn migrate []
-  (migrate/migrate config/config))
+  (migrate/migrate (:db config/config)))
 
 ;; TODO: function to setup fake data (from clojars.dev.setup?)
 
