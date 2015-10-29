@@ -1,22 +1,31 @@
 (ns clojars.web.user
-  (:require [clojars.db :as db :refer [find-user group-membernames add-user
-                                reserved-names update-user jars-by-username
-                                find-groupnames find-user-by-user-or-email
-                                rand-string]]
-            [clojars.web.common :refer [html-doc error-list jar-link
-                                        flash group-link]]
-            [clojars.config :refer [config]]
+  (:require [clj-time.core :as time]
+            [clojars
+             [auth :refer [bcrypt]]
+             [config :refer [config]]
+             [db
+              :as db
+              :refer
+              [find-groupnames
+               find-user
+               find-user-by-user-or-email
+               group-membernames
+               jars-by-username
+               update-user]]
+             [email :as email]]
+            [clojars.routes.repo :as repo]
+            [clojars.web
+             [common :refer [error-list flash group-link html-doc jar-link]]
+             [safe-hiccup :refer [form-to]]]
             [clojure.string :as string :refer [blank?]]
-            [hiccup.element :refer [link-to unordered-list]]
-            [hiccup.form :refer [label text-field
-                                 password-field text-area
-                                 submit-button
-                                 email-field]]
-            [clojars.web.safe-hiccup :refer [form-to]]
-            [clojars.email :as email]
-            [ring.util.response :refer [response redirect]]
-            [valip.core :refer [validate]]
-            [valip.predicates :as pred]))
+            [hiccup
+             [element :refer [unordered-list]]
+             [form :refer [email-field label password-field submit-button text-area text-field]]]
+            [ring.util.response :refer [redirect]]
+            [valip
+             [core :refer [validate]]
+             [predicates :as pred]])
+  (:import java.security.SecureRandom))
 
 (defn register-form [ & [errors email username pgp-key]]
   (html-doc nil "Register"
@@ -67,7 +76,7 @@
 
 (defn new-user-validations [db confirm]
   (concat [[:password pred/present? "Password can't be blank"]
-           [:username #(not (or (reserved-names %)
+           [:username #(not (or (repo/reserved-names %)
                                 (find-user db %)
                                 (seq (group-membernames db %))))
             "Username is already taken"]]
@@ -100,9 +109,12 @@
                                      :pgp-key pgp-key}
                            (update-user-validations confirm))]
       (profile-form account params nil (apply concat (vals errors)))
-      (do (update-user db account email account password pgp-key)
-          (assoc (redirect "/profile")
-            :flash "Profile updated.")))))
+      (let [password (if (empty? password)
+                       (:password (db/find-user account))
+                       (bcrypt password))]
+        (do (update-user db account email account password pgp-key)
+            (assoc (redirect "/profile")
+                   :flash "Profile updated."))))))
 
 (defn show-user [db account user]
   (html-doc account (user :user)
@@ -127,11 +139,29 @@
                           :email-or-username)
               (submit-button "Email me a password reset link"))]))
 
+  ;; Password resets
+  ;; Reference:
+  ;; https://github.com/xavi/noir-auth-app/blob/master/src/noir_auth_app/models/user.clj
+  ;; https://github.com/weavejester/crypto-random/blob/master/src/crypto/random.clj
+  ;; https://jira.atlassian.com/browse/CWD-1897?focusedCommentId=196759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-196759
+(defn generate-secure-token [size]
+  (let [seed (byte-array size)]
+    ;; http://docs.oracle.com/javase/6/docs/api/java/security/SecureRandom.html
+    (.nextBytes (SecureRandom/getInstance "SHA1PRNG") seed)
+    seed))
+
+(defn hexadecimalize [byte-array]
+  ;; converts byte array to hex string
+  ;; http://stackoverflow.com/a/8015558/974795
+  (string/lower-case (apply str (map #(format "%02X" %) byte-array))))
+
+
 (defn forgot-password [db {:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email db email-or-username)]
-    (let [reset-code (db/set-password-reset-code! db email-or-username)
+    (let [reset-code (hexadecimalize (generate-secure-token 20))
           base-url (:base-url config)
           reset-password-url (str base-url "/password-resets/" reset-code)]
+      (db/set-password-reset-code! db email-or-username reset-code (time/now))
       (email/send-email (user :email)
         "Password reset for Clojars"
         (->> ["Hello,"
@@ -145,7 +175,8 @@
     [:p "If your account was found, you should get an email with a link to reset your password soon."]))
 
 (defn edit-password-form [db reset-code & [errors]]
-  (if-let [user (db/find-user-by-password-reset-code db reset-code)]
+  (if-let [user (db/find-user-by-password-reset-code db reset-code 
+                                                     (-> 1 time/days time/ago))]
     (html-doc nil "Reset your password"
       [:div.small-section
        [:h1 "Reset your password"]
@@ -169,8 +200,12 @@
       [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"])))
 
 (defn update-password-validations [db confirm]
-  [[:reset-code #(or (blank? %) (db/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]
+  [[:reset-code #(or (blank? %)
+                     (db/find-user-by-password-reset-code db %
+                                                          (-> 1 time/days time/ago)))
+    "The reset code does not exist or it has expired."]
    [:reset-code pred/present? "Reset code can't be blank."]
+   [:password pred/present? "Password can't be blank"]
    [:password #(= % confirm) "Password and confirm password must match"]])
 
 (defn edit-password [db reset-code {:keys [password confirm]}]
@@ -179,6 +214,6 @@
                          (update-password-validations db confirm))]
     (edit-password-form db reset-code (apply concat (vals errors)))
     (do
-      (db/update-user-password db reset-code password)
+      (db/update-user-password db reset-code (bcrypt password))
       (assoc (redirect "/login")
              :flash "Your password was updated."))))

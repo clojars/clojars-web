@@ -20,7 +20,7 @@
                  [commons-codec "1.6"]
                  [net.cgrand/regex "1.0.1"
                   :exclusions [org.clojure/clojure]]
-                 [clj-time "0.9.0"]
+                 [clj-time "0.11.0"]
                  [com.cemerick/friend "0.2.1"
                   :exclusions [org.clojure/core.cache
                                org.apache.httpcomponents/httpclient

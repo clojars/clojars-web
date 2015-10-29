@@ -1,11 +1,14 @@
 (ns clojars.maven
   (:require [clojure.java.io :as io]
             [clojars.config :refer [config]]
-            [clojure.string :refer [split]]
+            [clojure.string :refer [split join]]
             [clojars.errors :refer [report-error]])
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
            java.io.IOException))
+
+(defn collapse-authors [authors]
+  (join ", " (map #(.replace % "," "") authors)))
 
 (defn model-to-map [model]
   {:name (or (.getArtifactId model)
@@ -19,7 +22,7 @@
    :url (.getUrl model)
    :licenses (.getLicenses model)
    :scm (.getScm model)
-   :authors (vec (map #(.getName %) (.getContributors model)))
+   :authors (collapse-authors (map #(.getName %) (.getContributors model)))
    :dependencies (vec (map
                        (fn [d] {:group_name (.getGroupId d)
                                 :jar_name (.getArtifactId d)

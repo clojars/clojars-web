@@ -1,11 +1,13 @@
 (ns clojars.test.integration.steps
   (:require [cemerick.pomegranate.aether :as aether]
-            [clojars.db :as db]
-            [clojars.maven :as maven]
+            [clj-time.core :as time]
+            [clojars
+             [config :refer [config]]
+             [db :as db]
+             [maven :as maven]]
             [clojars.test.test-helper :as help]
             [clojure.java.io :as io]
-            [kerodon.core :refer :all]
-            [clojars.config :refer [config]])
+            [kerodon.core :refer :all])
   (:import java.io.File))
 
 (defn login-as [state user password]
@@ -35,7 +37,9 @@
 (defn inject-artifacts-into-repo! [db user jar pom]
   (let [pom-file (io/resource pom)
         jarmap (maven/pom-to-map pom-file)]
-    (db/add-jar db user jarmap)
+    (when-not (some #{user} (db/group-membernames db (:group jarmap)))
+      (db/add-member db (:group jarmap) user "clojars-test"))
+    (db/add-jar db user jarmap (time/now))
     (aether/deploy :coordinates [(keyword (:group jarmap)
                                           (:name jarmap))
                                  (:version jarmap)]

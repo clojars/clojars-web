@@ -1,15 +1,16 @@
-(ns clojars.dev.setup
+(ns ^{:doc "Tools to setup a dev db."}
+  clojars.dev.setup
   "Tools to setup a dev db."
-  (:require [clojars.config :refer [config]]
-            [clojars.db :as db]
-            [clojars.search :as search]
+  (:require [clj-time.core :as time]
+            [clojars
+             [config :refer [config]]
+             [db :as db]
+             [search :as search]]
+            [clojars.db.sql :as sql]
             [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clojars.db.sql :as sql])
+            [clojure.string :as str])
   (:import [org.apache.maven.artifact.repository.metadata Metadata Versioning]
-           [org.apache.maven.artifact.repository.metadata.io.xpp3
-            MetadataXpp3Reader
-            MetadataXpp3Writer]))
+           [org.apache.maven.artifact.repository.metadata.io.xpp3 MetadataXpp3Reader MetadataXpp3Writer]))
 
 (defn reset-db! [db]
   (sql/clear-jars! {} {:connection db})
@@ -24,7 +25,7 @@
              (println "User" name "already exists")
              (do
                (printf "Adding user %s/%s\n" name name)
-               (db/add-user db (str name "@example.com") name name "")))
+               (db/add-user db (str name "@example.com") name name "" (time/now))))
            name)
     (range n)))
 
@@ -79,7 +80,8 @@
                             :version version
                             :description (format "Description for %s/%s" group-id artifact-id)
                             :homepage (format "http://example.com/%s/%s" group-id artifact-id)
-                            :authors ["Foo" "Bar" "Basil"]})
+                            :authors "Foo, Bar, Basil"}
+                      (time/now))
           (update-metadata parent group-id artifact-id version)
           [group-id artifact-id version (rand-int 1000)]))
       (remove nil?)

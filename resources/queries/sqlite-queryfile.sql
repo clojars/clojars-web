@@ -63,7 +63,7 @@ ORDER BY j.group_name ASC, j.jar_name ASC;
 SELECT j.*
 FROM jars j
 JOIN (
-  SELECT  jar_name, MAX(created) AS created
+  SELECT jar_name, MAX(created) AS created
   FROM jars
   GROUP BY group_name, jar_name
 ) l

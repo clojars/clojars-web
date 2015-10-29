@@ -1,46 +1,8 @@
 (ns clojars.db
-  (:require [clojure.string :as str]
-            [clojure.java.io :as io]
-            [clj-time.core :as time]
-            [clj-time.coerce :as time.coerce]
-            [clojars.config :refer [config]]
-            [clojure.java.jdbc :as jdbc]
-            [clojars.db.sql :as sql]
-            [cemerick.friend.credentials :as creds])
-  (:import java.security.MessageDigest
-           java.util.Date
-           java.security.SecureRandom
-           java.io.File
-           java.util.concurrent.Executors))
-
-(def reserved-names
-  #{"clojure" "clojars" "clojar" "register" "login"
-    "pages" "logout" "password" "username" "user"
-    "repo" "repos" "jar" "jars" "about" "help" "doc"
-    "docs" "images" "js" "css" "maven" "api"
-    "download" "create" "new" "upload" "contact" "terms"
-    "group" "groups" "browse" "status" "blog" "search"
-    "email" "welcome" "devel" "development" "test" "testing"
-    "prod" "production" "admin" "administrator" "root"
-    "webmaster" "profile" "dashboard" "settings" "options"
-    "index" "files" "releases" "snapshots"})
-
-(def ^{:private true} constituent-chars
-  (->> [[\a \z] [\A \Z] [\0 \9]]
-       (mapcat (fn [[x y]] (range (int x) (inc (int y)))))
-       (map char)
-       vec))
-
-(defn rand-string
-  "Generates a random string of [A-z0-9] of length n."
-  [n]
-  (str/join (repeatedly n #(rand-nth constituent-chars))))
-
-(defn get-time []
-  (Date.))
-
-(defn bcrypt [s]
-  (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor config)))
+  (:require [clojars.db.sql :as sql]
+            [clojure.string :as str]
+            [clj-time.jdbc])
+  (:import java.util.concurrent.Executors))
 
 (defn find-user [db username]
   (sql/find-user {:username username}
@@ -52,10 +14,9 @@
                                   {:connection db
                                    :result-set-fn first}))
 
-(defn find-user-by-password-reset-code [db reset-code]
+(defn find-user-by-password-reset-code [db reset-code time]
   (sql/find-user-by-password-reset-code {:reset_code reset-code
-                                         :reset_code_created_at
-                                         (-> 1 time/days time/ago time.coerce/to-long)}
+                                         :reset_code_created_at time}
                                         {:connection db
                                          :result-set-fn first}))
 
@@ -140,14 +101,6 @@
                               :result-set-fn first
                               :row-fn :count}))
 
-(defn browse-projects [db current-page per-page]
-  (vec
-   (map
-    #(find-jar db (:group_name %) (:jar_name %))
-    (all-projects db
-     (* (dec current-page) per-page)
-     per-page))))
-
 (def write-executor (memoize #(Executors/newSingleThreadExecutor)))
 
 (def ^:private ^:dynamic *in-executor* nil)
@@ -179,9 +132,9 @@
   `(serialize-task* ~name
                     (fn [] ~@body)))
 
-(defn add-user [db email username password pgp-key]
-  (let [record {:email email, :username username, :password (bcrypt password),
-                :pgp_key pgp-key :created (get-time)}
+(defn add-user [db email username password pgp-key time]
+  (let [record {:email email, :username username, :password password,
+                :pgp_key pgp-key :created time}
         groupname (str "org.clojars." username)]
     (serialize-task :add-user
                     (sql/insert-user! record
@@ -194,10 +147,8 @@
   (let [fields {:email email
                 :username username
                 :pgp_key pgp-key
-                :account account}
-        fields (if (empty? password)
-                 fields
-                 (assoc fields :password (bcrypt password)))]
+                :account account
+                :password password}]
     (serialize-task :update-user
                     (sql/update-user! fields
                                       {:connection db}))
@@ -206,34 +157,17 @@
 (defn update-user-password [db reset-code password]
   (assert (not (str/blank? reset-code)))
   (serialize-task :update-user-password
-                    (sql/update-user-password! {:password (bcrypt password)
+                    (sql/update-user-password! {:password password
                                                 :reset_code reset-code}
                                                {:connection db})))
 
-  ;; Password resets
-  ;; Reference:
-  ;; https://github.com/xavi/noir-auth-app/blob/master/src/noir_auth_app/models/user.clj
-  ;; https://github.com/weavejester/crypto-random/blob/master/src/crypto/random.clj
-  ;; https://jira.atlassian.com/browse/CWD-1897?focusedCommentId=196759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-196759
-(defn generate-secure-token [size]
-  (let [seed (byte-array size)]
-    ;; http://docs.oracle.com/javase/6/docs/api/java/security/SecureRandom.html
-    (.nextBytes (SecureRandom/getInstance "SHA1PRNG") seed)
-    seed))
 
-(defn hexadecimalize [byte-array]
-                                        ; converts byte array to hex string
-                                        ; http://stackoverflow.com/a/8015558/974795
-  (str/lower-case (apply str (map #(format "%02X" %) byte-array))))
-
-(defn set-password-reset-code! [db username-or-email]
-  (let [reset-code (hexadecimalize (generate-secure-token 20))]
-    (serialize-task :set-password-reset-code
-                    (sql/set-password-reset-code! {:reset_code reset-code
-                                                   :reset_code_created_at (get-time)
-                                                   :username_or_email username-or-email}
-                                                  {:connection db}))
-    reset-code))
+(defn set-password-reset-code! [db username-or-email reset-code time]
+  (serialize-task :set-password-reset-code
+                  (sql/set-password-reset-code! {:reset_code reset-code
+                                                 :reset_code_created_at time
+                                                 :username_or_email username-or-email}
+                                                {:connection db})))
 
 (defn add-member [db groupname username added-by]
   (serialize-task :add-member
@@ -242,35 +176,17 @@
                                     :added_by added-by}
                                    {:connection db})))
 
-(defn check-and-add-group [db account groupname]
-  (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)
-    (throw (Exception. (str "Group names must consist of lowercase "
-                            "letters, numbers, hyphens, underscores "
-                            "and full-stops."))))
-  (let [members (group-membernames db groupname)]
-    (if (empty? members)
-      (if (reserved-names groupname)
-        (throw (Exception. (str "The group name "
-                                groupname
-                                " is already taken.")))
-        (add-member db groupname account "clojars"))
-      (when-not (some #{account} members)
-        (throw (Exception. (str "You don't have access to the "
-                                groupname " group.")))))))
-
 (defn add-jar [db account {:keys [group name version
-                               description homepage authors]}]
-  (check-and-add-group db account group)
+                               description homepage authors]} time]
   (serialize-task :add-jar
                   (sql/add-jar! {:groupname group
                                  :jarname   name
                                  :version   version
                                  :user      account
-                                 :created    (get-time)
+                                 :created    time
                                  :description description
                                  :homepage   homepage
-                                 :authors    (str/join ", " (map #(.replace % "," "")
-                                                                 authors))}
+                                 :authors    authors}
                                 {:connection db})))
 
 (defn delete-jars [db group-id & [jar-id version]]
@@ -303,12 +219,12 @@
      (sql/find-groups-jars-information {:group_id group-id}
                                        {:connection db}))))
 
-(defn promote [db group name version]
+(defn promote [db group name version time]
   (serialize-task :promote
                   (sql/promote! {:group_id group
                                  :artifact_id name
                                  :version version
-                                 :promoted_at (get-time)}
+                                 :promoted_at time}
                                 {:connection db})))
 
 (defn promoted? [db group-id artifact-id version]
