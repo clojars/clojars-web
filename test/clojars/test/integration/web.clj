@@ -1,5 +1,4 @@
-(ns ^{:clojure.test/each-fixtures (#object[clojars.test.test_helper$default_fixture 0x37ce12ec "clojars.test.test_helper$default_fixture@37ce12ec"] #object[clojars.test.test_helper$with_clean_database 0x74123c9b "clojars.test.test_helper$with_clean_database@74123c9b"])}
-  clojars.test.integration.web
+(ns clojars.test.integration.web
   (:require [clj-time.core :as time]
             [clojars.db :as db]
             [clojars.test.test-helper :as help]

@@ -1,5 +1,4 @@
-(ns ^{:doc "Tools to setup a dev db."}
-  clojars.dev.setup
+(ns clojars.dev.setup
   "Tools to setup a dev db."
   (:require [clj-time.core :as time]
             [clojars
@@ -8,7 +7,9 @@
              [search :as search]]
             [clojars.db.sql :as sql]
             [clojure.java.io :as io]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [com.stuartsierra.component :as component]
+            [clojars.components.serial-sqlite :as sqlite])
   (:import [org.apache.maven.artifact.repository.metadata Metadata Versioning]
            [org.apache.maven.artifact.repository.metadata.io.xpp3 MetadataXpp3Reader MetadataXpp3Writer]))
 
@@ -93,7 +94,8 @@
     (println "Wrote download stats to" (.getAbsolutePath stats-file))))
 
 (defn -main []
-  (let [{:keys [repo stats-dir db]} config]
+  (let [{:keys [repo stats-dir db]} config
+        db (component/start (sqlite/map->SerialSqlite {:db db}))]
     (println "NOTE: this will clear the contents of" db
       "and import all of the projects in" repo "into the db.\n")
     (print "Are you sure you want to continue? [y/N] ")
@@ -102,11 +104,11 @@
       (println "Aborting.")
       (System/exit 1))
     (println "==> Clearing the" db "db...")
-    (reset-db! db)
+    (reset-db! (:db db))
     (println "==> Creating 10 test users...")
     (let [test-users (add-test-users db 10)]
       (println "==> Importing" repo "into the db...")
       (import-repo db repo stats-dir test-users))
     (println "==> Indexing" repo "...")
-    (search/index-repo repo))
-  (.shutdown (db/write-executor)))
+    (search/index-repo repo)
+    (component/stop db)))

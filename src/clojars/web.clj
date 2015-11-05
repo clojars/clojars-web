@@ -136,4 +136,4 @@
        (wrap-exceptions reporter))))
 
 (defn handler-optioned [{:keys [db error-reporter] :as opts}]
-  (clojars-app (:spec db) error-reporter))
+  (clojars-app db error-reporter))

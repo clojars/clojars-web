@@ -11,7 +11,6 @@
 
 (use-fixtures :each
   help/default-fixture
-  help/with-clean-database
   help/run-test-app)
 
 (defn get-api [parts & [opts]]

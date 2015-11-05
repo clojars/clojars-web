@@ -7,6 +7,7 @@
              [search :as search]
              [system :as system]
              [web :as web]]
+            [clojars.components.serial-sqlite :as sqlite]
             [clojars.db.migrate :as migrate]
             [clojure.java
              [io :as io]
@@ -80,30 +81,49 @@
   (reify errors/ErrorReporter
     (-report-error [t e ex id])))
 
+(defrecord Connection []
+  component/Lifecycle
+  (start [this]
+    (if (:connection this)
+      this
+      (assoc this :connection (jdbc/get-connection (:db test-config)))))
+  (stop [this]
+    (when (:connection this)
+      (.close (:connection this)))
+    (assoc this :connection nil)))
+
 (declare ^:dynamic *db*)
 
 (defn with-clean-database [f]
-  (binding [*db* {:connection (jdbc/get-connection (:db test-config))}]
-    (try
-      (with-out-str
-        (migrate/migrate *db*))
-      (f)
-      (finally (.close (:connection *db*))))))
+  (let [db-system (component/start (component/system-using
+                                    (component/system-map
+                                     :connection (->Connection)
+                                     :database (sqlite/connector))
+                                    {:database {:db :connection}}))]
+    (binding [*db* (:database db-system)]
+      (try
+        (with-out-str
+          (migrate/migrate (:connection db-system)))
+        (f)
+        (finally
+          (component/stop db-system))))))
 
 (defn app []
   (web/clojars-app *db* (quiet-reporter)))
 
-(declare test-port)
+(declare ^:dynamic test-port)
 
 (defn run-test-app
   ([f]
    (let [system (component/start (assoc (system/new-system test-config)
-                                        :db {:spec *db*}
                                         :error-reporter (quiet-reporter)))
          server (get-in system [:http :server])
          port (-> server .getConnectors first .getLocalPort)]
-     (with-redefs [test-port port]
+     (binding [*db* (:db system)
+               test-port port]
        (try
+         (with-out-str
+           (migrate/migrate (:connection system)))
          (f)
          (finally
            (component/stop system)))))))

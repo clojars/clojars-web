@@ -2,6 +2,7 @@
   (:require [clojars
              [ring-servlet-patch :as patch]
              [web :as web]]
+            [clojars.components.serial-sqlite :as sqlite]
             [com.stuartsierra.component :as component]
             [duct.component
              [endpoint :refer [endpoint-component]]
@@ -28,14 +29,27 @@
            :http {:port port :host bind}
            :db {:uri (jdbc-url db)})))
 
+(defrecord CPAdapter [cp datasource]
+  component/Lifecycle
+  (start [t]
+    (if datasource
+      t
+      (assoc t :datasource (get-in cp [:spec :datasource]))))
+  (stop [t]
+    (assoc t :datasource nil)))
+
 (defn new-system [config]
   (let [config (meta-merge base-env (translate config))]
     (-> (component/system-map
          :app  (handler-component (:app config))
          :http (jetty-server (:http config))
-         :db   (hikaricp (:db config))
+         :cp   (hikaricp (:db config))
+         :connection (map->CPAdapter {}) 
+         :db   (sqlite/connector) 
          :clojars-app   (endpoint-component web/handler-optioned))
         (component/system-using
          {:http [:app]
           :app  [:clojars-app]
+          :db   {:db :connection}
+          :connection [:cp]
           :clojars-app [:db :error-reporter]}))))

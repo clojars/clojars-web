@@ -110,7 +110,7 @@
                            (update-user-validations confirm))]
       (profile-form account params nil (apply concat (vals errors)))
       (let [password (if (empty? password)
-                       (:password (db/find-user account))
+                       (:password (db/find-user db account))
                        (bcrypt password))]
         (do (update-user db account email account password pgp-key)
             (assoc (redirect "/profile")
