@@ -44,7 +44,7 @@
   (let [app (help/app)]
     (-> (session app)
         (register-as "fixture" "fixture@example.org" "password"))
-    (jdbc/db-do-commands help/*db*
+    (jdbc/db-do-commands (:db help/*db*)
                          "update users set password='' where user = 'fixture'")
     (-> (session app)
         (login-as "fixture" "password")

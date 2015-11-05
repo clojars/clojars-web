@@ -1,6 +1,11 @@
 (ns clojars.auth
   (:require [cemerick.friend :as friend]
-            [clojars.db :refer [group-membernames]]))
+            [clojars.db :refer [group-membernames]]
+            [cemerick.friend.credentials :as creds]
+            [clojars.config :refer [config]]))
+
+(defn bcrypt [s]
+  (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor config)))
 
 (defmacro with-account [body]
   `(friend/authenticated (try-account ~body)))

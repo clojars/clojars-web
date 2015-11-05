@@ -1,11 +1,11 @@
 (ns clojars.test.integration.web
-  (:require [clojure.test :refer :all]
-            [kerodon.core :refer :all]
-            [kerodon.test :refer :all]
-            [clojars.test.integration.steps :refer :all]
-            [clojars.web :as web]
+  (:require [clj-time.core :as time]
             [clojars.db :as db]
             [clojars.test.test-helper :as help]
+            [clojure.test :refer :all]
+            [kerodon
+             [core :refer :all]
+             [test :refer :all]]
             [net.cgrand.enlive-html :as enlive]))
 
 (use-fixtures :each
@@ -37,7 +37,8 @@
     (db/add-jar
      help/*db*
       "test-user"
-      {:name (str "tester" i) :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
+      {:name (str "tester" i) :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}
+      (time/epoch)))
    (-> (session (help/app))
      (visit "/projects")
      (within [:div.light-article :> :h1]
@@ -62,7 +63,8 @@
     (db/add-jar
      help/*db*
       "test-user"
-      {:name (str "tester" i "a") :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
+      {:name (str "tester" i "a") :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}
+      (time/epoch)))
   (-> (session (help/app))
       (visit "/projects")
       (fill-in "Enter a few letters..." "tester/tester123")

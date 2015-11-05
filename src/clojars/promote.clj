@@ -1,20 +1,18 @@
 (ns clojars.promote
-  (:require [clojars.config :refer [config]]
-            [clojars.maven :as maven]
-            [clojars.db :as db]
+  (:require [cemerick.pomegranate.aether :as aether]
+            [clj-pgp
+             [core :as pgp]
+             [signature :as pgp-sig]]
+            [clj-time.core :as time]
+            [clojars
+             [config :refer [config]]
+             [db :as db]
+             [maven :as maven]]
             [clojure.java.io :as io]
-            [clojure.java.shell :as sh]
-            [clojure.java.jdbc :as sql]
-            [clojure.string :as str]
-            [clojure.set :as set]
-            [cemerick.pomegranate.aether :as aether]
-            [clj-pgp.core :as pgp]
-            [clj-pgp.signature :as pgp-sig])
-  (:import (java.util.concurrent LinkedBlockingQueue)
-           (org.springframework.aws.maven SimpleStorageServiceWagon)
-           (java.io File ByteArrayInputStream PrintWriter)
-           (org.bouncycastle.openpgp PGPUtil PGPObjectFactory)
-           (org.bouncycastle.bcpg ArmoredInputStream)))
+            [clojure.string :as str])
+  (:import [java.io ByteArrayInputStream File]
+           [org.bouncycastle.openpgp PGPObjectFactory PGPUtil]
+           org.springframework.aws.maven.SimpleStorageServiceWagon))
 
 (defonce _
   (do (java.security.Security/addProvider
@@ -134,7 +132,7 @@
         (do
           (println "Promoting" info)
           (deploy-to-s3 info)
-          (db/promote db group name version))
+          (db/promote db group name version (time/now)))
         (println "Didn't promote since :releases-url wasn't set."))
       (do (println "...failed.")
           blockers))))

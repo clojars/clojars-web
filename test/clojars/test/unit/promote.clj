@@ -1,11 +1,12 @@
 (ns clojars.test.unit.promote
-  (:require [clojure.test :refer :all]
-            [clojars.promote :refer :all]
+  (:require [clj-time.core :as time]
+            [clojars
+             [config :refer [config]]
+             [db :as db]
+             [promote :refer :all]]
+            [clojars.test.test-helper :as help]
             [clojure.java.io :as io]
-            [clojars.maven :as maven]
-            [clojars.db :as db]
-            [clojars.config :refer [config]]
-            [clojars.test.test-helper :as help]))
+            [clojure.test :refer :all]))
 
 (use-fixtures :each
   help/default-fixture
@@ -45,7 +46,8 @@
   (copy-resource "1.1.2" "jar.asc")
   (copy-resource "1.1.2" "pom.asc")
   (db/add-user help/*db* "test@ex.com" "testuser" "password"
-               (slurp (io/resource "pubring.gpg")))
+               (slurp (io/resource "pubring.gpg"))
+               (time/epoch))
   (db/add-member help/*db* "robert" "testuser" nil)
   (is (empty? (blockers help/*db*
                         {:group "robert" :name "hooke" :version "1.1.2"}))))
@@ -57,7 +59,8 @@
   (copy-resource "1.1.2" "jar.asc")
   (copy-resource "1.1.2" "pom.asc")
   (db/add-user help/*db* "test@ex.com" "testuser" "password"
-               (slurp (io/resource "pubring.gpg")))
+               (slurp (io/resource "pubring.gpg"))
+               (time/epoch))
   (db/add-member help/*db* "robert" "testuser" nil)
   (is (= [(str "Could not verify signature of "
                (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.jar. "
@@ -71,7 +74,7 @@
            (file-for "robert" "hooke" "1.1.2" "jar"))
   (copy-resource "1.1.2" "jar.asc")
   (copy-resource "1.1.2" "pom.asc")
-  (db/add-user help/*db* "test@ex.com" "testuser" "password" "")
+  (db/add-user help/*db* "test@ex.com" "testuser" "password" "" (time/epoch))
   (db/add-member help/*db* "robert" "testuser" nil)
   (is (= [(str "Could not verify signature of "
                (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.jar. "

@@ -1,5 +1,6 @@
 (ns clojars.routes.repo
-  (:require [clojars
+  (:require [clj-time.core :as time]
+            [clojars
              [auth :refer [require-authorization with-account]]
              [config :refer [config]]
              [db :as db]
@@ -10,28 +11,24 @@
             [clojure.string :as string]
             [clucy.core :as clucy]
             [compojure
-             [core :as compojure :refer [PUT defroutes]]
+             [core :as compojure :refer [PUT]]
              [route :refer [not-found]]]
             [ring.util
              [codec :as codec]
              [response :as response]])
   (:import java.io.StringReader))
 
-(defn versions [group-id artifact-id]
-  (->> (.listFiles (io/file (config :repo) group-id artifact-id))
-       (filter (memfn isDirectory))
-       (sort-by (comp - (memfn last-modified)))
-       (map (memfn getName))))
-
-(defn find-jar
-  ([group-id artifact-id]
-     (find-jar group-id artifact-id (first (versions group-id artifact-id))))
-  ([group-id artifact-id version]
-     (try
-       (maven/pom-to-map (io/file (config :repo) group-id artifact-id version
-                                  (format "%s-%s.pom" artifact-id version)))
-       (catch java.io.FileNotFoundException e
-         nil))))
+(def reserved-names
+  #{"clojure" "clojars" "clojar" "register" "login"
+    "pages" "logout" "password" "username" "user"
+    "repo" "repos" "jar" "jars" "about" "help" "doc"
+    "docs" "images" "js" "css" "maven" "api"
+    "download" "create" "new" "upload" "contact" "terms"
+    "group" "groups" "browse" "status" "blog" "search"
+    "email" "welcome" "devel" "development" "test" "testing"
+    "prod" "production" "admin" "administrator" "root"
+    "webmaster" "profile" "dashboard" "settings" "options"
+    "index" "files" "releases" "snapshots"})
 
 (defn save-to-file [sent-file input]
   (-> sent-file
@@ -55,10 +52,28 @@
       maven/pom-to-map
       (merge info)))
 
-(defn- body-and-add-pom [db body filename info account]
+(defn check-group [db account groupname]
+  (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)
+    (throw (Exception. (str "Group names must consist of lowercase "
+                            "letters, numbers, hyphens, underscores "
+                            "and full-stops."))))
+  (when (reserved-names groupname)
+    (throw (Exception. (str "The group name "
+                            groupname
+                            " is already taken."))))
+  (let [members (db/group-membernames db groupname)]
+    (if (empty? members)
+      (db/add-member db groupname account "clojars")
+      (when-not (some #{account} members)
+        (throw (Exception. (str "You don't have access to the "
+                                groupname " group.")))))))
+
+(defn- body-and-add-pom [db body filename info account time]
   (if (pom? filename)
-    (let [contents (slurp body)]
-      (db/add-jar db account (get-pom-info contents info))
+    (let [contents (slurp body)
+          pom (get-pom-info contents info)]
+      (check-group db account (:group pom))
+      (db/add-jar db account pom time)
       contents)
     body))
 
@@ -129,9 +144,9 @@
                   :name  artifact
                   :version version}]
         (validate-deploy groupname artifact version filename)
-        (db/check-and-add-group db account groupname)
+        (check-group db account groupname)
 
-        (try-save-to-file file (body-and-add-pom db body filename info account))
+        (try-save-to-file file (body-and-add-pom db body filename info account (time/now)))
         (when (pom? filename)
           (with-open [index (clucy/disk-index (config :index-path))]
             (search/index-pom index file)))))))
@@ -156,7 +171,7 @@
              db
              groupname
              (let [file (io/file (config :repo) group artifact file)]
-               (db/check-and-add-group db account groupname)
+               (check-group db account groupname)
                (try-save-to-file file body))))))
    (PUT ["/:group/:artifact/:version/:filename"
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"

@@ -2,10 +2,18 @@
   (:require [clojars.web.common :refer [html-doc jar-link user-link format-date
                                         page-nav page-description jar-name
                                         collection-fork-notice]]
-            [clojars.db :refer [browse-projects count-all-projects
+            [clojars.db :refer [find-jar all-projects count-all-projects
                                 count-projects-before]]
             [hiccup.form :refer [label submit-button text-field submit-button]]
             [ring.util.response :refer [redirect]]))
+
+(defn browse-projects [db current-page per-page]
+  (vec
+   (map
+    #(find-jar db (:group_name %) (:jar_name %))
+    (all-projects db
+                  (* (dec current-page) per-page)
+                  per-page))))
 
 (defn browse-page [db account page per-page]
   (let [project-count (count-all-projects db)
