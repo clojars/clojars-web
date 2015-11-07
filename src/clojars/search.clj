@@ -89,9 +89,8 @@
 
 (def download-score-weight 50)
 
-(defn download-values []
-  (let [stats (stats/all)
-        total (stats/total-downloads stats)]
+(defn download-values [stats]
+  (let [total (stats/total-downloads stats)]
     (ValueSourceQuery.
      (proxy [FieldCacheSource] ["download-count"]
        (getCachedFieldValues [cache _ reader]
@@ -118,7 +117,7 @@
                     (download-score i))))))))))
 
 ; http://stackoverflow.com/questions/963781/how-to-achieve-pagination-in-lucene
-(defn search [query & {:keys [page] :or {page 1}}]
+(defn search [stats query & {:keys [page] :or {page 1}}]
   (if (empty? query)
     []
     (with-open [index (clucy/disk-index (config :index-path))]
@@ -130,7 +129,7 @@
                                      "_content"
                                      clucy/*analyzer*)
                 query  (.parse parser query)
-                query  (CustomScoreQuery. query (download-values))
+                query  (CustomScoreQuery. query (download-values stats))
                 hits   (.search searcher query (* per-page page))
                 highlighter (#'clucy/make-highlighter query searcher nil)]
             (doall

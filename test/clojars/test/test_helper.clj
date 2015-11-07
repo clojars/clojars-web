@@ -1,10 +1,10 @@
 (ns clojars.test.test-helper
-  (:import java.io.File)
   (:require [clojars
              [config :refer [config]]
              [db :as db]
              [errors :as errors]
              [search :as search]
+             [stats :as stats]
              [system :as system]
              [web :as web]]
             [clojars.db.migrate :as migrate]
@@ -12,7 +12,8 @@
              [io :as io]
              [jdbc :as jdbc]]
             [clucy.core :as clucy]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component])
+  (:import java.io.File))
 
 (def local-repo (io/file (System/getProperty "java.io.tmpdir")
                          "clojars" "test" "local-repo"))
@@ -25,7 +26,6 @@
                        :subprotocol "sqlite"
                        :subname ":memory:"}
                   :repo "data/test/repo"
-                  :stats-dir "data/test/stats"
                   :index-path "data/test/index"
                   :bcrypt-work-factor 12
                   :mail {:hostname "smtp.gmail.com"
@@ -67,9 +67,6 @@
   (using-test-config
    (fn []
      (delete-file-recursively (io/file (config :repo)))
-     (delete-file-recursively (io/file (config :stats-dir)))
-     (.mkdirs (io/file (config :stats-dir)))
-     (make-download-count! {})
      (f))))
 
 (defn index-fixture [f]
@@ -90,8 +87,11 @@
       (f)
       (finally (.close (:connection *db*))))))
 
+(defn no-stats []
+  (stats/->MapStats {}))
+
 (defn app []
-  (web/clojars-app *db* (quiet-reporter)))
+  (web/clojars-app *db* (quiet-reporter) (no-stats)))
 
 (declare test-port)
 
@@ -99,7 +99,8 @@
   ([f]
    (let [system (component/start (assoc (system/new-system test-config)
                                         :db {:spec *db*}
-                                        :error-reporter (quiet-reporter)))
+                                        :error-reporter (quiet-reporter)
+                                        :stats (no-stats)))
          server (get-in system [:http :server])
          port (-> server .getConnectors first .getLocalPort)]
      (with-redefs [test-port port]

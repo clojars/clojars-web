@@ -36,19 +36,19 @@
              [resource :refer [wrap-resource]]
              [session :refer [wrap-session]]]))
 
-(defn main-routes [db reporter]
+(defn main-routes [db reporter stats]
   (routes
    (GET "/" _
         (try-account
          (if account
            (dashboard db account)
-           (index-page db account))))
+           (index-page db stats account))))
    (GET "/search" {:keys [params]}
         (try-account
          (let [validated-params (if (:page params)
                                   (assoc params :page (Integer. (:page params)))
                                   params)]
-           (search account validated-params))))
+           (search stats account validated-params))))
    (GET "/projects" {:keys [params]}
         (try-account
          (browse db account params)))
@@ -58,11 +58,11 @@
                    (raw (slurp (io/resource "security.html"))))))
    session/routes
    (group/routes db)
-   (artifact/routes db reporter)
+   (artifact/routes db reporter stats)
    ;; user routes must go after artifact routes
    ;; since they both catch /:identifier
    (user/routes db)
-   (api/routes db)
+   (api/routes db stats)
    (GET "/error" _ (throw (Exception. "What!? You really want an error?")))
    (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
    (ANY "*" _
@@ -106,7 +106,7 @@
         (secure-session req)
         (regular-session req)))))
 
-(defn clojars-app [db reporter]
+(defn clojars-app [db reporter stats]
   (routes
    (context "/repo" _
             (-> (repo/routes db)
@@ -119,7 +119,7 @@
                 (repo/wrap-exceptions reporter)
                 (repo/wrap-file (:repo config))
                 (repo/wrap-reject-double-dot)))
-   (-> (main-routes db reporter)
+   (-> (main-routes db reporter stats)
        (friend/authenticate
         {:credential-fn (credential-fn db)
          :workflows [(workflows/interactive-form)
@@ -135,5 +135,5 @@
        (wrap-file-info)
        (wrap-exceptions reporter))))
 
-(defn handler-optioned [{:keys [db error-reporter] :as opts}]
-  (clojars-app (:spec db) error-reporter))
+(defn handler-optioned [{:keys [db error-reporter stats] :as opts}]
+  (clojars-app (:spec db) error-reporter stats))

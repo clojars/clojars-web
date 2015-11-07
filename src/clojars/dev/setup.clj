@@ -62,6 +62,9 @@
   [db repo stats-dir users]
   (let [group-artifact-pattern (re-pattern (str repo "/(.*)/([^/]*)$"))
         stats-file (io/file stats-dir "all.edn")]
+    (let [d (io/file stats-dir)]
+      (when-not (.exists d)
+        (.mkdirs d)))
     (->>
       (for [version-dir (file-seq (io/file repo))
             :when (and (.isDirectory version-dir)

@@ -1,6 +1,7 @@
 (ns clojars.system
   (:require [clojars
              [ring-servlet-patch :as patch]
+             [stats :refer [file-stats]]
              [web :as web]]
             [com.stuartsierra.component :as component]
             [duct.component
@@ -8,7 +9,8 @@
              [handler :refer [handler-component]]
              [hikaricp :refer [hikaricp]]]
             [meta-merge.core :refer [meta-merge]]
-            [ring.component.jetty :refer [jetty-server]]))
+            [ring.component.jetty :refer [jetty-server]])
+  (:import java.nio.file.FileSystems))
 
 (def base-env
   {:app {:middleware []}
@@ -34,8 +36,11 @@
          :app  (handler-component (:app config))
          :http (jetty-server (:http config))
          :db   (hikaricp (:db config))
+         :fs-factory #(FileSystems/getDefault)
+         :stats (file-stats (:stats-dir config))
          :clojars-app   (endpoint-component web/handler-optioned))
         (component/system-using
          {:http [:app]
           :app  [:clojars-app]
-          :clojars-app [:db :error-reporter]}))))
+          :stats [:fs-factory]
+          :clojars-app [:db :error-reporter :stats]}))))
