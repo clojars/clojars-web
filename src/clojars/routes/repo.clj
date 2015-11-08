@@ -14,7 +14,8 @@
              [route :refer [not-found]]]
             [ring.util
              [codec :as codec]
-             [response :as response]])
+             [response :as response]]
+            [clojars.maven :as mvn])
   (:import java.io.StringReader))
 
 (defn versions [group-id artifact-id]
@@ -119,7 +120,7 @@
                   :file filename}
                  (ex-data e)))))))
 
-(defn- handle-versioned-upload [db body group artifact version filename]
+(defn- handle-versioned-upload [db search body group artifact version filename]
   (let [groupname (string/replace group "/" ".")]
     (put-req
       db
@@ -133,11 +134,11 @@
 
         (try-save-to-file file (body-and-add-pom db body filename info account))
         (when (pom? filename)
-          (with-open [index (clucy/disk-index (config :index-path))]
-            (search/index-pom index file)))))))
+          (search/index! search (assoc (mvn/pom-to-map file)
+                                       :at (.lastModified file))))))))
 
 ;; web handlers
-(defn routes [db]
+(defn routes [db search]
   (compojure/routes
    (PUT ["/:group/:artifact/:file"
          :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
@@ -150,7 +151,7 @@
                 group-parts (string/split group #"/")
                 group (string/join "/" (butlast group-parts))
                 artifact (last group-parts)]
-            (handle-versioned-upload db body group artifact version file))
+            (handle-versioned-upload db search body group artifact version file))
           (let [groupname (string/replace group "/" ".")]
             (put-req
              db
@@ -162,7 +163,7 @@
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
          :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
         {body :body {:keys [group artifact version filename]} :params}
-        (handle-versioned-upload db body group artifact version filename))
+        (handle-versioned-upload db search body group artifact version filename))
    (PUT "*" _ {:status 400 :headers {}})
    (not-found "Page not found")))
 

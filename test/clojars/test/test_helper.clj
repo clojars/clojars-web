@@ -26,7 +26,6 @@
                        :subprotocol "sqlite"
                        :subname ":memory:"}
                   :repo "data/test/repo"
-                  :index-path "data/test/index"
                   :bcrypt-work-factor 12
                   :mail {:hostname "smtp.gmail.com"
                          :from "noreply@clojars.org"
@@ -49,29 +48,11 @@
           (delete-file-recursively child)))
       (io/delete-file f))))
 
-(defn make-download-count! [m]
-  (spit (io/file (config :stats-dir) "all.edn")
-        (pr-str m)))
-
-(defn make-index! [v]
-  (delete-file-recursively (io/file (config :index-path)))
-  (with-open [index (clucy/disk-index (config :index-path))]
-    (if (empty? v)
-      (do (clucy/add index {:dummy true})
-          (clucy/search-and-delete index "dummy:true"))
-      (binding [clucy/*analyzer* search/analyzer]
-        (doseq [a v]
-          (clucy/add index a))))))
-
 (defn default-fixture [f]
   (using-test-config
    (fn []
      (delete-file-recursively (io/file (config :repo)))
      (f))))
-
-(defn index-fixture [f]
-  (make-index! [])
-  (f))
 
 (defn quiet-reporter []
   (reify errors/ErrorReporter
@@ -90,21 +71,33 @@
 (defn no-stats []
   (stats/->MapStats {}))
 
-(defn app []
-  (web/clojars-app *db* (quiet-reporter) (no-stats)))
+(defn no-search []
+  (reify search/Search))
 
-(declare test-port)
+(declare ^:dynamic test-port)
+
+(defn app []
+  (web/clojars-app *db* (quiet-reporter) (no-stats) (no-search)))
+
+(declare ^:dynamic system)
+
+(defn app-from-system []
+  ;; TODO once the database is a protocol, review
+  ;; usage of this to move things into unit tests
+  (web/handler-optioned system))
 
 (defn run-test-app
   ([f]
-   (let [system (component/start (assoc (system/new-system test-config)
-                                        :db {:spec *db*}
-                                        :error-reporter (quiet-reporter)
-                                        :stats (no-stats)))
-         server (get-in system [:http :server])
-         port (-> server .getConnectors first .getLocalPort)]
-     (with-redefs [test-port port]
-       (try
-         (f)
-         (finally
-           (component/stop system)))))))
+   (binding [system (component/start (assoc (system/new-system test-config)
+                                            :error-reporter (quiet-reporter)
+                                            :index-factory #(clucy/memory-index)
+                                            :stats (no-stats)))]
+     (let [server (get-in system [:http :server])
+           port (-> server .getConnectors first .getLocalPort)]
+       (binding [test-port port]
+         (try
+           (with-out-str
+             (migrate/migrate (get-in system [:db :spec])))
+           (f)
+           (finally
+             (component/stop system))))))))

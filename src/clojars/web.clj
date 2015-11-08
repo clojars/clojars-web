@@ -36,7 +36,7 @@
              [resource :refer [wrap-resource]]
              [session :refer [wrap-session]]]))
 
-(defn main-routes [db reporter stats]
+(defn main-routes [db reporter stats search-obj]
   (routes
    (GET "/" _
         (try-account
@@ -48,7 +48,7 @@
          (let [validated-params (if (:page params)
                                   (assoc params :page (Integer. (:page params)))
                                   params)]
-           (search stats account validated-params))))
+           (search search-obj account validated-params))))
    (GET "/projects" {:keys [params]}
         (try-account
          (browse db account params)))
@@ -106,10 +106,10 @@
         (secure-session req)
         (regular-session req)))))
 
-(defn clojars-app [db reporter stats]
+(defn clojars-app [db reporter stats search]
   (routes
    (context "/repo" _
-            (-> (repo/routes db)
+            (-> (repo/routes db search)
                 (friend/authenticate
                  {:credential-fn (credential-fn db)
                   :workflows [(workflows/http-basic :realm "clojars")]
@@ -119,7 +119,7 @@
                 (repo/wrap-exceptions reporter)
                 (repo/wrap-file (:repo config))
                 (repo/wrap-reject-double-dot)))
-   (-> (main-routes db reporter stats)
+   (-> (main-routes db reporter stats search)
        (friend/authenticate
         {:credential-fn (credential-fn db)
          :workflows [(workflows/interactive-form)
@@ -135,5 +135,5 @@
        (wrap-file-info)
        (wrap-exceptions reporter))))
 
-(defn handler-optioned [{:keys [db error-reporter stats] :as opts}]
-  (clojars-app (:spec db) error-reporter stats))
+(defn handler-optioned [{:keys [db error-reporter stats search]}]
+  (clojars-app (:spec db) error-reporter stats search))

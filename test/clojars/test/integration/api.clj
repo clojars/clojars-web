@@ -11,7 +11,6 @@
 
 (use-fixtures :each
   help/default-fixture
-  help/with-clean-database
   help/run-test-app)
 
 (defn get-api [parts & [opts]]
@@ -36,12 +35,12 @@
   (is (= (get-content-type {:headers {"content-type" "application/json;charset=utf-8"}}) "application/json")))
 
 (deftest an-api-test
-  (-> (session (help/app))
+  (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
-  (inject-artifacts-into-repo! help/*db* "dantheman" "test.jar" "test-0.0.1/test.pom")
-  (inject-artifacts-into-repo! help/*db* "dantheman" "test.jar" "test-0.0.2/test.pom")
-  (inject-artifacts-into-repo! help/*db* "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
-  (inject-artifacts-into-repo! help/*db* "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
+  (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.1/test.pom")
+  (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.2/test.pom")
+  (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
+  (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
 
   (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/transit+json"]]
     (testing f

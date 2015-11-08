@@ -13,6 +13,7 @@
   (.format (SimpleDateFormat. "yyyyMMdd") (db/get-time)))
 
 (def ^:dynamic *db*)
+(def ^:dynamic *search*)
 
 (defn repo->backup [parts]
   (let [backup (doto (io/file (:deletion-backup-dir config))
@@ -45,7 +46,7 @@
         (repo->backup [group-id])
         (db/delete-jars *db* group-id)
         (db/delete-groups *db* group-id)
-        (search/delete-from-index group-id)))
+        (search/delete! *search* group-id)))
     (println "No group found under" group-id)))
 
 (defn delete-jars [group-id jar-id & [version]]
@@ -62,7 +63,7 @@
           (println "Deleting" pretty-coords)
           (repo->backup [group-id jar-id version])
           (apply db/delete-jars *db* group-id jar-id (if version [version] []))
-          (search/delete-from-index group-id jar-id)))
+          (search/delete! *search* group-id jar-id)))
       (println "No artifacts found under" group-id jar-id version))))
 
 
@@ -76,9 +77,10 @@
       {:clojure.tools.nrepl.middleware/descriptor {:requires #{"clone"}
                                                    :expects #{"eval"}}})))
 
-(defn init [db]
+(defn init [db search]
   (when-let [port (:nrepl-port config)]
     (printf "clojars-web: starting nrepl on localhost:%s\n" port)
     (nrepl/start-server :port port
                         :bind "127.0.0.1"
-                        :handler (handler {#'*db* db}))))
+                        :handler (handler {#'*db* db
+                                           #'*search* search}))))

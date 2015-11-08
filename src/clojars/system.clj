@@ -1,8 +1,10 @@
 (ns clojars.system
   (:require [clojars
              [ring-servlet-patch :as patch]
+             [search :refer [lucene-component]]
              [stats :refer [file-stats]]
              [web :as web]]
+            [clucy.core :as clucy]
             [com.stuartsierra.component :as component]
             [duct.component
              [endpoint :refer [endpoint-component]]
@@ -38,9 +40,12 @@
          :db   (hikaricp (:db config))
          :fs-factory #(FileSystems/getDefault)
          :stats (file-stats (:stats-dir config))
+         :index-factory #(clucy/disk-index (:index-path config))
+         :search (lucene-component)
          :clojars-app   (endpoint-component web/handler-optioned))
         (component/system-using
          {:http [:app]
           :app  [:clojars-app]
           :stats [:fs-factory]
-          :clojars-app [:db :error-reporter :stats]}))))
+          :search [:index-factory :stats]
+          :clojars-app [:db :error-reporter :stats :search]}))))

@@ -15,22 +15,22 @@
       (assoc m :created created)
       m)))
 
-(defn json-gen [stats query]
-  (let [results (search/search stats query)]
+(defn json-gen [search query]
+  (let [results (search/search search query 1)]
     (json/generate-string {:count (count results)
                            :results (map jar->json results)})))
 
-(defn json-search [stats query]
+(defn json-search [search query]
   {:status 200,
    :headers {"Content-Type" "application/json; charset=UTF-8"}
-   :body (json-gen stats query)})
+   :body (json-gen search query)})
 
-(defn html-search [stats account query page]
+(defn html-search [search account query page]
   (html-doc account (str query " - search")
     [:div.light-article.row
      [:h1 "Search for '" query "'"]
      (try
-       (let [results (search/search stats query :page page)
+       (let [results (search/search search query page)
              {:keys [total-hits results-per-page offset]} (meta results)]
          (if (empty? results)
            [:p "No results."]
@@ -57,9 +57,9 @@
        (catch Exception _
          [:p "Could not search; please check your query syntax."]))]))
 
-(defn search [stats account params]
+(defn search [search account params]
   (let [q (params :q)
         page (or (params :page) 1)]
     (if (= (params :format) "json")
-      (json-search stats q)
-      (html-search stats account q page))))
+      (json-search search q)
+      (html-search search account q page))))

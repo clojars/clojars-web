@@ -27,4 +27,5 @@
     (Thread/setDefaultUncaughtExceptionHandler yeller)
     (let [system (component/start (prod-system))]
       (println "clojars-web: starting jetty on" (str "http://" (:bind config) ":" (:port config)))
-      (admin/init (get-in system [:db :spec])))))
+      (admin/init (get-in system [:db :spec])
+                  (:search system)))))

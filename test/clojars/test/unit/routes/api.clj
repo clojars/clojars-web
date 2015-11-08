@@ -7,7 +7,6 @@
 
 (use-fixtures :each
   help/default-fixture
-  help/index-fixture
   help/with-clean-database)
 
 (def jarname "tester")
