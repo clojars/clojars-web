@@ -44,9 +44,10 @@
 (def renames {:name :artifact-id :group :group-id})
 
 (defn delete-from-index [index group-id & [artifact-id]]
-  (clucy/search-and-delete index
-                           (cond-> (str "group-id:" group-id)
-                             artifact-id (str " AND artifact-id:" artifact-id))))
+  (binding [clucy/*analyzer* analyzer]
+    (clucy/search-and-delete index
+                             (cond-> (str "group-id:" group-id)
+                               artifact-id (str " AND artifact-id:" artifact-id)))))
 
 (defn index-pom [index pom]
   (let [pom (-> pom

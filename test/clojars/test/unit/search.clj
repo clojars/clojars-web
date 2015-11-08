@@ -126,4 +126,39 @@
       (finally
         (component/stop lc)))))
 
+(deftest deleting-by-group-id
+  (let [lc (component/start (assoc (lucene-component)
+                                   :stats (reify stats/Stats
+                                            (download-count [t g a] 1)
+                                            (total-downloads [t] 100))
+                                   :index-factory #(clucy/memory-index)))
+        lein-ring {:group-id "lein-ring"
+                   :artifact-id "lein-ring"}
+        another-lein-ring {:group-id "lein-ring"
+                           :artifact-id "another-lein-ring"}]
+    (try
+      (index! lc lein-ring)
+      (index! lc another-lein-ring)
+      (delete! lc "lein-ring")
+      (is (empty? (search lc "lein-ring" 1)))
+      (finally
+        (component/stop lc)))))
 
+(deftest deleting-by-group-id-and-artifact-id
+  (let [lc (component/start (assoc (lucene-component)
+                                   :stats (reify stats/Stats
+                                            (download-count [t g a] 1)
+                                            (total-downloads [t] 100))
+                                   :index-factory #(clucy/memory-index)))
+        lein-ring {:group-id "lein-ring"
+                   :artifact-id "lein-ring"}
+        another-lein-ring {:group-id "lein-ring"
+                           :artifact-id "another-lein-ring"}]
+    (try
+      (index! lc lein-ring)
+      (index! lc another-lein-ring)
+      (delete! lc "lein-ring" "lein-ring")
+      (is (= (map #(dissoc % :licenses) (search lc "lein-ring" 1))
+             [another-lein-ring]))
+      (finally
+        (component/stop lc)))))
