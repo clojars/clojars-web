@@ -14,7 +14,8 @@
   [:footer.row
    (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
    (link-to "/projects" "projects")
-   (link-to "https://github.com/ato/clojars-web/blob/master/NEWS.md" "news")
+   (link-to "https://github.com/ato/clojars-web/wiki/Contributing" "contribute")
+   (link-to "https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann" "news")
    (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
    (link-to "https://github.com/ato/clojars-web" "code")
    (link-to "/security" "security")
