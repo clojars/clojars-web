@@ -23,6 +23,7 @@
              [safe-hiccup :refer [raw]]
              [search :refer [search]]]
             [clojure.java.io :as io]
+            [clojure.set :refer [rename-keys]]
             [compojure
              [core :refer [ANY context GET PUT routes]]
              [route :refer [not-found]]]
@@ -82,14 +83,17 @@
 
 (defn credential-fn [db]
   (let [attempts (atom {})]
-    (partial creds/bcrypt-credential-fn
-             (fn [id]
-               (if-let [{:keys [user password]}
-                        (db/find-user-by-user-or-email db id)]
-                 (when-not (empty? password)
-                   (swap! attempts dissoc user)
-                   {:username user :password password})
-                 (do (swap! attempts bad-attempt id) nil))))))
+    (fn [{:keys [username] :as auth-map}]
+      (if-let [auth-result (creds/bcrypt-credential-fn
+                             #(rename-keys (db/find-user-by-user-or-email db %)
+                               {:user :username})
+                             auth-map)]
+        (do
+          (swap! attempts dissoc username)
+          auth-result)
+        (do
+          (swap! attempts bad-attempt username)
+          nil)))))
 
 (defn wrap-x-frame-options [f]
   (fn [req] (update-in (f req) [:headers] assoc "X-Frame-Options" "DENY")))
