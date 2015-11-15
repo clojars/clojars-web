@@ -13,7 +13,6 @@
                                  submit-button
                                  email-field]]
             [clojars.web.safe-hiccup :refer [form-to]]
-            [clojars.email :as email]
             [ring.util.response :refer [response redirect]]
             [valip.core :refer [validate]]
             [valip.predicates :as pred]))
@@ -127,12 +126,12 @@
                           :email-or-username)
               (submit-button "Email me a password reset link"))]))
 
-(defn forgot-password [db {:keys [email-or-username]}]
+(defn forgot-password [db mailer {:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email db email-or-username)]
     (let [reset-code (db/set-password-reset-code! db email-or-username)
           base-url (:base-url config)
           reset-password-url (str base-url "/password-resets/" reset-code)]
-      (email/send-email (user :email)
+      (mailer (user :email)
         "Password reset for Clojars"
         (->> ["Hello,"
               "We received a request from someone, hopefully you, to reset the password of your clojars user."

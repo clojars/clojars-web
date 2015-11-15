@@ -2,9 +2,10 @@
   (:require [clojars
              [config :refer [config]]
              [db :as db]
+             [email :as email]
              [errors :as errors]
-             [search :as search]
              [stats :as stats]
+             [search :as search]
              [system :as system]
              [web :as web]]
             [clojars.db.migrate :as migrate]
@@ -26,13 +27,7 @@
                        :subprotocol "sqlite"
                        :subname ":memory:"}
                   :repo "data/test/repo"
-                  :bcrypt-work-factor 12
-                  :mail {:hostname "smtp.gmail.com"
-                         :from "noreply@clojars.org"
-                         :username "clojars@pupeno.com"
-                         :password "fuuuuuu"
-                         :port 465 ; If you change ssl to false, the port might not be effective, search for .setSSL and .setSslSmtpPort
-                         :ssl true}})
+                  :bcrypt-work-factor 12})
 
 (defn using-test-config [f]
   (with-redefs [config test-config]
@@ -76,8 +71,16 @@
 
 (declare ^:dynamic test-port)
 
-(defn app []
-  (web/clojars-app *db* (quiet-reporter) (no-stats) (no-search)))
+
+(defn app
+  ([] (app {}))
+  ([{:keys [:db :error-reporter :stats :search :mailer]
+     :or {:db *db*
+          :error-reporter (quiet-reporter)
+          :stats (no-stats)
+          :search (no-search)
+          :mailer nil}}]
+   (web/clojars-app db error-reporter stats search mailer)))
 
 (declare ^:dynamic system)
 

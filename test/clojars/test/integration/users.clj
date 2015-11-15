@@ -123,52 +123,44 @@
 
 (deftest user-can-get-new-password
   (let [transport (promise)]
-    (with-redefs [clojars.email/send-out (fn [x] (deliver transport x))]
-      (-> (session (help/app))
-          (register-as "fixture" "fixture@example.org" "password"))
-      (-> (session (help/app))
-          (visit "/")
-          (follow "login")
-          (follow "Forgot password?")
-          (fill-in "Email or Username" "fixture")
-          (press "Email me a password reset link")
-          (has (status? 200))
-          (within [:p]
-                  (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
-      (let [email (deref transport 100 nil)]
-        (is email)
-        (let [from (.getFromAddress email)]
-          (is (= (.getAddress from) "noreply@clojars.org"))
-          (is (= (.getPersonal from) "Clojars")))
-        (let [to (first (.getToAddresses email))]
-          (is (= (.getAddress to) "fixture@example.org")))
-        (is (= (.getSubject email)
-               "Password reset for Clojars"))
-        (.buildMimeMessage email)
-        (let [password "some-secret!"
+    (-> (session (help/app))
+        (register-as "fixture" "fixture@example.org" "password"))
+    (-> (session (help/app {:mailer (fn [& x] (deliver transport x))}))
+        (visit "/")
+        (follow "login")
+        (follow "Forgot password?")
+        (fill-in "Email or Username" "fixture")
+        (press "Email me a password reset link")
+        (has (status? 200))
+        (within [:p]
+                (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
+    (let [[to subject message :as email] (deref transport 100 nil)]
+      (is email)
+      (is (= to "fixture@example.org"))
+      (is (= subject "Password reset for Clojars"))
+      (let [password "some-secret!"
+            [_ reset-password-link]
+            (re-find
+             #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of your clojars user.\n\nTo contine with the reset password process, click on the following link:\n\n([^ ]+)"
+             message)]
+        (is (seq reset-password-link))
+        (-> (session (help/app))
+            (visit reset-password-link)
+            (has (status? 200))
+            (fill-in "New password" password)
+            (fill-in "Confirm new password" password)
+            (press "Update my password")
+            (follow-redirect)
+            (has (status? 200))
+            (within [:div.small-section :> :h1]
+                    (has (text? "Login")))
 
-              [_ reset-password-link]
-              (re-find
-                #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of your clojars user.\n\nTo contine with the reset password process, click on the following link:\n\n([^ ]+)"
-                (.getContent (.getMimeMessage email)))]
-          (is (seq reset-password-link))
-          (-> (session (help/app))
-              (visit reset-password-link)
-              (has (status? 200))
-              (fill-in "New password" password)
-              (fill-in "Confirm new password" password)
-              (press "Update my password")
-              (follow-redirect)
-              (has (status? 200))
-              (within [:div.small-section :> :h1]
-                (has (text? "Login")))
-
-              ; can login with new password
-              (login-as "fixture@example.org" password)
-              (follow-redirect)
-              (has (status? 200))
-              (within [:div.light-article :> :h1]
-                      (has (text? "Dashboard (fixture)")))))))))
+                                        ; can login with new password
+            (login-as "fixture@example.org" password)
+            (follow-redirect)
+            (has (status? 200))
+            (within [:div.light-article :> :h1]
+                    (has (text? "Dashboard (fixture)"))))))))
 
 (deftest bad-reset-code-shows-message
   (-> (session (help/app))

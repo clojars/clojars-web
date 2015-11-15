@@ -9,7 +9,7 @@
     (auth/try-account
      (view/show-user db account user))))
 
-(defn routes [db]
+(defn routes [db mailer]
   (compojure/routes
    (GET "/profile" {:keys [flash]}
         (auth/with-account
@@ -24,7 +24,7 @@
    (GET "/forgot-password" _
         (view/forgot-password-form))
    (POST "/forgot-password" {:keys [params]}
-         (view/forgot-password db params))
+         (view/forgot-password db mailer params))
 
    (GET "/password-resets/:reset-code" [reset-code]
         (view/edit-password-form db reset-code))
