@@ -1,4 +1,4 @@
-(defproject clojars-web "0.19.0-SNAPSHOT"
+(defproject clojars-web "19.0.0-SNAPSHOT"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.cli "0.2.1"]
@@ -45,7 +45,7 @@
                   ["change" "version" "leiningen.release/bump-version" "release"]
                   ["vcs" "commit"]
                   ["vcs" "tag"]
-                  ["change" "version" "leiningen.release/bump-version"]
+                  ["change" "version" "leiningen.release/bump-version" "major"]
                   ["vcs" "commit"]
                   ["vcs" "push"]]
   :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
