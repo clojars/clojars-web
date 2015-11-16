@@ -63,6 +63,6 @@
                                   [kerodon "0.7.0"
                                    :exclusions [org.apache.httpcomponents/httpcore]]
                                   [clj-http-lite "0.3.0"]
-                                  [com.google.jimfs/jimfs 1.0]]
+                                  [com.google.jimfs/jimfs "1.0"]]
                    :resource-paths ["local-resources"]}
    :project/test  {}})
