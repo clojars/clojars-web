@@ -25,7 +25,7 @@
   (let [yeller (yeller/client {:token (:yeller-token config)
                                :environment (:yeller-environment config)})]
     (Thread/setDefaultUncaughtExceptionHandler yeller)
-    (let [system (component/start (prod-system))]
+    (let [system (component/start (prod-system config yeller))]
       (println "clojars-web: starting jetty on" (str "http://" (:bind config) ":" (:port config)))
       (admin/init (get-in system [:db :spec])
                   (:search system)))))
