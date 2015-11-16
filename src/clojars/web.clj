@@ -81,12 +81,16 @@
     (Thread/sleep (* failures failures)))
   (update-in attempts [user] (fnil inc 0)))
 
+(defn user-credentials [db username]
+  (when-let [user (db/find-user-by-user-or-email db username)]
+    (when-not (empty? (:password user))
+      (rename-keys user {:user :username}))))
+
 (defn credential-fn [db]
   (let [attempts (atom {})]
     (fn [{:keys [username] :as auth-map}]
       (if-let [auth-result (creds/bcrypt-credential-fn
-                             #(rename-keys (db/find-user-by-user-or-email db %)
-                               {:user :username})
+                             (partial user-credentials db)
                              auth-map)]
         (do
           (swap! attempts dissoc username)
