@@ -194,13 +194,14 @@
   (let [fields {:email email
                 :username username
                 :pgp_key pgp-key
-                :account account}
-        fields (if (empty? password)
-                 fields
-                 (assoc fields :password (bcrypt password)))]
+                :account account}]
     (serialize-task :update-user
-                    (sql/update-user! fields
-                                      {:connection db}))
+                    (if (empty? password)
+                      (sql/update-user! fields {:connection db})
+                      (sql/update-user-with-password!
+                        (assoc fields :password
+                                      (bcrypt password))
+                        {:connection db})))
     fields))
 
 (defn update-user-password [db reset-code password]

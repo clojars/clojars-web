@@ -67,6 +67,22 @@
              (db/find-user-by-user-or-email help/*db* email2)))
       (is (not (db/find-user help/*db* name))))))
 
+(deftest update-user-works-when-password-is-blank
+  (let [email "test@example.com"
+        name "testuser"
+        password "password"
+        pgp-key "aoeu"
+        email2 "test2@example.com"
+        name2 "testuser2"
+        password2 ""
+        pgp-key2 "aoeu2"]
+    (is (db/add-user help/*db* email name password pgp-key))
+    (let [old-user (db/find-user help/*db* name)]
+      (is (db/update-user help/*db* name email2 name2 password2 pgp-key2))
+      (let [user (db/find-user help/*db* name2)]
+        (is (= email2 (:email user)))
+        (is (= (:password old-user) (:password user)))))))
+
 (deftest added-users-are-added-only-to-their-org-clojars-group
   (let [email "test@example.com"
         name "testuser"
