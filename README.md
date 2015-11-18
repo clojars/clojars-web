@@ -34,6 +34,8 @@ something pushed to the production website.
 Development
 -----------
 
+**Note: Java 8+ is required**
+
 ### Development system
 
 To begin developing, start with a REPL.
