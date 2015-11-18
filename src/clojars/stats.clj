@@ -2,7 +2,8 @@
   (:require [clojure.core.memoize :as memo]
             [com.stuartsierra.component :as component])
   (:import java.nio.file.Files
-           java.nio.file.LinkOption))
+           java.nio.file.LinkOption
+           java.nio.charset.Charset))
 
 (defprotocol Stats
   (download-count
@@ -23,7 +24,7 @@
 
 (defn all* [path]
   (->MapStats (if (Files/exists path (make-array LinkOption 0))
-                (read (java.io.PushbackReader. (Files/newBufferedReader path)))
+                (read (java.io.PushbackReader. (Files/newBufferedReader path (Charset/defaultCharset))))
                 {})))
 
 (def all (memo/ttl all* :ttl/threshold (* 60 60 1000))) ;; 1 hour
