@@ -60,7 +60,7 @@
       (fill-in [:#search] "test")
       (press [:#search-button])
       ;; the pom is used as is, even if the data is wrong
-      ;; https://github.com/ato/clojars-web/issues/358
+      ;; https://github.com/clojars/clojars-web/issues/358
       (within [:div.result]
               (has (text? "fake/test 0.0.1")))))
 

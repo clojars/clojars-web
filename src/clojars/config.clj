@@ -113,7 +113,7 @@
   (let [[options args banner] (parse-config args)]
     (when (:help options)
       (println "clojars-web: a jar repository webapp written in Clojure")
-      (println "             https://github.com/ato/clojars-web")
+      (println "             https://github.com/clojars/clojars-web")
       (println)
       (println banner)
       (println "The config file must be a Clojure map: {:port 8080 :repo \"/var/repo\"}")

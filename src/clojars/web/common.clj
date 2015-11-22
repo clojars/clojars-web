@@ -12,14 +12,14 @@
 
 (def footer
   [:footer.row
-   (link-to "https://github.com/ato/clojars-web/wiki/About" "about")
+   (link-to "https://github.com/clojars/clojars-web/wiki/About" "about")
    (link-to "/projects" "projects")
-   (link-to "https://github.com/ato/clojars-web/wiki/Contributing" "contribute")
+   (link-to "https://github.com/clojars/clojars-web/wiki/Contributing" "contribute")
    (link-to "https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann" "news")
-   (link-to "https://github.com/ato/clojars-web/wiki/Contact" "contact")
-   (link-to "https://github.com/ato/clojars-web" "code")
+   (link-to "https://github.com/clojars/clojars-web/wiki/Contact" "contact")
+   (link-to "https://github.com/clojars/clojars-web" "code")
    (link-to "/security" "security")
-   (link-to "https://github.com/ato/clojars-web/wiki/" "help")
+   (link-to "https://github.com/clojars/clojars-web/wiki/" "help")
    [:div.row.sponsors
     [:div "sponsored by"]
     [:div
@@ -178,7 +178,7 @@
        " and then"]
       [:div.col-md-12
        " check out the "
-       (link-to "http://wiki.github.com/ato/clojars-web/tutorial" "tutorial")
+       (link-to "http://wiki.github.com/clojars/clojars-web/tutorial" "tutorial")
        ". Alternatively, "
        (link-to "/projects" "browse the repository")
        "."]]]
@@ -218,13 +218,13 @@
 (def single-fork-notice
   [:p.fork-notice.hint
    "Note: this artifact is a non-canonical fork. See "
-   (link-to "https://github.com/ato/clojars-web/wiki/Groups" "the wiki")
+   (link-to "https://github.com/clojars/clojars-web/wiki/Groups" "the wiki")
    " for more details."])
 
 (def collection-fork-notice
   [:p.fork-notice.hint
    "Note: artifacts in italics are non-canonical forks. See "
-   (link-to "https://github.com/ato/clojars-web/wiki/Groups" "the wiki")
+   (link-to "https://github.com/clojars/clojars-web/wiki/Groups" "the wiki")
    " for more details."])
 
 (defn jar-link [jar]

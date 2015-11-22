@@ -10,7 +10,7 @@
                   [:h1 "Oops!"]
                   [:p
                    "It seems as if an internal system error has occurred. Please give it another try. If it still doesn't work please "
-                   (link-to "https://github.com/ato/clojars-web/issues" "open an issue")
+                   (link-to "https://github.com/clojars/clojars-web/issues" "open an issue")
                    " and include:"]
                   [:p
                    [:pre.error-id (format "error-id:\"%s\"" error-id)]]]))

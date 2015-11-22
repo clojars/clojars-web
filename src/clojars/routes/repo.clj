@@ -146,7 +146,7 @@
         (if (snapshot-version? artifact)
           ;; SNAPSHOT metadata will hit this route, but should be
           ;; treated as a versioned file upload.
-          ;; See: https://github.com/ato/clojars-web/issues/319
+          ;; See: https://github.com/clojars/clojars-web/issues/319
           (let [version artifact
                 group-parts (string/split group #"/")
                 group (string/join "/" (butlast group-parts))
