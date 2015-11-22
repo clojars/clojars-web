@@ -21,7 +21,9 @@
    (link-to "/security" "security")
    (link-to "https://github.com/clojars/clojars-web/wiki/" "help")
    [:div.row.sponsors
-    [:div "sponsored by"]
+    [:div "sponsored by"
+     (link-to "https://www.bountysource.com/teams/clojars/backers" "individual contributors")
+     "and"]
     [:div
      (link-to {:target "_blank"}
        "http://www.redhat.com/"
