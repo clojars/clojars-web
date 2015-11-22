@@ -65,6 +65,22 @@
          (blockers help/*db*
                    {:group "robert" :name "hooke" :version "1.1.2"}))))
 
+(deftest test-unknown-key-type
+  (copy-resource "1.1.2")
+  (io/copy "dummy hooke jar file"
+           (file-for "robert" "hooke" "1.1.2" "jar"))
+  (copy-resource "1.1.2" "jar.asc")
+  (copy-resource "1.1.2" "pom.asc")
+  (db/add-user help/*db* "test@ex.com" "testuser" "password"
+               (slurp (io/resource "curve25519.key")))
+  (db/add-member help/*db* "robert" "testuser" nil)
+  (is (= (str "Could not verify signature of "
+              (config :repo) "/robert/hooke/1.1.2/hooke-1.1.2.jar: "
+              "unknown PGP public key algorithm encountered")
+         (first
+           (blockers help/*db*
+                     {:group "robert" :name "hooke" :version "1.1.2"})))))
+
 (deftest test-no-key
   (copy-resource "1.1.2")
   (io/copy "dummy hooke jar file corrupted"

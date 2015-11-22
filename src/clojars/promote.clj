@@ -12,7 +12,7 @@
             [clj-pgp.signature :as pgp-sig])
   (:import (java.util.concurrent LinkedBlockingQueue)
            (org.springframework.aws.maven SimpleStorageServiceWagon)
-           (java.io File ByteArrayInputStream PrintWriter)
+           (java.io File ByteArrayInputStream PrintWriter IOException)
            (org.bouncycastle.openpgp PGPUtil PGPObjectFactory)
            (org.bouncycastle.bcpg ArmoredInputStream)))
 
@@ -48,7 +48,12 @@
         .nextObject
         .getPublicKeys
         iterator-seq)
-    (catch NullPointerException e)))
+    (catch NullPointerException _)
+    (catch IOException e
+      (throw (ex-info "Parsing keys failed"
+                      {:key-data s
+                       :reason (.getMessage e)}
+                      e)))))
 
 (defn file-for [group artifact version extension]
   (let [filename (format "%s-%s.%s" artifact version extension)]
@@ -74,10 +79,14 @@
 (defn signed? [blockers file keys]
   (let [sig-file (str file ".asc")]
     (if (.exists (io/file sig-file))
-      (if (signed-with? file sig-file keys)
-        blockers
-        (conj blockers (str "Could not verify signature of " file "."
-                            " Ensure your public key is in your profile.")))
+      (try
+        (if (signed-with? file sig-file keys)
+          blockers
+          (conj blockers (str "Could not verify signature of " file "."
+                           " Ensure your public key is in your profile.")))
+        (catch clojure.lang.ExceptionInfo e
+          (conj blockers (format "Could not verify signature of %s: %s"
+                          file (-> e ex-data :reason)))))
       (conj blockers (str file " is not signed.")))))
 
 (defn unpromoted? [blockers db {:keys [group name version]}]
