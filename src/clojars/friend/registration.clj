@@ -1,6 +1,5 @@
 (ns clojars.friend.registration
-  (:require [cemerick.friend :as friend]
-            [cemerick.friend.workflows :as workflow]
+  (:require [cemerick.friend.workflows :as workflow]
             [ring.util.response :refer [response]]
             [clojars.web.user :refer [register-form new-user-validations]]
             [clojars.db :refer [add-user]]

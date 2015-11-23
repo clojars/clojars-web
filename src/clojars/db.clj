@@ -1,16 +1,12 @@
 (ns clojars.db
   (:require [clojure.string :as str]
-            [clojure.java.io :as io]
             [clj-time.core :as time]
             [clj-time.coerce :as time.coerce]
             [clojars.config :refer [config]]
-            [clojure.java.jdbc :as jdbc]
             [clojars.db.sql :as sql]
             [cemerick.friend.credentials :as creds])
-  (:import java.security.MessageDigest
-           java.util.Date
+  (:import java.util.Date
            java.security.SecureRandom
-           java.io.File
            java.util.concurrent.Executors))
 
 (def reserved-names

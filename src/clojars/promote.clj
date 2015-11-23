@@ -3,18 +3,13 @@
             [clojars.maven :as maven]
             [clojars.db :as db]
             [clojure.java.io :as io]
-            [clojure.java.shell :as sh]
-            [clojure.java.jdbc :as sql]
             [clojure.string :as str]
-            [clojure.set :as set]
             [cemerick.pomegranate.aether :as aether]
             [clj-pgp.core :as pgp]
             [clj-pgp.signature :as pgp-sig])
-  (:import (java.util.concurrent LinkedBlockingQueue)
-           (org.springframework.aws.maven SimpleStorageServiceWagon)
-           (java.io File ByteArrayInputStream PrintWriter IOException)
-           (org.bouncycastle.openpgp PGPUtil PGPObjectFactory)
-           (org.bouncycastle.bcpg ArmoredInputStream)))
+  (:import (org.springframework.aws.maven SimpleStorageServiceWagon)
+           (java.io ByteArrayInputStream IOException)
+           (org.bouncycastle.openpgp PGPUtil PGPObjectFactory)))
 
 (defonce _
   (do (java.security.Security/addProvider

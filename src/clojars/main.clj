@@ -2,7 +2,7 @@
   (:require [clojars
              [admin :as admin]
              [config :refer [config configure]]
-             [errors :as errors :refer [->StdOutReporter multiple-reporters]]
+             [errors :refer [->StdOutReporter multiple-reporters]]
              [system :as system]]
             [com.stuartsierra.component :as component]
             [meta-merge.core :refer [meta-merge]]

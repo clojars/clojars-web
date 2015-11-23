@@ -1,10 +1,5 @@
 (ns clojars.ring-servlet-patch
-  (:require [ring.util.servlet :as ring-servlet])
-  (:import [javax.servlet.http
-            HttpServlet
-            HttpServletRequest
-            HttpServletResponse
-            HttpServletResponseWrapper]
+  (:import [javax.servlet.http HttpServletResponseWrapper]
            [org.eclipse.jetty.server Request]
            [org.eclipse.jetty.server.handler AbstractHandler]))
 

@@ -6,7 +6,7 @@
             [clojars.web.common :refer [html-doc error-list jar-link
                                         flash group-link]]
             [clojars.config :refer [config]]
-            [clojure.string :as string :refer [blank?]]
+            [clojure.string :refer [blank?]]
             [hiccup.element :refer [link-to unordered-list]]
             [hiccup.form :refer [label text-field
                                  password-field text-area

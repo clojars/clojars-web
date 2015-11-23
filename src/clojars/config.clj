@@ -1,8 +1,7 @@
 (ns clojars.config
   (:require [clojure.tools.cli :refer [cli]]
             [clojure.java.io :as io]
-            [clojure.string :as str]
-            [ring.util.codec :as codec]))
+            [clojure.string :as str]))
 
 (def default-config
   {:port 8080

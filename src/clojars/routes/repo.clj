@@ -8,7 +8,6 @@
              [search :as search]]
             [clojure.java.io :as io]
             [clojure.string :as string]
-            [clucy.core :as clucy]
             [compojure
              [core :as compojure :refer [PUT defroutes]]
              [route :refer [not-found]]]
