@@ -90,10 +90,9 @@
       (conj blockers (str file " is not signed.")))))
 
 (defn unpromoted? [blockers db {:keys [group name version]}]
-  (let [[{:keys [promoted_at]}] (db/promoted? db group name version)]
-    (if promoted_at
-      (conj blockers "Already promoted.")
-      blockers)))
+  (if (db/promoted? db group name version)
+    (conj blockers "Already promoted.")
+    blockers))
 
 (defn blockers [db {:keys [group name version]}]
   (let [jar (file-for group name version "jar")

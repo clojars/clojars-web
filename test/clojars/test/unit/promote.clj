@@ -2,7 +2,6 @@
   (:require [clojure.test :refer :all]
             [clojars.promote :refer :all]
             [clojure.java.io :as io]
-            [clojars.maven :as maven]
             [clojars.db :as db]
             [clojars.config :refer [config]]
             [clojars.test.test-helper :as help]))
@@ -49,6 +48,23 @@
   (db/add-member help/*db* "robert" "testuser" nil)
   (is (empty? (blockers help/*db*
                         {:group "robert" :name "hooke" :version "1.1.2"}))))
+
+(deftest test-already-promoted
+  (copy-resource "1.1.2")
+  (io/copy "dummy hooke jar file"
+           (file-for "robert" "hooke" "1.1.2" "jar"))
+  (copy-resource "1.1.2" "jar.asc")
+  (copy-resource "1.1.2" "pom.asc")
+  (db/add-user help/*db* "test@ex.com" "testuser" "password"
+               (slurp (io/resource "pubring.gpg")))
+  (db/add-member help/*db* "robert" "testuser" nil)
+  ;; TODO: fix this - the test files are for 1.1.2, but the pom has 1.2.0,
+  ;; and promote/blockers reads the pom to get the version, and expects
+  ;; that version to be in the db
+  (db/add-jar help/*db* "testuser" {:group "robert" :name "hooke" :version "1.2.0"})
+  (db/promote help/*db* "robert" "hooke" "1.2.0")
+  (is (= ["Already promoted."]
+         (blockers help/*db* {:group "robert" :name "hooke" :version "1.1.2"}))))
 
 (deftest test-failed-signature
   (copy-resource "1.1.2")
