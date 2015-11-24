@@ -38,7 +38,7 @@
              [resource :refer [wrap-resource]]
              [session :refer [wrap-session]]]))
 
-(defn main-routes [db reporter stats search-obj]
+(defn main-routes [db reporter stats search-obj mailer]
   (routes
    (GET "/" _
         (try-account
@@ -63,7 +63,7 @@
    (artifact/routes db reporter stats)
    ;; user routes must go after artifact routes
    ;; since they both catch /:identifier
-   (user/routes db)
+   (user/routes db mailer)
    (api/routes db stats)
    (GET "/error" _ (throw (Exception. "What!? You really want an error?")))
    (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
@@ -115,7 +115,7 @@
         (secure-session req)
         (regular-session req)))))
 
-(defn clojars-app [db reporter stats search]
+(defn clojars-app [db reporter stats search mailer]
   (routes
    (context "/repo" _
             (-> (repo/routes db search)
@@ -128,7 +128,7 @@
                 (repo/wrap-exceptions reporter)
                 (repo/wrap-file (:repo config))
                 (repo/wrap-reject-double-dot)))
-   (-> (main-routes db reporter stats search)
+   (-> (main-routes db reporter stats search mailer)
        (friend/authenticate
         {:credential-fn (credential-fn db)
          :workflows [(workflows/interactive-form)
@@ -145,5 +145,5 @@
        (wrap-not-modified)
        (wrap-exceptions reporter))))
 
-(defn handler-optioned [{:keys [db error-reporter stats search]}]
-  (clojars-app (:spec db) error-reporter stats search))
+(defn handler-optioned [{:keys [db error-reporter stats search mailer]}]
+  (clojars-app (:spec db) error-reporter stats search mailer))
