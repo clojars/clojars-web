@@ -1,6 +1,6 @@
 (ns clojars.friend.registration
   (:require [cemerick.friend.workflows :as workflow]
-            [ring.util.response :refer [response]]
+            [ring.util.response :refer [response content-type]]
             [clojars.web.user :refer [register-form new-user-validations]]
             [clojars.db :refer [add-user]]
             [valip.core :refer [validate]]))
@@ -11,7 +11,9 @@
                                    :password password
                                    :pgp-key pgp-key}
                          (new-user-validations db confirm))]
-    (response (register-form (apply concat (vals errors)) email username))
+    (->
+     (response (register-form (apply concat (vals errors)) email username))
+     (content-type "text/html"))
     (do (add-user db email username password pgp-key)
         (workflow/make-auth {:identity username :username username}))))
 
