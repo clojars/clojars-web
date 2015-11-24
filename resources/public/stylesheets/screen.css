@@ -445,11 +445,10 @@ footer a {
     background-color: #ff2929;
 }
 
-/* FIXME: prefer a bulleted style for error lists? */
-/* .error ul { */
-/*   list-style-type: disc; */
-/*   list-style-position: inside; */
-/* } */
+.error ul { 
+   list-style-type: disc; 
+   list-style-position: inside; 
+} 
 
 #jar-title h1 a {
   color: #393536;
