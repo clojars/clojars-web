@@ -1,4 +1,4 @@
-(defproject clojars-web "24.0.0-SNAPSHOT"
+(defproject clojars-web "24-SNAPSHOT"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.cli "0.2.1"]
@@ -39,13 +39,14 @@
                  [duct "0.4.4"]
                  [meta-merge "0.1.1"]
                  [ring-jetty-component "0.3.0"]]
+  :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"
   :release-tasks [["vcs" "assert-committed"]
-                  ["change" "version" "leiningen.release/bump-version" "release"]
+                  ["change" "version" "super.sport/bump-version" "release"]
                   ["vcs" "commit"]
                   ["vcs" "tag"]
-                  ["change" "version" "leiningen.release/bump-version" "major"]
+                  ["change" "version" "super.sport/bump-version"]
                   ["vcs" "commit"]
                   ["vcs" "push"]]
   :aliases {"migrate" ["run" "-m" "clojars.db.migrate"]}
