@@ -22,10 +22,6 @@
 (defn parse-resource [f]
   (when-let [r (io/resource f)] (read-string (slurp r))))
 
-;; we attempt to read a config.clj from the classpath at load time
-;; this is handy for interactive development and unit tests
-(def config (merge default-config (parse-resource "config.clj")))
-
 (defn url-decode [s]
   (java.net.URLDecoder/decode s "UTF-8"))
 
@@ -78,6 +74,10 @@
        (assoc m k ((or f identity) x))
        m))
    {} env-vars))
+
+;; we attempt to read a config.clj from the classpath at load time
+;; this is handy for interactive development and unit tests
+(def config (merge default-config (parse-resource "config.clj") (parse-env)))
 
 (defn parse-args [args defaults]
   (cli args
