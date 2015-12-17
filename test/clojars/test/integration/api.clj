@@ -18,9 +18,6 @@
            (str/join "/" (map name parts)))
       (client/get opts)))
 
-(defn get-content-type [resp]
-  (some-> resp :headers (get "content-type") (string/split #";") first))
-
 (defn assert-404 [& get-args]
   (try
     (let [resp (apply get-api get-args)]
@@ -31,8 +28,8 @@
       (is (= 404 (-> e ex-data :object :status))))))
 
 (deftest utils-test
-  (is (= (get-content-type {:headers {"content-type" "application/json"}}) "application/json"))
-  (is (= (get-content-type {:headers {"content-type" "application/json;charset=utf-8"}}) "application/json")))
+  (is (= (help/get-content-type {:headers {"content-type" "application/json"}}) "application/json"))
+  (is (= (help/get-content-type {:headers {"content-type" "application/json;charset=utf-8"}}) "application/json")))
 
 (deftest an-api-test
   (-> (session (help/app-from-system))
@@ -44,10 +41,10 @@
 
   (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/transit+json"]]
     (testing f
-      (is (= f (get-content-type (get-api [:groups "fake"] {:accept f}))))))
+      (is (= f (help/get-content-type (get-api [:groups "fake"] {:accept f}))))))
 
   (testing "default format is json"
-    (is (= "application/json" (get-content-type (get-api [:groups "fake"])))))
+    (is (= "application/json" (help/get-content-type (get-api [:groups "fake"])))))
 
   (testing "list group artifacts"
     (let [resp (get-api [:groups "fake"] {:accept :json})

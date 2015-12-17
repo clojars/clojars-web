@@ -16,9 +16,13 @@
       m)))
 
 (defn json-gen [search query]
-  (let [results (search/search search query 1)]
-    (json/generate-string {:count (count results)
-                           :results (map jar->json results)})))
+  (try
+    (let [results (search/search search query 1)]
+      (json/generate-string {:count (count results)
+                             :results (map jar->json results)}))
+    (catch Exception e
+      (json/generate-string
+        {:error (format "Invalid search syntax for query `%s`" query)}))))
 
 (defn json-search [search query]
   {:status 200,

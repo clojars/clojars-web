@@ -12,6 +12,7 @@
             [clojure.java
              [io :as io]
              [jdbc :as jdbc]]
+            [clojure.string :as string]
             [clucy.core :as clucy]
             [com.stuartsierra.component :as component])
   (:import java.io.File))
@@ -104,3 +105,6 @@
            (f)
            (finally
              (component/stop system))))))))
+
+(defn get-content-type [resp]
+  (some-> resp :headers (get "content-type") (string/split #";") first))
