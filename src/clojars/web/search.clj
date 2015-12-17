@@ -15,19 +15,19 @@
       (assoc m :created created)
       m)))
 
-(defn json-gen [search query]
-  (try
-    (let [results (search/search search query 1)]
-      (json/generate-string {:count (count results)
-                             :results (map jar->json results)}))
-    (catch Exception e
-      (json/generate-string
-        {:error (format "Invalid search syntax for query `%s`" query)}))))
-
 (defn json-search [search query]
-  {:status 200,
-   :headers {"Content-Type" "application/json; charset=UTF-8"}
-   :body (json-gen search query)})
+  (let [response {:status 200
+                  :headers {"Content-Type" "application/json; charset=UTF-8"}}]
+    (try
+      (assoc response
+        :body (let [results (search/search search query 1)]
+                (json/generate-string {:count (count results)
+                                       :results (map jar->json results)})))
+      (catch Exception _
+        (assoc response
+          :status 400
+          :body (json/generate-string
+                  {:error (format "Invalid search syntax for query `%s`" query)}))))))
 
 (defn html-search [search account query page]
   (html-doc account (str query " - search")

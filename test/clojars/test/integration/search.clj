@@ -50,9 +50,9 @@
         (is (= search-data (:results result)))))
 
     (testing "invalid query syntax returns error"
-      (let [resp (do-search :json "test+AND")
+      (let [resp (do-search :json "test+AND" {:throw-exceptions false})
             result (json/parse-string (:body resp) true)]
-        (is (= 200 (:status resp)))
+        (is (= 400 (:status resp)))
         (is (nil? (:count result)))
         (is (nil? (:results result)))
         (is (= "Invalid search syntax for query `test AND`" (:error result)))))))
