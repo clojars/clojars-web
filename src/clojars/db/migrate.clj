@@ -4,8 +4,17 @@
             [clojars.config :refer [config]])
   (:import (java.sql Timestamp)))
 
+(defn initial-schema-file [connection-string]
+  (if (nil? connection-string)
+    "clojars.sql"
+    (let [uri (java.net.URI. connection-string) scheme (.getScheme uri)]
+      (str
+       "clojars-"
+       (if (= "jdbc" scheme) (.getScheme (java.net.URI. (.getSchemeSpecificPart uri))) scheme)
+       ".sql"))))
+
 (defn initial-schema [trans]
-  (doseq [cmd (.split (slurp "clojars.sql") ";\n\n")]
+  (doseq [cmd (.split (slurp (initial-schema-file (:connection-string trans))) ";\n\n")]
     ;; needs to succeed even if tables exist since this migration
     ;; hasn't been recorded in extant DBs before migrations were introduced
     (try (sql/db-do-commands trans cmd)
@@ -17,7 +26,7 @@
 (defn add-jars-index [trans]
   ;; speed up the front page and selects for jars by name
   (sql/db-do-commands trans
-                      (str "CREATE INDEX IF NOT EXISTS jars_idx0 "
+                      (str "CREATE INDEX jars_idx0 "
                         "ON jars (group_name, jar_name, created DESC)")))
 
 (defn add-pgp-key [trans]
@@ -61,12 +70,13 @@
                            (sql/create-table-ddl "migrations"
                                                  [:name :varchar "NOT NULL"]
                                                  [:created_at :timestamp
-                                                  "NOT NULL"  "DEFAULT CURRENT_TIMESTAMP"])) 
+                                                  "NOT NULL"  "DEFAULT CURRENT_TIMESTAMP"]))
        (catch Exception _))
   (sql/with-db-transaction [trans db]
     (let [has-run? (sql/query trans ["SELECT name FROM migrations"]
                               :row-fn :name
                               :result-set-fn set)]
+
       (doseq [m migrations
               :when (not (has-run? (str (:name (meta m)))))]
         (run-and-record m trans)))))
@@ -74,5 +84,5 @@
 
 (defn -main []
   (let [db (:db config)]
-    (ensure-db-directory-exists (:subname db))
+    (if (some? (:subname db)) (ensure-db-directory-exists (:subname db)))
     (migrate db)))

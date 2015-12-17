@@ -16,6 +16,7 @@
                  [hiccup "1.0.3"]
                  [cheshire "5.4.0"]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
+                 [org.postgresql/postgresql "9.4-1201-jdbc4"]
                  [org.apache.commons/commons-email "1.2"]
                  [commons-codec "1.6"]
                  [net.cgrand/regex "1.0.1"
