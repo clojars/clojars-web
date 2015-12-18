@@ -30,16 +30,13 @@
     (str (jar-name dep) " " (:version dep))))
 
 (defn version-badge-url [jar]
-  (str (jar-url jar) "/latest-version.svg"))
+  (format "https://img.shields.io/clojars/v%s.svg" (jar-url jar)))
 
 (defn badge-markdown [jar]
-  (str "[![Clojars Project]"
-       "(http://clojars.org"
-       (jar-url jar)
-       "/latest-version.svg)]"
-       "(http://clojars.org"
-       (jar-url jar)
-       ")"))
+  (format
+    "[![Clojars Project](%s)](https://clojars.org%s)"
+    (version-badge-url jar)
+    (jar-url jar)))
 
 (defn dependency-section [db title id dependencies]
   (if (empty? dependencies) '()
@@ -177,7 +174,7 @@
                  [:h4 "Version Badge"]
                  [:p
                   "Want to display the "
-                  (link-to (version-badge-url jar) "latest version")
+                  (link-to {:target "_blank"} (version-badge-url jar) "latest version")
                   " of your project on Github? Use the markdown code below!"]
                  [:textarea {:readonly "readonly" :rows 4} (badge-markdown jar)]
                  ]
