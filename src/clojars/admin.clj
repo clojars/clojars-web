@@ -51,9 +51,9 @@
 
 (defn delete-jars [group-id jar-id & [version]]
   (let [pretty-coords (format "%s/%s %s" group-id jar-id (or version "(all versions)"))]
-    (if-let [description (:description (if version
-                                         (db/find-jar *db* group-id jar-id version)
-                                         (db/find-jar *db* group-id jar-id)))]
+    (if-let [{:keys [description]} (if version
+                                     (db/find-jar *db* group-id jar-id version)
+                                     (db/find-jar *db* group-id jar-id))]
       (do
         (println "Giving you a fn to delete jars that match" pretty-coords)
         (when-not
