@@ -133,6 +133,7 @@
         {:credential-fn (credential-fn db)
          :workflows [(workflows/interactive-form)
                      (registration/workflow db)]})
+       (wrap-exceptions reporter)
        (wrap-anti-forgery)
        (wrap-x-frame-options)
        (wrap-keyword-params)
@@ -142,8 +143,7 @@
        (wrap-secure-session)
        (wrap-resource "public")
        (wrap-content-type)
-       (wrap-not-modified)
-       (wrap-exceptions reporter))))
+       (wrap-not-modified))))
 
 (defn handler-optioned [{:keys [db error-reporter stats search mailer]}]
   (clojars-app (:spec db) error-reporter stats search mailer))
