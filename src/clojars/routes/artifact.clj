@@ -87,7 +87,7 @@
         [group-id artifact-id file-format]
         (response-based-on-format db file-format artifact-id group-id))
 
-   (POST ["/:group-id/:artifact-id/promote/:version"
+   #_(POST ["/:group-id/:artifact-id/promote/:version"
           :group-id #"[^/]+" :artifact-id #"[^/]+" :version #"[^/]+"]
          [group-id artifact-id version]
          (auth/with-account

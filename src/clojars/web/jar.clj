@@ -70,7 +70,8 @@
     (list [:h2 "Promotion"]
           (if (promoted? jar)
             (promoted-at jar)
-            (if-let [issues (promotion-issues db jar)]
+            [:p "Promotion currently disabled"]
+            #_(if-let [issues (promotion-issues db jar)]
               (list [:h3 "Issues Blocking Promotion"]
                     [:ul#blockers
                      (for [i issues]
