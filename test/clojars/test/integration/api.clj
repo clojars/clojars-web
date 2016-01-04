@@ -10,8 +10,8 @@
             [cheshire.core :as json]))
 
 (use-fixtures :each
-  help/default-fixture
-  help/run-test-app)
+              help/default-fixture
+              help/run-test-app)
 
 (defn get-api [parts & [opts]]
   (-> (str "http://localhost:" help/test-port "/api/"
@@ -45,6 +45,9 @@
 
   (testing "default format is json"
     (is (= "application/json" (help/get-content-type (get-api [:groups "fake"])))))
+
+  (testing "api endpoints uses permissive cors settings"
+    (is (help/assert-cors-header (get-api [:groups "fake"]))))
 
   (testing "list group artifacts"
     (let [resp (get-api [:groups "fake"] {:accept :json})
