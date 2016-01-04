@@ -108,3 +108,8 @@
 
 (defn get-content-type [resp]
   (some-> resp :headers (get "content-type") (string/split #";") first))
+
+(defn assert-cors-header [resp]
+  (some-> resp :headers
+          (get "access-control-allow-origin")
+          (= "*")))
