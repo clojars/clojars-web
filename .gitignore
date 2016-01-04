@@ -13,6 +13,7 @@ home
 *.iml
 
 /.lein-deps-sum
+/.lein-repl-history
 /.lein-failures
 /.nrepl-port
 /local-resources
