@@ -1,7 +1,8 @@
 (ns clojars.routes.api
   (:require [clojars
              [db :as db]
-             [stats :as stats]]
+             [stats :as stats]
+             [http-utils :refer [wrap-cors-headers]]]
             [compojure
              [core :as compojure :refer [ANY context GET]]
              [route :refer [not-found]]]
@@ -47,4 +48,5 @@
 
 (defn routes [db stats]
   (-> (handler db stats)
+      (wrap-cors-headers)
       (wrap-restful-response :formats [:json :edn :yaml :transit-json])))
