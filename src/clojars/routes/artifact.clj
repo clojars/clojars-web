@@ -45,10 +45,12 @@
   (cond
     (= file-format "json") (-> (response/response (view/make-latest-version-json db group-id artifact-id))
                                (response/header "Cache-Control" "no-cache")
-                               (response/content-type "application/json; charset=UTF-8"))
+                               (response/content-type "application/json; charset=UTF-8")
+                               (response/header "Access-Control-Allow-Origin" "*"))
     (= file-format "svg") (-> (response/response (view/make-latest-version-svg db group-id artifact-id))
                               (response/header "Cache-Control" "no-cache")
-                              (response/content-type "image/svg+xml")))))
+                              (response/content-type "image/svg+xml")
+                              (response/header "Access-Control-Allow-Origin" "*")))))
 
 (defn routes [db reporter stats]
   (compojure/routes
