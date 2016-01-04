@@ -7,7 +7,8 @@
              [auth :refer [try-account]]
              [config :refer [config]]
              [db :as db]
-             [errors :refer [wrap-exceptions]]]
+             [errors :refer [wrap-exceptions]]
+             [http-utils :refer [wrap-x-frame-options wrap-secure-session]]]
             [clojars.friend.registration :as registration]
             [clojars.routes
              [api :as api]
@@ -98,22 +99,6 @@
         (do
           (swap! attempts bad-attempt username)
           nil)))))
-
-(defn wrap-x-frame-options [f]
-  (fn [req] (update-in (f req) [:headers] assoc "X-Frame-Options" "DENY")))
-
-(defn https-request? [req]
-  (or (= (:scheme req) :https)
-      (= (get-in req [:headers "x-forwarded-proto"]) "https")))
-
-(defn wrap-secure-session [f]
-  (let [secure-session (wrap-session f {:cookie-attrs {:secure true
-                                                      :http-only true}})
-        regular-session (wrap-session f {:cookie-attrs {:http-only true}})]
-    (fn [req]
-      (if (https-request? req)
-        (secure-session req)
-        (regular-session req)))))
 
 (defn clojars-app [db reporter stats search mailer]
   (routes
