@@ -17,7 +17,7 @@
             [valip.core :refer [validate]]
             [valip.predicates :as pred]))
 
-(defn register-form [ & [errors email username pgp-key]]
+(defn register-form [{:keys [errors email username pgp-key]}]
   (html-doc nil "Register"
             [:div.small-section
              [:h1 "Register"]
@@ -29,7 +29,8 @@
                                     :placeholder "bob@example.com"}
                                    :email)
                       (label :username "Username")
-                      (text-field {:required true
+                      (text-field {:value username
+                                   :required true
                                    :placeholder "bob"}
                                   :username)
                       (label :password "Password")

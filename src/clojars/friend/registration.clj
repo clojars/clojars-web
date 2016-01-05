@@ -12,7 +12,10 @@
                                    :pgp-key pgp-key}
                          (new-user-validations db confirm))]
     (->
-     (response (register-form (apply concat (vals errors)) email username))
+     (response (register-form {:errors (apply concat (vals errors))
+                               :email email
+                               :username username
+                               :pgp-key pgp-key}))
      (content-type "text/html"))
     (do (add-user db email username password pgp-key)
         (workflow/make-auth {:identity username :username username}))))
