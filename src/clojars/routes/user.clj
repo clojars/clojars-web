@@ -18,8 +18,8 @@
          (auth/with-account
            (view/update-profile db account params)))
 
-   (GET "/register" _
-        (view/register-form))
+   (GET "/register" {:keys [params]}
+        (view/register-form params))
 
    (GET "/forgot-password" _
         (view/forgot-password-form))

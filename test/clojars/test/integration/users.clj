@@ -41,6 +41,8 @@
       (fill-in "Username" "dantheman")
       (press "Register")
       (has (status? 200))
+      (has (value? [:input#username] "dantheman"))
+      (has (value? [:input#email] "test@example.com"))
       (within [:div.error :ul :li]
               (has (text? "Password and confirm password must match")))
 
