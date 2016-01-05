@@ -169,6 +169,7 @@
                 :name "q"
                 :id "search"
                 :placeholder "Search projects..."
+                :autofocus true
                 :required true}]
        [:input {:id "search-button"
                 :value "Search"
