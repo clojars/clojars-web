@@ -538,6 +538,14 @@ footer a {
   color: #999;
 }
 
+.sponsors table {
+    margin: auto;
+}
+
+.sponsors td {
+    vertical-align: middle;
+}
+
 .sponsor img {
     width: 100px;
 }

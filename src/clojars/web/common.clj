@@ -20,26 +20,29 @@
    (link-to "https://github.com/clojars/clojars-web" "code")
    (link-to "/security" "security")
    (link-to "https://github.com/clojars/clojars-web/wiki/" "help")
-   [:div.row.sponsors
-    [:div "sponsored by"
+   [:div.sponsors
+    [:div.row
+     "sponsored by"
      (link-to "https://www.bountysource.com/teams/clojars/backers" "individual contributors")
      "with in-kind sponsorship from"]
-    [:div
-     [:span.sponsor
-      (link-to {:target "_blank"}
-        "http://www.redhat.com/"
-        (image "/images/rht-logo.png" "Red Hat, Inc."))]
-     [:span.sponsor
-      (link-to {:target "_blank"}
-        "http://yellerapp.com/"
+    [:div.row
+     [:table
+      [:tr
+       [:td.sponsor
+        (link-to {:target "_blank"}
+          "http://www.redhat.com/"
+          (image "/images/rht-logo.png" "Red Hat, Inc."))]
+       [:td.sponsor
+        (link-to {:target "_blank"}
+          "http://yellerapp.com/"
 
-        (image "/images/yeller-logo.png" "Yeller"))]
-     [:span.sponsor
-      (link-to {:target "_blank"}
-        "https://dnsimple.link/resolving-clojars"
-        [:span "resolving with" [:br]]
-        [:span
-         (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]]
+          (image "/images/yeller-logo.png" "Yeller"))]
+       [:td.sponsor
+        (link-to {:target "_blank"}
+          "https://dnsimple.link/resolving-clojars"
+          [:span "resolving with" [:br]]
+          [:span
+           (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]]]]
    [:div.row.sponsors
     "remixed by"
     (link-to {:target "_blank"}
