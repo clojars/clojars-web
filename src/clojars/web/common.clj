@@ -23,14 +23,23 @@
    [:div.row.sponsors
     [:div "sponsored by"
      (link-to "https://www.bountysource.com/teams/clojars/backers" "individual contributors")
-     "and"]
+     "with in-kind sponsorship from"]
     [:div
-     (link-to {:target "_blank"}
-       "http://www.redhat.com/"
-       (image "/images/rht-logo.png" "Red Hat, Inc."))
-     (link-to {:target "_blank"}
-       "http://yellerapp.com/"
-       (image "/images/yeller-logo.png" "Yeller"))]]
+     [:span.sponsor
+      (link-to {:target "_blank"}
+        "http://www.redhat.com/"
+        (image "/images/rht-logo.png" "Red Hat, Inc."))]
+     [:span.sponsor
+      (link-to {:target "_blank"}
+        "http://yellerapp.com/"
+
+        (image "/images/yeller-logo.png" "Yeller"))]
+     [:span.sponsor
+      (link-to {:target "_blank"}
+        "https://dnsimple.link/resolving-clojars"
+        [:span "resolving with" [:br]]
+        [:span
+         (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]]
    [:div.row.sponsors
     "remixed by"
     (link-to {:target "_blank"}

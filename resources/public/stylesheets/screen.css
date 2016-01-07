@@ -538,6 +538,10 @@ footer a {
   color: #999;
 }
 
+.sponsor img {
+    width: 100px;
+}
+
 .result a.fork {
   font-style: italic;
 }
