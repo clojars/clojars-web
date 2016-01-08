@@ -1,19 +1,22 @@
-(ns clojars.stats.process "generate usage statistics from web log"
-    (:require [clojure.java.io :as io]
-              [clojure.string :as str]
-              [net.cgrand.regex :as re]
-              [clj-time.format :as timef]))
+(ns clojars.tools.process-stats
+  "generate usage statistics from web log"
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [net.cgrand.regex :as re]
+            [clj-time.format :as timef])
+  (:import java.util.regex.Pattern
+           java.io.BufferedReader))
 
 (def time-clf (timef/formatter "dd/MMM/YYYY:HH:mm:ss Z"))
 
 ;; net.cgrand/regex currently doesn't allow Patterns
 ;; but they're too handy so let's enable them anyway
-(extend-type java.util.regex.Pattern
+(extend-type Pattern
   re/RegexValue
   (pattern [re] (.pattern re))
-  (groupnames [re] [])
+  (groupnames [_] [])
   re/RegexFragment
-  (static? [this _] true))
+  (static? [_ _] true))
 
 (def re-clf ; common log format (apache, nginx etc)
   (let [field #"\S+"
@@ -84,9 +87,9 @@
   (with-open [rdr (io/reader logfile)]
     (compute-stats (line-seq rdr))))
 
-(defn -main [& args]
+(defn -main [& _]
   (-> *in*
-        java.io.BufferedReader.
-        line-seq
-        compute-stats
-        prn))
+      BufferedReader.
+      line-seq
+      compute-stats
+      prn))

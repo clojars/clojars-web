@@ -156,9 +156,6 @@
                 :results-per-page per-page
                 :offset offset}))))))))
 
-(defn -main [& [repo]]
-  (index-repo (or repo (config :repo))))
-
 (defrecord LuceneSearch [stats index-factory index]
   Search
   (index! [t pom]

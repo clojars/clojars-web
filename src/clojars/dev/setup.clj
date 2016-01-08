@@ -93,7 +93,7 @@
       (spit stats-file))
     (println "Wrote download stats to" (.getAbsolutePath stats-file))))
 
-(defn -main []
+(defn setup-dev-environment []
   (let [{:keys [repo stats-dir db]} config]
     (println "NOTE: this will clear the contents of" db
       "and import all of the projects in" repo "into the db.\n")

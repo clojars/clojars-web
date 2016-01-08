@@ -1,5 +1,5 @@
-(ns clojars.test.unit.stats.process
-  (:require [clojars.stats.process :as stats]
+(ns clojars.test.unit.tools.process-stats
+  (:require [clojars.tools.process-stats :as stats]
             [clj-time.core :as time]
             [clojure.java.io :as io]
             [clojure.test :refer :all]))

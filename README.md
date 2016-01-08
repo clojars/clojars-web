@@ -70,13 +70,13 @@ user=> (reset)
 
 If you'd like to hack on the UI or search it might be useful to have
 production-like metadata. To create that, use
-`clojars.dev.setup/-main` to create test users, import an existing
+`clojars.tools.setup-dev/-main` to create test users, import an existing
 maven repository (your local `~/.m2/repository/` works well), and
 setup a search index:
 
 ```sh
 cp -r ~/.m2/repository data/dev_repo
-lein run -m clojars.dev.setup
+lein run -m clojars.tools.setup-dev
 ```
 If you want to use the actual repo from clojars.org, you can grab it
 via [rsync](http://github.com/ato/clojars-web/wiki/Data).
@@ -119,7 +119,7 @@ Also see [Configuration](#configuration).
 
 1. Compile with: `lein uberjar`
 2. Deploy `target/uberjar/clojars-web-*-standalone.jar` to the server
-3. Run the migrations `java -cp clojars-web-*-standalone.jar clojure.main -m clojars.db.migrate`
+3. Run the migrations `java -cp clojars-web-*-standalone.jar clojure.main -m clojars.tools.migrate-db`
 4. Run the production system: `java -jar clojars-web-*-standalone.jar`
 
 Configuration

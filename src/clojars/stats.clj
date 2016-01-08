@@ -1,7 +1,8 @@
 (ns clojars.stats
   (:require [clojure.core.memoize :as memo]
             [com.stuartsierra.component :as component])
-  (:import java.nio.file.Files
+  (:import java.io.PushbackReader
+           java.nio.file.Files
            java.nio.file.LinkOption))
 
 (defprotocol Stats
@@ -12,29 +13,29 @@
 
 (defrecord MapStats [s]
   Stats
-  (download-count [t group-id artifact-id]
+  (download-count [_ group-id artifact-id]
      (->> (s [group-id artifact-id])
           vals
           (apply +)))
-  (download-count [t group-id artifact-id version]
+  (download-count [_ group-id artifact-id version]
     (get-in s [[group-id artifact-id] version] 0))
-  (total-downloads [t]
+  (total-downloads [_]
     (apply + (mapcat vals (vals s)))))
 
 (defn all* [path]
   (->MapStats (if (Files/exists path (make-array LinkOption 0))
-                (read (java.io.PushbackReader. (Files/newBufferedReader path)))
+                (read (PushbackReader. (Files/newBufferedReader path)))
                 {})))
 
 (def all (memo/ttl all* :ttl/threshold (* 60 60 1000))) ;; 1 hour
 
 (defrecord FileStats [fs-factory path-factory fs path]
   Stats
-  (download-count [t group-id artifact-id]
+  (download-count [_ group-id artifact-id]
     (download-count (all path) group-id artifact-id))
-  (download-count [t group-id artifact-id version-id]
+  (download-count [_ group-id artifact-id version-id]
     (download-count (all path) group-id artifact-id version-id))
-  (total-downloads [t]
+  (total-downloads [_]
     (total-downloads (all path)))
   component/Lifecycle
   (start [t]

@@ -43,10 +43,6 @@
                [(str (:name (meta migration)))
                 (Timestamp. (System/currentTimeMillis))]))
 
-(defn- ensure-db-directory-exists [db]
-  (when-not (.exists (io/file db))
-    (.mkdirs (.getParentFile (io/file db)))))
-
 (def migrations
   [#'initial-schema
    #'add-promoted-field
@@ -71,8 +67,3 @@
               :when (not (has-run? (str (:name (meta m)))))]
         (run-and-record m trans)))))
 
-
-(defn -main []
-  (let [db (:db config)]
-    (ensure-db-directory-exists (:subname db))
-    (migrate db)))
