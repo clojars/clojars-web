@@ -54,8 +54,8 @@
               :jar_name "test"
               :group_name "fake"
               :user "dantheman"
-              :description nil
-              :homepage nil
+              :description "TEST"
+              :homepage "http://example.com"
               :downloads 0}
              (first body)))))
 
@@ -70,8 +70,8 @@
               :jar_name "test"
               :group_name "fake"
               :user "dantheman"
-              :description nil
-              :homepage nil
+              :description "TEST"
+              :homepage "http://example.com"
               :downloads 0
               :recent_versions [{:downloads 0 :version "0.0.3-SNAPSHOT"}
                                 {:downloads 0 :version "0.0.2"}

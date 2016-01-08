@@ -8,6 +8,9 @@
   <packaging>jar</packaging>
   <name>asdf</name>
 
+  <description>TEST</description>
+  <url>http://example.com</url>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>

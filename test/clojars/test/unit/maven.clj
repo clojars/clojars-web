@@ -64,3 +64,16 @@
         (snapshot-pom-file-with {:group_name "fake"
                                  :jar_name "test"
                                  :version "0.2.1-alpha-SNAPSHOT"}))))
+
+;; this might be a good candidate for test.check
+(deftest comparing-versions
+  (are [op v1 v2] (op (compare-versions v1 v2) 0)
+    = "0.0.1"         "0.0.1"
+    > "0.0.1"         "0.0.1-SNAPSHOT"
+    > "0.0.1-alpha2"  "0.0.1-alpha1"
+    > "0.0.1-alpha22" "0.0.1-alpha1"
+    < "0.0.1"         "0.0.2"
+    < "1.0.0"         "2.0.0"
+    < "8.2.0.Final"   "10.0.0.CR5"
+    < "1.2.3.455"     "1.2.3.456"
+    < "1"             "2"))
