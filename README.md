@@ -118,9 +118,10 @@ Deployment
 Also see [Configuration](#configuration).
 
 1. Compile with: `lein uberjar`
-2. Deploy `target/uberjar/clojars-web-*-standalone.jar` to the server
-3. Run the migrations `java -cp clojars-web-*-standalone.jar clojure.main -m clojars.tools.migrate-db`
-4. Run the production system: `java -jar clojars-web-*-standalone.jar`
+1. Deploy `target/uberjar/clojars-web-*-standalone.jar` to the server
+1. Run the migrations `java -cp clojars-web-*-standalone.jar clojure.main -m clojars.tools.migrate-db`
+1. Set Yeller token `export YELLER_TOKEN="foo-bar"`
+1. Run the production system: `java -jar clojars-web-*-standalone.jar`
 
 Configuration
 -------------
