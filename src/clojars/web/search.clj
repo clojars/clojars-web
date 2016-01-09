@@ -17,7 +17,8 @@
 
 (defn json-search [search query]
   (let [response {:status 200
-                  :headers {"Content-Type" "application/json; charset=UTF-8"}}]
+                  :headers {"Content-Type" "application/json; charset=UTF-8"
+                            "Access-Control-Allow-Origin" "*"}}]
     (try
       (assoc response
         :body (let [results (search/search search query 1)]

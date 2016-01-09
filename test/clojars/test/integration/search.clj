@@ -32,6 +32,9 @@
         (is (= 200 (:status resp)))
         (is (= "application/json" (help/get-content-type resp)))))
 
+    (testing "json request uses permissive cors headers"
+      (is (help/assert-cors-header (do-search :json "test"))))
+
     (testing "default request returns html"
       (let [resp (do-search "" "test")]
         (is (= 200 (:status resp)))
