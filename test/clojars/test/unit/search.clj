@@ -53,10 +53,8 @@
              [lein-ring]))
       (is (= (map #(dissoc % :licenses) (search lc "ring" 1))
              [lein-ring]))
-      (comment
-        ;;TODO fix query parser to not ignore words #243
-        (is (= (map #(dissoc % :licenses) (search lc "at-at" 1))
-             [at-at])))
+      (is (= (map #(dissoc % :licenses) (search lc "at-at" 1))
+             [at-at]))
       (finally
         (component/stop lc)))))
 

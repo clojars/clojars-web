@@ -35,7 +35,8 @@
 
 ;; TODO: make this easy to do from clucy
 (defonce analyzer (let [a (PerFieldAnalyzerWrapper.
-                           (StandardAnalyzer. clucy/*version*))]
+                           ;; Our default analyzer has no stop words.
+                           (StandardAnalyzer. clucy/*version* #{}))]
                     (doseq [[field {:keys [analyzed]}] field-settings
                             :when (false? analyzed)]
                       (.addAnalyzer a (name field) (KeywordAnalyzer.)))
