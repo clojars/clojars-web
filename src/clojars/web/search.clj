@@ -31,7 +31,7 @@
                   {:error (format "Invalid search syntax for query `%s`" query)}))))))
 
 (defn html-search [search account query page]
-  (html-doc account (str query " - search")
+  (html-doc (str query " - search") {:account account :query query}
     [:div.light-article.row
      [:h1 "Search for '" query "'"]
      (try

@@ -61,7 +61,7 @@
 (defn typekit-js []
   [:script "try{Typekit.load();}catch(e){}"])
 
-(defn html-doc [account title & body]
+(defn html-doc [title ctx & body]
   (html5
    [:head
     [:link {:type "application/opensearchdescription+xml"
@@ -98,9 +98,10 @@
                  :id "search"
                  :class "search"
                  :placeholder "Search projects..."
+                 :value (:query ctx)
                  :required true}]]]
       [:nav.main-navigation.col-md-6.col-sm-6.col-xs-12.col-lg-6
-       (if account
+       (if (:account ctx)
          (unordered-list
           [(link-to "/" "dashboard")
            (link-to "/profile" "profile")
@@ -111,7 +112,7 @@
      body
      footer]]))
 
-(defn html-doc-with-large-header [account title & body]
+(defn html-doc-with-large-header [title ctx & body]
   (html5
    [:head
     [:link {:type "application/opensearchdescription+xml"
@@ -159,7 +160,7 @@
        [:h1
         (link-to "/" "Clojars")]]
       [:nav.main-navigation.col-md-6.col-sm-6.col-xs-12.col-lg-6
-       (if account
+       (if (:account ctx)
          (unordered-list
           [(link-to "/" "dashboard")
            (link-to "/profile" "profile")
@@ -181,6 +182,7 @@
                 :name "q"
                 :id "search"
                 :placeholder "Search projects..."
+                :value (:query ctx)
                 :autofocus true
                 :required true}]
        [:input {:id "search-button"

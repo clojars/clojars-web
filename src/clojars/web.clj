@@ -57,7 +57,7 @@
          (browse db account params)))
    (GET "/security" []
         (try-account
-         (html-doc account "Security"
+         (html-doc "Security" {:account account}
                    (raw (slurp (io/resource "security.html"))))))
    session/routes
    (group/routes db)
@@ -71,8 +71,7 @@
    (ANY "*" _
         (try-account
          (not-found
-          (html-doc account
-                    "Page not found"
+          (html-doc "Page not found" {:account account}
                     [:div.small-section
                      [:h1 "Page not found"]
                      [:p "Thundering typhoons!  I think we lost it.  Sorry!"]]))))))
