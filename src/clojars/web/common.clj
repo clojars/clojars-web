@@ -59,7 +59,7 @@
   ga('send', 'pageview');"])
 
 (defn typekit-js []
-  [:script "try{Typekit.load();}catch(e){}"])
+  [:script "try{Typekit.load({async:true});}catch(e){}"])
 
 (defn html-doc [account title & body]
   (html5
@@ -149,7 +149,8 @@
          ;; more info: http://getbootstrap.com/css/#grid
          ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
     (include-js "//use.typekit.net/zhw0tse.js")
-    [:script "try{Typekit.load();}catch(e){}"]
+    (typekit-js)
+    (google-analytics-js)
     (raw (when-ie (include-js "/js/html5.js")))]
    [:body.container-fluid
     [:div.hero.row
