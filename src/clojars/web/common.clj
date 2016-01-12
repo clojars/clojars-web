@@ -2,7 +2,10 @@
   (:require [hiccup.core :refer [html]]
             [hiccup.page :refer [include-css include-js]]
             [hiccup.element :refer [link-to unordered-list image]]
-            [clojars.web.safe-hiccup :refer [html5 raw form-to]]))
+            [clojars.web.safe-hiccup :refer [html5 raw form-to]]
+            [clojars.web.helpers :as helpers]
+            [clojure.string :refer [join]]
+            [clojure.java.io :as io]))
 
 (defn when-ie [& contents]
   (str
@@ -13,6 +16,7 @@
 (def footer
   [:footer.row
    (link-to "https://github.com/clojars/clojars-web/wiki/About" "about")
+   (link-to "http://status.clojars.org" "status")
    (link-to "/projects" "projects")
    (link-to "https://github.com/clojars/clojars-web/wiki/Contributing" "contribute")
    (link-to "https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann" "news")
@@ -42,12 +46,19 @@
           "https://dnsimple.link/resolving-clojars"
           [:span "resolving with" [:br]]
           [:span
-           (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]]]]
+           (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]
+      [:tr
+       [:td.sponsor]
+       [:td.sponsor
+        (link-to {:target "_blank"}
+                 "https://www.statuspage.io"
+                 (helpers/retinized-image "/images/statuspage-io-logo.png" "StatusPage.io"))]
+       [:td.sponsor]]]]]
    [:div.row.sponsors
     "remixed by"
     (link-to {:target "_blank"}
              "http://www.bendyworks.com/"
-             (image "/images/bendyworks_logo_white.png" "Bendyworks Inc."))]])
+             (image "/images/bendyworks-logo.svg" "Bendyworks Inc."))]])
 
 (defn google-analytics-js []
   [:script "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
