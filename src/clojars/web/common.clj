@@ -35,11 +35,10 @@
        [:td.sponsor
         (link-to {:target "_blank"}
           "http://www.redhat.com/"
-          (image "/images/rht-logo.png" "Red Hat, Inc."))]
+          (image "/images/red-hat-logo.svg" "Red Hat, Inc."))]
        [:td.sponsor
         (link-to {:target "_blank"}
           "http://yellerapp.com/"
-
           (image "/images/yeller-logo.png" "Yeller"))]
        [:td.sponsor
         (link-to {:target "_blank"}
@@ -48,7 +47,10 @@
           [:span
            (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]
       [:tr
-       [:td.sponsor]
+       [:td.sponsor
+        (link-to {:target "_blank"}
+                 "https://www.rackspace.com"
+                 (helpers/retinized-image "/images/rackspace-logo.svg" "Rackspace"))]
        [:td.sponsor
         (link-to {:target "_blank"}
                  "https://www.statuspage.io"
@@ -58,7 +60,7 @@
     "remixed by"
     (link-to {:target "_blank"}
              "http://www.bendyworks.com/"
-             (image "/images/bendyworks-logo.svg" "Bendyworks Inc."))]])
+             [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150px"}])]])
 
 (defn google-analytics-js []
   [:script "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -100,7 +102,7 @@
     [:div#content-wrapper
      [:header.small-header.row
       [:div.home.col-md-3.col-sm-3.col-xs-6.col-lg-3
-       (link-to "/" (image "/images/clojars-logo-tiny.png" "Clojars"))
+       (link-to "/" (helpers/retinized-image "/images/clojars-logo-tiny.png" "Clojars"))
        [:h1 (link-to "/" "Clojars")]]
       [:div.col-md-3.col-sm-3.col-xs-6.col-lg-3
        [:form {:action "/search"}
@@ -167,7 +169,7 @@
     [:div.hero.row
      [:header
       [:div.home.col-md-6.col-sm-6.col-xs-12.col-lg-6
-       (link-to "/" (image "/images/clojars-logo-small.png" "Clojars"))
+       (link-to "/" (helpers/retinized-image "/images/clojars-logo.png" "Clojars"))
        [:h1
         (link-to "/" "Clojars")]]
       [:nav.main-navigation.col-md-6.col-sm-6.col-xs-12.col-lg-6

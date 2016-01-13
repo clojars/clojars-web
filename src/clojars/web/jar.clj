@@ -14,7 +14,8 @@
             [clojars.stats :as stats]
             [clojure.set :as set]
             [ring.util.codec :refer [url-encode]]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [clojars.web.helpers :as helpers]))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
@@ -92,10 +93,10 @@
                   (if-let [gh-info (github-info pom-map)]
                     (link-to {:target "_blank"}
                              (format "https://github.com/%s" gh-info)
-                             (image "/images/GitHub-Mark-16px.png" "GitHub")
+                             (helpers/retinized-image "/images/github-mark.png" "GitHub")
                              gh-info)
                     [:p.github
-                     (image "/images/GitHub-Mark-16px.png" "GitHub")
+                     (helpers/retinized-image "/images/github-mark.png" "GitHub")
                      "N/A"])]
                  [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
                   (stats/download-count stats
