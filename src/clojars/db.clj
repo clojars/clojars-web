@@ -200,11 +200,13 @@
                         {:connection db})))
     fields))
 
-(defn update-user-password [db reset-code password]
+(defn reset-user-password [db username reset-code password]
   (assert (not (str/blank? reset-code)))
-  (serialize-task :update-user-password
-                    (sql/update-user-password! {:password (bcrypt password)
-                                                :reset_code reset-code}
+  (assert (some? username))
+  (serialize-task :reset-user-password
+                    (sql/reset-user-password! {:password (bcrypt password)
+                                               :reset_code reset-code
+                                               :username username}
                                                {:connection db})))
 
   ;; Password resets
@@ -223,12 +225,12 @@
                                         ; http://stackoverflow.com/a/8015558/974795
   (str/lower-case (apply str (map #(format "%02X" %) byte-array))))
 
-(defn set-password-reset-code! [db username-or-email]
+(defn set-password-reset-code! [db username]
   (let [reset-code (hexadecimalize (generate-secure-token 20))]
     (serialize-task :set-password-reset-code
                     (sql/set-password-reset-code! {:reset_code reset-code
                                                    :reset_code_created_at (get-time)
-                                                   :username_or_email username-or-email}
+                                                   :username username}
                                                   {:connection db}))
     reset-code))
 

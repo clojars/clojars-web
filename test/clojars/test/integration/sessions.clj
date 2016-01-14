@@ -27,7 +27,7 @@
   (let [app (help/app)]
     (-> (session app)
         (register-as "fixture" "fixture@example.org" "password"))
-    (doseq [login ["fixture@example.org" "fixture"]]
+    (doseq [login ["fixture"]]
       (-> (session app)
           (login-as login "password")
           (follow-redirect)

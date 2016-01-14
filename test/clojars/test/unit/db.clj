@@ -10,7 +10,12 @@
   help/with-clean-database)
 
 (defn submap [s m]
-  (every? (fn [[k v]] (= (m k) v)) s))
+  (every? (fn [[k v]] (= (get m k) v)) s))
+
+(deftest submap-test
+  (is (not (submap {:a 1} nil)))
+  (is (not (submap {:a 1} {:a 2})))
+  (is (submap {:a 1} {:a 1 :b 2})))
 
 (deftest added-users-can-be-found
   (let [email "test@example.com"
@@ -34,7 +39,7 @@
         password "password"
         pgp-key "aoeu"]
       (db/add-user help/*db* email name password pgp-key)
-      (let [reset-code (db/set-password-reset-code! help/*db* "test@example.com")]
+      (let [reset-code (db/set-password-reset-code! help/*db* "testuser")]
         (is (submap {:email email
                      :user name
                      :password_reset_code reset-code}

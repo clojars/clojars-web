@@ -34,7 +34,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Password can't be blank")))
+              (has (text? "Password can't be blankPassword must be 8 characters or longer")))
 
       (fill-in "Password" "password")
       (fill-in "Email" "test@example.com")
@@ -53,7 +53,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Email can't be blank")))
+              (has (text? "Email can't be blankEmail must have an @ sign and a domain")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "")
@@ -96,7 +96,7 @@
       (has (status? 200))
       (within [:nav [:li enlive/first-child] :a]
               (has (text? "login")))
-      (login-as "fixture2@example.org" "password2")
+      (login-as "fixture" "password2")
       (follow-redirect)
       (has (status? 200))
       (within [:div.light-article :> :h1]
@@ -121,7 +121,7 @@
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Email can't be blank")))))
+              (has (text? "Email can't be blankEmail must have an @ sign and a domain")))))
 
 (deftest user-can-get-new-password
   (let [transport (promise)]
@@ -158,7 +158,7 @@
                     (has (text? "Login")))
 
                                         ; can login with new password
-            (login-as "fixture@example.org" password)
+            (login-as "fixture" password)
             (follow-redirect)
             (has (status? 200))
             (within [:div.light-article :> :h1]

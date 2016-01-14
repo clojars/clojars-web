@@ -82,7 +82,7 @@
   (update-in attempts [user] (fnil inc 0)))
 
 (defn user-credentials [db username]
-  (when-let [user (db/find-user-by-user-or-email db username)]
+  (when-let [user (db/find-user db username)]
     (when-not (empty? (:password user))
       (rename-keys user {:user :username}))))
 

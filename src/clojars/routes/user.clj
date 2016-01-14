@@ -27,10 +27,10 @@
          (view/forgot-password db mailer params))
 
    (GET "/password-resets/:reset-code" [reset-code]
-        (view/edit-password-form db reset-code))
+        (view/reset-password-form db reset-code))
 
    (POST "/password-resets/:reset-code" {{:keys [reset-code password confirm]} :params}
-         (view/edit-password db reset-code {:password password :confirm confirm}))
+         (view/reset-password db reset-code {:password password :confirm confirm}))
 
    (GET "/users/:username" [username]
         (show db username))

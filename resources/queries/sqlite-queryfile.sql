@@ -106,7 +106,7 @@ WHERE (
 );
 
 --name: recent-jars
-SELECT j.* 
+SELECT j.*
 FROM jars j
 JOIN (
   SELECT group_name, jar_name, MAX(created) AS created
@@ -199,19 +199,19 @@ UPDATE users
 SET email = :email, user = :username, pgp_key = :pgp_key, password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
 WHERE user = :account;
 
---name: update-user-password!
+--name: reset-user-password!
 UPDATE users
 SET password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
-WHERE password_reset_code = :reset_code;
+WHERE (
+  password_reset_code = :reset_code
+  AND
+  user = :username
+);
 
 --name: set-password-reset-code!
 UPDATE users
 SET password_reset_code = :reset_code, password_reset_code_created_at = :reset_code_created_at
-WHERE (
-  user = :username_or_email
-  OR
-  email = :username_or_email
-);
+WHERE user = :username;
 
 --name: find-groups-jars-information
 SELECT j.jar_name, j.group_name, homepage, description, user,
@@ -284,7 +284,7 @@ AND r.created = r2.created
 WHERE j.group_name = :group_id
 AND j.jar_name = :artifact_id
 ORDER BY j.group_name ASC, j.jar_name ASC;
-            
+
 --name: add-member!
 INSERT INTO groups (name, user, added_by)
 VALUES (:groupname, :username, :added_by);

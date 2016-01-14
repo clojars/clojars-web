@@ -55,13 +55,19 @@
   (and (.startsWith key "-----BEGIN PGP PUBLIC KEY BLOCK-----")
        (.endsWith key "-----END PGP PUBLIC KEY BLOCK-----")))
 
-(defn update-user-validations [confirm]
+;; Validations
+
+(defn password-validations [confirm]
+  [[:password #(<= 8 (count %)) "Password must be 8 characters or longer"]
+   [:password #(= % confirm) "Password and confirm password must match"]])
+
+(defn user-validations []
   [[:email pred/present? "Email can't be blank"]
+   [:email #(re-matches #".+@.+" %) "Email must have an @ sign and a domain"]
    [:username #(re-matches #"[a-z0-9_-]+" %)
     (str "Username must consist only of lowercase "
          "letters, numbers, hyphens and underscores.")]
    [:username pred/present? "Username can't be blank"]
-   [:password #(= % confirm) "Password and confirm password must match"]
    [:pgp-key #(or (blank? %) (valid-pgp-key? %))
     "Invalid PGP public key"]])
 
@@ -71,7 +77,16 @@
                                 (find-user db %)
                                 (seq (group-membernames db %))))
             "Username is already taken"]]
-          (update-user-validations confirm)))
+          (user-validations)
+          (password-validations confirm)))
+
+(defn reset-password-validations [db confirm]
+  (concat
+    [[:reset-code #(or (blank? %) (db/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]
+     [:reset-code pred/present? "Reset code can't be blank."]]
+    (password-validations confirm)))
+
+;;
 
 (defn profile-form [account user flash-msg & [errors]]
   (html-doc "Profile" {:account account}
@@ -93,12 +108,15 @@
                       (submit-button "Update"))]))
 
 (defn update-profile [db account {:keys [email password confirm pgp-key] :as params}]
-  (let [pgp-key (and pgp-key (.trim pgp-key))]
+  (let [pgp-key (and pgp-key (.trim pgp-key))
+        email (and email (.trim email))]
     (if-let [errors (apply validate {:email email
                                      :username account
                                      :password password
                                      :pgp-key pgp-key}
-                           (update-user-validations confirm))]
+                           (if (empty? password)
+                             (user-validations)
+                             (concat (user-validations) (password-validations confirm))))]
       (profile-form account params nil (apply concat (vals errors)))
       (do (update-user db account email account password pgp-key)
           (assoc (redirect "/profile")
@@ -129,7 +147,7 @@
 
 (defn forgot-password [db mailer {:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email db email-or-username)]
-    (let [reset-code (db/set-password-reset-code! db email-or-username)
+    (let [reset-code (db/set-password-reset-code! db (:user user))
           base-url (:base-url config)
           reset-password-url (str base-url "/password-resets/" reset-code)]
       (mailer (user :email)
@@ -144,7 +162,7 @@
     [:h1 "Forgot password?"]
     [:p "If your account was found, you should get an email with a link to reset your password soon."]))
 
-(defn edit-password-form [db reset-code & [errors]]
+(defn reset-password-form [db reset-code & [errors]]
   (if-let [user (db/find-user-by-password-reset-code db reset-code)]
     (html-doc "Reset your password" {}
       [:div.small-section
@@ -168,17 +186,12 @@
       [:h1 "Reset your password"]
       [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"])))
 
-(defn update-password-validations [db confirm]
-  [[:reset-code #(or (blank? %) (db/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]
-   [:reset-code pred/present? "Reset code can't be blank."]
-   [:password #(= % confirm) "Password and confirm password must match"]])
-
-(defn edit-password [db reset-code {:keys [password confirm]}]
+(defn reset-password [db reset-code {:keys [password confirm]}]
   (if-let [errors (apply validate {:password password
                                    :reset-code reset-code}
-                         (update-password-validations db confirm))]
-    (edit-password-form db reset-code (apply concat (vals errors)))
-    (do
-      (db/update-user-password db reset-code password)
+                         (reset-password-validations db confirm))]
+    (reset-password-form db reset-code (apply concat (vals errors)))
+    (let [user (db/find-user-by-password-reset-code db reset-code)]
+      (db/reset-user-password db (:user user) reset-code password)
       (assoc (redirect "/login")
              :flash "Your password was updated."))))
