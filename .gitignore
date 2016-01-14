@@ -3,7 +3,8 @@
 \#*
 \.#*
 home
-/data
+/data/*
+!/data/.gitkeep
 /native
 /target
 
