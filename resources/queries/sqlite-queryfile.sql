@@ -191,12 +191,12 @@ VALUES (:groupname, :username);
 
 --name: update-user!
 UPDATE users
-SET email = :email, user = :username, pgp_key = :pgp_key
+SET email = :email, user = :username, pgp_key = :pgp_key, password_reset_code = NULL, password_reset_code_created_at = NULL
 WHERE user = :account;
 
 --name: update-user-with-password!
 UPDATE users
-SET email = :email, user = :username, pgp_key = :pgp_key, password = :password
+SET email = :email, user = :username, pgp_key = :pgp_key, password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
 WHERE user = :account;
 
 --name: update-user-password!
