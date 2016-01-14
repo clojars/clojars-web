@@ -5,7 +5,8 @@
             [net.cgrand.regex :as re]
             [clj-time.format :as timef])
   (:import java.util.regex.Pattern
-           java.io.BufferedReader))
+           java.io.BufferedReader)
+  (:gen-class))
 
 (def time-clf (timef/formatter "dd/MMM/YYYY:HH:mm:ss Z"))
 

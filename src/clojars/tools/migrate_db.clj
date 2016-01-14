@@ -1,7 +1,8 @@
 (ns clojars.tools.migrate-db
   (:require [clojars.config :refer [config]]
             [clojars.db.migrate :refer [migrate]]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:gen-class))
 
 (defn- ensure-db-directory-exists [db]
   (when-not (.exists (io/file db))

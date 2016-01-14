@@ -3,7 +3,8 @@
             [clojars.maven :as maven]
             [clojure.set :as set])
   (:import java.util.zip.GZIPOutputStream
-           (java.io FileOutputStream PrintWriter)))
+           (java.io FileOutputStream PrintWriter))
+  (:gen-class))
 
 (defn pom-seq [repo]
   (for [f (file-seq repo)
