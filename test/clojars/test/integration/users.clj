@@ -130,7 +130,7 @@
     (-> (session (help/app {:mailer (fn [& x] (deliver transport x))}))
         (visit "/")
         (follow "login")
-        (follow "Forgot password?")
+        (follow "Forgot your username or password?")
         (fill-in "Email or Username" "fixture")
         (press "Email me a password reset link")
         (has (status? 200))
@@ -143,9 +143,9 @@
       (let [password "some-secret!"
             [_ reset-password-link]
             (re-find
-             #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of your clojars user.\n\nTo contine with the reset password process, click on the following link:\n\n([^ ]+)"
+             #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of the clojars user: fixture.\n\nTo contine with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
              message)]
-        (is (seq reset-password-link))
+        (is (string? reset-password-link))
         (-> (session (help/app))
             (visit reset-password-link)
             (has (status? 200))

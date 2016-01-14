@@ -135,9 +135,10 @@
               (unordered-list (map group-link (find-groupnames db (user :user))))]]))
 
 (defn forgot-password-form []
-  (html-doc "Forgot password?" {}
+  (html-doc "Forgot password or username?" {}
     [:div.small-section
-     [:h1 "Forgot password?"]
+     [:h1 "Forgot something?"]
+     [:p "Don't worry, it happens to the best of us. Enter your email or username below, and we'll set you a password reset link, along with your username."]
      (form-to [:post "/forgot-password"]
               (label :email-or-username "Email or Username")
               (text-field {:placeholder "bob"
@@ -150,17 +151,19 @@
     (let [reset-code (db/set-password-reset-code! db (:user user))
           base-url (:base-url config)
           reset-password-url (str base-url "/password-resets/" reset-code)]
-      (mailer (user :email)
+      (mailer (:email user)
         "Password reset for Clojars"
         (->> ["Hello,"
-              "We received a request from someone, hopefully you, to reset the password of your clojars user."
+              (format "We received a request from someone, hopefully you, to reset the password of the clojars user: %s." (:user user))
               "To contine with the reset password process, click on the following link:"
-              reset-password-url]
+              reset-password-url
+              "This link is valid for 24 hours, after which you will need to generate a new one."
+              "If you didn't reset your password then you can ignore this email."]
              (interpose "\n\n")
              (apply str)))))
   (html-doc "Forgot password?" {}
-    [:h1 "Forgot password?"]
-    [:p "If your account was found, you should get an email with a link to reset your password soon."]))
+    [:div.small-section [:h1 "Forgot password?"]
+     [:p "If your account was found, you should get an email with a link to reset your password soon."]]))
 
 (defn reset-password-form [db reset-code & [errors]]
   (if-let [user (db/find-user-by-password-reset-code db reset-code)]
@@ -169,7 +172,11 @@
        [:h1 "Reset your password"]
        (error-list errors)
        (form-to [:post (str "/password-resets/" reset-code)]
-                (label :email-or-username "Your email")
+                (label :username "Your username")
+                (text-field {:value (:user user)
+                             :disabled "disabled"}
+                            :ignored-username)
+                (label :email "Your email")
                 (text-field {:value (:email user)
                              :disabled "disabled"}
                             :ignored-email)

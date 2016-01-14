@@ -29,5 +29,5 @@
              (password-field {:placeholder "keep it secret, keep it safe"
                               :required true}
                              :password)
-             (link-to {:class :hint-link} "/forgot-password" "Forgot password?")
+             (link-to {:class :hint-link} "/forgot-password" "Forgot your username or password?")
              (submit-button "Login"))]))
