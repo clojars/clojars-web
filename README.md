@@ -50,6 +50,13 @@ Run `migrate` to initialize the database to the latest migration.
 user=> (migrate)
 ...
 ```
+
+or alternatively, from the command line.
+
+```sh
+$ lein run -m user/migrate
+```
+
 Run `go` to initiate and start the system.
 
 ```clojure

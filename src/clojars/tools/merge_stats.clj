@@ -1,5 +1,6 @@
 (ns clojars.tools.merge-stats
-  (:import (java.io FileReader PushbackReader)))
+  (:import (java.io FileReader PushbackReader))
+  (:gen-class))
 
 (defn -main [& args]
   (let [stats (map (fn [filename]

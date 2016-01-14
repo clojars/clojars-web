@@ -5,7 +5,7 @@
   (:import (java.sql Timestamp)))
 
 (defn initial-schema [trans]
-  (doseq [cmd (.split (slurp "clojars.sql") ";\n\n")]
+  (doseq [cmd (.split (slurp (io/resource "queries/clojars.sql")) ";\n\n")]
     ;; needs to succeed even if tables exist since this migration
     ;; hasn't been recorded in extant DBs before migrations were introduced
     (try (sql/db-do-commands trans cmd)
@@ -57,7 +57,7 @@
                            (sql/create-table-ddl "migrations"
                                                  [:name :varchar "NOT NULL"]
                                                  [:created_at :timestamp
-                                                  "NOT NULL"  "DEFAULT CURRENT_TIMESTAMP"])) 
+                                                  "NOT NULL"  "DEFAULT CURRENT_TIMESTAMP"]))
        (catch Exception _))
   (sql/with-db-transaction [trans db]
     (let [has-run? (sql/query trans ["SELECT name FROM migrations"]
