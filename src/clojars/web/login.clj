@@ -7,7 +7,7 @@
             [clojars.web.safe-hiccup :refer [form-to]]))
 
 (defn login-form [login_failed username]
-  (html-doc nil "Login"
+  (html-doc "Login" {}
    [:div.small-section
     [:h1 "Login"]
     [:p.hint "Don't have an account? "

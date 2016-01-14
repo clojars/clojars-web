@@ -20,7 +20,7 @@
                                                                    (:jar_name jar-map))]]]))
 
 (defn index-page [db stats account]
-  (html-doc-with-large-header account nil
+  (html-doc-with-large-header nil {:account account}
     [:article.row
      [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
       [:h3.push-header "Push with Leiningen"]
@@ -41,7 +41,7 @@
     [:ul.recent-jars-list.row (map #(recent-jar stats %) (recent-jars db))]))
 
 (defn dashboard [db account]
-  (html-doc account "Dashboard"
+  (html-doc "Dashboard" {:account account}
     [:div.light-article.col-md-12.col-lg-12.col-xs-12.col-sm-12
      [:h1 (str "Dashboard (" account ")")]
      [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12

@@ -4,8 +4,7 @@
             [hiccup.element :refer [link-to]]))
 
 (defn error-page-response [error-id]
-  (-> (response (html-doc nil
-                 "Oops, we encountered an error"
+  (-> (response (html-doc "Oops, we encountered an error" {}
                  [:div.small-section
                   [:h1 "Oops!"]
                   [:p

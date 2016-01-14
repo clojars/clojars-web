@@ -7,7 +7,7 @@
             [clojars.web.safe-hiccup :refer [form-to]]))
 
 (defn show-group [db account groupname membernames & errors]
-  (html-doc account (str groupname " group")
+  (html-doc (str groupname " group") {:account account}
     [:div.small-section.col-md-6.col-lg-6.col-sm-6.col-xs-12
      [:h1 (str groupname " group")]
      [:h2 "Projects"]

@@ -81,7 +81,7 @@
                        (submit-button "Promote")))))))
 
 (defn show-jar [db reporter stats account jar recent-versions count]
-  (html-doc account (str (:jar_name jar) " " (:version jar))
+  (html-doc (str (:jar_name jar) " " (:version jar)) {:account account}
             (let [pom-map (jar-to-pom-map reporter jar)]
               [:div.light-article.row
                [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
@@ -182,7 +182,7 @@
                 ]])))
 
 (defn show-versions [account jar versions]
-  (html-doc account (str "all versions of "(jar-name jar))
+  (html-doc account (str "all versions of "(jar-name jar)) {:account account}
             [:div.light-article
              [:h1 "all versions of "(jar-link jar)]
              [:div.versions

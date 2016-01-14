@@ -18,7 +18,7 @@
             [valip.predicates :as pred]))
 
 (defn register-form [{:keys [errors email username pgp-key]}]
-  (html-doc nil "Register"
+  (html-doc "Register" {}
             [:div.small-section
              [:h1 "Register"]
              (error-list errors)
@@ -74,7 +74,7 @@
           (update-user-validations confirm)))
 
 (defn profile-form [account user flash-msg & [errors]]
-  (html-doc account "Profile"
+  (html-doc "Profile" {:account account}
             [:div.small-section
              (flash flash-msg)
              [:h1 "Profile"]
@@ -105,7 +105,7 @@
             :flash "Profile updated.")))))
 
 (defn show-user [db account user]
-  (html-doc account (user :user)
+  (html-doc (user :user) {:account account}
             [:div.light-article.row
              [:h1.col-md-12.col-sm-12.col-xs-12.col-lg-12
               (user :user)]
@@ -117,7 +117,7 @@
               (unordered-list (map group-link (find-groupnames db (user :user))))]]))
 
 (defn forgot-password-form []
-  (html-doc nil "Forgot password?"
+  (html-doc "Forgot password?" {}
     [:div.small-section
      [:h1 "Forgot password?"]
      (form-to [:post "/forgot-password"]
@@ -140,13 +140,13 @@
               reset-password-url]
              (interpose "\n\n")
              (apply str)))))
-  (html-doc nil "Forgot password?"
+  (html-doc "Forgot password?" {}
     [:h1 "Forgot password?"]
     [:p "If your account was found, you should get an email with a link to reset your password soon."]))
 
 (defn edit-password-form [db reset-code & [errors]]
   (if-let [user (db/find-user-by-password-reset-code db reset-code)]
-    (html-doc nil "Reset your password"
+    (html-doc "Reset your password" {}
       [:div.small-section
        [:h1 "Reset your password"]
        (error-list errors)
@@ -164,7 +164,7 @@
                                  :required true}
                                 :confirm)
                 (submit-button "Update my password"))])
-    (html-doc nil "Reset your password"
+    (html-doc "Reset your password" {}
       [:h1 "Reset your password"]
       [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"])))
 
