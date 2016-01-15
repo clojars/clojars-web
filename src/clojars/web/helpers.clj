@@ -7,9 +7,7 @@
   at that path."
   [path]
   (some-> (str "public" path)
-          (io/resource)
-          (io/file)
-          (.exists)))
+          (io/resource)))
 
 (defn srcset-part
   "Creates a srcset part, e.g.
