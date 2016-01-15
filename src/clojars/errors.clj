@@ -38,7 +38,8 @@
    (report-error reporter e nil))
   ([reporter e extra]
    (let [id (error-id)]
-     (-report-error reporter e extra id)
+     (when-not (false? (:report? (ex-data e)))
+       (-report-error reporter e extra id))
      id)))
 
 (defn report-ring-error [reporter e request]

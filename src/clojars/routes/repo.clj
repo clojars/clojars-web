@@ -84,7 +84,7 @@
          (.exists (io/file (config :repo) (string/replace group-id "." "/")
                     artifact-id version filename)))
    (throw (ex-info "redeploying non-snapshots is not allowed (see http://git.io/vO2Tg)"
-            {}))))
+            {:report? false}))))
 
 (defn validate-deploy [group-id artifact-id version filename]
   (try
