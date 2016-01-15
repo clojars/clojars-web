@@ -1,6 +1,7 @@
 (ns clojars.web.helpers
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojars.web.safe-hiccup :as hiccup]))
 
 (defn public-resource-exists?
   "Takes a path and checks whether the resource exists under the public directory
@@ -36,3 +37,19 @@
            :srcset (->> (filter identity [(srcset-part base extension "2x")
                                           (srcset-part base extension "3x")])
                         (str/join ", "))}]))
+
+(defn select-text-script []
+  (hiccup/raw "<script>
+                     function selectText( containerid ) {
+                       var node = document.getElementById( containerid );
+
+                       if ( window.getSelection ) {
+                         if ( window.getSelection().type != \"Range\" ) {
+                           var range = document.createRange();
+                           range.selectNodeContents( node );
+                           window.getSelection().removeAllRanges();
+                           window.getSelection().addRange( range );
+                         }
+                       }
+                     }
+               </script>"))

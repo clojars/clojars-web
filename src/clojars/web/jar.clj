@@ -6,7 +6,7 @@
             hiccup.core
             [hiccup.element :refer [link-to image]]
             [hiccup.form :refer [submit-button]]
-            [clojars.web.safe-hiccup :refer [form-to]]
+            [clojars.web.safe-hiccup :refer [form-to raw]]
             [clojars.maven :refer [jar-to-pom-map commit-url github-info]]
             [clojars.auth :refer [authorized?]]
             [clojars.db :refer [find-jar jar-exists]]
@@ -85,6 +85,7 @@
   (html-doc (str (:jar_name jar) " " (:version jar)) {:account account}
             (let [pom-map (jar-to-pom-map reporter jar)]
               [:div.light-article.row
+               (helpers/select-text-script)
                [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
                 [:h1 (jar-link jar)]
                 [:p.description (:description jar)]
@@ -113,7 +114,8 @@
                   [:p.error "Oops. We hit an error opening the metadata POM file for this project "
                    "so some details are not available."])
                 [:h2 "Leiningen"]
-                [:div.package-config-example
+                [:div#leiningen-coordinates.package-config-example
+                 {:onClick "selectText('leiningen-coordinates');"}
                  [:pre
                   (tag "[")
                   (jar-name jar)
@@ -121,7 +123,8 @@
                    (:version jar) "\""] (tag "]") ]]
 
                 [:h2 "Gradle"]
-                [:div.package-config-example
+                [:div#gradle-coordinates.package-config-example
+                 {:onClick "selectText('gradle-coordinates');"}
                  [:pre
                   "compile "
                   [:span.string
@@ -134,7 +137,8 @@
                    \"]]]
 
                 [:h2 "Maven"]
-                [:div.package-config-example
+                [:div#maven-coordinates.package-config-example
+                 {:onClick "selectText('maven-coordinates');"}
                  [:pre
                   (tag "<dependency>\n")
                   (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
@@ -178,7 +182,9 @@
                   "Want to display the "
                   (link-to {:target "_blank"} (version-badge-url jar) "latest version")
                   " of your project on Github? Use the markdown code below!"]
-                 [:textarea {:readonly "readonly" :rows 4} (badge-markdown jar)]
+                 [:textarea#version-badge
+                  {:readonly "readonly" :rows 4 :onClick "selectText('version-badge')"}
+                  (badge-markdown jar)]
                  ]
                 ]])))
 
