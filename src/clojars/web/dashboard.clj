@@ -2,7 +2,8 @@
   (:require [clojars.web.common :refer [html-doc html-doc-with-large-header jar-link group-link tag]]
             [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
             [clojars.stats :as stats]
-            [hiccup.element :refer [unordered-list link-to]]))
+            [hiccup.element :refer [unordered-list link-to]]
+            [clojars.web.helpers :as helpers]))
 
 (defn recent-jar [stats jar-map]
   (let [description (:description jar-map)
@@ -22,14 +23,15 @@
 (defn index-page [db stats account]
   (html-doc-with-large-header nil {:account account}
     [:article.row
+     (helpers/select-text-script)
      [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
       [:h3.push-header "Push with Leiningen"]
-      [:div.push-example
+      [:div#leiningen.push-example {:onClick "selectText('leiningen');"}
        [:pre.push-example-leiningen
         (tag "$") " lein deploy clojars\n"]]]
      [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
       [:h3.push-header "Maven Repository"]
-      [:div.push-example
+      [:div#maven.push-example {:onClick "selectText('maven');"}
        [:pre
         (tag "<repository>\n")
         (tag "  <id>") "clojars.org" (tag "</id>\n")
