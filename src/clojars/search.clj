@@ -15,7 +15,8 @@
            org.apache.lucene.index.IndexNotFoundException
            org.apache.lucene.queryParser.QueryParser
            [org.apache.lucene.search.function CustomScoreQuery DocValues FieldCacheSource ValueSourceQuery]
-           org.apache.lucene.search.IndexSearcher))
+           org.apache.lucene.search.IndexSearcher
+           (java.io File)))
 
 (defprotocol Search
   (index! [t pom])
@@ -53,7 +54,7 @@
 (defn index-pom [index pom]
   (let [pom (-> pom
                 (set/rename-keys renames)
-                (update-in [:licenses] #(mapv (comp :name bean) %)))
+                (update-in [:licenses] #(mapv :name %)))
         ;; TODO: clucy forces its own :_content on you
         content (string/join " " ((apply juxt content-fields) pom))
         doc (assoc (dissoc pom :homepage :dependencies :scm)
@@ -76,21 +77,30 @@
             (clucy/add index (with-meta doc field-settings)))
           (clucy/add index (with-meta doc field-settings)))))))
 
+(defn version-path-from-pom [repo-root {:keys [group name version]}]
+  (io/file repo-root
+           (.replace group \. \/) name version))
+
 (defn index-repo [root]
   (let [indexed (atom 0)]
     (with-open [index (clucy/disk-index (config :index-path))]
       ;; searching with an empty index creates an exception
       (clucy/add index {:dummy true})
-      (doseq [file (file-seq (io/file root))
+      (doseq [^File file (file-seq (io/file root))
               :when (.endsWith (str file) ".pom")]
         (swap! indexed inc)
         (when (zero? (mod @indexed 100))
           (println "Indexed" @indexed))
         (try
-          (index-pom index (assoc (mvn/pom-to-map file)
-                                  :at (.lastModified file)))
+          (let [pom-data (assoc (mvn/pom-to-map file)
+                           :at (.lastModified file))]
+            (if (= (.getParentFile file) (version-path-from-pom root pom-data))
+              (index-pom index pom-data)
+              (println (format "Skipping %s - group/artifact:version don't match: %s/%s:%s"
+                               file (:group pom-data) (:name pom-data) (:version pom-data)))))
           (catch Exception e
-              (println "Failed to index" file " - " (.getMessage e)))))
+              (println "Failed to index" file " - " (.getMessage e))
+              (.printStackTrace e))))
       (clucy/search-and-delete index "dummy:true"))))
 
 
