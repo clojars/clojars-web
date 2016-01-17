@@ -7,11 +7,13 @@ home
 !/data/.gitkeep
 /native
 /target
+pom.xml
 
-# IntelliJ IDEA (La Clojure) project files
+# IntelliJ IDEA project files
 *.ipr
 *.iws
 *.iml
+.idea
 
 /.lein-deps-sum
 /.lein-repl-history
