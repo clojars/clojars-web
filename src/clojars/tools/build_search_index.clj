@@ -1,8 +1,9 @@
 (ns clojars.tools.build-search-index
   (:require [clojars
-             [config :refer [config]]
+             [config :refer [config configure]]
              [search :refer [index-repo]]])
   (:gen-class))
 
 (defn -main [& [repo]]
-  (index-repo (or repo (config :repo))))
+  (configure nil)
+  (index-repo (or repo (:repo config))))

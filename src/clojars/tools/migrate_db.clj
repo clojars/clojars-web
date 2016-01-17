@@ -1,5 +1,5 @@
 (ns clojars.tools.migrate-db
-  (:require [clojars.config :refer [config]]
+  (:require [clojars.config :refer [config configure]]
             [clojars.db.migrate :refer [migrate]]
             [clojure.java.io :as io])
   (:gen-class))
@@ -8,7 +8,8 @@
   (when-not (.exists (io/file db))
     (.mkdirs (.getParentFile (io/file db)))))
 
-(defn -main []
+(defn -main [& _]
+  (configure nil)
   (let [db (:db config)]
     (ensure-db-directory-exists (:subname db))
     (migrate db)))
