@@ -6,7 +6,8 @@
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
            java.io.IOException
-           (org.apache.maven.model Scm Model)))
+           (org.apache.maven.model Scm Model License)))
+
 (defn without-nil-values
   "Prunes a map of pairs that have nil values."
   [m]
@@ -15,6 +16,21 @@
               m
               (conj m entry)))
           (empty m) m))
+
+(defn scm-to-map [^Scm scm]
+  (when scm
+    (without-nil-values
+      {:connection           (.getConnection scm)
+       :developer-connection (.getDeveloperConnection scm)
+       :tag                  (.getTag scm)
+       :url                  (.getUrl scm)})))
+
+(defn license-to-seq [^License license]
+  (without-nil-values
+    {:name         (.getName license)
+     :url          (.getUrl license)
+     :distribution (.getDistribution license)
+     :comments     (.getComments license)}))
 
 (defn model-to-map [^Model model]
   (without-nil-values
@@ -27,23 +43,15 @@
      :description  (.getDescription model)
      :homepage     (.getUrl model)
      :url          (.getUrl model)
-     :licenses     (.getLicenses model)
-     :scm          (.getScm model)
-     :authors      (vec (map #(.getName %) (.getContributors model)))
-     :dependencies (vec (map
-                          (fn [d] {:group_name (.getGroupId d)
-                                   :jar_name   (.getArtifactId d)
-                                   :version    (.getVersion d)
-                                   :scope      (or (.getScope d) "compile")})
-                          (.getDependencies model)))}))
-
-(defn scm-to-map [^Scm scm]
-  (when scm
-    (without-nil-values
-      {:connection           (.getConnection scm)
-       :developer-connection (.getDeveloperConnection scm)
-       :tag                  (.getTag scm)
-       :url                  (.getUrl scm)})))
+     :licenses     (mapv license-to-seq (.getLicenses model))
+     :scm          (scm-to-map (.getScm model))
+     :authors      (mapv #(.getName %) (.getContributors model))
+     :dependencies (mapv
+                     (fn [d] {:group_name (.getGroupId d)
+                              :jar_name   (.getArtifactId d)
+                              :version    (.getVersion d)
+                              :scope      (or (.getScope d) "compile")})
+                     (.getDependencies model))}))
 
 (defn read-pom
   "Reads a pom file returning a maven Model object."
@@ -87,17 +95,15 @@
       nil)))
 
 (defn github-info [pom-map]
-  (let [scm (:scm pom-map)
-        url (and scm (.getUrl scm))
+  (let [url (get-in pom-map [:scm :url])
         github-re #"^https?://github.com/([^/]+/[^/]+)"
         user-repo (->> (str url) (re-find github-re) second)]
     user-repo))
 
 (defn commit-url [pom-map]
-  (let [scm (:scm pom-map)
-        url (and scm (.getUrl scm))
+  (let [{:keys [url tag]} (:scm pom-map)
         base-url (re-find #"https?://github.com/[^/]+/[^/]+" (str url))]
-    (if (and base-url (.getTag scm)) (str base-url "/commit/" (.getTag scm)))))
+    (if (and base-url tag) (str base-url "/commit/" tag))))
 
 (defn parse-int [^String s]
   (when s

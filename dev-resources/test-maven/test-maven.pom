@@ -5,6 +5,22 @@
   <artifactId>test</artifactId>
   <version>0.0.4</version>
   <name>blarg</name>
+  <licenses>
+    <license>
+      <name>Some License</name>
+      <url>http://example.com/license</url>
+      <distribution>repo</distribution>
+    </license>
+    <license>
+      <name>Some Other License</name>
+      <url>http://example.com/license2</url>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:git://example.com/example/example.git</connection>
+    <tag>abcde</tag>
+    <url>http://example.com/example/example</url>
+  </scm>
   <dependencies>
     <dependency>
       <groupId>org.clojure</groupId>

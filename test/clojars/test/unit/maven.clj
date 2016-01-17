@@ -16,11 +16,18 @@
     (is (= "fake" (:group m)))
     (is (= "child" (:name m)))))
 
-(deftest directory-for-handles-normal-group-name
-  (is (= (io/file (config :repo) "fake" "test" "1.0.0")
-         (directory-for {:group_name "fake"
-                         :jar_name "test"
-                         :version "1.0.0"}))))
+(deftest pom-to-map-parses-scm
+  (let [{:keys [tag url]} (:scm (pom-to-map (.toString (io/resource "test-maven/test-maven.pom"))))]
+    (is (= "abcde" tag))
+    (is (= "http://example.com/example/example" url))))
+
+(deftest pom-to-map-parses-licenses
+  (let [[l1 l2] (:licenses (pom-to-map (.toString (io/resource "test-maven/test-maven.pom"))))]
+    (is (= "Some License" (:name l1)))
+    (is (= "http://example.com/license" (:url l1)))
+
+    (is (= "Some Other License" (:name l2)))
+    (is (= "http://example.com/license2" (:url l2)))))
 
 (deftest directory-for-handles-group-names-with-dots
   (is (= (io/file (config :repo) "com" "novemberain" "monger" "1.2.0-alpha1")

@@ -11,9 +11,7 @@
         :when (and (not (re-matches #".*/\..*" (str f)))
                    (.endsWith (.getName f) ".pom"))
         :let [pom (try
-                    (-> (maven/pom-to-map f)
-                        (update :scm maven/scm-to-map)
-                        maven/without-nil-values)
+                    (maven/pom-to-map f)
                     (catch Exception e (.printStackTrace e)))]
         :when pom]
     pom))

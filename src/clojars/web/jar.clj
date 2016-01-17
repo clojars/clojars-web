@@ -176,6 +176,12 @@
                   [:li.homepage
                    [:h4 "Homepage"]
                    (safe-link-to homepage homepage)])
+                (when-let [licenses (seq (:licenses pom-map))]
+                  [:li.license
+                   [:h4 "License"]
+                   [:ul#licenses
+                    (for [{:keys [name url]} licenses]
+                      [:li (safe-link-to url name)])]])
                 [:li
                  [:h4 "Version Badge"]
                  [:p
