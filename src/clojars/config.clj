@@ -65,9 +65,6 @@
    ["REPO" :repo]
    ["DELETION_BACKUP_DIR" :deletion-backup-dir]
    ["NREPL_PORT" :nrepl-port #(Integer/parseInt %)]
-   ["RELEASES_URL" :releases-url]
-   ["RELEASES_ACCESS_KEY" :releases-access-key]
-   ["RELEASES_SECRET_KEY" :releases-secret-key]
    ["YELLER_ENV" :yeller-environment]
    ["YELLER_TOKEN" :yeller-token]])
 

@@ -10,7 +10,6 @@
                   :exclusions
                   [org.apache.httpcomponents/httpcore
                    commons-logging]]
-                 [s3-wagon-private "1.0.0"]
                  [compojure "1.3.3"]
                  [ring-middleware-format "0.5.0"]
                  [hiccup "1.0.3"]
@@ -31,8 +30,6 @@
                  [valip "0.2.0" :exclusions [commons-logging]]
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.11"]
-                 [org.bouncycastle/bcpg-jdk15on "1.47"]
-                 [mvxcvi/clj-pgp "0.8.0"]
                  [yesql "0.5.1"]
                  [com.stuartsierra/component "0.2.3"]
                  [duct/hikaricp-component "0.1.0"]

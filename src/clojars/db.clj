@@ -65,11 +65,6 @@
                          {:connection db
                           :row-fn :user}))
 
-(defn group-keys [db groupname]
-  (sql/group-keys {:groupname groupname}
-                  {:connection db
-                   :row-fn :pgp_key}))
-
 (defn jars-by-username [db username]
   (sql/jars-by-username {:username username}
                         {:connection db}))
@@ -175,9 +170,9 @@
   `(serialize-task* ~name
                     (fn [] ~@body)))
 
-(defn add-user [db email username password pgp-key]
+(defn add-user [db email username password]
   (let [record {:email email, :username username, :password (bcrypt password),
-                :pgp_key pgp-key :created (get-time)}
+                :created (get-time)}
         groupname (str "org.clojars." username)]
     (serialize-task :add-user
                     (sql/insert-user! record
@@ -186,10 +181,9 @@
                                        {:connection db}))
     record))
 
-(defn update-user [db account email username password pgp-key]
+(defn update-user [db account email username password]
   (let [fields {:email email
                 :username username
-                :pgp_key pgp-key
                 :account account}]
     (serialize-task :update-user
                     (if (empty? password)
@@ -302,18 +296,3 @@
      (sql/find-groups-jars-information {:group_id group-id}
                                        {:connection db}))))
 
-(defn promote [db group name version]
-  (serialize-task :promote
-                  (sql/promote! {:group_id group
-                                 :artifact_id name
-                                 :version version
-                                 :promoted_at (get-time)}
-                                {:connection db})))
-
-(defn promoted? [db group-id artifact-id version]
-  (sql/promoted {:group_id group-id
-                 :artifact_id artifact-id
-                 :version version}
-                {:connection db
-                 :result-set-fn first
-                 :row-fn :promoted_at}))

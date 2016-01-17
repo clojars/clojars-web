@@ -17,7 +17,7 @@
             [valip.core :refer [validate]]
             [valip.predicates :as pred]))
 
-(defn register-form [{:keys [errors email username pgp-key]}]
+(defn register-form [{:keys [errors email username]}]
   (html-doc "Register" {}
             [:div.small-section
              [:h1 "Register"]
@@ -41,19 +41,12 @@
                       (password-field {:placeholder "confirm your password"
                                        :required true}
                                       :confirm)
-                      (label :pgp-key "PGP public key")
-                      [:p.hint "Optional - needed only if you sign releases"]
-                      (text-area :pgp-key pgp-key)
                       (submit-button "Register"))]))
 
 (defn conj-when [coll test x]
   (if test
     (conj coll x)
     coll))
-
-(defn valid-pgp-key? [key]
-  (and (.startsWith key "-----BEGIN PGP PUBLIC KEY BLOCK-----")
-       (.endsWith key "-----END PGP PUBLIC KEY BLOCK-----")))
 
 ;; Validations
 
@@ -67,9 +60,7 @@
    [:username #(re-matches #"[a-z0-9_-]+" %)
     (str "Username must consist only of lowercase "
          "letters, numbers, hyphens and underscores.")]
-   [:username pred/present? "Username can't be blank"]
-   [:pgp-key #(or (blank? %) (valid-pgp-key? %))
-    "Invalid PGP public key"]])
+   [:username pred/present? "Username can't be blank"]])
 
 (defn new-user-validations [db confirm]
   (concat [[:password pred/present? "Password can't be blank"]
@@ -102,23 +93,18 @@
                       (password-field :password)
                       (label :confirm "Confirm password")
                       (password-field :confirm)
-                      (label :pgp-key "PGP public key")
-                      [:p.hint "Optional - needed only if you sign releases"]
-                      (text-area :pgp-key (user :pgp_key))
                       (submit-button "Update"))]))
 
-(defn update-profile [db account {:keys [email password confirm pgp-key] :as params}]
-  (let [pgp-key (and pgp-key (.trim pgp-key))
-        email (and email (.trim email))]
+(defn update-profile [db account {:keys [email password confirm] :as params}]
+  (let [email (and email (.trim email))]
     (if-let [errors (apply validate {:email email
                                      :username account
-                                     :password password
-                                     :pgp-key pgp-key}
+                                     :password password}
                            (if (empty? password)
                              (user-validations)
                              (concat (user-validations) (password-validations confirm))))]
       (profile-form account params nil (apply concat (vals errors)))
-      (do (update-user db account email account password pgp-key)
+      (do (update-user db account email account password)
           (assoc (redirect "/profile")
             :flash "Profile updated.")))))
 

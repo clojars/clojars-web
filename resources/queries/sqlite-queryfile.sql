@@ -34,13 +34,6 @@ SELECT user
 FROM groups
 WHERE name = :groupname;
 
---name: group-keys
-SELECT users.pgp_key
-FROM groups
-INNER JOIN users
-ON users.user = groups.user
-WHERE groups.name = :groupname;
-
 --name: jars-by-username
 SELECT j.*
 FROM jars j
@@ -183,7 +176,7 @@ WHERE group_name || '/' || jar_name < :s;
 
 --name: insert-user!
 INSERT INTO 'users' (email, user, password, pgp_key, created, ssh_key, salt)
-VALUES (:email, :username, :password, :pgp_key, :created, '', '');
+VALUES (:email, :username, :password, '', :created, '', '');
 
 --name: insert-group!
 INSERT INTO 'groups' (name, user)
@@ -191,12 +184,12 @@ VALUES (:groupname, :username);
 
 --name: update-user!
 UPDATE users
-SET email = :email, user = :username, pgp_key = :pgp_key, password_reset_code = NULL, password_reset_code_created_at = NULL
+SET email = :email, user = :username, pgp_key = '', password_reset_code = NULL, password_reset_code_created_at = NULL
 WHERE user = :account;
 
 --name: update-user-with-password!
 UPDATE users
-SET email = :email, user = :username, pgp_key = :pgp_key, password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
+SET email = :email, user = :username, pgp_key = '', password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
 WHERE user = :account;
 
 --name: reset-user-password!
@@ -292,28 +285,6 @@ VALUES (:groupname, :username, :added_by);
 --name: add-jar!
 INSERT INTO jars (group_name, jar_name, version, user, created, description, homepage, authors)
 VALUES (:groupname, :jarname, :version, :user, :created, :description, :homepage, :authors);
-
---name: promote!
-UPDATE jars
-SET promoted_at = :promoted_at
-WHERE (
-  group_name = :group_id
-  AND
-  jar_name = :artifact_id
-  AND
-  version = :version
-);
-
---name: promoted
-SELECT promoted_at
-FROM jars
-WHERE (
-  group_name = :group_id
-  AND
-  jar_name = :artifact_id
-  AND
-  version = :version
-);
 
 --name: delete-groups-jars!
 DELETE FROM jars

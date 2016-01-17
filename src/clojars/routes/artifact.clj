@@ -4,7 +4,6 @@
             [clojars.auth :as auth]
             [clojars.web.jar :as view]
             [clojars.web.common :as common]
-            [clojars.promote :as promote]
             [ring.util.response :as response]
             [clojure.set :as set]))
 
@@ -87,18 +86,4 @@
          :artifact-id #"[^/]+"
          :file-format #"(svg|json)$"]
         [group-id artifact-id file-format]
-        (response-based-on-format db file-format artifact-id group-id))
-
-   #_(POST ["/:group-id/:artifact-id/promote/:version"
-          :group-id #"[^/]+" :artifact-id #"[^/]+" :version #"[^/]+"]
-         [group-id artifact-id version]
-         (auth/with-account
-           (auth/require-authorization
-            db
-            group-id
-            (if-let [jar (db/find-jar db group-id artifact-id version)]
-              (do (promote/promote db (set/rename-keys jar {:jar_name :name
-                                                            :group_name :group}))
-                  (response/redirect
-                   (common/jar-url {:group_name group-id
-                                    :jar_name artifact-id})))))))))
+        (response-based-on-format db file-format artifact-id group-id))))

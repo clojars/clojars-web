@@ -20,9 +20,8 @@
 (deftest added-users-can-be-found
   (let [email "test@example.com"
         name "testuser"
-        password "password"
-        pgp-key "aoeu"]
-      (db/add-user help/*db* email name password pgp-key)
+        password "password"]
+      (db/add-user help/*db* email name password)
       (are [x] (submap {:email email
                         :user name}
                        x)
@@ -36,9 +35,8 @@
 (deftest added-users-can-be-found-by-password-reset-code-except-when-expired
   (let [email "test@example.com"
         name "testuser"
-        password "password"
-        pgp-key "aoeu"]
-      (db/add-user help/*db* email name password pgp-key)
+        password "password"]
+      (db/add-user help/*db* email name password)
       (let [reset-code (db/set-password-reset-code! help/*db* "testuser")]
         (is (submap {:email email
                      :user name
@@ -52,19 +50,16 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"
-        pgp-key "aoeu"
         ms (long 0)
         email2 "test2@example.com"
         name2 "testuser2"
-        password2 "password2"
-        pgp-key2 "aoeu2"]
+        password2 "password2"]
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. ms))]
-      (db/add-user help/*db* email name password pgp-key)
+      (db/add-user help/*db* email name password)
       (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 1)))]
-        (db/update-user help/*db* name email2 name2 password2 pgp-key2)
+        (db/update-user help/*db* name email2 name2 password2)
         (are [x] (submap {:email email2
                           :user name2
-                          :pgp_key pgp-key2
                           :created ms}
                          x)
              (db/find-user help/*db* name2)
@@ -76,14 +71,12 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"
-        pgp-key "aoeu"
         email2 "test2@example.com"
         name2 "testuser2"
-        password2 ""
-        pgp-key2 "aoeu2"]
-    (db/add-user help/*db* email name password pgp-key)
+        password2 ""]
+    (db/add-user help/*db* email name password)
     (let [old-user (db/find-user help/*db* name)]
-      (db/update-user help/*db* name email2 name2 password2 pgp-key2)
+      (db/update-user help/*db* name email2 name2 password2)
       (let [user (db/find-user help/*db* name2)]
         (is (= email2 (:email user)))
         (is (= (:password old-user) (:password user)))))))
@@ -91,9 +84,8 @@
 (deftest added-users-are-added-only-to-their-org-clojars-group
   (let [email "test@example.com"
         name "testuser"
-        password "password"
-        pgp-key "aoeu"]
-    (db/add-user help/*db* email name password pgp-key)
+        password "password"]
+    (db/add-user help/*db* email name password)
     (is (= ["testuser"]
            (db/group-membernames help/*db* (str "org.clojars." name))))
     (is (= ["org.clojars.testuser"]
@@ -102,9 +94,8 @@
 (deftest users-can-be-added-to-groups
   (let [email "test@example.com"
         name "testuser"
-        password "password"
-        pgp-key "aoeu"]
-    (db/add-user help/*db* email name password pgp-key)
+        password "password"]
+    (db/add-user help/*db* email name password)
     (db/add-member help/*db* "test-group" name "some-dude")
     (is (= ["testuser"] (db/group-membernames help/*db* "test-group")))
     (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))

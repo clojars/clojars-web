@@ -10,7 +10,6 @@
             [clojars.maven :refer [jar-to-pom-map commit-url github-info]]
             [clojars.auth :refer [authorized?]]
             [clojars.db :refer [find-jar jar-exists]]
-            [clojars.promote :refer [blockers]]
             [clojars.stats :as stats]
             [clojure.set :as set]
             [ring.util.codec :refer [url-encode]]
@@ -55,31 +54,6 @@
 (defn fork-notice [jar]
   (when (jar-fork? jar)
     single-fork-notice))
-
-(defn promoted? [jar]
-  (:promoted_at jar))
-
-(defn promoted-at [jar]
-  [:p (str "Promoted at " (java.util.Date. (:promoted_at jar)))])
-
-(defn promotion-issues [db jar]
-  (seq (blockers db (set/rename-keys jar {:group_name :group
-                                          :jar_name :name}))))
-
-(defn promotion-details [db account jar]
-  (when (authorized? db account (:group_name jar))
-    (list [:h2 "Promotion"]
-          (if (promoted? jar)
-            (promoted-at jar)
-            [:p "Promotion currently disabled"]
-            #_(if-let [issues (promotion-issues db jar)]
-              (list [:h3 "Issues Blocking Promotion"]
-                    [:ul#blockers
-                     (for [i issues]
-                       [:li i])])
-              (form-to [:post (str "/" (:group_name jar) "/" (:jar_name jar)
-                                   "/promote/" (:version jar))]
-                       (submit-button "Promote")))))))
 
 (defn show-jar [db reporter stats account jar recent-versions count]
   (html-doc (str (:jar_name jar) " " (:version jar)) {:account account}
@@ -146,8 +120,7 @@
                   (tag "  <version>") (:version jar) (tag "</version>\n")
                   (tag "</dependency>")]]
                 (list
-                 (fork-notice jar)
-                 (promotion-details db account jar))]
+                 (fork-notice jar))]
                [:ul#jar-sidebar.col-sm-3.col-xs-12.col-md-3.col-lg-3
                 [:li
                  [:h4 "Pushed by"]
