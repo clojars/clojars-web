@@ -204,15 +204,13 @@
                 :type "submit"}]]]
      [:h2.getting-started.row
       [:div.col-md-12
-       "To get started pushing your own project "
-       (link-to "/register" "register")
-       " and then"]
-      [:div.col-md-12
-       " check out the "
-       (link-to "http://wiki.github.com/clojars/clojars-web/tutorial" "tutorial")
-       ". Alternatively, "
-       (link-to "/projects" "browse the repository")
-       "."]]]
+       [:p.padded-copy "To get started pushing your own project "
+         (link-to "/register" "register")
+         " and then check out the "
+         (link-to "http://wiki.github.com/clojars/clojars-web/tutorial" "tutorial")
+         ". Alternatively, "
+         (link-to "/projects" "browse the repository")
+         "."]]]]
     body
     footer]))
 
