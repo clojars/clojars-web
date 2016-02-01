@@ -85,6 +85,8 @@
     (println "Usage: repo-path backup-path (:repair|:report)")
     (let [[repo backup-dir action] args]
       (doseq [md (find-bad-metadata repo)]
-        (if (= ":repair" action)
-          (repair-metadata (io/file backup-dir) md)
-          (prn md))))))
+        (when (= ":repair" action)
+          (repair-metadata (io/file backup-dir) md))
+        (prn (-> md
+                 (dissoc :version-dirs :metadata)
+                 (update :file (memfn getAbsolutePath))))))))
