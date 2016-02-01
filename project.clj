@@ -35,7 +35,8 @@
                  [duct/hikaricp-component "0.1.0"]
                  [duct "0.4.4"]
                  [meta-merge "0.1.1"]
-                 [ring-jetty-component "0.3.0"]]
+                 [ring-jetty-component "0.3.0"]
+                 [digest "1.4.4"]]
   :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"

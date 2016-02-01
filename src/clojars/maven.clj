@@ -6,7 +6,9 @@
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
            java.io.IOException
-           (org.apache.maven.model Scm Model License)))
+           (org.apache.maven.model Scm Model License)
+           (org.apache.maven.artifact.repository.metadata Metadata)
+           (org.apache.maven.artifact.repository.metadata.io.xpp3 MetadataXpp3Writer)))
 
 (defn without-nil-values
   "Prunes a map of pairs that have nil values."
@@ -61,11 +63,17 @@
 
 (def pom-to-map (comp model-to-map read-pom))
 
-(defn read-metadata
+(defn ^Metadata read-metadata
   "Reads a maven-metadata file returning a maven Metadata object."
   [file]
   (with-open [reader (io/reader file)]
     (.read (MetadataXpp3Reader.) reader)))
+
+(defn write-metadata
+  "Writes the given metadata out to a file."
+  [^Metadata metadata file]
+  (with-open [writer (io/writer file)]
+    (.write (MetadataXpp3Writer.) writer metadata)))
 
 (defn snapshot-version
   "Get snapshot version from maven-metadata.xml used in pom filename"
