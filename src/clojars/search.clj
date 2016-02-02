@@ -16,7 +16,10 @@
            org.apache.lucene.queryParser.QueryParser
            [org.apache.lucene.search.function CustomScoreQuery DocValues FieldCacheSource ValueSourceQuery]
            org.apache.lucene.search.IndexSearcher
-           (java.io File)))
+           (org.apache.lucene.util Version)
+           (java.io File)
+           (org.apache.lucene.store NIOFSDirectory Directory)
+           (org.apache.lucene.search FieldCache Query)))
 
 (defprotocol Search
   (index! [t pom])
@@ -36,8 +39,8 @@
 
 ;; TODO: make this easy to do from clucy
 (defonce analyzer (let [a (PerFieldAnalyzerWrapper.
-                           ;; Our default analyzer has no stop words.
-                           (StandardAnalyzer. clucy/*version* #{}))]
+                            ;; Our default analyzer has no stop words.
+                            (StandardAnalyzer. ^Version clucy/*version* #{}))]
                     (doseq [[field {:keys [analyzed]}] field-settings
                             :when (false? analyzed)]
                       (.addAnalyzer a (name field) (KeywordAnalyzer.)))
@@ -69,7 +72,7 @@
                       ;; is added. We can treat it here as a nil return
                       ))]
         (if old
-          (when (and (< (Long. (:at old)) (:at doc))
+          (when (and (< (Long. ^long (:at old)) (:at doc))
                      (not (re-find #"-SNAPSHOT$" (:version doc))))
             (clucy/search-and-delete index (format "artifact-id:%s AND group-id:%s"
                                                    (:artifact-id doc)
@@ -83,7 +86,7 @@
 
 (defn index-repo [root]
   (let [indexed (atom 0)]
-    (with-open [index (clucy/disk-index (config :index-path))]
+    (with-open [index ^NIOFSDirectory (clucy/disk-index (config :index-path))]
       ;; searching with an empty index creates an exception
       (clucy/add index {:dummy true})
       (doseq [^File file (file-seq (io/file root))
@@ -93,7 +96,7 @@
           (println "Indexed" @indexed))
         (try
           (let [pom-data (assoc (mvn/pom-to-map file)
-                           :at (.lastModified file))]
+                           :at (.lastModified ^File file))]
             (if (= (.getParentFile file) (version-path-from-pom root pom-data))
               (index-pom index pom-data)
               (println (format "Skipping %s - group/artifact:version don't match: %s/%s:%s"
@@ -113,11 +116,11 @@
 
 (def download-score-weight 50)
 
-(defn download-values [stats]
+(defn ^ValueSourceQuery download-values [stats]
   (let [total (stats/total-downloads stats)]
     (ValueSourceQuery.
      (proxy [FieldCacheSource] ["download-count"]
-       (getCachedFieldValues [cache _ reader]
+       (getCachedFieldValues [^FieldCache cache _ reader]
          (let [ids (map vector
                         (.getStrings cache reader "group-id")
                         (.getStrings cache reader "artifact-id"))
@@ -141,7 +144,7 @@
                     (download-score i))))))))))
 
 ; http://stackoverflow.com/questions/963781/how-to-achieve-pagination-in-lucene
-(defn -search [stats index query page]
+(defn -search [stats ^Directory index ^String query page]
   (if (empty? query)
     []
     (binding [clucy/*analyzer* analyzer]
@@ -151,7 +154,7 @@
               parser (QueryParser. clucy/*version*
                                    "_content"
                                    clucy/*analyzer*)
-              query  (.parse parser query)
+              query  ^Query (.parse parser query)
               query  (CustomScoreQuery. query (download-values stats))
               hits   (.search searcher query (* per-page page))
               highlighter (#'clucy/make-highlighter query searcher nil)]

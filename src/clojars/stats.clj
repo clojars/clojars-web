@@ -3,7 +3,8 @@
             [com.stuartsierra.component :as component])
   (:import java.io.PushbackReader
            java.nio.file.Files
-           java.nio.file.LinkOption))
+           java.nio.file.LinkOption
+           (java.io Closeable File FileSystem)))
 
 (defprotocol Stats
   (download-count
@@ -29,7 +30,7 @@
 
 (def all (memo/ttl all* :ttl/threshold (* 60 60 1000))) ;; 1 hour
 
-(defrecord FileStats [fs-factory path-factory fs path]
+(defrecord FileStats [fs-factory path-factory ^Closeable fs path]
   Stats
   (download-count [_ group-id artifact-id]
     (download-count (all path) group-id artifact-id))

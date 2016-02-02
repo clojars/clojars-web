@@ -23,7 +23,7 @@
   "Creates an img tag with support for 2x and 3x retina images.
   Will check if the retina images exist before adding them to srcset.
   Throws if the src image does not exist."
-  [src alt]
+  [^String src ^String alt]
   (assert (= (first src) \/) (format "src %s must start with a /" src))
   (assert (public-resource-exists? src)
           (format "File %s does not exist" (str "public" src)))

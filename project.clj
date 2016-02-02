@@ -48,6 +48,7 @@
                   ["vcs" "commit"]
                   ["vcs" "push"]]
   :aliases {"migrate" ["run" "-m" "clojars.tools.migrate-db"]}
+  :global-vars {*warn-on-reflection* true}
   :profiles
   {:dev  [:project/dev  :profiles/dev]
    :test [:project/test :profiles/test]

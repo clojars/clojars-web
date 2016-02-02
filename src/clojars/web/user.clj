@@ -95,7 +95,7 @@
                       (password-field :confirm)
                       (submit-button "Update"))]))
 
-(defn update-profile [db account {:keys [email password confirm] :as params}]
+(defn update-profile [db account {:keys [^String email password confirm] :as params}]
   (let [email (and email (.trim email))]
     (if-let [errors (apply validate {:email email
                                      :username account

@@ -7,7 +7,8 @@
             [cemerick.friend.credentials :as creds])
   (:import java.util.Date
            java.security.SecureRandom
-           java.util.concurrent.Executors))
+           java.util.concurrent.Executors
+           (java.util.concurrent Executor)))
 
 (def reserved-names
   #{"clojure" "clojars" "clojar" "register" "login"
@@ -262,7 +263,7 @@
                                  :created    (get-time)
                                  :description description
                                  :homepage   homepage
-                                 :authors    (str/join ", " (map #(.replace % "," "")
+                                 :authors    (str/join ", " (map #(.replace ^String % "," "")
                                                                  authors))}
                                 {:connection db})))
 

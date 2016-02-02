@@ -6,7 +6,7 @@
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
            java.io.IOException
-           (org.apache.maven.model Scm Model License)
+           (org.apache.maven.model Scm Model License Contributor Dependency)
            (org.apache.maven.artifact.repository.metadata Metadata)
            (org.apache.maven.artifact.repository.metadata.io.xpp3 MetadataXpp3Writer)))
 
@@ -158,8 +158,8 @@
       (compare (:major x 0) (:major y 0))
       (compare (:minor x 0) (:minor y 0))
       (compare (:incremental x 0) (:incremental y 0))
-      (let [qx (:qualifier x)
-            qy (:qualifier y)]
+      (let [qx ^String (:qualifier x)
+            qy ^String (:qualifier y)]
         (if qx
           (if qy
             (if (and (> (count qx) (count qy)) (.startsWith qx qy))

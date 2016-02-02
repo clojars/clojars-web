@@ -311,7 +311,7 @@
       (concat main-div previous-page before-current current after-current next-page))))
 
 (defn page-description [current-page per-page total]
-  (let [total-pages (-> (/ total per-page) Math/ceil .intValue)
+  (let [total-pages (-> (/ total per-page) ^Double (Math/ceil) .intValue)
         current-page (-> current-page (max 1) (min total-pages))
         upper (* per-page current-page)]
    [:div {:class "page-description"}
