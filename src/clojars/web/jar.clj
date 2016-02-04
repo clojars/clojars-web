@@ -168,7 +168,7 @@
                 ]])))
 
 (defn show-versions [account jar versions]
-  (html-doc account (str "all versions of "(jar-name jar)) {:account account}
+  (html-doc (str "all versions of "(jar-name jar)) {:account account}
             [:div.light-article
              [:h1 "all versions of "(jar-link jar)]
              [:div.versions
