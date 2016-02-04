@@ -50,12 +50,15 @@
        [:td.sponsor
         (link-to {:target "_blank"}
                  "https://www.rackspace.com"
-                 (helpers/retinized-image "/images/rackspace-logo.svg" "Rackspace"))]
+                 (image "/images/rackspace-logo.svg" "Rackspace"))]
        [:td.sponsor
         (link-to {:target "_blank"}
                  "https://www.statuspage.io"
                  (helpers/retinized-image "/images/statuspage-io-logo.png" "StatusPage.io"))]
-       [:td.sponsor]]]]]
+       [:td.sponsor
+        (link-to {:target "_blank"}
+                 "https://pingometer.com/"
+                 (image "/images/pingometer-logo.svg" "Pingometer"))]]]]]
    [:div.row.sponsors
     "remixed by"
     (link-to {:target "_blank"}

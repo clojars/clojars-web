@@ -445,10 +445,10 @@ footer a {
     background-color: #ff2929;
 }
 
-.error ul { 
-   list-style-type: disc; 
-   list-style-position: inside; 
-} 
+.error ul {
+   list-style-type: disc;
+   list-style-position: inside;
+}
 
 #jar-title h1 a {
   color: #393536;
@@ -547,7 +547,7 @@ footer a {
 }
 
 .sponsor img {
-    width: 100px;
+    width: 90px;
 }
 
 .result a.fork {
