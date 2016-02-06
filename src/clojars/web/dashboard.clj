@@ -3,7 +3,10 @@
             [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
             [clojars.stats :as stats]
             [hiccup.element :refer [unordered-list link-to]]
-            [clojars.web.helpers :as helpers]))
+            [clojars.web.safe-hiccup :as hiccup]
+            [hiccup.util :as util]
+            [clojars.web.helpers :as helpers]
+            [cheshire.core :as json]))
 
 (defn recent-jar [stats jar-map]
   (let [description (:description jar-map)
@@ -20,8 +23,25 @@
                                                                    (:group_name jar-map)
                                                                    (:jar_name jar-map))]]]))
 
+(def site-link-search-box
+  "This is used by Google and other search engines to display a search box
+  in search results for Clojars. It is only needed on the home page.
+  See https://developers.google.com/structured-data/slsb-overview for more info."
+  (hiccup/raw
+    (str "<script type=\"application/ld+json\">"
+         (json/generate-string
+           {"@context" "http://schema.org"
+            "@type"    "WebSite"
+            "url"      "https://clojars.org"
+            "potentialAction"
+                       {"@type"       "SearchAction"
+                        "target"      "https://clojars.org/search?q={search_term_string}"
+                        "query-input" "required name=search_term_string"}})
+         "</script>")))
+
 (defn index-page [db stats account]
   (html-doc-with-large-header nil {:account account}
+    site-link-search-box
     [:article.row
      (helpers/select-text-script)
      [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
