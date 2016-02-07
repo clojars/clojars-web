@@ -5,13 +5,18 @@
             [clojars.web.safe-hiccup :refer [html5 raw form-to]]
             [clojars.web.helpers :as helpers]
             [clojure.string :refer [join]]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as str]))
 
 (defn when-ie [& contents]
   (str
    "<!--[if lt IE 9]>"
    (html contents)
    "<![endif]-->"))
+
+(defn meta-description [ctx]
+  (when-not (str/blank? (:description ctx))
+    [:meta {:name "description" :content (:description ctx)}]))
 
 (def footer
   [:footer.row
@@ -88,6 +93,7 @@
             :rel "icon"}]
     [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+    (meta-description ctx)
     [:title
      (when title
        (str title " - "))
@@ -156,6 +162,7 @@
 
     [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+    (meta-description ctx)
     [:title
      (when title
        (str title " - "))

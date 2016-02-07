@@ -56,7 +56,7 @@
     single-fork-notice))
 
 (defn show-jar [db reporter stats account jar recent-versions count]
-  (html-doc (str (:jar_name jar) " " (:version jar)) {:account account}
+  (html-doc (str (:jar_name jar) " " (:version jar)) {:account account :description (format "%s - %s" (:description jar) (:version jar))}
             (let [pom-map (jar-to-pom-map reporter jar)]
               [:div.light-article.row
                (helpers/select-text-script)

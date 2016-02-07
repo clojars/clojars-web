@@ -31,9 +31,9 @@
                   {:error (format "Invalid search syntax for query `%s`" query)}))))))
 
 (defn html-search [search account query page]
-  (html-doc (str query " - search") {:account account :query query}
+  (html-doc (str query " - search") {:account account :query query :description (format "Clojars search results for '%s'" query)}
     [:div.light-article.row
-     [:h1 "Search for '" query "'"]
+     [:h1 (format "Search for '%s'" query)]
      (try
        (let [results (search/search search query page)
              {:keys [total-hits results-per-page offset]} (meta results)]

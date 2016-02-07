@@ -11,7 +11,7 @@
   (let [project-count (count-all-projects db)
         total-pages (-> (/ project-count per-page) Math/ceil .intValue)
         projects (browse-projects db page per-page)]
-    (html-doc "All projects" {:account account}
+    (html-doc "All projects" {:account account :description "Browse all of the projects in Clojars"}
      [:div.light-article.row
       [:h1 "All projects"]
       [:div.small-section
