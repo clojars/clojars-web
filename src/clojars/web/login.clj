@@ -15,7 +15,7 @@
 
     (when login_failed
       [:div [:p.error "Incorrect username and/or password."]
-       [:p.hint "If you have not logged in since "
+       [:p.hint "If you have not logged in since April 2012 when "
         [:a {:href "https://groups.google.com/group/clojure/browse_thread/thread/5e0d48d2b82df39b"}
          "the insecure password hashes were wiped"]
         ", please use the " [:a {:href "/forgot-password"} "forgot password"]
