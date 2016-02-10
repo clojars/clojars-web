@@ -124,7 +124,7 @@
   (html-doc "Forgot password or username?" {}
     [:div.small-section
      [:h1 "Forgot something?"]
-     [:p "Don't worry, it happens to the best of us. Enter your email or username below, and we'll set you a password reset link, along with your username."]
+     [:p "Don't worry, it happens to the best of us. Enter your email or username below, and we'll send you a password reset link along with your username."]
      (form-to [:post "/forgot-password"]
               (label :email-or-username "Email or Username")
               (text-field {:placeholder "bob"
