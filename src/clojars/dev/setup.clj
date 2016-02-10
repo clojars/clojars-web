@@ -24,7 +24,7 @@
              (println "User" name "already exists")
              (do
                (printf "Adding user %s/%s\n" name name)
-               (db/add-user db (str name "@example.com") name name "")))
+               (db/add-user db (str name "@example.com") name name)))
            name)
     (range n)))
 
