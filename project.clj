@@ -1,6 +1,6 @@
 (defproject clojars-web "31-SNAPSHOT"
   :min-lein-version "2.0.0"
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [yeller-clojure-client "1.4.1"]
                  [org.apache.maven/maven-model "3.0.4"
