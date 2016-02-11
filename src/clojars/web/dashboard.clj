@@ -1,5 +1,6 @@
 (ns clojars.web.dashboard
   (:require [clojars.web.common :refer [html-doc html-doc-with-large-header jar-link group-link tag]]
+            [clojars.web.structured-data :as structured-data]
             [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
             [clojars.stats :as stats]
             [hiccup.element :refer [unordered-list link-to]]
@@ -16,12 +17,17 @@
        (if (> (count description) truncate-length)
          (str (subs description 0 truncate-length) "...")
          description)]
-      [:p.hint.total-downloads "Downloads: " (stats/download-count stats
-                                                                   (:group_name jar-map)
-                                                                   (:jar_name jar-map))]]]))
+      [:p.hint.total-downloads "Downloads: " (-> (stats/download-count stats
+                                                                       (:group_name jar-map)
+                                                                       (:jar_name jar-map))
+                                                 (stats/format-stats))]]]))
+
 
 (defn index-page [db stats account]
-  (html-doc-with-large-header nil {:account account}
+  (html-doc-with-large-header nil {:account account
+                                   :description "Clojars is a dead easy community repository for open source Clojure libraries."}
+    structured-data/website
+    structured-data/organisation
     [:article.row
      (helpers/select-text-script)
      [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12

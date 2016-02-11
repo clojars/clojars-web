@@ -5,13 +5,16 @@
             [clojars.web.safe-hiccup :refer [html5 raw form-to]]
             [clojars.web.helpers :as helpers]
             [clojure.string :refer [join]]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as str]
+            [clojars.web.structured-data :as structured-data]))
 
 (defn when-ie [& contents]
   (str
    "<!--[if lt IE 9]>"
    (html contents)
    "<![endif]-->"))
+
 
 (def footer
   [:footer.row
@@ -88,6 +91,7 @@
             :rel "icon"}]
     [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+    (structured-data/meta-tags (assoc ctx :title title)) ;; TODO: talk about whether we should refactor signature of html-doc
     [:title
      (when title
        (str title " - "))
@@ -156,6 +160,7 @@
 
     [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+    (structured-data/meta-tags (assoc ctx :title title))
     [:title
      (when title
        (str title " - "))
@@ -238,8 +243,13 @@
     (str "/" (:jar_name jar))
     (str "/" (:group_name jar) "/" (:jar_name jar))))
 
+(defn group-is-name?
+  "Is the group of the artifact the same as its name?"
+  [jar]
+  (= (:group_name jar) (:jar_name jar)))
+
 (defn jar-name [jar]
-  (if (= (:group_name jar) (:jar_name jar))
+  (if (group-is-name? jar)
     (:jar_name jar)
     (str (:group_name jar) "/" (:jar_name jar))))
 

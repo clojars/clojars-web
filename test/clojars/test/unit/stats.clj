@@ -37,7 +37,7 @@
     (Files/createDirectory (.getPath fs dir (make-array String 0))
                            (make-array FileAttribute 0))
     (Files/write (.getPath fs dir (into-array String ["all.edn"]))
-                 (.getBytes string)             
+                 (.getBytes string)
                  (make-array OpenOption 0))
     fs))
 
@@ -63,3 +63,12 @@
       ;; TODO test cache expiration
       (finally
         (component/stop stats)))))
+
+(deftest format-stats-with-commas
+  (is "0" (format-stats 0))
+  (is "1" (format-stats 1))
+  (is "-1" (format-stats -1))
+  (is "1" (format-stats 1.25129))
+  (is "999" (format-stats 999))
+  (is "1,000" (format-stats 1000))
+  (is "2,123,512" (format-stats 2123512)))

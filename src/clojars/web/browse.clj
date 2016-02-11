@@ -5,14 +5,16 @@
             [clojars.db :refer [browse-projects count-all-projects
                                 count-projects-before]]
             [hiccup.form :refer [label submit-button text-field submit-button]]
-            [ring.util.response :refer [redirect]]))
+            [ring.util.response :refer [redirect]]
+            [clojars.web.structured-data :as structured-data]))
 
 (defn browse-page [db account page per-page]
   (let [project-count (count-all-projects db)
         total-pages (-> (/ project-count per-page) Math/ceil .intValue)
         projects (browse-projects db page per-page)]
-    (html-doc "All projects" {:account account}
+    (html-doc "All projects" {:account account :description "Browse all of the projects in Clojars"}
      [:div.light-article.row
+      (structured-data/breadcrumbs [{:name "All projects" :url "https://clojars.org/projects"}])
       [:h1 "All projects"]
       [:div.small-section
        [:form.browse-from {:method :get :action "/projects"}
