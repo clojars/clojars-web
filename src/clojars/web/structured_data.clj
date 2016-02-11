@@ -2,7 +2,8 @@
   "Central place for providing all structured data to search engines and crawlers
   See https://developers.google.com/structured-data/"
   (:require [cheshire.core :as json]
-            [clojars.web.safe-hiccup :as hiccup]))
+            [clojars.web.safe-hiccup :as hiccup]
+            [clojure.string :as str]))
 
 (def common "Common ld-json attributes"
   {"@context" "http://schema.org"
@@ -32,3 +33,42 @@
     {"@type" "Organization"
      "name"  "Clojars"
      "logo"  "https://clojars.org/images/clojars-logo@2x.png"}))
+
+(defn meta-property
+  "Return a meta tag if content is provided"
+  [property content]
+  (when-not (str/blank? content)
+    [:meta {:property property :content content}]))
+
+(defn meta-name
+  "Return a meta tag if content is provided"
+  [name content]
+  (when-not (str/blank? content)
+    [:meta {:name name :content content}]))
+
+(defn meta-tags
+  "Returns meta tags for description, twitter cards, and facebook opengraph."
+  [ctx]
+  (list
+    ;; meta description
+    (meta-name "description" (:description ctx))
+
+    ;; twitter metadata
+    [:meta {:name "twitter:card" :content "summary"}]
+    [:meta {:name "twitter:site:id" :content "@clojars"}]
+    [:meta {:name "twitter:site" :content "https://clojars.org"}]
+    (meta-name "twitter:title" (:title ctx))
+    (meta-name "twitter:description" (:description ctx))
+    (meta-name "twitter:image" (or (:image-url ctx) "https://clojars.org/images/clojars-logo@2x.png"))
+    (meta-name "twitter:label1" (:label1 ctx))
+    (meta-name "twitter:data1" (:data1 ctx))
+    (meta-name "twitter:label2" (:label2 ctx))
+    (meta-name "twitter:data2" (:data2 ctx))
+
+    ;; facebook opengraph metadata
+    [:meta {:property "og:type" :content "website"}]
+    [:meta {:property "og:site_name" :content "Clojars"}]
+    (meta-property "og:url" (:url ctx))
+    (meta-property "og:title" (:title ctx))
+    (meta-property "og:description" (:description ctx))
+    (meta-property "og:image" (or (:image-url ctx) "https://clojars.org/images/clojars-logo@2x.png"))))

@@ -6,7 +6,8 @@
             [clojars.web.helpers :as helpers]
             [clojure.string :refer [join]]
             [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojars.web.structured-data :as structured-data]))
 
 (defn when-ie [& contents]
   (str
@@ -14,9 +15,6 @@
    (html contents)
    "<![endif]-->"))
 
-(defn meta-description [ctx]
-  (when-not (str/blank? (:description ctx))
-    [:meta {:name "description" :content (:description ctx)}]))
 
 (def footer
   [:footer.row
@@ -93,7 +91,7 @@
             :rel "icon"}]
     [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
-    (meta-description ctx)
+    (structured-data/meta-tags (assoc ctx :title title)) ;; TODO: talk about whether we should refactor signature of html-doc
     [:title
      (when title
        (str title " - "))
@@ -162,7 +160,7 @@
 
     [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
-    (meta-description ctx)
+    (structured-data/meta-tags (assoc ctx :title title))
     [:title
      (when title
        (str title " - "))
