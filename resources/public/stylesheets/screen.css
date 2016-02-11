@@ -87,6 +87,11 @@ hr {
   display: block;
 }
 
+.error {
+  color: #c9302c;
+  margin-bottom: 10px;
+}
+
 .page-nav {
   clear: left;
   font-size: 1.2em;

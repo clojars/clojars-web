@@ -21,7 +21,7 @@
       (follow-redirect)
       (has (status? 200))
       (within [:div :p.error]
-              (has (text? "Incorrect username and/or password.")))))
+              (has (text? "Incorrect username and/or password.Make sure that you are using your username, and not your email to log in.")))))
 
 (deftest user-can-login-and-logout
   (let [app (help/app)]
