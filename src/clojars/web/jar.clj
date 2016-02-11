@@ -66,8 +66,8 @@
                                                          (:version jar))
                                    (stats/format-stats))]
     (html-doc (str (:jar_name jar) " " (:version jar)) {:account account :description (format "%s - %s" (:description jar) (:version jar))
-                                                        :label1  "Downloads total/this version"
-                                                        :data1   (format "%s/%s" total-downloads downloads-this-version)
+                                                        :label1  (str "Total downloads / this version")
+                                                        :data1   (format "%s / %s" total-downloads downloads-this-version)
                                                         :label2  "Coordinates"
                                                         :data2   (format "[%s \"%s\"]" (jar-name jar) (:version jar))}
       (let [pom-map (jar-to-pom-map reporter jar)]

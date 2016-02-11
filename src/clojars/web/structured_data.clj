@@ -50,6 +50,7 @@
 (defn meta-tags
   "Returns meta tags for description, twitter cards, and facebook opengraph."
   [ctx]
+  (println "Title" (:title ctx))
   (list
     ;; meta description
     (meta-name "description" (:description ctx))
