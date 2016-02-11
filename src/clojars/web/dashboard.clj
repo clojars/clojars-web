@@ -17,9 +17,10 @@
        (if (> (count description) truncate-length)
          (str (subs description 0 truncate-length) "...")
          description)]
-      [:p.hint.total-downloads "Downloads: " (stats/download-count stats
-                                                                   (:group_name jar-map)
-                                                                   (:jar_name jar-map))]]]))
+      [:p.hint.total-downloads "Downloads: " (-> (stats/download-count stats
+                                                                       (:group_name jar-map)
+                                                                       (:jar_name jar-map))
+                                                 (stats/format-stats))]]]))
 
 
 (defn index-page [db stats account]

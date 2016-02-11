@@ -3,7 +3,8 @@
             [com.stuartsierra.component :as component])
   (:import java.io.PushbackReader
            java.nio.file.Files
-           java.nio.file.LinkOption))
+           java.nio.file.LinkOption
+           (java.text DecimalFormat)))
 
 (defprotocol Stats
   (download-count
@@ -61,3 +62,6 @@
   (map->FileStats {:path-factory #(.getPath %
                                             (str stats-dir "/all.edn")
                                             (make-array String 0))}))
+
+(defn format-stats [num]
+  (.format (DecimalFormat. "#,##0") num))
