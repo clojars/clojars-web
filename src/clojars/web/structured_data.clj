@@ -6,8 +6,7 @@
             [clojure.string :as str]))
 
 (def common "Common ld-json attributes"
-  {"@context" "http://schema.org"
-   "url"      "https://clojars.org"})
+  {"@context" "http://schema.org"})
 
 (defn ld-json
   "Takes a map m, converts it to JSON, and puts it inside
@@ -21,6 +20,7 @@
 (def website
   (ld-json
     {"@type"  "WebSite"
+     "url"    "https://clojars.org"
      "name"   "Clojars" ;; https://developers.google.com/structured-data/site-name
      "sameAs" ["https://twitter.com/clojars"] ;; https://developers.google.com/structured-data/customize/social-profiles
      "potentialAction" ;; https://developers.google.com/structured-data/slsb-overview
@@ -31,6 +31,7 @@
 (def organisation
   (ld-json
     {"@type" "Organization"
+     "url"   "https://clojars.org"
      "name"  "Clojars"
      "logo"  "https://clojars.org/images/clojars-logo@2x.png"}))
 
@@ -72,3 +73,13 @@
     (meta-property "og:title" (:title ctx))
     (meta-property "og:description" (:description ctx))
     (meta-property "og:image" (or (:image-url ctx) "https://clojars.org/images/clojars-logo@2x.png"))))
+
+(defn breadcrumbs [crumbs]
+  (ld-json
+    {"@type"           "BreadcrumbList"
+     "itemListElement" (into [] (map-indexed (fn [index crumb]
+                                               {"@type"    "ListItem"
+                                                "position" (inc index)
+                                                "item"     {"@id"  (:url crumb)
+                                                            "name" (:name crumb)}}))
+                             crumbs)}))

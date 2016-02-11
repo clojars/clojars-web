@@ -243,8 +243,13 @@
     (str "/" (:jar_name jar))
     (str "/" (:group_name jar) "/" (:jar_name jar))))
 
+(defn group-is-name?
+  "Is the group of the artifact the same as its name?"
+  [jar]
+  (= (:group_name jar) (:jar_name jar)))
+
 (defn jar-name [jar]
-  (if (= (:group_name jar) (:jar_name jar))
+  (if (group-is-name? jar)
     (:jar_name jar)
     (str (:group_name jar) "/" (:jar_name jar))))
 

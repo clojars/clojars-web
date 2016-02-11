@@ -1,6 +1,6 @@
 (ns clojars.web.jar
   (:require [clojars.web.common :refer [html-doc jar-link group-link
-                                        tag jar-url jar-name user-link
+                                        tag jar-url jar-name group-is-name? user-link
                                         jar-fork? single-fork-notice
                                         simple-date]]
             hiccup.core
@@ -13,7 +13,8 @@
             [clojars.stats :as stats]
             [ring.util.codec :refer [url-encode]]
             [cheshire.core :as json]
-            [clojars.web.helpers :as helpers]))
+            [clojars.web.helpers :as helpers]
+            [clojars.web.structured-data :as structured-data]))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
@@ -65,12 +66,21 @@
                                                          (:version jar))
                                    (stats/format-stats))]
     (html-doc (str (:jar_name jar) " " (:version jar)) {:account account :description (format "%s - %s" (:description jar) (:version jar))
-                                                        :label1 "Downloads total/this version"
-                                                        :data1 (format "%s/%s" total-downloads downloads-this-version)
-                                                        :label2 "Coordinates"
-                                                        :data2 (format "[%s \"%s\"]" (jar-name jar) (:version jar))}
+                                                        :label1  "Downloads total/this version"
+                                                        :data1   (format "%s/%s" total-downloads downloads-this-version)
+                                                        :label2  "Coordinates"
+                                                        :data2   (format "[%s \"%s\"]" (jar-name jar) (:version jar))}
       (let [pom-map (jar-to-pom-map reporter jar)]
         [:div.light-article.row
+         ;; TODO: this could be made more semantic by attaching the metadata to #jar-title, but we're waiting on https://github.com/clojars/clojars-web/issues/482
+         (structured-data/breadcrumbs (if (group-is-name? jar)
+                                        [{:url (str "https://clojars.org/" (jar-name jar))
+                                          :name (:jar_name jar)}]
+                                        [{:url (str "https://clojars.org/groups/" (:group_name jar))
+                                          :name (:group_name jar)}
+                                         {:url (str "https://clojars.org/" (jar-name jar)) ;; TODO: Not sure if this is a dirty hack or a stroke of brilliance
+                                          :name (:jar_name jar)}]))
+
          (helpers/select-text-script)
          [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
           [:h1 (jar-link jar)]

@@ -4,11 +4,14 @@
             [clojars.auth :refer [authorized?]]
             [hiccup.element :refer [unordered-list]]
             [hiccup.form :refer [text-field submit-button]]
-            [clojars.web.safe-hiccup :refer [form-to]]))
+            [clojars.web.safe-hiccup :refer [form-to]]
+            [clojars.web.structured-data :as structured-data]))
 
 (defn show-group [db account groupname membernames & errors]
   (html-doc (str groupname " group") {:account account :description (format "Clojars projects in the %s group" groupname)}
     [:div.small-section.col-md-6.col-lg-6.col-sm-6.col-xs-12
+     (structured-data/breadcrumbs [{:url  (str "https://clojars.org/groups/" groupname)
+                                    :name groupname}])
      [:h1 (str groupname " group")]
      [:h2 "Projects"]
      (unordered-list (map jar-link (jars-by-groupname db groupname)))
