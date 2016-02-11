@@ -54,7 +54,7 @@
        [:td.sponsor
         (link-to {:target "_blank"}
                  "https://www.statuspage.io"
-                 (helpers/retinized-image "/images/statuspage-io-logo.png" "StatusPage.io"))]
+                 (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]
        [:td.sponsor
         (link-to {:target "_blank"}
                  "https://pingometer.com/"
