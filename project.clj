@@ -6,7 +6,7 @@
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
                   [org.codehaus.plexus/plexus-utils]]
-                 [com.cemerick/pomegranate "0.0.13"
+                 [com.cemerick/pomegranate "0.3.0"
                   :exclusions
                   [org.apache.httpcomponents/httpcore
                    commons-logging]]

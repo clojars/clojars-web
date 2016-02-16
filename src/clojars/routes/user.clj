@@ -7,16 +7,16 @@
 (defn show [db username]
   (if-let [user (db/find-user db username)]
     (auth/try-account
-     (view/show-user db account user))))
+     #(view/show-user db % user))))
 
 (defn routes [db mailer]
   (compojure/routes
    (GET "/profile" {:keys [flash]}
         (auth/with-account
-          (view/profile-form account (db/find-user db account) flash)))
+          #(view/profile-form % (db/find-user db %) flash)))
    (POST "/profile" {:keys [params]}
          (auth/with-account
-           (view/update-profile db account params)))
+           #(view/update-profile db % params)))
 
    (GET "/register" {:keys [params]}
         (view/register-form params))

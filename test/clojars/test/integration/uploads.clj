@@ -23,9 +23,10 @@
   (help/delete-file-recursively help/local-repo)
   (help/delete-file-recursively help/local-repo2)
   (aether/deploy
-   :coordinates '[org.clojars.dantheman/test "1.0.0"]
+   :coordinates '[org.clojars.dantheman/test "0.0.1"]
    :jar-file (io/file (io/resource "test.jar"))
-   :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+   :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+               {:groupId "org.clojars.dantheman"})
    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                         :username "dantheman"
                         :password "password"}}
@@ -36,10 +37,10 @@
                                              "clojars"
                                              "dantheman"
                                              "test"
-                                             "1.0.0")))))
-  (is (= '{[org.clojars.dantheman/test "1.0.0"] nil}
+                                             "0.0.1")))))
+  (is (= '{[org.clojars.dantheman/test "0.0.1"] nil}
          (aether/resolve-dependencies
-          :coordinates '[[org.clojars.dantheman/test "1.0.0"]]
+          :coordinates '[[org.clojars.dantheman/test "0.0.1"]]
           :repositories {"test" {:url
                                  (str "http://localhost:" help/test-port "/repo")}}
           :local-repo help/local-repo2)))
@@ -59,10 +60,8 @@
       (visit "/")
       (fill-in [:#search] "test")
       (press [:#search-button])
-      ;; the pom is used as is, even if the data is wrong
-      ;; https://github.com/clojars/clojars-web/issues/358
       (within [:div.result]
-              (has (text? "fake/test 0.0.1")))))
+        (has (text? "org.clojars.dantheman/test 0.0.1")))))
 
 (deftest user-can-deploy-to-new-group
    (-> (session (help/app-from-system))
@@ -116,7 +115,7 @@
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (aether/deploy
-   :coordinates '[org.clojars.dantheman/test "0.0.1"]
+   :coordinates '[fake/test "0.0.1"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
@@ -127,7 +126,7 @@
         org.sonatype.aether.deployment.DeploymentException
         #"Forbidden - redeploying non-snapshots"
         (aether/deploy
-          :coordinates '[org.clojars.dantheman/test "0.0.1"]
+          :coordinates '[fake/test "0.0.1"]
           :jar-file (io/file (io/resource "test.jar"))
           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
           :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
@@ -139,7 +138,7 @@
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (aether/deploy
-   :coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
+   :coordinates '[fake/test "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
@@ -147,7 +146,7 @@
                         :password "password"}}
    :local-repo help/local-repo)
   (aether/deploy
-   :coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
+   :coordinates '[fake/test "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
@@ -161,11 +160,46 @@
   (aether/deploy
    :coordinates '[org.clojars.dantheman/test.thing "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
-   :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
+   :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
+               {:groupId "org.clojars.dantheman"
+                :artifactId "test.thing"})
    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo))
+
+(deftest user-can-deploy-with-signatures
+  (-> (session (help/app-from-system))
+    (register-as "dantheman" "test@example.org" "password"))
+  (let [pom (io/file (io/resource "test-0.0.1/test.pom"))]
+    (aether/deploy
+      :coordinates '[fake/test "0.0.1"]
+      :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
+                     [:extension "pom"] pom
+                     ;; any content will do since we don't validate signatures
+                     [:extension "jar.asc"] pom
+                     [:extension "pom.asc"] pom}
+      :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+                           :username "dantheman"
+                           :password "password"}}
+      :local-repo help/local-repo)))
+
+(deftest missing-signature-fails-the-deploy
+  (-> (session (help/app-from-system))
+    (register-as "dantheman" "test@example.org" "password"))
+  (let [pom (io/file (io/resource "test-0.0.1/test.pom"))]
+    (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+          #"test-0.0.1.pom has no signature"
+          (aether/deploy
+            :coordinates '[fake/test "0.0.1"]
+            :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
+                           [:extension "pom"] pom
+                           ;; any content will do since we don't validate signatures
+                           [:extension "jar.asc"] pom}
+            :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+                                 :username "dantheman"
+                                 :password "password"}}
+            :local-repo help/local-repo)))))
 
 (deftest anonymous-cannot-deploy
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
@@ -188,13 +222,33 @@
                               :password "password"}}
          :local-repo help/local-repo))))
 
-(deftest deploy-requires-lowercase-group
+(deftest deploy-requires-path-to-match-pom
   (-> (session (help/app-from-system))
-      (register-as "dantheman" "test@example.org" "password"))
+    (register-as "dantheman" "test@example.org" "password"))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-        #"Forbidden - group names must consist solely of lowercase"
+        #"Forbidden - the group in the pom \(fake\) does not match the group you are deploying to \(flake\)"
         (aether/deploy
-         :coordinates '[faKE/test "1.0.0"]
+         :coordinates '[flake/test "0.0.1"]
+         :jar-file (io/file (io/resource "test.jar"))
+         :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+                              :username "dantheman"
+                              :password "password"}}
+         :local-repo help/local-repo)))
+  (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+        #"Forbidden - the name in the pom \(test\) does not match the name you are deploying to \(toast\)"
+        (aether/deploy
+         :coordinates '[fake/toast "0.0.1"]
+         :jar-file (io/file (io/resource "test.jar"))
+         :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+                              :username "dantheman"
+                              :password "password"}}
+         :local-repo help/local-repo)))
+  (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+        #"Forbidden - the version in the pom \(0.0.1\) does not match the version you are deploying to \(1.0.0\)"
+        (aether/deploy
+         :coordinates '[fake/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
          :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
@@ -202,19 +256,35 @@
                               :password "password"}}
          :local-repo help/local-repo))))
 
-(deftest deploy-requires-lowercase-project
+(deftest deploy-requires-lowercase-group
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-        #"Forbidden - project names must consist solely of lowercase"
+        #"Forbidden - group names must consist solely of lowercase"
         (aether/deploy
-         :coordinates '[fake/teST "1.0.0"]
+         :coordinates '[faKE/test "0.0.1"]
          :jar-file (io/file (io/resource "test.jar"))
-         :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+         :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                     {:groupId "faKE"})
          :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                               :username "dantheman"
                               :password "password"}}
-         :local-repo help/local-repo))))
+         :local-repo help/local-repo)))
+
+  (deftest deploy-requires-lowercase-project
+    (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+    (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+          #"Forbidden - project names must consist solely of lowercase"
+          (aether/deploy
+            :coordinates '[fake/teST "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                        {:artifactId "teST"})
+            :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+                                 :username "dantheman"
+                                 :password "password"}}
+            :local-repo help/local-repo)))))
 
 (deftest deploy-requires-ascii-version
   (-> (session (help/app-from-system))
@@ -224,7 +294,8 @@
         (aether/deploy
          :coordinates '[fake/test "1.α.0"]
          :jar-file (io/file (io/resource "test.jar"))
-         :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+         :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                     {:version "1.α.0"})
          :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
                               :username "dantheman"
                               :password "password"}}
