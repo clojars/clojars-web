@@ -103,7 +103,7 @@
          ;; (then the default colors were removed)
          ;; more info: http://getbootstrap.com/css/#grid
          ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-    (include-js "//use.typekit.net/zhw0tse.js")
+    (include-js "https://use.typekit.net/zhw0tse.js")
     (typekit-js)
     (google-analytics-js)
     (raw (when-ie (include-js "/js/html5.js")))]
@@ -174,7 +174,7 @@
          ;; (then the default colors were removed)
          ;; more info: http://getbootstrap.com/css/#grid
          ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-    (include-js "//use.typekit.net/zhw0tse.js")
+    (include-js "https://use.typekit.net/zhw0tse.js")
     (typekit-js)
     (google-analytics-js)
     (raw (when-ie (include-js "/js/html5.js")))]
