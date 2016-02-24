@@ -3,7 +3,8 @@
             [yeller.clojure.client :as yeller]
             [clojars.config :refer [config]]
             [clj-stacktrace.repl :refer [pst]]
-            [clojars.web.error-page :as error-page])
+            [clojars.web.error-page :as error-page]
+            [clojars.web.error-api :as error-api])
   (:import java.util.UUID
            com.yellerapp.client.YellerHTTPClient))
 
@@ -50,5 +51,9 @@
     (try
       (app req)
       (catch Throwable t
-        (->> (report-ring-error reporter t req)
-             (error-page/error-page-response))))))
+        (let [params (:params req)
+              err-response-fn (if (= (:format params) "json")
+                                error-api/error-api-response
+                                error-page/error-page-response)]
+          (->> (report-ring-error reporter t req)
+               (err-response-fn (ex-data t))))))))
