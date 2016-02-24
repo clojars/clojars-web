@@ -39,6 +39,21 @@
              [resource :refer [wrap-resource]]
              [session :refer [wrap-session]]]))
 
+(defn try-parse-page
+  "Will throw a targeted error if maybe-page doesn't parse as an integer."
+  [maybe-page]
+  (try
+    (let [i (Integer/parseInt maybe-page)]
+      i)
+    (catch NumberFormatException nfe
+      (let [e (ex-info
+               "page must be an integer"
+               {:report? false
+                :title "Bad Request"
+                :error-message "The page query parameter must be an integer."
+                :status 400})]
+        (throw e)))))
+
 (defn main-routes [db reporter stats search-obj mailer]
   (routes
    (GET "/" _
@@ -49,7 +64,7 @@
    (GET "/search" {:keys [params]}
         (try-account
          (let [validated-params (if (:page params)
-                                  (assoc params :page (Integer. (:page params)))
+                                  (assoc params :page (try-parse-page (:page params)))
                                   params)]
            (search search-obj account validated-params))))
    (GET "/projects" {:keys [params]}
