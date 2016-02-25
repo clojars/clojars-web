@@ -57,6 +57,12 @@
      (doto (-> .getVersioning (.addVersion version)))
      (write-metadata md-file))))
 
+; TODO: If there are more places that require this, move to a utility location.
+(defn get-path
+  "Ensures that / is used as separator when regex depends on it."
+  [file]
+  (str/replace (.getPath file) (java.io.File/separator) "/"))
+
 (defn import-repo
   "Builds a dev db from the contents of the repo."
   [db repo stats-dir users]
@@ -70,7 +76,7 @@
             :when (and (.isDirectory version-dir)
                     (re-find #"^[0-9]\." (.getName version-dir)))
             :let [parent (.getParentFile version-dir)
-                  [_ group-path artifact-id] (re-find group-artifact-pattern (.getPath parent))
+                  [_ group-path artifact-id] (re-find group-artifact-pattern (get-path parent))
                   version (.getName version-dir)
                   group-id (str/lower-case (str/replace group-path "/" "."))
                   user (or (first (db/group-membernames db group-id)) (rand-nth users))]]
