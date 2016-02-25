@@ -6,11 +6,13 @@
            (java.io File)))
 
 (defn initial-schema [trans]
-  (doseq [cmd (.split (slurp (io/resource (str "queries" (File/separator) "clojars.sql"))) ";\n\n")]
-    ;; needs to succeed even if tables exist since this migration
-    ;; hasn't been recorded in extant DBs before migrations were introduced
-    (try (sql/db-do-commands trans cmd)
-         (catch java.sql.BatchUpdateException _)))) ;; TODO: should we really be swallowing exceptions here?
+  (let [line-sep (System/getProperty "line.separator")
+        splitter (str ";" line-sep line-sep)]
+    (doseq [cmd (.split (slurp (io/resource (str "queries" (File/separator) "clojars.sql"))) splitter)]
+      ;; needs to succeed even if tables exist since this migration
+      ;; hasn't been recorded in extant DBs before migrations were introduced
+      (try (sql/db-do-commands trans cmd)
+           (catch java.sql.BatchUpdateException _))))) ;; TODO: should we really be swallowing exceptions here?
 
 (defn add-promoted-field [trans]
   (sql/db-do-commands trans "ALTER TABLE jars ADD COLUMN promoted_at DATE"))
