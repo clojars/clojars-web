@@ -3,7 +3,9 @@
                                         collection-fork-notice user-link
                                         format-date page-nav]]
             [clojars.search :as search]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [clojars.errors :as errors]
+            [clojars.web.error-api :as error-api]))
 
 (defn- jar->json [jar]
   (let [m {:jar_name (:artifact-id jar)
@@ -25,10 +27,10 @@
                 (json/generate-string {:count (count results)
                                        :results (map jar->json results)})))
       (catch Exception _
-        (assoc response
-          :status 400
-          :body (json/generate-string
-                  {:error (format "Invalid search syntax for query `%s`" query)}))))))
+        (error-api/error-api-response
+         {:status 400
+          :error-message (format "Invalid search syntax for query `%s`" query)}
+         (errors/error-id))))))
 
 (defn html-search [search account query page]
   (html-doc (str query " - search") {:account account :query query :description (format "Clojars search results for '%s'" query)}
