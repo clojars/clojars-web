@@ -8,7 +8,8 @@
              [config :refer [config]]
              [db :as db]
              [errors :refer [wrap-exceptions]]
-             [http-utils :refer [wrap-x-frame-options wrap-secure-session]]]
+             [http-utils :refer [wrap-x-frame-options wrap-secure-session]]
+             [middleware :refer [wrap-ignore-trailing-slash]]]
             [clojars.friend.registration :as registration]
             [clojars.routes
              [api :as api]
@@ -127,7 +128,8 @@
        (wrap-secure-session)
        (wrap-resource "public")
        (wrap-content-type)
-       (wrap-not-modified))))
+       (wrap-not-modified)
+       (wrap-ignore-trailing-slash))))
 
 (defn handler-optioned [{:keys [db error-reporter stats search mailer]}]
   (clojars-app (:spec db) error-reporter stats search mailer))
