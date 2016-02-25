@@ -43,16 +43,14 @@
   "Will throw a targeted error if maybe-page doesn't parse as an integer."
   [maybe-page]
   (try
-    (let [i (Integer/parseInt maybe-page)]
-      i)
+    (Integer/parseInt maybe-page)
     (catch NumberFormatException nfe
-      (let [e (ex-info
-               "page must be an integer"
-               {:report? false
-                :title "Bad Request"
-                :error-message "The page query parameter must be an integer."
-                :status 400})]
-        (throw e)))))
+      (throw (ex-info
+                "page must be an integer"
+                {:report? false
+                 :title "Bad Request"
+                 :error-message "The page query parameter must be an integer."
+                 :status 400})))))
 
 (defn main-routes [db reporter stats search-obj mailer]
   (routes
