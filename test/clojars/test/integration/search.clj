@@ -73,7 +73,6 @@
     (testing "json request with invalid page returns error"
       (let [resp (do-search-with-page :json "test" "a" {:throw-exceptions false})
             result (json/parse-string (:body resp) true)]
-        (prn resp)
         (is (= 400 (:status resp)))
         (is (= "application/json" (help/get-content-type resp)))
         (is (not (nil? (:error result))))
