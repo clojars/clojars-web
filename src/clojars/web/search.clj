@@ -58,7 +58,7 @@
                     [:br]])
                  [:span.details (if-let [created (:created jar)]
                                   [:td (format-date created)])]]])]
-            (page-nav (Integer. page)
+            (page-nav page
               (int (Math/ceil (/ total-hits results-per-page)))
               :base-path (str "/search?q=" query "&page="))]))
        (catch Exception _
