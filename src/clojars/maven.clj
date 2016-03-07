@@ -48,6 +48,7 @@
      :licenses     (mapv license-to-seq (.getLicenses model))
      :scm          (scm-to-map (.getScm model))
      :authors      (mapv #(.getName %) (.getContributors model))
+     :packaging    (keyword (.getPackaging model))
      :dependencies (mapv
                      (fn [d] {:group_name (.getGroupId d)
                               :jar_name   (.getArtifactId d)

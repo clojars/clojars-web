@@ -43,23 +43,23 @@
 (defn main-routes [db reporter stats search-obj mailer]
   (routes
    (GET "/" _
-        (try-account
-         (if account
-           (dashboard db account)
-           (index-page db stats account))))
+     (try-account
+       #(if %
+          (dashboard db %)
+          (index-page db stats %))))
    (GET "/search" {:keys [params]}
         (try-account
-         (let [validated-params (if (:page params)
-                                  (assoc params :page (Integer. (:page params)))
-                                  params)]
-           (search search-obj account validated-params))))
+          #(let [validated-params (if (:page params)
+                                    (assoc params :page (Integer. (:page params)))
+                                    params)]
+             (search search-obj % validated-params))))
    (GET "/projects" {:keys [params]}
         (try-account
-         (browse db account params)))
+          #(browse db % params)))
    (GET "/security" []
         (try-account
-         (html-doc "Security" {:account account}
-                   (raw (slurp (io/resource "security.html"))))))
+          #(html-doc "Security" {:account %}
+             (raw (slurp (io/resource "security.html"))))))
    session/routes
    (group/routes db)
    (artifact/routes db reporter stats)
@@ -71,11 +71,11 @@
    (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
    (ANY "*" _
         (try-account
-         (not-found
-          (html-doc "Page not found" {:account account}
-                    [:div.small-section
-                     [:h1 "Page not found"]
-                     [:p "Thundering typhoons!  I think we lost it.  Sorry!"]]))))))
+         #(not-found
+            (html-doc "Page not found" {:account %}
+              [:div.small-section
+               [:h1 "Page not found"]
+               [:p "Thundering typhoons!  I think we lost it.  Sorry!"]]))))))
 
 (defn bad-attempt [attempts user]
   (let [failures (or (attempts user) 0)]
@@ -102,17 +102,18 @@
 
 (defn clojars-app [db reporter stats search mailer]
   (routes
-   (context "/repo" _
-            (-> (repo/routes db search)
-                (friend/authenticate
-                 {:credential-fn (credential-fn db)
-                  :workflows [(workflows/http-basic :realm "clojars")]
-                  :allow-anon? false
-                  :unauthenticated-handler
-                  (partial workflows/http-basic-deny "clojars")})
-                (repo/wrap-exceptions reporter)
-                (repo/wrap-file (:repo config))
-                (repo/wrap-reject-double-dot)))
+    (-> (context "/repo" _
+          (-> (repo/routes db search)
+            (friend/authenticate
+              {:credential-fn (credential-fn db)
+               :workflows [(workflows/http-basic :realm "clojars")]
+               :allow-anon? false
+               :unauthenticated-handler
+               (partial workflows/http-basic-deny "clojars")})
+            (repo/wrap-exceptions reporter)
+            (repo/wrap-file (:repo config))
+            (repo/wrap-reject-double-dot)))
+      (wrap-secure-session))
    (-> (main-routes db reporter stats search mailer)
        (friend/authenticate
         {:credential-fn (credential-fn db)

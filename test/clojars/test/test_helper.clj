@@ -12,7 +12,7 @@
             [clojure.java
              [io :as io]
              [jdbc :as jdbc]]
-            [clojure.string :as string]
+            [clojure.string :as str]
             [clucy.core :as clucy]
             [com.stuartsierra.component :as component])
   (:import java.io.File))
@@ -107,9 +107,22 @@
              (component/stop system))))))))
 
 (defn get-content-type [resp]
-  (some-> resp :headers (get "content-type") (string/split #";") first))
+  (some-> resp :headers (get "content-type") (str/split #";") first))
 
 (defn assert-cors-header [resp]
   (some-> resp :headers
           (get "access-control-allow-origin")
           (= "*")))
+
+(defn rewrite-pom [file m]
+  (let [new-pom (doto (File/createTempFile (.getName file) ".pom")
+                  .deleteOnExit)]
+    (-> file
+      slurp
+      (as-> % (reduce (fn [accum [element new-value]]
+                        (str/replace accum (re-pattern (format "<(%s)>.*?<" (name element)))
+                          (format "<$1>%s<" new-value)))
+                %
+                m))
+      (->> (spit new-pom)))
+    new-pom))

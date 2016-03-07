@@ -7,7 +7,7 @@
   [file type]
   (let [file' (io/file file)]
     (io/file (.getParentFile file')
-             (format "%s.%s" (.getName file') (name type)))))
+      (format "%s.%s" (.getName file') (name type)))))
 
 (defn- create-sum [f file type]
   (let [file' (io/file file)]
@@ -35,17 +35,22 @@
 
 (defn valid-sum?
   "Checks to see if a sum of type `type` exists and is valid for `file`"
-  [file type]
-  (let [sig-file (sum-file file type)]
-    (and (.exists sig-file)
-         (= ((sum-generators type) (io/file file))
-            (slurp sig-file)))))
+  ([file type]
+   (valid-sum? file type true))
+  ([file type fail-if-missing?]
+   (let [sig-file (sum-file file type)]
+     (if (.exists sig-file)
+       (= ((sum-generators type) (io/file file))
+         (slurp sig-file))
+       (not fail-if-missing?)))))
 
 (defn valid-sums?
   "Checks to see if both md5 and sha1 sums exist and are valid for `file`"
-  [file]
-  (reduce (fn [valid? sig-type]
-            (and valid?
-                 (valid-sum? file sig-type)))
-          true
-          [:md5 :sha1]))
+  ([file]
+   (valid-sums? file true))
+  ([file fail-if-missing?]
+   (reduce (fn [valid? sig-type]
+             (and valid?
+               (valid-sum? file sig-type fail-if-missing?)))
+     true
+     [:md5 :sha1])))
