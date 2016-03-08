@@ -88,6 +88,12 @@
       signed-extension
       (last (.split name "\\.")))))
 
+(defn- classifier [version f]
+  (let [name (.getName f)]
+    (when-let [[_ classifier] (re-find #"^-(.*?).jar"
+                                (subs name (+ (.indexOf name version) (count version))))]
+      classifier)))
+
 (defn- match-file-name [re f]
   (re-find re (.getName f)))
 
@@ -220,7 +226,9 @@
         (aether/deploy
           :coordinates [(symbol group name) version]
           :artifact-map (reduce #(assoc %1
-                                   [:extension (extension %2)] %2)
+                                   [:classifier (classifier version %2)
+                                    :extension (extension %2)]
+                                   %2)
                           {} (find-artifacts dir))
           :repository {"local" {:url (-> repo io/file .toURI .toURL)}})
         (db/add-jar db account pom)

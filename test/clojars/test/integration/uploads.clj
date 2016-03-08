@@ -168,6 +168,23 @@
                         :password "password"}}
    :local-repo help/local-repo))
 
+(deftest user-can-deploy-with-classifiers
+  (-> (session (help/app-from-system))
+    (register-as "dantheman" "test@example.org" "password"))
+  (let [pom (io/file (io/resource "test-0.0.1/test.pom"))]
+    (aether/deploy
+      :coordinates '[fake/test "0.0.1"]
+      :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
+                     [:classifier "test" :extension "jar"] (io/file (io/resource "test.jar"))
+                     [:extension "pom"] pom}
+      :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+                           :username "dantheman"
+                           :password "password"}}
+      :local-repo help/local-repo))
+  (are [ext] (.exists (io/file (:repo help/test-config) "fake" "test" "0.0.1"
+                        (format "test-0.0.1%s" ext)))
+       ".pom" ".jar" "-test.jar"))
+
 (deftest user-can-deploy-with-signatures
   (-> (session (help/app-from-system))
     (register-as "dantheman" "test@example.org" "password"))
