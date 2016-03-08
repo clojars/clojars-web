@@ -4,10 +4,15 @@
             [clojure.java.io :as io])
   (:import (java.io File)
            (org.apache.commons.io FileUtils)
-           (org.apache.maven.artifact.repository.metadata Metadata)
+           (org.apache.maven.artifact.repository.metadata Metadata Versioning)
            (java.text SimpleDateFormat)
            (java.util Date))
   (:gen-class))
+
+(defn get-versioning [metadata]
+  (if-let [versioning (.getVersioning metadata)]
+    versioning
+    (get-versioning (doto metadata (.setVersioning (Versioning.))))))
 
 (defn find-bad-metadata [repo]
   ;; This is gross, mainly because maven uses maven-metadata.xml files for three things:
@@ -35,7 +40,7 @@
                                            (not (.exists (io/file dir "maven-metadata.xml"))))]
                              dir)
               versions (set (map (memfn getName) version-dirs))
-              missing-versions? (not= versions (set (.getVersions (.getVersioning metadata))))
+              missing-versions? (not= versions (set (.getVersions (get-versioning metadata))))
               invalid-sums? (not (futil/valid-sums? f))]
         :when (or missing-versions? invalid-sums?)]
     {:file              f
@@ -56,17 +61,17 @@
                   [file (futil/sum-file file :sha1) (futil/sum-file file :md5)]))))
 
 (defn repair-versions [{:keys [file metadata version-dirs]}]
-  (let [versioning (.getVersioning metadata)
+  (let [versioning (get-versioning metadata)
         sorted-dirs (sort-by #(.lastModified %) version-dirs)]
     ;; remove existing versions, then write dir versions in dir creation order
     (run! #(.removeVersion versioning %) (into [] (.getVersions versioning)))
     (run! #(.addVersion versioning %) (map (memfn getName) sorted-dirs))
     ;; set release to latest !snapshot
     (.setRelease versioning
-                 (->> sorted-dirs
-                      (filter #(not (.endsWith (.getName %) "SNAPSHOT")))
-                      last
-                      .getName))
+                 (when-let [v (->> sorted-dirs
+                                   (filter #(not (.endsWith (.getName %) "SNAPSHOT")))
+                                   last)]
+                   (.getName v)))
     ;; set lastUpdated to latest version
     (.setLastUpdated versioning (.format date-formatter
                                          (-> sorted-dirs last .lastModified Date.)))
@@ -85,8 +90,8 @@
     (println "Usage: repo-path backup-path (:repair|:report)")
     (let [[repo backup-dir action] args]
       (doseq [md (find-bad-metadata repo)]
-        (when (= ":repair" action)
-          (repair-metadata (io/file backup-dir) md))
         (prn (-> md
                  (dissoc :version-dirs :metadata)
-                 (update :file (memfn getAbsolutePath))))))))
+                 (update :file (memfn getAbsolutePath))))
+        (when (= ":repair" action)
+          (repair-metadata (io/file backup-dir) md))))))
