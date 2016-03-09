@@ -171,19 +171,36 @@
 (deftest user-can-deploy-with-classifiers
   (-> (session (help/app-from-system))
     (register-as "dantheman" "test@example.org" "password"))
-  (let [pom (io/file (io/resource "test-0.0.1/test.pom"))]
-    (aether/deploy
-      :coordinates '[fake/test "0.0.1"]
-      :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
-                     [:classifier "test" :extension "jar"] (io/file (io/resource "test.jar"))
-                     [:extension "pom"] pom}
-      :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
-                           :username "dantheman"
-                           :password "password"}}
-      :local-repo help/local-repo))
+  (aether/deploy
+    :coordinates '[fake/test "0.0.1"]
+    :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
+                   [:classifier "test" :extension "jar"] (io/file (io/resource "test.jar"))
+                   [:extension "pom"] (io/file (io/resource "test-0.0.1/test.pom"))}
+    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+                         :username "dantheman"
+                         :password "password"}}
+    :local-repo help/local-repo)
   (are [ext] (.exists (io/file (:repo help/test-config) "fake" "test" "0.0.1"
                         (format "test-0.0.1%s" ext)))
        ".pom" ".jar" "-test.jar"))
+
+(deftest user-can-deploy-snapshot-with-classifiers
+  (-> (session (help/app-from-system))
+    (register-as "dantheman" "test@example.org" "password"))
+  (aether/deploy
+    :coordinates '[fake/test "0.0.3-SNAPSHOT"]
+    :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
+                   [:classifier "test" :extension "jar"] (io/file (io/resource "test.jar"))
+                   [:extension "pom"] (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))}
+    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+                         :username "dantheman"
+                         :password "password"}}
+    :local-repo help/local-repo)
+  ;; we can't look for files directly since the version will be timestamped
+  (is (= 3 (->> (file-seq (io/file (:repo help/test-config) "fake" "test" "0.0.3-SNAPSHOT"))
+             (filter (memfn isFile))
+             (filter #(re-find #"(pom|jar|-test\.jar)$" (.getName %)))
+             count))))
 
 (deftest user-can-deploy-with-signatures
   (-> (session (help/app-from-system))

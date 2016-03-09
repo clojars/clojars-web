@@ -79,6 +79,9 @@
     (filter pom?)
     first))
 
+(defn re-find-after [re after v]
+  (re-find re (subs v (+ (.indexOf v after) (count after)))))
+
 ;; borrowed from
 ;; https://github.com/technomancy/leiningen/tree/2.5.3/src/leiningen/deploy.clj#L137
 ;; and modified
@@ -89,10 +92,8 @@
       (last (.split name "\\.")))))
 
 (defn- classifier [version f]
-  (let [name (.getName f)]
-    (when-let [[_ classifier] (re-find #"^-(.*?).jar"
-                                (subs name (+ (.indexOf name version) (count version))))]
-      classifier)))
+  (when-let [[_ classifier] (re-find-after #"^-(.*?)\.jar" version (.getName f))]
+    classifier))
 
 (defn- match-file-name [re f]
   (re-find re (.getName f)))
@@ -220,13 +221,17 @@
                     (throw-invalid (str "invalid pom file: " (.getMessage e))
                       {:file pom-file}
                       e)))
-            {:keys [group name version] :as posted-metadata} (read-string (slurp (io/file dir "metadata.edn")))]
+            {:keys [group name version] :as posted-metadata} (read-string (slurp (io/file dir "metadata.edn")))
+            [_ version-from-pom-name] (re-find-after #"^-(.*)\.pom$" name (.getName pom-file))]
         (validate-deploy dir pom posted-metadata)
         (db/check-and-add-group db account group)
         (aether/deploy
           :coordinates [(symbol group name) version]
           :artifact-map (reduce #(assoc %1
-                                   [:classifier (classifier version %2)
+                                   ;; use the version from the pom
+                                   ;; name so we have the timestamped
+                                   ;; snapshot version
+                                   [:classifier (classifier version-from-pom-name %2)
                                     :extension (extension %2)]
                                    %2)
                           {} (find-artifacts dir))
