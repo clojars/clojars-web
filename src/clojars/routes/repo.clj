@@ -150,7 +150,7 @@
 
 (defn validate-checksums [artifacts]
   (doseq [f artifacts]
-    ;; verify that at least one type checksum file exists
+    ;; verify that at least one type of checksum file exists
     (when (not (or (.exists (fu/sum-file f :md5))
                  (.exists (fu/sum-file f :sha1))))
       (throw-invalid (str "no checksum provided for " (.getName f) {:file f})))
@@ -271,7 +271,7 @@
                 group (string/join "/" (butlast group-parts))
                 artifact (last group-parts)]
             (handle-versioned-upload db body session group artifact version file))
-          (when (re-find #"maven-metadata\.xml$" file)
+          (if (re-find #"maven-metadata\.xml$" file)
             ;; ignore metadata sums, since we'll recreate those when
             ;; the deploy is finalizied
             (let [groupname (string/replace group "/" ".")]
@@ -282,7 +282,10 @@
                 (fn [account upload-dir]
                   (let [file (io/file upload-dir group artifact file)]
                     (try-save-to-file file body)
-                    (finalize-deploy db search account (config :repo) upload-dir))))))))
+                    (finalize-deploy db search account (config :repo) upload-dir)))))
+            {:status 201
+             :headers {}
+             :body nil})))
    (PUT ["/:group/:artifact/:version/:filename"
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
          :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
