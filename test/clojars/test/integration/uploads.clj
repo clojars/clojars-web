@@ -168,6 +168,24 @@
                         :password "password"}}
    :local-repo help/local-repo))
 
+(deftest snapshot-deploys-preserve-timestamp-version
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [timestamped-jar (atom nil)]
+    (aether/deploy
+      :coordinates '[fake/test "0.0.3-SNAPSHOT"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
+      :repository {"test" {:url      (str "http://localhost:" help/test-port "/repo")
+                           :username "dantheman"
+                           :password "password"}}
+      :local-repo help/local-repo
+      :transfer-listener #(when-let [name (get-in % [:resource :name])]
+                           (when (.endsWith name ".jar")
+                             (reset! timestamped-jar name))))
+    (is @timestamped-jar)
+    (is (.exists (io/file (:repo help/test-config) @timestamped-jar)))))
+
 (deftest user-can-deploy-with-classifiers
   (-> (session (help/app-from-system))
     (register-as "dantheman" "test@example.org" "password"))

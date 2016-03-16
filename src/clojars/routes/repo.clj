@@ -16,9 +16,9 @@
             [ring.util
              [codec :as codec]
              [response :as response]])
-  (:import java.io.StringReader
-           java.util.UUID
-           org.apache.commons.io.FileUtils))
+  (:import java.util.UUID
+           org.apache.commons.io.FileUtils
+           (java.io FileFilter IOException FileNotFoundException File)))
 
 (defn versions [group-id artifact-id]
   (->> (.listFiles (io/file (config :repo) group-id artifact-id))
@@ -33,7 +33,7 @@
      (try
        (maven/pom-to-map (io/file (config :repo) group-id artifact-id version
                                   (format "%s-%s.pom" artifact-id version)))
-       (catch java.io.FileNotFoundException e
+       (catch FileNotFoundException _
          nil))))
 
 (defn save-to-file [sent-file input]
@@ -45,7 +45,7 @@
 (defn- try-save-to-file [sent-file input]
   (try
     (save-to-file sent-file input)
-    (catch java.io.IOException e
+    (catch IOException e
       (.delete sent-file)
       (throw e))))
 
@@ -79,24 +79,13 @@
     (filter pom?)
     first))
 
-(defn re-find-after [re after v]
-  (re-find re (subs v (+ (.indexOf v after) (count after)))))
-
-;; borrowed from
-;; https://github.com/technomancy/leiningen/tree/2.5.3/src/leiningen/deploy.clj#L137
-;; and modified
-(defn- extension [f]
+(defn- match-file-name [match f]
   (let [name (.getName f)]
-    (if-let [[_ signed-extension] (re-find #"\.([a-z]+\.asc)$" name)]
-      signed-extension
-      (last (.split name "\\.")))))
+    (if (string? match)
+      (= match name)
+      (re-find match name))))
 
-(defn- classifier [version f]
-  (when-let [[_ classifier] (re-find-after #"^-(.*?)\.jar" version (.getName f))]
-    classifier))
-
-(defn- match-file-name [re f]
-  (re-find re (.getName f)))
+(def metadata-edn "_metadata.edn")
 
 (defn find-artifacts [dir]
   (into []
@@ -104,8 +93,7 @@
       (filter (memfn isFile))
       (remove (partial match-file-name #".sha1$"))
       (remove (partial match-file-name #".md5$"))
-      (remove (partial match-file-name #"^maven-metadata\.xml"))
-      (remove (partial match-file-name #"^metadata\.edn$")))
+      (remove (partial match-file-name metadata-edn)))
     (file-seq dir)))
 
 (defn- throw-invalid
@@ -199,7 +187,7 @@
     (let [artifacts (find-artifacts dir)]
       (assert-jar-uploaded artifacts pom)
       (validate-checksums artifacts)
-      (assert-signatures artifacts))
+      (assert-signatures (remove (partial match-file-name "maven-metadata.xml") artifacts)))
     
     (catch Exception e
       (throw (ex-info (.getMessage e)
@@ -212,7 +200,7 @@
                  (ex-data e))
                (.getCause e))))))
 
-(defn finalize-deploy [db search account repo dir]
+(defn finalize-deploy [db search account repo ^File dir]
   (try
     (if-let [pom-file (find-pom dir)]
       (let [pom (try
@@ -221,21 +209,29 @@
                     (throw-invalid (str "invalid pom file: " (.getMessage e))
                       {:file pom-file}
                       e)))
-            {:keys [group name version] :as posted-metadata} (read-string (slurp (io/file dir "metadata.edn")))
-            [_ version-from-pom-name] (re-find-after #"^-(.*)\.pom$" name (.getName pom-file))]
+            {:keys [group group-path name] :as posted-metadata} (read-string (slurp (io/file dir metadata-edn)))]
+
+        ;; since we trigger on maven-metadata.xml, we don't actually
+        ;; have the sums for it because they are uploaded *after* the
+        ;; metadata file itself. This means that it's possible for a
+        ;; corrupted file to slip through, so we try to parse it
+        (let [md-file (io/file dir group-path name "maven-metadata.xml")]
+          (try
+            (maven/read-metadata md-file)
+            (catch Exception e
+              (throw-invalid "Failed to parse maven-metadata.xml"
+                {:file md-file}
+                e)))
+
+          ;; If that succeeds, we create checksums for it
+          (fu/create-sums md-file))
+
         (validate-deploy dir pom posted-metadata)
         (db/check-and-add-group db account group)
-        (aether/deploy
-          :coordinates [(symbol group name) version]
-          :artifact-map (reduce #(assoc %1
-                                   ;; use the version from the pom
-                                   ;; name so we have the timestamped
-                                   ;; snapshot version
-                                   [:classifier (classifier version-from-pom-name %2)
-                                    :extension (extension %2)]
-                                   %2)
-                          {} (find-artifacts dir))
-          :repository {"local" {:url (-> repo io/file .toURI .toURL)}})
+        (FileUtils/copyDirectory dir (io/file repo)
+                                 (reify FileFilter
+                                   (accept [_ f]
+                                     (not= metadata-edn (.getName f)))))
         (db/add-jar db account pom)
         (search/index! search (assoc pom
                                 :at (.lastModified pom-file))))
@@ -250,8 +246,9 @@
       groupname
       session
       (fn [_ upload-dir]
-        (spit (io/file upload-dir "metadata.edn")
+        (spit (io/file upload-dir metadata-edn)
           (pr-str {:group groupname
+                   :group-path group
                    :name  artifact
                    :version version}))
         (try-save-to-file (io/file upload-dir group artifact version filename) body)))))
