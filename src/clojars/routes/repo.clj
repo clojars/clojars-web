@@ -1,6 +1,7 @@
 (ns clojars.routes.repo
   (:require [clojars
              [auth :refer [require-authorization with-account]]
+             [cloudfiles :as cf]
              [config :refer [config]]
              [db :as db]
              [errors :refer [report-error]]
@@ -87,14 +88,20 @@
 
 (def metadata-edn "_metadata.edn")
 
-(defn find-artifacts [dir]
-  (into []
-    (comp
-      (filter (memfn isFile))
-      (remove (partial match-file-name #".sha1$"))
-      (remove (partial match-file-name #".md5$"))
-      (remove (partial match-file-name metadata-edn)))
-    (file-seq dir)))
+(defn find-artifacts
+  ([dir]
+   (find-artifacts dir true))
+  ([dir remove-checksums?]
+   (let [tx (comp
+              (filter (memfn isFile))
+              (remove (partial match-file-name metadata-edn)))]
+     (into []
+       (if remove-checksums?
+         (comp tx
+           (remove (partial match-file-name #".sha1$"))
+           (remove (partial match-file-name #".md5$")))
+         tx)
+       (file-seq dir)))))
 
 (defn- throw-invalid
   ([message]
@@ -200,7 +207,7 @@
                  (ex-data e))
                (.getCause e))))))
 
-(defn finalize-deploy [db search account repo ^File dir]
+(defn finalize-deploy [cloudfiles db reporter search account repo ^File dir]
   (try
     (if-let [pom-file (find-pom dir)]
       (let [pom (try
@@ -232,6 +239,19 @@
                                  (reify FileFilter
                                    (accept [_ f]
                                      (not= metadata-edn (.getName f)))))
+        (run!
+          (fn [f]
+            (let [path (cf/remote-path (.getAbsolutePath dir) (.getAbsolutePath f))]
+              (try
+                (cf/put-file cloudfiles path f)
+                (catch Exception e
+                  (.printStackTrace e)
+                  ;; catch and report anything that fails for now
+                  ;; instead of letting it bubble up, since cloudfiles
+                  ;; isn't yet the primary repo
+                  (report-error reporter e {:path path :file f})))))
+          (find-artifacts dir false))
+
         (db/add-jar db account pom)
         (search/index! search (assoc pom
                                 :at (.lastModified pom-file))))
@@ -254,7 +274,7 @@
         (try-save-to-file (io/file upload-dir group artifact version filename) body)))))
 
 ;; web handlers
-(defn routes [db search]
+(defn routes [cloudfiles db reporter search]
   (compojure/routes
    (PUT ["/:group/:artifact/:file"
          :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
@@ -279,7 +299,8 @@
                 (fn [account upload-dir]
                   (let [file (io/file upload-dir group artifact file)]
                     (try-save-to-file file body)
-                    (finalize-deploy db search account (config :repo) upload-dir)))))
+                    (finalize-deploy cloudfiles db reporter search
+                      account (config :repo) upload-dir)))))
             {:status 201
              :headers {}
              :body nil})))

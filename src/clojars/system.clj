@@ -36,18 +36,18 @@
 (defn new-system [config]
   (let [config (meta-merge base-env (translate config))]
     (-> (component/system-map
-         :app  (handler-component (:app config))
-         :http (jetty-server (:http config))
-         :db   (hikaricp (:db config))
-         :fs-factory #(FileSystems/getDefault)
-         :stats (file-stats (:stats-dir config))
+         :app           (handler-component (:app config))
+         :http          (jetty-server (:http config))
+         :db            (hikaricp (:db config))
+         :fs-factory    #(FileSystems/getDefault)
+         :stats         (file-stats (:stats-dir config))
          :index-factory #(clucy/disk-index (:index-path config))
-         :search (lucene-component)
-         :mailer (simple-mailer (:mail config))
+         :search        (lucene-component)
+         :mailer        (simple-mailer (:mail config))
          :clojars-app   (endpoint-component web/handler-optioned))
         (component/system-using
          {:http [:app]
           :app  [:clojars-app]
           :stats [:fs-factory]
           :search [:index-factory :stats]
-          :clojars-app [:db :error-reporter :stats :search :mailer]}))))
+          :clojars-app [:cloudfiles :db :error-reporter :stats :search :mailer]}))))

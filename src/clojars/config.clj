@@ -66,7 +66,10 @@
    ["DELETION_BACKUP_DIR" :deletion-backup-dir]
    ["NREPL_PORT" :nrepl-port #(Integer/parseInt %)]
    ["YELLER_ENV" :yeller-environment]
-   ["YELLER_TOKEN" :yeller-token]])
+   ["YELLER_TOKEN" :yeller-token]
+   ["CLOUDFILES_USER" :cloudfiles-user]
+   ["CLOUDFILES_TOKEN" :cloudfiles-token]
+   ["CLOUDFILES_CONTAINER" :cloudfiles-container]])
 
 (defn parse-env []
   (reduce

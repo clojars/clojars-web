@@ -1,6 +1,7 @@
 (ns clojars.main
   (:require [clojars
              [admin :as admin]
+             [cloudfiles :as cf]
              [config :refer [config configure]]
              [errors :refer [->StdOutReporter multiple-reporters]]
              [system :as system]]
@@ -15,9 +16,14 @@
 (defn prod-system [config yeller]
   (-> (meta-merge config prod-env)
       system/new-system
-      (assoc :error-reporter (multiple-reporters
-                              (->StdOutReporter)
-                              yeller))))
+      (assoc
+        :error-reporter (multiple-reporters
+                          (->StdOutReporter)
+                          yeller)
+        :cloudfiles (cf/connect
+                      (:cloudfiles-user config)
+                      (:cloudfiles-token config)
+                      (:cloudfiles-container config)))))
 
 (defn -main [& args]
   (configure args)

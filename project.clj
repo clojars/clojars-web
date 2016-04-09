@@ -15,6 +15,8 @@
                  [hiccup "1.0.3"]
                  [cheshire "5.4.0"]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
+                 [org.apache.jclouds/jclouds-all "1.9.2"]
+                 [org.clojure/tools.logging "0.3.1"] ;; required by jclouds
                  [org.apache.commons/commons-email "1.2"]
                  [commons-codec "1.6"]
                  [net.cgrand/regex "1.0.1"
@@ -24,7 +26,8 @@
                   :exclusions [org.clojure/core.cache
                                org.apache.httpcomponents/httpclient
                                org.apache.httpcomponents/httpcore
-                               commons-logging]]
+                               commons-logging
+                               com.google.inject/guice]]
                  [clj-stacktrace "0.2.6"]
                  [ring-anti-forgery "0.2.1"]
                  [valip "0.2.0" :exclusions [commons-logging]]

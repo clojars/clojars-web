@@ -1,5 +1,6 @@
 (ns clojars.test.test-helper
   (:require [clojars
+             [cloudfiles :as cf]
              [config :refer [config]]
              [db :as db]
              [email :as email]
@@ -70,18 +71,21 @@
 (defn no-search []
   (reify search/Search))
 
-(declare ^:dynamic test-port)
+(defn transient-cloudfiles []
+  (cf/connect "" "" "test-repo" "transient"))
 
+(declare ^:dynamic test-port)
 
 (defn app
   ([] (app {}))
-  ([{:keys [:db :error-reporter :stats :search :mailer]
-     :or {:db *db*
+  ([{:keys [:cloudfiles :db :error-reporter :stats :search :mailer]
+     :or {:cloudfiles (transient-cloudfiles)
+          :db *db*
           :error-reporter (quiet-reporter)
           :stats (no-stats)
           :search (no-search)
           :mailer nil}}]
-   (web/clojars-app db error-reporter stats search mailer)))
+   (web/clojars-app cloudfiles db error-reporter stats search mailer)))
 
 (declare ^:dynamic system)
 
@@ -93,9 +97,10 @@
 (defn run-test-app
   ([f]
    (binding [system (component/start (assoc (system/new-system test-config)
-                                            :error-reporter (quiet-reporter)
-                                            :index-factory #(clucy/memory-index)
-                                            :stats (no-stats)))]
+                                       :cloudfiles (transient-cloudfiles)
+                                       :error-reporter (quiet-reporter)
+                                       :index-factory #(clucy/memory-index)
+                                       :stats (no-stats)))]
      (let [server (get-in system [:http :server])
            port (-> server .getConnectors first .getLocalPort)]
        (binding [test-port port]
