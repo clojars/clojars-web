@@ -66,7 +66,7 @@
     "remixed by"
     (link-to {:target "_blank"}
              "http://www.bendyworks.com/"
-             [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150px"}])]])
+             [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]])
 
 (defn google-analytics-js []
   [:script "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
