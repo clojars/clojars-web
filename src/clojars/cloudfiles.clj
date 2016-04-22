@@ -1,7 +1,11 @@
 (ns clojars.cloudfiles
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [org.jclouds.blobstore2 :as jc]))
+            [org.jclouds.blobstore2 :as jc])
+  (:import [org.jclouds.blobstore
+            BlobStore
+            domain.PageSet
+            options.ListContainerOptions]))
 
 (defrecord Connection [bs container])
 
@@ -25,6 +29,42 @@
 
 (defn put-file [conn name file]
   (apply-conn jc/put-blob conn (jc/blob name :payload file)))
+
+;; borrowed from jclouds
+;; (https://github.com/jclouds/jclouds/blob/master/blobstore/src/main/clojure/org/jclouds/blobstore2.clj)
+;; and modified to properly allow recursion in container seq
+
+(defn- container-seq-chunk
+  [^BlobStore blobstore container options]
+  (apply jc/blobs blobstore container
+    (mapcat identity
+      (if (string? (:after-marker options))
+        options
+        (dissoc options :after-marker)))))
+
+(defn- container-seq-chunks [^BlobStore blobstore container options]
+  (when (:after-marker options) ;; When getNextMarker returns null, there's no more.
+    (let [chunk (container-seq-chunk blobstore container options)]
+      (lazy-seq (cons chunk
+                  (container-seq-chunks blobstore container
+                    (assoc options
+                      :after-marker (.getNextMarker ^PageSet chunk))))))))
+
+(defn container-seq
+  "Returns a lazy seq of all blobs in the given container."
+  ([^BlobStore blobstore container]
+     (container-seq blobstore container nil))
+  ([^BlobStore blobstore container options]
+     ;; :start has no special meaning, it is just a non-null (null indicates
+     ;; end), non-string (markers are strings).
+   (#'jc/concat-elements (container-seq-chunks blobstore container
+                           (assoc options :after-marker :start)))))
+
+;; end jclouds code
+
+(defn artifact-seq [conn]
+  (map (memfn getName) (apply-conn container-seq conn {:recursive true :with-details false})))
+
 
 ;; All deletions require purging from the CDN:
 ;; https://developer.rackspace.com/docs/cdn/v1/developer-guide/#purge-a-cached-asset
