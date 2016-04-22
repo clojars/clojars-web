@@ -3,19 +3,27 @@
             [clojars.cloudfiles :as cf])
   (:gen-class))
 
-(defn upload-file [conn path file]
-  (if (cf/artifact-exists? conn path)
-    (println "==> Remote artifact exists, ignoring:" path)
-    (cf/put-file conn path file)))
+(defn upload-file [conn path file existing]
+  (if (existing path)
+    (println "!!> Remote artifact exists, ignoring:" path)
+    (do
+      (println "==> Uploading:" path)
+      (cf/put-file conn path file))))
+
+(defn get-existing [conn]
+  (println "Retrieving current artifact list (this will take a while)")
+  (into #{} (cf/artifact-seq conn)))
 
 (defn upload-repo [conn repo]
-  (->> (file-seq repo)
-    (filter (memfn isFile))
-    (run! #(upload-file conn
-             (cf/remote-path
-               (.getAbsolutePath repo)
-               (.getAbsolutePath %))
-             %))))
+  (let [existing (get-existing conn)]
+    (->> (file-seq repo)
+      (filter (memfn isFile))
+      (run! #(upload-file conn
+               (cf/remote-path
+                 (.getAbsolutePath repo)
+                 (.getAbsolutePath %))
+               %
+               existing)))))
 
 (defn -main [& args]
   (if (not= 4 (count args))
