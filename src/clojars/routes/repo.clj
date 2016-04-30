@@ -146,12 +146,15 @@
 (defn validate-checksums [artifacts]
   (doseq [f artifacts]
     ;; verify that at least one type of checksum file exists
-    (when (not (or (.exists (fu/sum-file f :md5))
-                 (.exists (fu/sum-file f :sha1))))
-      (throw-invalid (str "no checksum provided for " (.getName f) {:file f})))
+    (when (not (or (.exists (fu/checksum-file f :md5))
+                 (.exists (fu/checksum-file f :sha1))))
+      (throw-invalid (format "no checksums provided for %s" (.getName f))
+        {:file f}))
     ;; verify provided checksums are valid
-    (when (not (fu/valid-sums? f false))
-      (throw-invalid (str "invalid checksum for " (.getName f) {:file f})))))
+    (doseq [type [:md5 :sha1]]
+      (when (not (fu/valid-checksum-file? f type false))
+        (throw-invalid (format "invalid %s checksum for %s" type (.getName f))
+          {:file f})))))
 
 (defn assert-signatures [artifacts]
   ;; if any signatures exist, require them for every artifact
@@ -231,7 +234,8 @@
                 e)))
 
           ;; If that succeeds, we create checksums for it
-          (fu/create-sums md-file))
+          (fu/create-checksum-file md-file :md5)
+          (fu/create-checksum-file md-file :sha1))
 
         (validate-deploy dir pom posted-metadata)
         (db/check-and-add-group db account group)

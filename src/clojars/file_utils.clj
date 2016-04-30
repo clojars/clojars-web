@@ -2,55 +2,42 @@
   (:require [clojure.java.io :as io]
             [digest :as d]))
 
-(defn sum-file
+(defn checksum-file
   "Returns a file for the sum of `file` of type `type`"
   [file type]
   (let [file' (io/file file)]
     (io/file (.getParentFile file')
       (format "%s.%s" (.getName file') (name type)))))
 
-(defn- create-sum [f file type]
-  (let [file' (io/file file)]
-    (spit (sum-file file' type) (f file'))))
-
 (def ^:private sum-generators
   {:md5 d/md5
    :sha1 d/sha-1})
 
-(defn create-md5-sum
-  "Creates md5 sum file for `file`"
-  [file]
-  (create-sum (sum-generators :md5) file :md5))
+(defn checksum
+  "Returns the sum of `type` for `file` as a string"
+  [file type]
+  ((sum-generators type) (io/file file)))
 
-(defn create-sha1-sum
-  "Creates sha1 sum file for `file`"
-  [file]
-  (create-sum (sum-generators :sha1) file :sha1))
+(defn- write-sum-file [sum file type]
+  (spit (checksum-file file type) sum))
 
-(defn create-sums
-  "Creates md5 and sha1 sum files for `file`"
-  [file]
-  (create-md5-sum file)
-  (create-sha1-sum file))
+(defn create-checksum-file
+  "Creates a sum file of `type` for `file`"
+  [file type]
+  (spit (checksum-file file type) (checksum file type)))
 
-(defn valid-sum?
-  "Checks to see if a sum of type `type` exists and is valid for `file`"
+(defn valid-checksum?
+  "Checks to see if `sum` of type `type` is valid for `file`"
+  [sum file type]
+  (= sum (checksum file type)))
+
+(defn valid-checksum-file?
+  "Checks to see if a sum file of type `type` exists and is valid for `file`"
   ([file type]
-   (valid-sum? file type true))
+   (valid-checksum-file? file type true))
   ([file type fail-if-missing?]
-   (let [sig-file (sum-file file type)]
+   (let [sig-file (checksum-file file type)]
      (if (.exists sig-file)
-       (= ((sum-generators type) (io/file file))
-         (slurp sig-file))
+       (valid-checksum? (slurp sig-file) file type)
        (not fail-if-missing?)))))
 
-(defn valid-sums?
-  "Checks to see if both md5 and sha1 sums exist and are valid for `file`"
-  ([file]
-   (valid-sums? file true))
-  ([file fail-if-missing?]
-   (reduce (fn [valid? sig-type]
-             (and valid?
-               (valid-sum? file sig-type fail-if-missing?)))
-     true
-     [:md5 :sha1])))

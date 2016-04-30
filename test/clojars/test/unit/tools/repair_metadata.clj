@@ -53,7 +53,8 @@
           (is (= ["0.1.0" "0.2.0" "0.4.0" "0.5.0-SNAPSHOT"] (.getVersions versioning)))))
 
       (testing "writes correct sums"
-        (is (futil/valid-sums? bar-file)))
+        (is (futil/valid-checksum-file? bar-file :md5))
+        (is (futil/valid-checksum-file? bar-file :sha1)))
 
       (finally
         (FileUtils/deleteDirectory backup-dir)))))
@@ -69,7 +70,8 @@
         (is (= 1 (count (filter #(= "maven-metadata.xml" (.getName %)) (file-seq backup-dir))))))
 
       (testing "writes correct sums"
-        (is (futil/valid-sums? baz-file)))
+        (is (futil/valid-checksum-file? baz-file :md5))
+        (is (futil/valid-checksum-file? baz-file :sha1)))
 
       (finally
         (FileUtils/deleteDirectory backup-dir)))))

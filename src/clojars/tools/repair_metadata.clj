@@ -41,7 +41,8 @@
                              dir)
               versions (set (map (memfn getName) version-dirs))
               missing-versions? (not= versions (set (.getVersions (get-versioning metadata))))
-              invalid-sums? (not (futil/valid-sums? f))]
+              invalid-sums? (not (and (futil/valid-checksum-file? f :md5)
+                                   (futil/valid-checksum-file? f :sha1)))]
         :when (or missing-versions? invalid-sums?)]
     {:file              f
      :metadata          metadata
@@ -58,7 +59,7 @@
                  .mkdirs)]
     (run! #(FileUtils/copyFileToDirectory % to-dir)
           (filter (memfn exists)
-                  [file (futil/sum-file file :sha1) (futil/sum-file file :md5)]))))
+                  [file (futil/checksum-file file :sha1) (futil/checksum-file file :md5)]))))
 
 (defn repair-versions [{:keys [file metadata version-dirs]}]
   (let [versioning (get-versioning metadata)
@@ -83,7 +84,8 @@
   (backup-metadata backup-dir data)
   (when missing-versions?
     (repair-versions data))
-  (futil/create-sums file))
+  (futil/create-checksum-file file :md5)
+  (futil/create-checksum-file file :sha1))
 
 (defn -main [& args]
   (if (not= 3 (count args))
