@@ -1,6 +1,7 @@
 (ns clojars.tools.upload-files
-  (:require [clojure.java.io :as io]
-            [clojars.cloudfiles :as cf])
+  (:require [clojars.cloudfiles :as cf]
+            [clojars.file-utils :as fu]
+            [clojure.java.io :as io])
   (:gen-class))
 
 ;; uploads the given files to the top-level of the repo container
@@ -15,5 +16,11 @@
           conn (connect username key container-name)]
       (->> files
         (map io/file)
-        (run! #(cf/put-file conn (.getName %) %))))))
+        (run!
+          (fn [f]
+            (let [path (.getName f)]
+              (if (= (fu/checksum f :md5)
+                    (:md5 (cf/artifact-metadata conn path)))
+                (println (format "Remote %s exists and has the same md5 checksum, skipping" path))
+                (cf/put-file conn path f)))))))))
 

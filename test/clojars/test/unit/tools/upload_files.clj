@@ -31,3 +31,13 @@
       (apply -main container "foo" "foo" (map (memfn getAbsolutePath) files))
       (doseq [f files]
         (is (cf/artifact-exists? @conn-p (.getName f)))))))
+
+(deftest reupload-of-unchanged-file-should-message
+  (let [f (io/file (io/resource "config.clj"))
+        conn (cf/connect "" "" "test" "transient")]
+    (with-redefs [connect (constantly conn)]
+      (-main "test" "foo" "foo" (.getAbsolutePath f))
+      (is (cf/artifact-exists? conn "config.clj"))
+      (let [out (with-out-str
+                  (-main "test" "foo" "foo" (.getAbsolutePath f)))]
+        (is (re-find #"Remote config.clj exists and has the same md5 checksum" out))))))
