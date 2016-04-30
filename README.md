@@ -1,6 +1,8 @@
 Clojars web interface
 =====================
 
+[![Build Status](https://travis-ci.org/clojars/clojars-web.svg)](https://travis-ci.org/clojars/clojars-web)
+
 This is the source code for the [Clojars](http://clojars.org/) jar
 repository webapp.
 
