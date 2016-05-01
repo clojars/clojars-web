@@ -1,5 +1,6 @@
 (ns clojars.cloudfiles
-  (:require [clojure.java.io :as io]
+  (:require [clojars.file-utils :as fu]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [org.jclouds.blobstore2 :as jc])
   (:import [org.jclouds.blobstore
@@ -23,7 +24,7 @@
        (jc/create-container bs container-name :public-read? true))
      (->Connection bs container-name))))
 
-(defn- apply-conn [f conn & args]
+(defn apply-conn [f conn & args]
   (apply f (:bs conn) (:container conn) args))
 
 (defn remote-path [prefix path]
@@ -32,31 +33,54 @@
 (defn artifact-exists? [conn path]
   (apply-conn jc/blob-exists? conn path))
 
-(def ^:private metadata-builders
-  {:md5 (memfn getETag)
-   :content-type #(.getContentType (.getContentMetadata %))
-   :created (memfn getCreationDate)
-   :last-modified (memfn getLastModified)
-   :name (memfn getName)
-   :size (memfn getSize)
-   :user-metadata #(into {} (.getUserMetadata %))})
-
-(defn artifact-metadata [conn path]
-  (when-let [md (apply-conn jc/blob-metadata conn path)]
+(let [metadata-builders
+      {:md5 (memfn getETag)
+       :content-type #(.getContentType (.getContentMetadata %))
+       :created (memfn getCreationDate)
+       :last-modified (memfn getLastModified)
+       :name (memfn getName)
+       :size (memfn getSize)
+       :uri (memfn getUri)
+       :user-metadata #(into {} (.getUserMetadata %))}]
+  (defn metadata->map [md]
     (reduce (fn [m [k f]]
               (assoc m k (f md)))
       {}
       metadata-builders)))
+  
+(defn artifact-metadata [conn path]
+  (when-let [md (apply-conn jc/blob-metadata conn path)]
+    (metadata->map md)))
+
+(let [content-types
+      {:asc            :txt
+       :bundle         :xml
+       :clj            :txt
+       :eclipse-plugin :zip
+       :gz             "application/gzip"
+       :jar            "application/x-java-archive"
+       :md5            :txt
+       :pom            :xml
+       :properties     :txt
+       :sha1           :txt
+       :txt            "text/plain"
+       :xml            "application/xml"
+       :zip            "application/zip"
+       :unknown        "application/unknown"}]
+  (defn content-type [suffix]
+    (let [ct (content-types (keyword suffix) :unknown)]
+      (if (keyword? ct)
+        (content-type ct)
+        ct))))
 
 (defn put-file
-  ([conn name file]
-   (put-file conn name file nil))
-  ([conn name file options]
-   (apply-conn jc/put-blob conn
-     (apply-map jc/blob name
-       (-> options
-         (assoc :payload file)
-         (update :content-md5 #(when % (HashCode/fromString %))))))))
+  [conn name file]
+  (let [file' (io/file file)]
+    (apply-conn jc/put-blob conn
+      (jc/blob name
+        :payload file'
+        :content-type (content-type (last (str/split name #"\.")))
+        :content-md5 (HashCode/fromString (fu/checksum file' :md5))))))
 
 ;; borrowed from jclouds
 ;; (https://github.com/jclouds/jclouds/blob/master/blobstore/src/main/clojure/org/jclouds/blobstore2.clj)
@@ -89,9 +113,8 @@
 
 ;; end jclouds code
 
-(defn artifact-seq [conn]
-  (map (memfn getName) (apply-conn container-seq conn {:recursive true :with-details false})))
-
+(defn metadata-seq [conn]
+  (map metadata->map (apply-conn container-seq conn {:recursive true :with-details false})))
 
 ;; All deletions require purging from the CDN:
 ;; https://developer.rackspace.com/docs/cdn/v1/developer-guide/#purge-a-cached-asset

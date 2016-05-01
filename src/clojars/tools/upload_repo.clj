@@ -12,7 +12,7 @@
 
 (defn get-existing [conn]
   (println "Retrieving current artifact list (this will take a while)")
-  (into #{} (cf/artifact-seq conn)))
+  (into #{} (map :name (cf/metadata-seq conn))))
 
 (defn upload-repo [conn repo]
   (let [existing (get-existing conn)]
