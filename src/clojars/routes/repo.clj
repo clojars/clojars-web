@@ -27,16 +27,6 @@
        (sort-by (comp - (memfn last-modified)))
        (map (memfn getName))))
 
-(defn find-jar
-  ([group-id artifact-id]
-     (find-jar group-id artifact-id (first (versions group-id artifact-id))))
-  ([group-id artifact-id version]
-     (try
-       (maven/pom-to-map (io/file (config :repo) group-id artifact-id version
-                                  (format "%s-%s.pom" artifact-id version)))
-       (catch FileNotFoundException _
-         nil))))
-
 (defn save-to-file [sent-file input]
   (-> sent-file
       .getParentFile
