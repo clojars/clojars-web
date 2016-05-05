@@ -70,6 +70,16 @@
 (defn add-scope [trans]
   (sql/db-do-commands trans "ALTER TABLE deps ADD COLUMN dep_scope TEXT"))
 
+(defn drop-search-table-and-triggers [trans]
+  (try
+    (sql/db-do-commands trans
+      "DROP TRIGGER insert_search"
+      "DROP TRIGGER update_search"
+      "DROP TABLE search")
+    (catch BatchUpdateException _
+      ;; they won't be there in test, where the db is built from clojars.sql
+      )))
+
 ;; migrations mechanics
 
 (defn run-and-record [migration trans]
@@ -91,7 +101,8 @@
    #'add-password-reset-code-created-at
    #'add-licenses-and-packaging
    #'restore-deps-table
-   #'add-scope])
+   #'add-scope
+   #'drop-search-table-and-triggers])
 
 (defn migrate [db]
   (try (sql/db-do-commands db

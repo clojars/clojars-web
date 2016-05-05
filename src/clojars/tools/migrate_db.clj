@@ -11,5 +11,6 @@
 (defn -main [& _]
   (configure nil)
   (let [db (:db config)]
+    (println "=> Migrating" db)
     (ensure-db-directory-exists (:subname db))
     (migrate db)))
