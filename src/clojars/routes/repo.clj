@@ -239,7 +239,6 @@
               (try
                 (cf/put-file cloudfiles path f)
                 (catch Exception e
-                  (.printStackTrace e)
                   ;; catch and report anything that fails for now
                   ;; instead of letting it bubble up, since cloudfiles
                   ;; isn't yet the primary repo

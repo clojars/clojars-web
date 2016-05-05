@@ -114,6 +114,6 @@
     (let [test-users (add-test-users db 10)]
       (println "==> Importing" repo "into the db...")
       (import-repo db repo stats-dir test-users))
-    (println "==> Indexing" repo "...")
-    (search/index-repo repo))
+    (println "==> Indexing...")
+    (search/generate-index db))
   (.shutdown (db/write-executor)))

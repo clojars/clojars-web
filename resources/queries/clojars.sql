@@ -18,7 +18,7 @@ create table jars
         homepage TEXT,
         scm TEXT,
         authors TEXT);
-        
+
 create table deps
        (id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_name TEXT NOT NULL,
@@ -36,37 +36,38 @@ create table groups
 --
 -- Search support: quick and dirty, but it works
 --
-        
-create virtual table search using fts3
-       (id INTEGER PRIMARY KEY,
-       content text not null,
-       jar_name text not null,
-       group_name text not null);
-
-create trigger insert_search insert on jars
-  begin
-    delete from search where jar_name = new.jar_name and group_name = new.group_name;
-    insert into search (id, jar_name, group_name, content) values
-           (new.id, new.jar_name, new.group_name,
-           new.jar_name || ' ' || 
-           new.group_name || ' ' || 
-           new.version || ' ' || 
-           coalesce(new.authors, '') || ' ' || 
-           new.user || ' ' ||
-           coalesce(new.description, ''));
-  end;
-
-create trigger update_search update on jars
-  begin
-    delete from search where jar_name = new.jar_name and group_name = new.group_name;
-    insert into search (id, jar_name, group_name, content) values
-           (new.id, new.jar_name, new.group_name,
-           new.jar_name || ' ' || 
-           new.group_name || ' ' || 
-           new.version || ' ' || 
-           coalesce(new.authors, '') || ' ' || 
-           new.user || ' ' ||
-           coalesce(new.description, ''));
-  end;
+-- Note: none of the below is used anymore, but still exists in the production db
+--
+--create virtual table search using fts3
+--       (id INTEGER PRIMARY KEY,
+--       content text not null,
+--       jar_name text not null,
+--       group_name text not null);
+--
+--create trigger insert_search insert on jars
+--  begin
+--    delete from search where jar_name = new.jar_name and group_name = new.group_name;
+--    insert into search (id, jar_name, group_name, content) values
+--           (new.id, new.jar_name, new.group_name,
+--           new.jar_name || ' ' ||
+--           new.group_name || ' ' ||
+--           new.version || ' ' ||
+--           coalesce(new.authors, '') || ' ' ||
+--           new.user || ' ' ||
+--           coalesce(new.description, ''));
+--  end;
+--
+--create trigger update_search update on jars
+--  begin
+--    delete from search where jar_name = new.jar_name and group_name = new.group_name;
+--    insert into search (id, jar_name, group_name, content) values
+--           (new.id, new.jar_name, new.group_name,
+--           new.jar_name || ' ' ||
+--           new.group_name || ' ' ||
+--           new.version || ' ' ||
+--           coalesce(new.authors, '') || ' ' ||
+--           new.user || ' ' ||
+--           coalesce(new.description, ''));
+--  end;
 
 

@@ -2,21 +2,21 @@
   (:refer-clojure :exclude [index])
   (:require [clojars
              [config :refer [config]]
-             [maven :as mvn]
              [stats :as stats]]
             [clojure
              [set :as set]
              [string :as string]]
             [clojure.java.io :as io]
             [clucy.core :as clucy]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [clojars.db :as db]
+            [clojure.string :as str])
   (:import [org.apache.lucene.analysis KeywordAnalyzer PerFieldAnalyzerWrapper]
            org.apache.lucene.analysis.standard.StandardAnalyzer
            org.apache.lucene.index.IndexNotFoundException
            org.apache.lucene.queryParser.QueryParser
            [org.apache.lucene.search.function CustomScoreQuery DocValues FieldCacheSource ValueSourceQuery]
-           org.apache.lucene.search.IndexSearcher
-           (java.io File)))
+           org.apache.lucene.search.IndexSearcher))
 
 (defprotocol Search
   (index! [t pom])
@@ -43,27 +43,32 @@
                       (.addAnalyzer a (name field) (KeywordAnalyzer.)))
                     a))
 
-(def renames {:name :artifact-id :group :group-id})
+(def renames {:name       :artifact-id
+              :jar_name   :artifact-id
+              :group      :group-id
+              :group_name :group-id
+              :created    :at
+              :homepage   :url})
 
 (defn delete-from-index [index group-id & [artifact-id]]
   (binding [clucy/*analyzer* analyzer]
     (clucy/search-and-delete index
                              (cond-> (str "group-id:" group-id)
-                               artifact-id (str " AND artifact-id:" artifact-id)))))
+                                     artifact-id (str " AND artifact-id:" artifact-id)))))
 
-(defn index-pom [index pom]
-  (let [pom (-> pom
+(defn index-jar [index jar]
+  (let [jar' (-> jar
                 (set/rename-keys renames)
                 (update-in [:licenses] #(mapv :name %)))
         ;; TODO: clucy forces its own :_content on you
-        content (string/join " " ((apply juxt content-fields) pom))
-        doc (assoc (dissoc pom :homepage :dependencies :scm)
+        content (string/join " " ((apply juxt content-fields) jar'))
+        doc (assoc (dissoc jar' :dependencies :scm)
                    :_content content)]
     (binding [clucy/*analyzer* analyzer]
       (let [[old] (try
                     (clucy/search index (format "artifact-id:%s AND group-id:%s"
-                                              (:artifact-id pom)
-                                              (:group-id pom)) 1)
+                                              (:artifact-id doc)
+                                              (:group-id doc)) 1)
                     (catch IndexNotFoundException _
                       ;; This happens when the index is searched before any data
                       ;; is added. We can treat it here as a nil return
@@ -77,29 +82,20 @@
             (clucy/add index (with-meta doc field-settings)))
           (clucy/add index (with-meta doc field-settings)))))))
 
-(defn version-path-from-pom [repo-root {:keys [group name version]}]
-  (io/file repo-root
-           (.replace group \. \/) name version))
-
-(defn index-repo [root]
+(defn generate-index [db]
   (let [indexed (atom 0)]
     (with-open [index (clucy/disk-index (config :index-path))]
       ;; searching with an empty index creates an exception
       (clucy/add index {:dummy true})
-      (doseq [^File file (file-seq (io/file root))
-              :when (.endsWith (str file) ".pom")]
+      (doseq [jar (db/all-jars db)]
         (swap! indexed inc)
         (when (zero? (mod @indexed 100))
           (println "Indexed" @indexed))
         (try
-          (let [pom-data (assoc (mvn/pom-to-map file)
-                           :at (.lastModified file))]
-            (if (= (.getParentFile file) (version-path-from-pom root pom-data))
-              (index-pom index pom-data)
-              (println (format "Skipping %s - group/artifact:version don't match: %s/%s:%s"
-                               file (:group pom-data) (:name pom-data) (:version pom-data)))))
+          (index-jar index jar)
           (catch Exception e
-              (println "Failed to index" file " - " (.getMessage e))
+              (println (format "Failed to index %s/%s:%s - %s" (:group_name jar) (:jar_name jar) (:version jar)
+                               (.getMessage e)))
               (.printStackTrace e))))
       (clucy/search-and-delete index "dummy:true"))))
 
@@ -170,7 +166,7 @@
 (defrecord LuceneSearch [stats index-factory index]
   Search
   (index! [t pom]
-    (index-pom index pom))
+    (index-jar index pom))
   (search [t query page]
     (-search stats index query page))
   (delete! [t group-id]

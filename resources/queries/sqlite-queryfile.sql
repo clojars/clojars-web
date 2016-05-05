@@ -116,6 +116,9 @@ ON (
 ORDER BY l.created DESC
 LIMIT 6;
 
+--name: all-jars
+SELECT * FROM jars;
+
 --name: jar-exists
 SELECT EXISTS(
   SELECT 1
@@ -150,6 +153,17 @@ WHERE (
 )
 ORDER BY created DESC
 LIMIT 1;
+
+--name: find-dependencies
+SELECT *
+FROM deps
+WHERE (
+  group_name = :groupname
+  AND
+  jar_name = :jarname
+  AND
+  version = :version
+);
 
 --name: all-projects
 SELECT DISTINCT group_name, jar_name
@@ -283,8 +297,12 @@ INSERT INTO groups (name, user, added_by)
 VALUES (:groupname, :username, :added_by);
 
 --name: add-jar!
-INSERT INTO jars (group_name, jar_name, version, user, created, description, homepage, authors)
-VALUES (:groupname, :jarname, :version, :user, :created, :description, :homepage, :authors);
+INSERT INTO jars (group_name, jar_name, version, user, created, description, homepage, authors, packaging, licenses, scm)
+VALUES (:groupname, :jarname, :version, :user, :created, :description, :homepage, :authors, :packaging, :licenses, :scm);
+
+--name: add-dependency!
+INSERT INTO deps (group_name, jar_name, version, dep_group_name, dep_jar_name, dep_version, dep_scope)
+VALUES (:groupname, :jarname, :version, :dep_groupname, :dep_jarname, :dep_version, :dep_scope);
 
 --name: delete-groups-jars!
 DELETE FROM jars
@@ -307,6 +325,30 @@ WHERE (
   AND
   version = :version
 );
+
+--name: delete-groups-dependencies!
+DELETE FROM deps
+WHERE (
+group_name = :group_id
+)
+
+--name: delete-dependencies!
+DELETE FROM deps
+WHERE (
+group_name = :group_id
+AND
+jar_name = :jar_id
+)
+
+--name: delete-dependencies-version!
+DELETE FROM deps
+WHERE (
+group_name = :group_id
+AND
+jar_name = :jar_id
+AND
+version = :version
+)
 
 --name: delete-group!
 DELETE FROM groups

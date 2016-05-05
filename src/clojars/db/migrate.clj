@@ -1,18 +1,24 @@
 (ns clojars.db.migrate
   (:require [clojure.java.jdbc :as sql]
             [clojure.java.io :as io]
-            [clojars.config :refer [config]])
-  (:import (java.sql Timestamp)
+            [clojars.config :refer [config]]
+            [clojure.string :as str])
+  (:import (java.sql Timestamp BatchUpdateException)
            (java.io File)))
 
 (defn initial-schema [trans]
-  (let [line-sep (System/getProperty "line.separator")
-        splitter (str ";" line-sep line-sep)]
-    (doseq [cmd (.split (slurp (io/resource (str "queries" (File/separator) "clojars.sql"))) splitter)]
-      ;; needs to succeed even if tables exist since this migration
-      ;; hasn't been recorded in extant DBs before migrations were introduced
-      (try (sql/db-do-commands trans cmd)
-           (catch java.sql.BatchUpdateException _))))) ;; TODO: should we really be swallowing exceptions here?
+  (doseq [cmd (map str/trim
+                   (-> (str "queries" (File/separator) "clojars.sql")
+                       io/resource
+                       slurp
+                       (str/split #";\s*")))
+          :when (not (.isEmpty cmd))
+          :when (not (re-find #"^\s*--" cmd))]
+    ;; needs to succeed even if tables exist since this migration
+    ;; hasn't been recorded in extant DBs before migrations were introduced
+    (try (sql/db-do-commands trans cmd)
+         (catch BatchUpdateException e
+           (.printStackTrace e)))))
 
 (defn add-promoted-field [trans]
   (sql/db-do-commands trans "ALTER TABLE jars ADD COLUMN promoted_at DATE"))
@@ -35,6 +41,29 @@
 (defn add-password-reset-code-created-at [trans]
   (sql/db-do-commands trans "ALTER TABLE users ADD COLUMN password_reset_code_created_at DATE"))
 
+(defn add-licenses-and-packaging [trans]
+  (sql/db-do-commands trans
+                      "ALTER TABLE jars ADD COLUMN licenses TEXT"
+                      "ALTER TABLE jars ADD COLUMN packaging TEXT"))
+
+;; the deps table was lost from production at some point
+(defn restore-deps-table [trans]
+  (try
+    (sql/db-do-commands trans
+                        (str "CREATE TABLE deps (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                             "group_name TEXT NOT NULL, "
+                             "jar_name TEXT NOT NULL, "
+                             "version TEXT NOT NULL, "
+                             "dep_group_name TEXT NOT NULL, "
+                             "dep_jar_name TEXT NOT NULL, "
+                             "dep_version TEXT NOT NULL);"))
+    (catch BatchUpdateException _
+      ;; will throw if table already exists
+      )))
+
+(defn add-scope [trans]
+  (sql/db-do-commands trans "ALTER TABLE deps ADD COLUMN dep_scope TEXT"))
+
 ;; migrations mechanics
 
 (defn run-and-record [migration trans]
@@ -53,7 +82,10 @@
    #'add-pgp-key
    #'add-added-by
    #'add-password-reset-code
-   #'add-password-reset-code-created-at])
+   #'add-password-reset-code-created-at
+   #'add-licenses-and-packaging
+   #'restore-deps-table
+   #'add-scope])
 
 (defn migrate [db]
   (try (sql/db-do-commands db

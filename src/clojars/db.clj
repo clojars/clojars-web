@@ -4,7 +4,9 @@
             [clj-time.coerce :as time.coerce]
             [clojars.config :refer [config]]
             [clojars.db.sql :as sql]
-            [cemerick.friend.credentials :as creds])
+            [cemerick.friend.credentials :as creds]
+            [clojure.edn :as edn]
+            [clojure.set :as set])
   (:import java.util.Date
            java.security.SecureRandom
            java.util.concurrent.Executors))
@@ -101,18 +103,35 @@
                    :result-set-fn first
                    :row-fn #(= % 1)}))
 
-(defn find-jar
-  ([db groupname jarname]
-   (sql/find-jar {:groupname groupname
-                  :jarname jarname}
-                 {:connection db
-                  :result-set-fn first}))
-  ([db groupname jarname version]
-   (sql/find-jar-versioned {:groupname groupname
-                            :jarname jarname
-                            :version version}
-                           {:connection db
-                            :result-set-fn first})))
+(let [read-field (fn [m field] (update m field (fnil edn/read-string "nil")))
+      read-edn-fields #(when %
+                        (-> %
+                            (read-field :licenses)
+                            (read-field :scm)))]
+  (defn find-jar
+    ([db groupname jarname]
+     (read-edn-fields
+       (sql/find-jar {:groupname groupname
+                      :jarname   jarname}
+                     {:connection    db
+                      :result-set-fn first})))
+    ([db groupname jarname version]
+     (read-edn-fields
+       (sql/find-jar-versioned {:groupname groupname
+                                :jarname   jarname
+                                :version   version}
+                               {:connection    db
+                                :result-set-fn first}))))
+  (defn all-jars [db]
+    (map read-edn-fields
+         (sql/all-jars {} {:connection db}))))
+
+(defn find-dependencies
+  [db groupname jarname version]
+  (sql/find-dependencies {:groupname groupname
+                          :jarname   jarname
+                          :version   version}
+                         {:connection db}))
 
 (defn all-projects [db offset-num limit-num]
   (sql/all-projects {:num limit-num
@@ -251,20 +270,32 @@
         (throw (Exception. (str "You don't have access to the "
                                 groupname " group.")))))))
 
-(defn add-jar [db account {:keys [group name version
-                               description homepage authors]}]
+(defn add-jar [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]
   (check-and-add-group db account group)
   (serialize-task :add-jar
-                  (sql/add-jar! {:groupname group
-                                 :jarname   name
-                                 :version   version
-                                 :user      account
-                                 :created    (get-time)
+                  (sql/add-jar! {:groupname   group
+                                 :jarname     name
+                                 :version     version
+                                 :user        account
+                                 :created     (get-time)
                                  :description description
-                                 :homepage   homepage
-                                 :authors    (str/join ", " (map #(.replace % "," "")
-                                                                 authors))}
-                                {:connection db})))
+                                 :homepage    homepage
+                                 :packaging   (when packaging (clojure.core/name packaging))
+                                 :licenses    (when licenses (pr-str licenses))
+                                 :scm         (when scm (pr-str scm))
+                                 :authors     (str/join ", " (map #(.replace % "," "")
+                                                                  authors))}
+                                {:connection db})
+                  (doseq [dep dependencies]
+                    (sql/add-dependency! (-> dep
+                                             (set/rename-keys {:group_name :dep_groupname
+                                                               :jar_name   :dep_jarname
+                                                               :version    :dep_version
+                                                               :scope      :dep_scope})
+                                             (assoc :groupname group
+                                                    :jarname   name
+                                                    :version   version))
+                                         {:connection db}))))
 
 (defn delete-jars [db group-id & [jar-id version]]
   (serialize-task :delete-jars
@@ -272,12 +303,21 @@
                     (if jar-id
                       (let [coords (assoc coords :jar_id jar-id)]
                         (if version
-                          (sql/delete-jar-version! (assoc coords :version version)
-                                                   {:connection db})
-                          (sql/delete-jars! coords
-                                            {:connection db})))
-                      (sql/delete-groups-jars! coords
-                                        {:connection db})))))
+                          (let [coords' (assoc coords :version version)]
+                            (sql/delete-jar-version! coords'
+                                                     {:connection db})
+                            (sql/delete-dependencies-version! coords'
+                                                              {:connection db}))
+                          (do
+                            (sql/delete-jars! coords
+                                              {:connection db})
+                            (sql/delete-dependencies! coords
+                                                      {:connection db}))))
+                      (do
+                        (sql/delete-groups-jars! coords
+                                                 {:connection db})
+                        (sql/delete-groups-dependencies! coords
+                                                         {:connection db}))))))
 
 ;; does not delete jars in the group. should it?
 (defn delete-groups [db group-id]

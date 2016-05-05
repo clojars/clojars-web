@@ -27,7 +27,7 @@
        :tag                  (.getTag scm)
        :url                  (.getUrl scm)})))
 
-(defn license-to-seq [^License license]
+(defn license-to-map [^License license]
   (without-nil-values
     {:name         (.getName license)
      :url          (.getUrl license)
@@ -45,7 +45,7 @@
      :description  (.getDescription model)
      :homepage     (.getUrl model)
      :url          (.getUrl model)
-     :licenses     (mapv license-to-seq (.getLicenses model))
+     :licenses     (mapv license-to-map (.getLicenses model))
      :scm          (scm-to-map (.getScm model))
      :authors      (mapv #(.getName %) (.getContributors model))
      :packaging    (keyword (.getPackaging model))
@@ -102,17 +102,6 @@
     (catch IOException e
       (report-error reporter (ex-info "Failed to create pom map" jar e))
       nil)))
-
-(defn github-info [pom-map]
-  (let [url (get-in pom-map [:scm :url])
-        github-re #"^https?://github.com/([^/]+/[^/]+)"
-        user-repo (->> (str url) (re-find github-re) second)]
-    user-repo))
-
-(defn commit-url [pom-map]
-  (let [{:keys [url tag]} (:scm pom-map)
-        base-url (re-find #"https?://github.com/[^/]+/[^/]+" (str url))]
-    (if (and base-url tag) (str base-url "/commit/" tag))))
 
 (defn parse-int [^String s]
   (when s

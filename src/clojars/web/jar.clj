@@ -7,14 +7,15 @@
             [hiccup.element :refer [link-to image]]
             [hiccup.form :refer [submit-button]]
             [clojars.web.safe-hiccup :refer [form-to raw]]
-            [clojars.maven :refer [jar-to-pom-map commit-url github-info]]
             [clojars.auth :refer [authorized?]]
             [clojars.db :refer [find-jar jar-exists]]
             [clojars.stats :as stats]
             [ring.util.codec :refer [url-encode]]
             [cheshire.core :as json]
             [clojars.web.helpers :as helpers]
-            [clojars.web.structured-data :as structured-data]))
+            [clojars.web.structured-data :as structured-data]
+            [clojars.db :as db]
+            [clojure.set :as set]))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
@@ -23,6 +24,18 @@
  (str "http://search.maven.org/#"
    (url-encode (apply format "artifactdetails|%s|%s|%s|jar"
         ((juxt :group_name :jar_name :version) jar)))))
+
+(let [github-re #"^https?://github.com/([^/]+/[^/]+)"]
+
+  (defn github-info [jar]
+    (let [url (get-in jar [:scm :url])
+          user-repo (->> (str url) (re-find github-re) second)]
+      user-repo))
+
+  (defn commit-url [jar]
+    (let [{:keys [url tag]} (:scm jar)
+          base-url (first (re-find github-re (str url)))]
+      (when (and base-url tag) (str base-url "/commit/" tag)))))
 
 (defn dependency-link [db dep]
   (link-to
@@ -41,10 +54,10 @@
 (defn dependency-section [db title id dependencies]
   (if (empty? dependencies) '()
     (list
-    [:h3 title]
-    [(keyword (str "ul#" id))
-     (for [dep dependencies]
-       [:li (dependency-link db dep)])])))
+      [:h3 title]
+      [(keyword (str "ul#" id))
+       (for [dep dependencies]
+         [:li (dependency-link db dep)])])))
 
 ; handles link-to throwing an exception when given a non-url
 (defn safe-link-to [url text]
@@ -65,124 +78,128 @@
                                                          (:jar_name jar)
                                                          (:version jar))
                                    (stats/format-stats))]
-    (html-doc (str (:jar_name jar) " " (:version jar)) {:account account :description (format "%s - %s" (:description jar) (:version jar))
-                                                        :label1  (str "Total downloads / this version")
-                                                        :data1   (format "%s / %s" total-downloads downloads-this-version)
-                                                        :label2  "Coordinates"
-                                                        :data2   (format "[%s \"%s\"]" (jar-name jar) (:version jar))}
-      (let [pom-map (jar-to-pom-map reporter jar)]
-        [:div.light-article.row
-         ;; TODO: this could be made more semantic by attaching the metadata to #jar-title, but we're waiting on https://github.com/clojars/clojars-web/issues/482
-         (structured-data/breadcrumbs (if (group-is-name? jar)
-                                        [{:url (str "https://clojars.org/" (jar-name jar))
-                                          :name (:jar_name jar)}]
-                                        [{:url (str "https://clojars.org/groups/" (:group_name jar))
-                                          :name (:group_name jar)}
-                                         {:url (str "https://clojars.org/" (jar-name jar)) ;; TODO: Not sure if this is a dirty hack or a stroke of brilliance
-                                          :name (:jar_name jar)}]))
+    (html-doc
+      (str (:jar_name jar) " " (:version jar)) {:account account :description (format "%s - %s" (:description jar) (:version jar))
+                                                :label1  (str "Total downloads / this version")
+                                                :data1   (format "%s / %s" total-downloads downloads-this-version)
+                                                :label2  "Coordinates"
+                                                :data2   (format "[%s \"%s\"]" (jar-name jar) (:version jar))}
+      [:div.light-article.row
+       ;; TODO: this could be made more semantic by attaching the metadata to #jar-title, but we're waiting on https://github.com/clojars/clojars-web/issues/482
+       (structured-data/breadcrumbs (if (group-is-name? jar)
+                                      [{:url  (str "https://clojars.org/" (jar-name jar))
+                                        :name (:jar_name jar)}]
+                                      [{:url  (str "https://clojars.org/groups/" (:group_name jar))
+                                        :name (:group_name jar)}
+                                       {:url  (str "https://clojars.org/" (jar-name jar)) ;; TODO: Not sure if this is a dirty hack or a stroke of brilliance
+                                        :name (:jar_name jar)}]))
 
-         (helpers/select-text-script)
-         [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
-          [:h1 (jar-link jar)]
-          [:p.description (:description jar)]
-          [:ul#jar-info-bar.row
-           [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
-            (if-let [gh-info (github-info pom-map)]
-              (link-to {:target "_blank"}
-                       (format "https://github.com/%s" gh-info)
-                       (helpers/retinized-image "/images/github-mark.png" "GitHub")
-                       gh-info)
-              [:p.github
-               (helpers/retinized-image "/images/github-mark.png" "GitHub")
-               "N/A"])]
-           [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
-            total-downloads
-            " Downloads"]
-           [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
-            downloads-this-version
-            " This Version"]]
-          (when-not pom-map
-            [:p.error "Oops. We hit an error opening the metadata POM file for this project "
-             "so some details are not available."])
-          [:h2 "Leiningen"]
-          [:div#leiningen-coordinates.package-config-example
-           {:onClick "selectText('leiningen-coordinates');"}
-           [:pre
-            (tag "[")
-            (jar-name jar)
-            [:span.string " \""
-             (:version jar) "\""] (tag "]")]]
+       (helpers/select-text-script)
+       [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
+        [:h1 (jar-link jar)]
+        [:p.description (:description jar)]
+        [:ul#jar-info-bar.row
+         [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+          (if-let [gh-info (github-info jar)]
+            (link-to {:target "_blank"}
+                     (format "https://github.com/%s" gh-info)
+                     (helpers/retinized-image "/images/github-mark.png" "GitHub")
+                     gh-info)
+            [:p.github
+             (helpers/retinized-image "/images/github-mark.png" "GitHub")
+             "N/A"])]
+         [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+          total-downloads
+          " Downloads"]
+         [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+          downloads-this-version
+          " This Version"]]
+        [:h2 "Leiningen"]
+        [:div#leiningen-coordinates.package-config-example
+         {:onClick "selectText('leiningen-coordinates');"}
+         [:pre
+          (tag "[")
+          (jar-name jar)
+          [:span.string " \""
+           (:version jar) "\""] (tag "]")]]
 
-          [:h2 "Gradle"]
-          [:div#gradle-coordinates.package-config-example
-           {:onClick "selectText('gradle-coordinates');"}
-           [:pre
-            "compile "
-            [:span.string
-             \"
-             (:group_name jar)
-             ":"
-             (:jar_name jar)
-             ":"
-             (:version jar)
-             \"]]]
+        [:h2 "Gradle"]
+        [:div#gradle-coordinates.package-config-example
+         {:onClick "selectText('gradle-coordinates');"}
+         [:pre
+          "compile "
+          [:span.string
+           \"
+           (:group_name jar)
+           ":"
+           (:jar_name jar)
+           ":"
+           (:version jar)
+           \"]]]
 
-          [:h2 "Maven"]
-          [:div#maven-coordinates.package-config-example
-           {:onClick "selectText('maven-coordinates');"}
-           [:pre
-            (tag "<dependency>\n")
-            (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
-            (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
-            (tag "  <version>") (:version jar) (tag "</version>\n")
-            (tag "</dependency>")]]
-          (list
-            (fork-notice jar))]
-         [:ul#jar-sidebar.col-sm-3.col-xs-12.col-md-3.col-lg-3
-          [:li
-           [:h4 "Pushed by"]
-           (user-link (:user jar)) " on "
-           [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
-           (if-let [url (commit-url pom-map)]
-             [:span.commit-url " with " (link-to url "this commit")])]
-          [:li
-           [:h4 "Recent Versions"]
-           [:ul#versions
-            (for [v recent-versions]
-              [:li (link-to (url-for (assoc jar
-                                       :version (:version v)))
-                            (:version v))])]
-           ;; by default, 5 versions are shown. If there are only 5 to
-           ;; see, then there's no reason to show the 'all versions' link
-           (when (> count 5)
-             [:p (link-to (str (jar-url jar) "/versions")
-                          (str "Show All Versions (" count " total)"))])]
-          (let [dependencies
-                (dependency-section db "Dependencies" "dependencies"
-                                    (remove #(not= (:scope %) "compile") (:dependencies pom-map)))]
-            (when-not (empty? dependencies)
-              [:li dependencies]))
-          (when-let [homepage (:homepage jar)]
-            [:li.homepage
-             [:h4 "Homepage"]
-             (safe-link-to homepage homepage)])
-          (when-let [licenses (seq (:licenses pom-map))]
-            [:li.license
-             [:h4 "License"]
-             [:ul#licenses
-              (for [{:keys [name url]} licenses]
-                [:li (safe-link-to url name)])]])
-          [:li
-           [:h4 "Version Badge"]
-           [:p
-            "Want to display the "
-            (link-to {:target "_blank"} (version-badge-url jar) "latest version")
-            " of your project on Github? Use the markdown code below!"]
-           [:textarea#version-badge
-            {:readonly "readonly" :rows 4 :onClick "selectText('version-badge')"}
-            (badge-markdown jar)]
-           ]
-          ]]))))
+        [:h2 "Maven"]
+        [:div#maven-coordinates.package-config-example
+         {:onClick "selectText('maven-coordinates');"}
+         [:pre
+          (tag "<dependency>\n")
+          (tag "  <groupId>") (:group_name jar) (tag "</groupId>\n")
+          (tag "  <artifactId>") (:jar_name jar) (tag "</artifactId>\n")
+          (tag "  <version>") (:version jar) (tag "</version>\n")
+          (tag "</dependency>")]]
+        (list
+          (fork-notice jar))]
+       [:ul#jar-sidebar.col-sm-3.col-xs-12.col-md-3.col-lg-3
+        [:li
+         [:h4 "Pushed by"]
+         (user-link (:user jar)) " on "
+         [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
+         (if-let [url (commit-url jar)]
+           [:span.commit-url " with " (link-to url "this commit")])]
+        [:li
+         [:h4 "Recent Versions"]
+         [:ul#versions
+          (for [v recent-versions]
+            [:li (link-to (url-for (assoc jar
+                                     :version (:version v)))
+                          (:version v))])]
+         ;; by default, 5 versions are shown. If there are only 5 to
+         ;; see, then there's no reason to show the 'all versions' link
+         (when (> count 5)
+           [:p (link-to (str (jar-url jar) "/versions")
+                        (str "Show All Versions (" count " total)"))])]
+        (let [dependencies
+              (dependency-section db "Dependencies" "dependencies"
+                                  (remove #(not= (:scope %) "compile")
+                                          (map
+                                            #(set/rename-keys % {:dep_group_name :group_name
+                                                                 :dep_jar_name   :jar_name
+                                                                 :dep_version    :version
+                                                                 :dep_scope      :scope})
+                                            (db/find-dependencies db
+                                                                  (:group_name jar)
+                                                                  (:jar_name jar)
+                                                                  (:version jar)))))]
+          (when-not (empty? dependencies)
+            [:li dependencies]))
+        (when-let [homepage (:homepage jar)]
+          [:li.homepage
+           [:h4 "Homepage"]
+           (safe-link-to homepage homepage)])
+        (when-let [licenses (seq (:licenses jar))]
+          [:li.license
+           [:h4 "License"]
+           [:ul#licenses
+            (for [{:keys [name url]} licenses]
+              [:li (safe-link-to url name)])]])
+        [:li
+         [:h4 "Version Badge"]
+         [:p
+          "Want to display the "
+          (link-to {:target "_blank"} (version-badge-url jar) "latest version")
+          " of your project on Github? Use the markdown code below!"]
+         [:textarea#version-badge
+          {:readonly "readonly" :rows 4 :onClick "selectText('version-badge')"}
+          (badge-markdown jar)]]]])))
 
 (defn show-versions [account jar versions]
   (html-doc (str "all versions of "(jar-name jar)) {:account account}
