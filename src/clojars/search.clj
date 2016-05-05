@@ -27,7 +27,7 @@
 
 
 (def content-fields [:artifact-id :group-id :version :description
-                     :url :authors])
+                     :url #(->> % :authors (str/join " "))])
 
 (def field-settings {:artifact-id {:analyzed false}
                      :group-id {:analyzed false}
