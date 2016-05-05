@@ -30,7 +30,13 @@
                         "ON jars (group_name, jar_name, created DESC)")))
 
 (defn add-pgp-key [trans]
-  (sql/db-do-commands trans "ALTER TABLE users ADD COLUMN pgp_key TEXT"))
+  (try
+    (sql/db-do-commands trans "ALTER TABLE users ADD COLUMN pgp_key TEXT")
+    (catch BatchUpdateException e
+      ;; production db doesn't have this migration recorded, but has the field
+      ;; ignore the dupe in that case
+      (when-not (re-find #"duplicate column name" (.getMessage e))
+        (throw e)))))
 
 (defn add-added-by [trans]
   (sql/db-do-commands trans "ALTER TABLE groups ADD COLUMN added_by TEXT"))
