@@ -18,13 +18,12 @@
   [file type]
   ((sum-generators type) (io/file file)))
 
-(defn- write-sum-file [sum file type]
-  (spit (checksum-file file type) sum))
-
 (defn create-checksum-file
-  "Creates a sum file of `type` for `file`"
+  "Creates a sum file of `type` for `file`. Returns the checksum file."
   [file type]
-  (spit (checksum-file file type) (checksum file type)))
+  (let [cf (checksum-file file type)]
+    (spit cf (checksum file type))
+    cf))
 
 (defn valid-checksum?
   "Checks to see if `sum` of type `type` is valid for `file`"

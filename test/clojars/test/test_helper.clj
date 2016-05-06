@@ -74,6 +74,12 @@
 (defn transient-cloudfiles []
   (cf/connect "" "" "test-repo" "transient"))
 
+(declare ^:dynamic *cloudfiles*)
+
+(defn with-cloudfiles [f]
+  (binding [*cloudfiles* (transient-cloudfiles)]
+    (f)))
+
 (declare ^:dynamic test-port)
 
 (defn app

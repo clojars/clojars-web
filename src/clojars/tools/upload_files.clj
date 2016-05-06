@@ -19,8 +19,6 @@
         (run!
           (fn [f]
             (let [path (.getName f)]
-              (if (= (fu/checksum f :md5)
-                    (:md5 (cf/artifact-metadata conn path)))
-                (println (format "Remote %s exists and has the same md5 checksum, skipping" path))
-                (cf/put-file conn path f)))))))))
+              (when-not (cf/put-file conn path f :if-changed)
+                (println (format "Remote %s exists and has the same md5 checksum, skipping" path))))))))))
 

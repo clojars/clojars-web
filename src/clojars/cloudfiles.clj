@@ -74,13 +74,24 @@
         ct))))
 
 (defn put-file
-  [conn name file]
-  (let [file' (io/file file)]
-    (apply-conn jc/put-blob conn
-      (jc/blob name
-        :payload file'
-        :content-type (content-type (last (str/split name #"\.")))
-        :content-md5 (HashCode/fromString (fu/checksum file' :md5))))))
+  "Writes a file to the cloudfiles store.
+
+  If if-changed? is true, only writes the file if it doesn't exist remotely, or its md5 sum doesn't match.
+
+  Returns true if the file was uploaded, nil otherwise."
+  ([conn name file]
+    (put-file conn name file nil))
+  ([conn name file if-changed?]
+   (let [file' (io/file file)]
+     (when (or (not if-changed?)
+               (not= (fu/checksum file :md5)
+                     (:md5 (artifact-metadata conn name))))
+       (apply-conn jc/put-blob conn
+                   (jc/blob name
+                            :payload file'
+                            :content-type (content-type (last (str/split name #"\.")))
+                            :content-md5 (HashCode/fromString (fu/checksum file' :md5))))
+       true))))
 
 ;; borrowed from jclouds
 ;; (https://github.com/jclouds/jclouds/blob/master/blobstore/src/main/clojure/org/jclouds/blobstore2.clj)
