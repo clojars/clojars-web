@@ -94,7 +94,10 @@
              (write-sums jar-file)
              (write-sums gz-file)))))
 
-(defn -main [dest]
-  (configure nil)
-  (generate-feeds dest (:db config) (:cloudfiles config)))
+(defn -main [& args]
+  (if (not= 3 (count args))
+    (println "args: cf-user cf-key dest-dir")
+    (let [[cf-user cf-key dest-dir] args]
+      (configure nil)
+      (generate-feeds dest-dir (:db config) (cf/connect cf-user cf-key "repo")))))
 
