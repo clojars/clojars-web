@@ -1,6 +1,6 @@
 (ns clojars.test.integration.search
   (:require [cheshire.core :as json]
-            [clj-http.lite.client :as client]
+            [clj-http.client :as client]
             [clojars.search :as search]
             [clojars.test.test-helper :as help]
             [clojure.set :as set]

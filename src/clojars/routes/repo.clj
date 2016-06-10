@@ -27,17 +27,18 @@
        (sort-by (comp - (memfn last-modified)))
        (map (memfn getName))))
 
-(defn save-to-file [sent-file input]
-  (-> sent-file
+(defn save-to-file [dest input]
+  (-> dest
       .getParentFile
       .mkdirs)
-  (io/copy input sent-file))
+  (io/copy input dest)
+  dest)
 
-(defn- try-save-to-file [sent-file input]
+(defn- try-save-to-file [dest input]
   (try
-    (save-to-file sent-file input)
+    (save-to-file dest input)
     (catch IOException e
-      (.delete sent-file)
+      (.delete dest)
       (throw e))))
 
 (defn- pom? [file]
@@ -200,59 +201,64 @@
                  (ex-data e))
                (.getCause e))))))
 
+(defn upload-to-cloudfiles [cloudfiles reporter from-dir file]
+  (let [path (cf/remote-path (.getAbsolutePath from-dir) (.getAbsolutePath file))]
+    (try
+      (cf/put-file cloudfiles path file)
+      (catch Exception e
+        ;; catch and report anything that fails for now
+        ;; instead of letting it bubble up, since cloudfiles
+        ;; isn't yet the primary repo
+        (report-error reporter e {:path path :file file})))))
+        
 (defn finalize-deploy [cloudfiles db reporter search account repo ^File dir]
-  (try
-    (if-let [pom-file (find-pom dir)]
-      (let [pom (try
-                  (maven/pom-to-map pom-file)
-                  (catch Exception e
-                    (throw-invalid (str "invalid pom file: " (.getMessage e))
-                      {:file pom-file}
-                      e)))
-            {:keys [group group-path name] :as posted-metadata} (read-string (slurp (io/file dir metadata-edn)))]
-
-        ;; since we trigger on maven-metadata.xml, we don't actually
-        ;; have the sums for it because they are uploaded *after* the
-        ;; metadata file itself. This means that it's possible for a
-        ;; corrupted file to slip through, so we try to parse it
-        (let [md-file (io/file dir group-path name "maven-metadata.xml")]
-          (try
-            (maven/read-metadata md-file)
-            (catch Exception e
-              (throw-invalid "Failed to parse maven-metadata.xml"
-                {:file md-file}
-                e)))
-
-          ;; If that succeeds, we create checksums for it
-          (fu/create-checksum-file md-file :md5)
-          (fu/create-checksum-file md-file :sha1))
-
-        (validate-deploy dir pom posted-metadata)
-        (db/check-and-add-group db account group)
-        (FileUtils/copyDirectory dir (io/file repo)
-                                 (reify FileFilter
-                                   (accept [_ f]
-                                     (not= metadata-edn (.getName f)))))
-        (run!
-          (fn [f]
-            (let [path (cf/remote-path (.getAbsolutePath dir) (.getAbsolutePath f))]
-              (try
-                (cf/put-file cloudfiles path f)
+  (if-let [pom-file (find-pom dir)]
+    (let [pom (try
+                (maven/pom-to-map pom-file)
                 (catch Exception e
-                  ;; catch and report anything that fails for now
-                  ;; instead of letting it bubble up, since cloudfiles
-                  ;; isn't yet the primary repo
-                  (report-error reporter e {:path path :file f})))))
-          (find-artifacts dir false))
+                  (throw-invalid (str "invalid pom file: " (.getMessage e))
+                    {:file pom-file}
+                    e)))
+          {:keys [group group-path name] :as posted-metadata} (read-string (slurp (io/file dir metadata-edn)))]
 
-        (db/add-jar db account pom)
-        (search/index! search (assoc pom
-                                :at (.lastModified pom-file))))
-      (throw-invalid "no pom file was uploaded"))
-    (finally
-      (FileUtils/deleteQuietly dir))))
+      ;; since we trigger on maven-metadata.xml, we don't actually
+      ;; have the sums for it because they are uploaded *after* the
+      ;; metadata file itself. This means that it's possible for a
+      ;; corrupted file to slip through, so we try to parse it
+      (let [md-file (io/file dir group-path name "maven-metadata.xml")]
+        (try
+          (maven/read-metadata md-file)
+          (catch Exception e
+            (throw-invalid "Failed to parse maven-metadata.xml"
+              {:file md-file}
+              e)))
 
-(defn- handle-versioned-upload [db body session group artifact version filename]
+        ;; If that succeeds, we create checksums for it
+        (fu/create-checksum-file md-file :md5)
+        (fu/create-checksum-file md-file :sha1))
+
+      (validate-deploy dir pom posted-metadata)
+      (db/check-and-add-group db account group)
+      (FileUtils/copyDirectory dir (io/file repo)
+        (reify FileFilter
+          (accept [_ f]
+            (not= metadata-edn (.getName f)))))
+      (run! (partial upload-to-cloudfiles cloudfiles reporter dir) (find-artifacts dir false))
+
+      (db/add-jar db account pom)
+      (search/index! search (assoc pom
+                              :at (.lastModified pom-file)))
+      (spit (io/file dir ".finalized") ""))
+    (throw-invalid "no pom file was uploaded")))
+
+(defn- deploy-finalized? [dir]
+  (.exists (io/file dir ".finalized")))
+
+(defn- deploy-post-finalized-file [cloudfiles reporter repo tmp-repo file]
+  (io/copy file (io/file repo (cf/remote-path (.getAbsolutePath tmp-repo) (.getAbsolutePath file))))
+  (upload-to-cloudfiles cloudfiles reporter tmp-repo file))
+
+(defn- handle-versioned-upload [cloudfiles db reporter repo body session group artifact version filename]
   (let [groupname (string/replace group "/" ".")]
     (upload-request
       db
@@ -264,7 +270,9 @@
                    :group-path group
                    :name  artifact
                    :version version}))
-        (try-save-to-file (io/file upload-dir group artifact version filename) body)))))
+        (let [file (try-save-to-file (io/file upload-dir group artifact version filename) body)]
+          (when (deploy-finalized? upload-dir)
+            (deploy-post-finalized-file cloudfiles reporter repo upload-dir file)))))))
 
 ;; web handlers
 (defn routes [cloudfiles db reporter search]
@@ -280,7 +288,7 @@
                 group-parts (string/split group #"/")
                 group (string/join "/" (butlast group-parts))
                 artifact (last group-parts)]
-            (handle-versioned-upload db body session group artifact version file))
+            (handle-versioned-upload cloudfiles db reporter (config :repo) body session group artifact version file))
           (if (re-find #"maven-metadata\.xml$" file)
             ;; ignore metadata sums, since we'll recreate those when
             ;; the deploy is finalizied
@@ -301,7 +309,7 @@
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
          :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
         {body :body session :session {:keys [group artifact version filename]} :params}
-        (handle-versioned-upload db body session group artifact version filename))
+        (handle-versioned-upload cloudfiles db reporter (config :repo) body session group artifact version filename))
    (PUT "*" _ {:status 400 :headers {}})
    (not-found "Page not found")))
 

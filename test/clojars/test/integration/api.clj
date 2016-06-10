@@ -1,5 +1,5 @@
 (ns clojars.test.integration.api
-  (:require [clj-http.lite.client :as client]
+  (:require [clj-http.client :as client]
             [clojars.test.integration.steps :refer [register-as inject-artifacts-into-repo!]]
             [clojars.test.test-helper :as help]
             [clojars.web :as web]

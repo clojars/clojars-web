@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [clojars.test.test-helper :as help]
             [clojure.string :as str]
-            [clj-http.lite.client :as client]
+            [clj-http.client :as client]
             [kerodon.core :refer [session]]
             [clojars.test.integration.steps :refer [register-as inject-artifacts-into-repo!]]
             [cheshire.core :as json]))

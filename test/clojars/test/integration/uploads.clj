@@ -3,12 +3,14 @@
             [clojars
              [cloudfiles :as cf]
              [config :refer [config]]
+             [file-utils :as fu]
              [web :as web :refer [clojars-app]]]
             [clojars.test.integration.steps :refer :all]
             [clojars.test.test-helper :as help]
             [clojure.data.codec.base64 :as base64]
             [clojure.java.io :as io]
             [clojure.test :refer :all]
+            [clj-http.client :as client]
             [kerodon
              [core :refer :all]
              [test :refer :all]]
@@ -17,6 +19,19 @@
 (use-fixtures :each
   help/default-fixture
   help/run-test-app)
+
+(defn repo-url []
+  (str "http://localhost:" help/test-port "/repo"))
+
+(defn tmp-file [f name]
+  (let [tmp-f (doto (io/file help/tmp-dir name)
+                (.deleteOnExit))]
+    (io/copy f tmp-f)
+    tmp-f))
+
+(defn tmp-checksum-file [f type]
+  (doto (fu/create-checksum-file f type)
+    .deleteOnExit))
 
 (deftest user-can-register-and-deploy
   (-> (session (help/app-from-system))
@@ -28,7 +43,7 @@
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                {:groupId "org.clojars.dantheman"})
-   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+   :repository {"test" {:url (repo-url)
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo)
@@ -48,7 +63,7 @@
          (aether/resolve-dependencies
           :coordinates '[[org.clojars.dantheman/test "0.0.1"]]
           :repositories {"test" {:url
-                                 (str "http://localhost:" help/test-port "/repo")}}
+                                 (repo-url)}}
           :local-repo help/local-repo2)))
   (-> (session (help/app-from-system))
       (visit "/groups/org.clojars.dantheman")
@@ -69,6 +84,47 @@
       (within [:div.result]
         (has (text? "org.clojars.dantheman/test 0.0.1")))))
 
+(deftest user-can-deploy-artifacts-after-maven-metadata
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (help/delete-file-recursively help/local-repo)
+  (help/delete-file-recursively help/local-repo2)
+  (let [add-checksums (partial mapcat (fn [[f no-version?]]
+                                        [[f no-version?]
+                                         [(tmp-checksum-file f :md5) no-version?]
+                                         [(tmp-checksum-file f :sha1) no-version?]]))
+        files (add-checksums [[(tmp-file
+                                 (io/file (io/resource "test.jar")) "test-0.0.1.jar")]
+                              [(tmp-file
+                                 (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                   {:groupId "org.clojars.dantheman"})
+                                 "test-0.0.1.pom")]
+                              [(tmp-file
+                                 (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                 "maven-metadata.xml")
+                               :no-version]
+                              [(tmp-file
+                                 (io/file (io/resource "test.jar")) "test-sources-0.0.1.jar")]])]
+    ;; we use clj-http here instead of aether to have control over the
+    ;; order the files are uploaded
+    (binding [clj-http.core/*cookie-store* (clj-http.cookies/cookie-store)]
+      (doseq [[f no-version?] files]
+          (client/put (format "%s/org/clojars/dantheman/test/%s%s"
+                        (repo-url)
+                        (if no-version? "" "0.0.1/")
+                        (.getName f))
+            {:body f
+             :basic-auth ["dantheman" "password"]})))
+    (let [base-path "org/clojars/dantheman/test/"
+          cloudfiles (:cloudfiles help/system)
+          repo (:repo config)]
+      (doseq [[f no-version?] files]
+        (let [fname (.getName f)
+              base-path' (if no-version? base-path (str base-path "0.0.1/"))]
+          (is (.exists (io/file repo base-path' fname)))
+          (is (cf/artifact-exists? cloudfiles (str base-path' fname))))))))
+
+
 (deftest user-can-deploy-to-new-group
    (-> (session (help/app-from-system))
        (register-as "dantheman" "test@example.org" "password"))
@@ -78,7 +134,7 @@
     :coordinates '[fake/test "0.0.1"]
     :jar-file (io/file (io/resource "test.jar"))
     :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+    :repository {"test" {:url (repo-url)
                          :username "dantheman"
                          :password "password"}}
     :local-repo help/local-repo)
@@ -86,7 +142,7 @@
           (aether/resolve-dependencies
            :coordinates '[[fake/test "0.0.1"]]
            :repositories {"test" {:url
-                                  (str "http://localhost:" help/test-port "/repo")}}
+                                  (repo-url)}}
            :local-repo help/local-repo2)))
    (-> (session (help/app-from-system))
        (visit "/groups/fake")
@@ -112,7 +168,7 @@
          :coordinates '[org.clojars.fixture/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+         :repository {"test" {:url (repo-url)
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo))))
@@ -124,7 +180,7 @@
    :coordinates '[fake/test "0.0.1"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+   :repository {"test" {:url (repo-url)
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo)
@@ -135,7 +191,7 @@
           :coordinates '[fake/test "0.0.1"]
           :jar-file (io/file (io/resource "test.jar"))
           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-          :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+          :repository {"test" {:url (repo-url)
                                :username "dantheman"
                                :password "password"}}
           :local-repo help/local-repo))))
@@ -147,7 +203,7 @@
    :coordinates '[fake/test "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
-   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+   :repository {"test" {:url (repo-url)
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo)
@@ -155,7 +211,7 @@
    :coordinates '[fake/test "0.0.3-SNAPSHOT"]
    :jar-file (io/file (io/resource "test.jar"))
    :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
-   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+   :repository {"test" {:url (repo-url)
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo))
@@ -169,7 +225,7 @@
    :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
                {:groupId "org.clojars.dantheman"
                 :artifactId "test.thing"})
-   :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+   :repository {"test" {:url (repo-url)
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo))
@@ -182,7 +238,7 @@
       :coordinates '[fake/test "0.0.3-SNAPSHOT"]
       :jar-file (io/file (io/resource "test.jar"))
       :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
-      :repository {"test" {:url      (str "http://localhost:" help/test-port "/repo")
+      :repository {"test" {:url      (repo-url)
                            :username "dantheman"
                            :password "password"}}
       :local-repo help/local-repo
@@ -200,7 +256,7 @@
     :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
                    [:classifier "test" :extension "jar"] (io/file (io/resource "test.jar"))
                    [:extension "pom"] (io/file (io/resource "test-0.0.1/test.pom"))}
-    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+    :repository {"test" {:url (repo-url)
                          :username "dantheman"
                          :password "password"}}
     :local-repo help/local-repo)
@@ -216,7 +272,7 @@
     :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
                    [:classifier "test" :extension "jar"] (io/file (io/resource "test.jar"))
                    [:extension "pom"] (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))}
-    :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+    :repository {"test" {:url (repo-url)
                          :username "dantheman"
                          :password "password"}}
     :local-repo help/local-repo)
@@ -237,7 +293,7 @@
                      ;; any content will do since we don't validate signatures
                      [:extension "jar.asc"] pom
                      [:extension "pom.asc"] pom}
-      :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+      :repository {"test" {:url (repo-url)
                            :username "dantheman"
                            :password "password"}}
       :local-repo help/local-repo)))
@@ -254,7 +310,7 @@
                            [:extension "pom"] pom
                            ;; any content will do since we don't validate signatures
                            [:extension "jar.asc"] pom}
-            :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+            :repository {"test" {:url (repo-url)
                                  :username "dantheman"
                                  :password "password"}}
             :local-repo help/local-repo)))))
@@ -266,7 +322,7 @@
          :coordinates '[fake/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")}}
+         :repository {"test" {:url (repo-url)}}
          :local-repo help/local-repo))))
 
 (deftest bad-login-cannot-deploy
@@ -275,7 +331,7 @@
          :coordinates '[fake/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+         :repository {"test" {:url (repo-url)
                               :username "guest"
                               :password "password"}}
          :local-repo help/local-repo))))
@@ -289,7 +345,7 @@
          :coordinates '[flake/test "0.0.1"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+         :repository {"test" {:url (repo-url)
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo)))
@@ -299,7 +355,7 @@
          :coordinates '[fake/toast "0.0.1"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+         :repository {"test" {:url (repo-url)
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo)))
@@ -309,7 +365,7 @@
          :coordinates '[fake/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+         :repository {"test" {:url (repo-url)
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo))))
@@ -324,7 +380,7 @@
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                      {:groupId "faKE"})
-         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+         :repository {"test" {:url (repo-url)
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo)))
@@ -339,7 +395,7 @@
             :jar-file (io/file (io/resource "test.jar"))
             :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                         {:artifactId "teST"})
-            :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+            :repository {"test" {:url (repo-url)
                                  :username "dantheman"
                                  :password "password"}}
             :local-repo help/local-repo)))))
@@ -354,7 +410,7 @@
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                      {:version "1.α.0"})
-         :repository {"test" {:url (str "http://localhost:" help/test-port "/repo")
+         :repository {"test" {:url (repo-url)
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo))))

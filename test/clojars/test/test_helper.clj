@@ -18,10 +18,9 @@
             [com.stuartsierra.component :as component])
   (:import java.io.File))
 
-(def local-repo (io/file (System/getProperty "java.io.tmpdir")
-                         "clojars" "test" "local-repo"))
-(def local-repo2 (io/file (System/getProperty "java.io.tmpdir")
-                         "clojars" "test" "local-repo2"))
+(def tmp-dir (io/file (System/getProperty "java.io.tmpdir")))
+(def local-repo (io/file tmp-dir "clojars" "test" "local-repo"))
+(def local-repo2 (io/file tmp-dir "clojars" "test" "local-repo2"))
 
 (def test-config {:port 0
                   :bind "127.0.0.1"
