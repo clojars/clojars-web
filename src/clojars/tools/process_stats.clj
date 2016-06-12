@@ -1,6 +1,7 @@
 (ns clojars.tools.process-stats
   "generate usage statistics from web log"
-  (:require [clojure.java.io :as io]
+  (:require [clojars.file-utils :as fu]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [net.cgrand.regex :as re]
             [clj-time.format :as timef])
@@ -49,7 +50,7 @@
   (when s
     (when-let [m (re/exec re-path s)]
       {:name (:name m)
-       :group (str/replace (:group m) "/" ".")
+       :group (fu/path->group (:group m))
        :version (:version m)
        :ext (:ext m)})))
 

@@ -1,5 +1,6 @@
 (ns clojars.file-utils
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [digest :as d]))
 
 (defn checksum-file
@@ -40,3 +41,8 @@
        (valid-checksum? (slurp sig-file) file type)
        (not fail-if-missing?)))))
 
+(defn group->path [group]
+  (str/replace group "." "/"))
+
+(defn path->group [path]
+  (str/replace path "/" "."))

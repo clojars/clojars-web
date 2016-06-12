@@ -2,6 +2,7 @@
   (:require [clojars
              [config :refer [config]]
              [db :as db]
+             [file-utils :as fu]
              [search :as search]]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -22,7 +23,7 @@
     (try
       (FileUtils/moveDirectory
         (apply io/file (:repo config)
-                   (str/replace (first parts') "." "/") (rest parts'))
+                   (fu/group->path (first parts')) (rest parts'))
         (io/file backup (str/join "-" (conj parts' (current-date-str)))))
       (catch Exception e
         (printf "WARNING: failed to backup %s: %s\n" parts' (.getMessage e))))))

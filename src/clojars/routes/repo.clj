@@ -124,10 +124,10 @@
   (.endsWith version "-SNAPSHOT"))
 
 (defn assert-non-redeploy [group-id artifact-id version]
- (when (and (not (snapshot-version? version))
-         (.exists (io/file (config :repo) (string/replace group-id "." "/")
-                    artifact-id version)))
-   (throw-invalid "redeploying non-snapshots is not allowed (see http://git.io/vO2Tg)")))
+  (when (and (not (snapshot-version? version))
+          ;; TODO: have this check cloudfiles once that is canon
+          (.exists (io/file (config :repo) (fu/group->path group-id) artifact-id version)))
+    (throw-invalid "redeploying non-snapshots is not allowed (see http://git.io/vO2Tg)")))
 
 (defn assert-jar-uploaded [artifacts pom]
   (when (and (= :jar (:packaging pom))
@@ -259,7 +259,7 @@
   (upload-to-cloudfiles cloudfiles reporter tmp-repo file))
 
 (defn- handle-versioned-upload [cloudfiles db reporter repo body session group artifact version filename]
-  (let [groupname (string/replace group "/" ".")]
+  (let [groupname (fu/path->group group)]
     (upload-request
       db
       groupname
@@ -292,7 +292,7 @@
           (if (re-find #"maven-metadata\.xml$" file)
             ;; ignore metadata sums, since we'll recreate those when
             ;; the deploy is finalizied
-            (let [groupname (string/replace group "/" ".")]
+            (let [groupname (fu/path->group group)]
               (upload-request
                 db
                 groupname

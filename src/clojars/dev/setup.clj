@@ -2,6 +2,7 @@
   "Tools to setup a dev db."
   (:require [clojars.config :refer [config]]
             [clojars.db :as db]
+            [clojars.file-utils :as fu]
             [clojars.search :as search]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -78,7 +79,7 @@
             :let [parent (.getParentFile version-dir)
                   [_ group-path artifact-id] (re-find group-artifact-pattern (get-path parent))
                   version (.getName version-dir)
-                  group-id (str/lower-case (str/replace group-path "/" "."))
+                  group-id (str/lower-case (fu/path->group group-path))
                   user (or (first (db/group-membernames db group-id)) (rand-nth users))]]
         (when-not (db/find-jar db group-id artifact-id version)
           (printf "Importing %s/%s %s (user: %s)\n" group-id artifact-id version user)
