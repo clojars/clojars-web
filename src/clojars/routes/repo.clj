@@ -202,7 +202,7 @@
                (.getCause e))))))
 
 (defn upload-to-cloudfiles [cloudfiles reporter from-dir file]
-  (let [path (cf/remote-path (.getAbsolutePath from-dir) (.getAbsolutePath file))]
+  (let [path (fu/subpath (.getAbsolutePath from-dir) (.getAbsolutePath file))]
     (try
       (cf/put-file cloudfiles path file)
       (catch Exception e
@@ -255,7 +255,7 @@
   (.exists (io/file dir ".finalized")))
 
 (defn- deploy-post-finalized-file [cloudfiles reporter repo tmp-repo file]
-  (io/copy file (io/file repo (cf/remote-path (.getAbsolutePath tmp-repo) (.getAbsolutePath file))))
+  (io/copy file (io/file repo (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file))))
   (upload-to-cloudfiles cloudfiles reporter tmp-repo file))
 
 (defn- handle-versioned-upload [cloudfiles db reporter repo body session group artifact version filename]

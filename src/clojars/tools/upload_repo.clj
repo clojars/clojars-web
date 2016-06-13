@@ -1,6 +1,7 @@
 (ns clojars.tools.upload-repo
   (:require [clojure.java.io :as io]
-            [clojars.cloudfiles :as cf])
+            [clojars.cloudfiles :as cf]
+            [clojars.file-utils :as fu])
   (:gen-class))
 
 (defn upload-file [conn path file existing]
@@ -19,7 +20,7 @@
     (->> (file-seq repo)
       (filter (memfn isFile))
       (run! #(upload-file conn
-               (cf/remote-path
+               (fu/subpath
                  (.getAbsolutePath repo)
                  (.getAbsolutePath %))
                %

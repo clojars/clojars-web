@@ -46,3 +46,6 @@
 
 (defn path->group [path]
   (str/replace path "/" "."))
+
+(defn subpath [prefix path]
+  (subs path (inc (count prefix))))

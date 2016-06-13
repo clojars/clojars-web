@@ -27,9 +27,6 @@
 (defn apply-conn [f conn & args]
   (apply f (:bs conn) (:container conn) args))
 
-(defn remote-path [prefix path]
-  (subs path (inc (count prefix))))
-
 (defn artifact-exists? [conn path]
   (apply-conn jc/blob-exists? conn path))
 
