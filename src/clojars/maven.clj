@@ -1,7 +1,7 @@
 (ns clojars.maven
   (:require [clojure.java.io :as io]
             [clojars.config :refer [config]]
-            [clojure.string :refer [split]]
+            [clojure.string :as str]
             [clojars.errors :refer [report-error]])
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
@@ -85,7 +85,7 @@
 (defn directory-for
   "Directory for a jar under repo"
   [{:keys [group_name jar_name version]}]
-  (apply io/file (concat [(config :repo)] (split group_name #"\.") [jar_name version])))
+  (apply io/file (concat [(config :repo)] (str/split group_name #"\.") [jar_name version])))
 
 (defn snapshot-pom-file [{:keys [jar_name version] :as jar}]
   (let [metadata-file (io/file (directory-for jar) "maven-metadata.xml")
@@ -138,6 +138,56 @@
         (numeric-or ~@exprs)
         value#))))
 
+(defn split-qualifier [s]
+  (when s
+    (when-let [[prefix counter suffix] (seq (rest (re-find #"^([^0-9.-]*?)[.-]?([0-9]*)[.-]?([^0-9.-]*?)$" s)))]
+      (let [to-lower (fn [s]
+                       (when-not (empty? s) (.toLowerCase s)))]
+        [(to-lower (if (and (empty? prefix)
+                          (empty? counter))
+                      suffix
+                      prefix))
+         (when-not (empty? counter)
+           (parse-int counter))
+         (when-not (and (empty? prefix)
+                     (empty? counter))
+           (to-lower suffix))]))))
+
+(def common-qualifiers
+  "common qualifiers in relative sort order"
+  ["alpha" "beta" "cr" "rc" "snapshot" "final" "release"])
+
+(defn compare-qualifier-fraction [x y]
+  (let [x-value (.indexOf common-qualifiers x)
+        y-value (.indexOf common-qualifiers y)]
+    (cond
+      (< -1 x-value y-value)      -1 ; both fractions are common, x has a lower sort order
+      (and x-value (not y-value)) -1 ; x is known, but y isn't. x wins
+      (< -1 y-value x-value)       1 ; both fractions are common, x has a lower sort order
+      (and y-value (not x-value))  1 ; y is known, but x isn't. y wins
+      :default                     0)))
+
+(defn compare-qualifiers [qx qy]
+  (let [[qx-prefix qx-counter qx-suffix] (split-qualifier qx)
+        [qy-prefix qy-counter qy-suffix] (split-qualifier qy)
+        qx-counter (or qx-counter -1)
+        qy-counter (or qy-counter -1)]
+    (if qx
+      (if qy
+        (numeric-or
+          (compare-qualifier-fraction qx-prefix qy-prefix)
+          (compare qx-counter qy-counter)
+          (compare-qualifier-fraction qx-suffix qy-suffix)
+          (cond
+            (and (> (count qx) (count qy)) (.startsWith qx qy)) -1 ; x is longer, it's older
+            (and (< (count qx) (count qy)) (.startsWith qy qx))  1 ; y is longer, it's older
+            :default (compare qx qy)))                              ; same length, so string compare           
+        -1)                       ; y has no qualifier, it's younger
+      (if qy
+        1                         ; x has no qualifier, it's younger
+        0)))                      ; no qualifiers
+  )
+
 (defn compare-versions
   "Compare two maven versions.  Accepts either the string or parsed
   representation."
@@ -148,18 +198,6 @@
       (compare (:major x 0) (:major y 0))
       (compare (:minor x 0) (:minor y 0))
       (compare (:incremental x 0) (:incremental y 0))
-      (let [qx (:qualifier x)
-            qy (:qualifier y)]
-        (if qx
-          (if qy
-            (if (and (> (count qx) (count qy)) (.startsWith qx qy))
-              -1                      ; x is longer, it's older
-              (if (and (< (count qx) (count qy)) (.startsWith qx qy))
-                1                     ; y is longer, it's older
-                (compare qx qy)))     ; same length, so string compare
-            -1)                       ; y has no qualifier, it's younger
-          (if qy
-            1                         ; x has no qualifier, it's younger
-            0)))                      ; no qualifiers
+      (compare-qualifiers (:qualifier x) (:qualifier y))
       (compare (:build-number x 0) (:build-number y 0)))))
 
