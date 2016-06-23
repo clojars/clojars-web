@@ -198,7 +198,7 @@
           (link-to {:target "_blank"} (version-badge-url jar) "latest version")
           " of your project on Github? Use the markdown code below!"]
          [:textarea#version-badge
-          {:readonly "readonly" :rows 4 :onClick "selectText('version-badge')"}
+          {:readonly "readonly" :rows 6 :onClick "selectText('version-badge')"}
           (badge-markdown jar)]]]])))
 
 (defn show-versions [account jar versions]
