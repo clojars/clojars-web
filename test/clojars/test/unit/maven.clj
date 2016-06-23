@@ -3,9 +3,10 @@
   (:require [clojars.config :refer [config]]
             [clojure.java.io :as io]))
 
-(deftest pom-to-map-returns-corrects-dependencies
+(deftest pom-to-map-returns-correct-dependencies
   (is (=
         [{:group_name "org.clojure", :jar_name "clojure", :version "1.3.0-beta1" :scope "compile"}
+         {:group_name "com.example", :jar_name "versionless", :version "" :scope "compile"}
          {:group_name "org.clojurer", :jar_name "clojure", :version "1.6.0" :scope "provided"}
          {:group_name "midje", :jar_name "midje", :version "1.3-alpha4", :scope "test"}]
      (:dependencies (pom-to-map (.toString (io/resource "test-maven/test-maven.pom")))))))

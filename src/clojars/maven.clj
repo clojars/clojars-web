@@ -51,9 +51,9 @@
      :packaging    (keyword (.getPackaging model))
      :dependencies (mapv
                      (fn [d] {:group_name (.getGroupId d)
-                              :jar_name   (.getArtifactId d)
-                              :version    (.getVersion d)
-                              :scope      (or (.getScope d) "compile")})
+                             :jar_name   (.getArtifactId d)
+                             :version    (or (.getVersion d) "")
+                             :scope      (or (.getScope d) "compile")})
                      (.getDependencies model))}))
 
 (defn read-pom
