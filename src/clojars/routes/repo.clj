@@ -73,7 +73,7 @@
         {:status 201
          :headers {}
          :session (update session
-                    :upload-dirs #((fnil conj []) % (.getAbsolutePath upload-dir)))
+                    :upload-dirs #((fnil conj #{}) % (.getAbsolutePath upload-dir)))
          :body nil}))))
 
 (defn find-pom [dir]
