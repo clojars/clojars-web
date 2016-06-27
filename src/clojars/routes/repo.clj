@@ -45,24 +45,35 @@
   (let [filename (if (string? file) file (.getName file))]
     (.endsWith filename ".pom")))
 
-(defn find-upload-dir [{:keys [upload-dir]}]
-  (let [dir (io/file upload-dir)]
-    (if (and dir (.exists dir))
-      dir
-      (let [dir' (io/file (FileUtils/getTempDirectory)
-                   (str "upload-" (UUID/randomUUID)))]
-        (FileUtils/forceMkdir dir')
-        dir'))))
+(def metadata-edn "_metadata.edn")
 
-(defn upload-request [db groupname session f]
+(defn read-metadata [dir]
+  (let [md-file (io/file dir metadata-edn)]
+    (when (.exists md-file)
+      (read-string (slurp md-file)))))
+
+(defn find-upload-dir [group artifact {:keys [upload-dirs]}]
+  (if-let [dir (some (fn [dir]
+                       (let [dir (io/file dir)]
+                         (when (and dir (.exists dir)
+                                 (= [group artifact] ((juxt :group :name) (read-metadata dir))))
+                           dir)))
+                 upload-dirs)]
+    dir
+    (doto (io/file (FileUtils/getTempDirectory)
+            (str "upload-" (UUID/randomUUID)))
+      (FileUtils/forceMkdir))))
+
+(defn upload-request [db groupname artifact session f]
   (with-account
     (fn [account]
-      (let [upload-dir (find-upload-dir session)]
+      (let [upload-dir (find-upload-dir groupname artifact session)]
         (require-authorization db account groupname (partial f account upload-dir))
         ;; should we only do 201 if the file didn't already exist?
         {:status 201
          :headers {}
-         :session (assoc session :upload-dir (.getAbsolutePath upload-dir))
+         :session (update session
+                    :upload-dirs #((fnil conj []) % (.getAbsolutePath upload-dir)))
          :body nil}))))
 
 (defn find-pom [dir]
@@ -76,8 +87,6 @@
     (if (string? match)
       (= match name)
       (re-find match name))))
-
-(def metadata-edn "_metadata.edn")
 
 (defn find-artifacts
   ([dir]
@@ -219,7 +228,7 @@
                   (throw-invalid (str "invalid pom file: " (.getMessage e))
                     {:file pom-file}
                     e)))
-          {:keys [group group-path name] :as posted-metadata} (read-string (slurp (io/file dir metadata-edn)))]
+          {:keys [group group-path name] :as posted-metadata} (read-metadata dir)]
 
       ;; since we trigger on maven-metadata.xml, we don't actually
       ;; have the sums for it because they are uploaded *after* the
@@ -263,6 +272,7 @@
     (upload-request
       db
       groupname
+      artifact
       session
       (fn [_ upload-dir]
         (spit (io/file upload-dir metadata-edn)
@@ -296,6 +306,7 @@
               (upload-request
                 db
                 groupname
+                artifact
                 session
                 (fn [account upload-dir]
                   (let [file (io/file upload-dir group artifact file)]
