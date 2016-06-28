@@ -173,6 +173,22 @@
                               :password "password"}}
          :local-repo help/local-repo))))
 
+(deftest user-cannot-deploy-to-reserved-groups
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+        #"Forbidden - The group name 'dashboard' is reserved."
+        (aether/deploy
+         :coordinates '[dashboard/test "0.0.1"]
+         :jar-file (io/file (io/resource "test.jar"))
+         :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                     {:groupId "dashboard"})
+         :repository {"test" {:url (repo-url)
+                              :username "dantheman"
+                              :password "password"}}
+         :local-repo help/local-repo))))
+
+
 (deftest user-cannot-redeploy
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))

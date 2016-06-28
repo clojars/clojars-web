@@ -9,7 +9,7 @@
   (friend/authenticated (try-account f)))
 
 (defn authorized? [db account group]
-  (if account
+  (when account
     (let [names (group-membernames db group)]
       (or (some #{account} names) (empty? names)))))
 

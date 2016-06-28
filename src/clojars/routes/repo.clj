@@ -189,26 +189,14 @@
         "numbers, dots, pluses, hyphens and underscores (see http://git.io/vO2TO)")))
 
 (defn validate-deploy [dir pom {:keys [group name version]}]
-  (try
-    (validate-gav group name version)
-    (validate-pom pom group name version)
-    (assert-non-redeploy group name version)
+  (validate-gav group name version)
+  (validate-pom pom group name version)
+  (assert-non-redeploy group name version)
 
-    (let [artifacts (find-artifacts dir)]
-      (assert-jar-uploaded artifacts pom)
-      (validate-checksums artifacts)
-      (assert-signatures (remove (partial match-file-name "maven-metadata.xml") artifacts)))
-    
-    (catch Exception e
-      (throw (ex-info (.getMessage e)
-               (merge
-                 {:status 403
-                  :status-message (str "Forbidden - " (.getMessage e))
-                  :group group
-                  :name name
-                  :version version}
-                 (ex-data e))
-               (.getCause e))))))
+  (let [artifacts (find-artifacts dir)]
+    (assert-jar-uploaded artifacts pom)
+    (validate-checksums artifacts)
+    (assert-signatures (remove (partial match-file-name "maven-metadata.xml") artifacts))))
 
 (defn upload-to-cloudfiles [cloudfiles reporter from-dir file]
   (let [path (fu/subpath (.getAbsolutePath from-dir) (.getAbsolutePath file))]
@@ -311,8 +299,19 @@
                 (fn [account upload-dir]
                   (let [file (io/file upload-dir group artifact file)]
                     (try-save-to-file file body)
-                    (finalize-deploy cloudfiles db reporter search
-                      account (config :repo) upload-dir)))))
+                    (try
+                      (finalize-deploy cloudfiles db reporter search
+                        account (config :repo) upload-dir)
+                      (catch Exception e
+                        (throw-invalid (.getMessage e)
+                          (merge
+                            {:status 403
+                             :status-message (str "Forbidden - " (.getMessage e))
+                             :account account
+                             :group group
+                             :name name}
+                            (ex-data e))
+                          (.getCause e))))))))
             {:status 201
              :headers {}
              :body nil})))
