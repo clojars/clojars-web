@@ -163,7 +163,7 @@
   (-> (session (help/app-from-system))
       (register-as "fixture" "fixture@example.org" "password"))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-        #"Forbidden"
+        #"Forbidden - You don't have access to the 'org\.clojars\.fixture' group\.$"
         (aether/deploy
          :coordinates '[org.clojars.fixture/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
@@ -177,7 +177,7 @@
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-        #"Forbidden - The group name 'dashboard' is reserved."
+        #"Forbidden - The group name 'dashboard' is reserved.$"
         (aether/deploy
          :coordinates '[dashboard/test "0.0.1"]
          :jar-file (io/file (io/resource "test.jar"))

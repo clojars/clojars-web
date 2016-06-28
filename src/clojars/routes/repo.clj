@@ -1,6 +1,6 @@
 (ns clojars.routes.repo
   (:require [clojars
-             [auth :refer [require-authorization with-account]]
+             [auth :refer [with-account]]
              [cloudfiles :as cf]
              [config :refer [config]]
              [db :as db]
@@ -64,11 +64,39 @@
             (str "upload-" (UUID/randomUUID)))
       (FileUtils/forceMkdir))))
 
+(defn- throw-invalid
+  ([message]
+   (throw-invalid message nil))
+  ([message meta]
+   (throw-invalid message meta nil))
+  ([message meta cause]
+   (throw
+     (ex-info message (merge {:report? false} meta) cause))))
+
+(defn- rethrow-forbidden
+  [e meta]
+  (throw-invalid (.getMessage e)
+    (merge
+      {:status 403
+       :status-message (str "Forbidden - " (.getMessage e))}
+      meta
+      (ex-data e))
+    (.getCause e)))
+
+(defn- check-group [db account group]
+  (try
+    (db/check-group (db/group-membernames db group) account group)
+    (catch Exception e
+      (rethrow-forbidden e
+        {:account account
+         :group group}))))
+
 (defn upload-request [db groupname artifact session f]
   (with-account
     (fn [account]
+      (check-group db account groupname) ;; will throw if there are any issues
       (let [upload-dir (find-upload-dir groupname artifact session)]
-        (require-authorization db account groupname (partial f account upload-dir))
+        (f account upload-dir)
         ;; should we only do 201 if the file didn't already exist?
         {:status 201
          :headers {}
@@ -102,15 +130,6 @@
            (remove (partial match-file-name #".md5$")))
          tx)
        (file-seq dir)))))
-
-(defn- throw-invalid
-  ([message]
-   (throw-invalid message nil))
-  ([message meta]
-   (throw-invalid message meta nil))
-  ([message meta cause]
-   (throw
-     (ex-info message (merge {:report? false} meta) cause))))
 
 (defn- validate-regex [x re message]
   (when-not (re-matches re x)
@@ -262,7 +281,7 @@
       groupname
       artifact
       session
-      (fn [_ upload-dir]
+      (fn [account upload-dir]
         (spit (io/file upload-dir metadata-edn)
           (pr-str {:group groupname
                    :group-path group
@@ -270,6 +289,11 @@
                    :version version}))
         (let [file (try-save-to-file (io/file upload-dir group artifact version filename) body)]
           (when (deploy-finalized? upload-dir)
+            ;; a deploy should never get this far with a bad group,
+            ;; but since this includes the group authorization check,
+            ;; we do it here just in case. Will throw if there are any
+            ;; issues.
+            (check-group db account groupname)
             (deploy-post-finalized-file cloudfiles reporter repo upload-dir file)))))))
 
 ;; web handlers
@@ -303,15 +327,10 @@
                       (finalize-deploy cloudfiles db reporter search
                         account (config :repo) upload-dir)
                       (catch Exception e
-                        (throw-invalid (.getMessage e)
-                          (merge
-                            {:status 403
-                             :status-message (str "Forbidden - " (.getMessage e))
-                             :account account
-                             :group group
-                             :name name}
-                            (ex-data e))
-                          (.getCause e))))))))
+                        (rethrow-forbidden e
+                          {:account account
+                           :group group
+                           :name name})))))))
             {:status 201
              :headers {}
              :body nil})))

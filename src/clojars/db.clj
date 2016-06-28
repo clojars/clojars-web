@@ -254,21 +254,23 @@
                                     :added_by added-by}
                                    {:connection db})))
 
-(defn check-and-add-group [db account groupname]
+(defn check-group
+  "Throws if the group is invalid or not accessible to the account"
+  [members account groupname]
   (let [err (fn [msg]
               (throw (ex-info msg {:account account
                                    :group groupname})))]
-    (when-not (re-matches #"^[a-z0-9-_.]+$" groupname)
-      (err (str "Group names must consist of lowercase "
-             "letters, numbers, hyphens, underscores "
-             "and full-stops.")))
-    (let [members (group-membernames db groupname)]
-      (if (empty? members)
-        (if (reserved-names groupname)
-          (err (format "The group name '%s' is reserved." groupname))
-          (add-member db groupname account "clojars"))
-        (when-not (some #{account} members)
-          (err (format "You don't have access to the '%s' group." groupname)))))))
+    (when (reserved-names groupname)
+      (err (format "The group name '%s' is reserved" groupname)))
+    (when (and (seq members)
+            (not (some #{account} members)))
+      (err (format "You don't have access to the '%s' group" groupname)))))
+  
+(defn check-and-add-group [db account groupname]
+  (let [members (group-membernames db groupname)]
+    (check-group members account groupname)
+    (when (empty? members)
+      (add-member db groupname account "clojars"))))
 
 (defn add-jar [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]
   (check-and-add-group db account group)
