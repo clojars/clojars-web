@@ -13,4 +13,5 @@
   (let [expire-date #inst "2018-06-18T00:00:00.000-00:00"]
     (is (< (System/currentTimeMillis)
           (- (.getTime expire-date) sixty-days))
-      (format "clojars.org TLS cert expires on %s" expire-date))))
+      (format "clojars.org TLS cert expires on %s.\nBe sure to give lein a copy of the new one: %s"
+        expire-date "https://github.com/technomancy/leiningen/blob/master/leiningen-core/resources/clojars.pem"))))
