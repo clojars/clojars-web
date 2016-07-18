@@ -264,8 +264,10 @@
         (reify FileFilter
           (accept [_ f]
             (not= metadata-edn (.getName f)))))
-      
-      (run!
+
+      ;; disabled since it takes too long to do in band, and causes
+      ;; aether clients to time out on deploy (#546}
+      #_(run!
         (fn [artifact]
           (profile {:file artifact
                     :context 'upload-to-cloudfiles}
