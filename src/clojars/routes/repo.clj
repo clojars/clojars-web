@@ -226,7 +226,12 @@
         ;; instead of letting it bubble up, since cloudfiles
         ;; isn't yet the primary repo
         (report-error reporter e {:path path :file file})))))
-        
+
+(defmacro profile [meta & body]
+  `(let [start# (System/currentTimeMillis)]
+     ~@body
+     (prn (assoc ~meta :time (- (System/currentTimeMillis) start#)))))
+
 (defn finalize-deploy [cloudfiles db reporter search account repo ^File dir]
   (if-let [pom-file (find-pom dir)]
     (let [pom (try
@@ -259,7 +264,13 @@
         (reify FileFilter
           (accept [_ f]
             (not= metadata-edn (.getName f)))))
-      (run! (partial upload-to-cloudfiles cloudfiles reporter dir) (find-artifacts dir false))
+      
+      (run!
+        (fn [artifact]
+          (profile {:file artifact
+                    :context 'upload-to-cloudfiles}
+            (upload-to-cloudfiles cloudfiles reporter dir artifact)))
+        (find-artifacts dir false))
 
       (db/add-jar db account pom)
       (search/index! search (assoc pom
@@ -324,8 +335,11 @@
                   (let [file (io/file upload-dir group artifact file)]
                     (try-save-to-file file body)
                     (try
-                      (finalize-deploy cloudfiles db reporter search
-                        account (config :repo) upload-dir)
+                      (profile {:group groupname
+                                :artifact artifact
+                                :context 'finalize-deploy}
+                        (finalize-deploy cloudfiles db reporter search
+                          account (config :repo) upload-dir))
                       (catch Exception e
                         (rethrow-forbidden e
                           {:account account
