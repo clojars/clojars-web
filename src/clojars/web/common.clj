@@ -81,16 +81,16 @@
   [:script "try{Typekit.load({async:true});}catch(e){}"])
 
 (defn html-doc [title ctx & body]
-  (html5
+  (html5 {:lang "en"}
    [:head
+    [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
     [:link {:type "application/opensearchdescription+xml"
             :href "/opensearch.xml"
             :rel "search"}]
     [:link {:type "image/png"
             :href "/favicon.png"
             :rel "icon"}]
-    [:meta {:charset "utf-8"}]
-    [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
     (structured-data/meta-tags (assoc ctx :title (if title
                                                    title
                                                    "Clojars"))) ;; TODO: talk about whether we should refactor signature of html-doc
