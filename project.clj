@@ -3,7 +3,8 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [yeller-clojure-client "1.4.2"
-                  :exclusions [com.fasterxml.jackson.core/jackson-core]]
+                  :exclusions [com.fasterxml.jackson.core/jackson-core
+                               commons-codec]]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
                   [org.codehaus.plexus/plexus-utils]]
@@ -13,7 +14,7 @@
                    org.apache.httpcomponents/httpcore
                    org.codehaus.plexus/plexus-utils]]
                  ;; pomegranate transitively depends on two versions, so we explicitly bring in one
-                 [org.codehaus.plexus/plexus-utils "3.0"] 
+                 [org.codehaus.plexus/plexus-utils "3.0"]
                  [ring-middleware-format "0.7.0"
                   :exclusions [ring/ring-core]]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
