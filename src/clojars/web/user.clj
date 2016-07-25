@@ -153,7 +153,7 @@
 
 (defn reset-password-form [db reset-code & [errors]]
   (if-let [user (db/find-user-by-password-reset-code db reset-code)]
-    (html-doc "Reset your password" {}
+    (html-doc "Reset your password" {:footer-links? false}
       [:div.small-section
        [:h1 "Reset your password"]
        (error-list errors)

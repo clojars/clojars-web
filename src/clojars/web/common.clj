@@ -16,57 +16,62 @@
    "<![endif]-->"))
 
 
-(def footer
-  [:footer.row
-   (link-to "https://github.com/clojars/clojars-web/wiki/About" "about")
-   (link-to "http://status.clojars.org" "status")
-   (link-to "/projects" "projects")
-   (link-to "https://github.com/clojars/clojars-web/wiki/Contributing" "contribute")
-   (link-to "https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann" "news")
-   (link-to "https://github.com/clojars/clojars-web/wiki/Contact" "contact")
-   (link-to "https://github.com/clojars/clojars-web" "code")
-   (link-to "/security" "security")
-   (link-to "https://github.com/clojars/clojars-web/wiki/" "help")
-   [:div.sponsors
-    [:div.row
-     "sponsored by"
-     (link-to "https://www.bountysource.com/teams/clojars/backers" "individual contributors")
-     "with in-kind sponsorship from"]
-    [:div.row
-     [:table
-      [:tr
-       [:td.sponsor
-        (link-to {:target "_blank"}
-          "http://www.redhat.com/"
-          (image "/images/red-hat-logo.svg" "Red Hat, Inc."))]
-       [:td.sponsor
-        (link-to {:target "_blank"}
-          "http://yellerapp.com/"
-          (image "/images/yeller-logo.png" "Yeller"))]
-       [:td.sponsor
-        (link-to {:target "_blank"}
-          "https://dnsimple.link/resolving-clojars"
-          [:span "resolving with" [:br]]
-          [:span
-           (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]
-      [:tr
-       [:td.sponsor
-        (link-to {:target "_blank"}
-                 "https://www.rackspace.com"
-                 (image "/images/rackspace-logo.svg" "Rackspace"))]
-       [:td.sponsor
-        (link-to {:target "_blank"}
-                 "https://www.statuspage.io"
-                 (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]
-       [:td.sponsor
-        (link-to {:target "_blank"}
-                 "https://pingometer.com/"
-                 (image "/images/pingometer-logo.svg" "Pingometer"))]]]]]
-   [:div.row.sponsors
-    "remixed by"
-    (link-to {:target "_blank"}
-             "http://www.bendyworks.com/"
-             [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]])
+(defn footer
+  "We normally want to include links in the footer, except on pages which contain sensitive URL's like password reset.
+  This is so users don't accidentally leak the password reset URL in the referer header."
+  [footer-links?]
+  (if footer-links?
+    [:footer.row
+     (link-to "https://github.com/clojars/clojars-web/wiki/About" "about")
+     (link-to "http://status.clojars.org" "status")
+     (link-to "/projects" "projects")
+     (link-to "https://github.com/clojars/clojars-web/wiki/Contributing" "contribute")
+     (link-to "https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann" "news")
+     (link-to "https://github.com/clojars/clojars-web/wiki/Contact" "contact")
+     (link-to "https://github.com/clojars/clojars-web" "code")
+     (link-to "/security" "security")
+     (link-to "https://github.com/clojars/clojars-web/wiki/" "help")
+     [:div.sponsors
+      [:div.row
+       "sponsored by"
+       (link-to "https://www.bountysource.com/teams/clojars/backers" "individual contributors")
+       "with in-kind sponsorship from"]
+      [:div.row
+       [:table
+        [:tr
+         [:td.sponsor
+          (link-to {:target "_blank"}
+                   "http://www.redhat.com/"
+                   (image "/images/red-hat-logo.svg" "Red Hat, Inc."))]
+         [:td.sponsor
+          (link-to {:target "_blank"}
+                   "http://yellerapp.com/"
+                   (image "/images/yeller-logo.png" "Yeller"))]
+         [:td.sponsor
+          (link-to {:target "_blank"}
+                   "https://dnsimple.link/resolving-clojars"
+                   [:span "resolving with" [:br]]
+                   [:span
+                    (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]
+        [:tr
+         [:td.sponsor
+          (link-to {:target "_blank"}
+                   "https://www.rackspace.com"
+                   (image "/images/rackspace-logo.svg" "Rackspace"))]
+         [:td.sponsor
+          (link-to {:target "_blank"}
+                   "https://www.statuspage.io"
+                   (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]
+         [:td.sponsor
+          (link-to {:target "_blank"}
+                   "https://pingometer.com/"
+                   (image "/images/pingometer-logo.svg" "Pingometer"))]]]]]
+     [:div.row.sponsors
+      "remixed by"
+      (link-to {:target "_blank"}
+               "http://www.bendyworks.com/"
+               [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]]
+    [:footer.row]))
 
 (defn google-analytics-js []
   [:script "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -132,7 +137,7 @@
           [(link-to "/login" "login")
            (link-to "/register" "register")]))]]
      body
-     footer]]))
+     (footer (get ctx :footer-links? true))]]))
 
 (defn html-doc-with-large-header [title ctx & body]
   (html5
@@ -226,7 +231,7 @@
        (link-to "/projects" "browse the repository")
        "."]]]
     body
-    footer]))
+    (footer (get ctx :footer-links? true))]))
 
 (defn flash [msg]
   (when msg
