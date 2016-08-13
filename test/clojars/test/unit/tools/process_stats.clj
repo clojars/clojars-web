@@ -31,4 +31,5 @@
 (deftest compute-stats
   (let [stats (stats/process-log (io/resource "fake.access.log"))]
     (is (= 5 (get-in stats [["snowy" "snowy"] "0.2.0"])))
+    (is (= 2 (get-in stats [["snowy" "snowy"] "0.3.0"])))
     (is (= 3 (get-in stats [["captain.archibald" "haddock"] "0.1.0"])))))
