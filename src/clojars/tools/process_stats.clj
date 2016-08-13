@@ -30,7 +30,7 @@
     (re/regex [field :as :host] \space
               [field :as :ident] \space
               [field :as :authuser] \space
-              \[ [nonbracket :as :time] \] \space
+              \[ [nonbracket :as :time] \] #"\s+"
               \" reqline \" \space
               [field :as :status] \space
               [field :as :size]

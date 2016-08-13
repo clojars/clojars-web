@@ -10,4 +10,4 @@ blistering barnacles
 127.0.0.4 - - [14/May/2012:06:45:40 +0000] "GET /repo/snowy/snowy/0.3.0/snowy-0.3.0.jar HTTP/1.1" 200 2377 "-" "Java/1.6.0_30"
 127.0.0.2 - - [14/May/2012:06:43:40 +0000] "GET /repo/snowy/snowy/0.2.0/snowy-0.2.0.jar HTTP/1.1" 200 2377 "-" "Java/1.6.0_30"
 billions of bilious [blue blistering] "barnacles in ten" thousand thundering "typhoons" "!"
-127.0.0.4 - - [14/May/2012:06:45:40 +0000] "GET /repo/snowy/snowy/0.3.0/snowy-0.3.0.jar HTTP/1.1" 200 2377 "-" "Java/1.6.0_30"
+127.0.0.4 - - [14/May/2012:06:45:40 +0000]  "GET /repo/snowy/snowy/0.3.0/snowy-0.3.0.jar HTTP/1.1" 200 2377 "-" "Java/1.6.0_30" "clojars.org"
