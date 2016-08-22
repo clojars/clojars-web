@@ -67,8 +67,11 @@
                                     params)]
              (search search-obj % validated-params))))
    (GET "/projects" {:keys [params]}
-        (try-account
-          #(browse db % params)))
+         (try-account
+           #(let [validated-params (if (:page params)
+                                     (assoc params :page (try-parse-page (:page params)))
+                                     params)]
+             (browse db % validated-params))))
    (GET "/security" []
         (try-account
           #(html-doc "Security" {:account %}

@@ -49,4 +49,4 @@
       (let [i (count-projects-before db from)
             page (inc (int (/ i per-page)))]
         (redirect (str "/projects?page=" page "#" (mod i per-page))))
-      (browse-page db account (Integer. (or (:page params) 1)) per-page))))
+      (browse-page db account (or (:page params) 1) per-page))))
