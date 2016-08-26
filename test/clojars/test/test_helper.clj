@@ -7,6 +7,7 @@
              [errors :as errors]
              [stats :as stats]
              [search :as search]
+             [storage :as storage]
              [system :as system]
              [web :as web]]
             [clojars.db.migrate :as migrate]
@@ -15,7 +16,8 @@
              [jdbc :as jdbc]]
             [clojure.string :as str]
             [clucy.core :as clucy]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [clojars.storage :as storage])
   (:import java.io.File))
 
 (def tmp-dir (io/file (System/getProperty "java.io.tmpdir")))
@@ -52,7 +54,8 @@
 
 (defn quiet-reporter []
   (reify errors/ErrorReporter
-    (-report-error [t e ex id])))
+    (-report-error [t e ex id]
+      (println t e ex id))))
 
 (declare ^:dynamic *db*)
 
@@ -81,16 +84,22 @@
 
 (declare ^:dynamic test-port)
 
+(defn test-storage [& [cf]]
+  (let [cf (or cf (transient-cloudfiles))]
+    (storage/multi-storage
+      (storage/fs-storage (:repo test-config))
+      (cf/cloudfiles-storage cf))))
+
 (defn app
   ([] (app {}))
-  ([{:keys [:cloudfiles :db :error-reporter :stats :search :mailer]
-     :or {:cloudfiles (transient-cloudfiles)
-          :db *db*
+  ([{:keys [:storage :db :error-reporter :stats :search :mailer]
+     :or {:db *db*
+          :storage (test-storage)
           :error-reporter (quiet-reporter)
           :stats (no-stats)
           :search (no-search)
           :mailer nil}}]
-   (web/clojars-app cloudfiles db error-reporter stats search mailer)))
+   (web/clojars-app storage db error-reporter stats search mailer)))
 
 (declare ^:dynamic system)
 
@@ -101,20 +110,22 @@
 
 (defn run-test-app
   ([f]
-   (binding [system (component/start (assoc (system/new-system test-config)
-                                       :cloudfiles (transient-cloudfiles)
-                                       :error-reporter (quiet-reporter)
-                                       :index-factory #(clucy/memory-index)
-                                       :stats (no-stats)))]
-     (let [server (get-in system [:http :server])
-           port (-> server .getConnectors first .getLocalPort)]
-       (binding [test-port port]
-         (try
-           (with-out-str
-             (migrate/migrate (get-in system [:db :spec])))
-           (f)
-           (finally
-             (component/stop system))))))))
+   (let [cf (transient-cloudfiles)]
+     (binding [system (component/start (assoc (system/new-system test-config)
+                                         :storage (test-storage cf)
+                                         :_cloudfiles cf
+                                         :error-reporter (quiet-reporter)
+                                         :index-factory #(clucy/memory-index)
+                                         :stats (no-stats)))]
+       (let [server (get-in system [:http :server])
+             port (-> server .getConnectors first .getLocalPort)]
+         (binding [test-port port]
+           (try
+             (with-out-str
+               (migrate/migrate (get-in system [:db :spec])))
+             (f)
+             (finally
+               (component/stop system)))))))))
 
 (defn get-content-type [resp]
   (some-> resp :headers (get "content-type") (str/split #";") first))

@@ -50,4 +50,4 @@
           :app  [:clojars-app]
           :stats [:fs-factory]
           :search [:index-factory :stats]
-          :clojars-app [:cloudfiles :db :error-reporter :stats :search :mailer]}))))
+          :clojars-app [:storage :db :error-reporter :stats :search :mailer]}))))

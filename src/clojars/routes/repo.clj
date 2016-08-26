@@ -1,15 +1,15 @@
 (ns clojars.routes.repo
   (:require [clojars
              [auth :refer [with-account]]
-             [cloudfiles :as cf]
              [config :refer [config]]
              [db :as db]
              [errors :refer [report-error]]
              [file-utils :as fu]
              [maven :as maven]
-             [search :as search]]
+             [search :as search]
+             [storage :as storage]]
             [clojure.java.io :as io]
-            [clojure.string :as string]
+            [clojure.string :as str]
             [cemerick.pomegranate.aether :as aether]
             [compojure
              [core :as compojure :refer [PUT defroutes]]
@@ -20,12 +20,6 @@
   (:import java.util.UUID
            org.apache.commons.io.FileUtils
            (java.io FileFilter IOException FileNotFoundException File)))
-
-(defn versions [group-id artifact-id]
-  (->> (.listFiles (io/file (config :repo) group-id artifact-id))
-       (filter (memfn isDirectory))
-       (sort-by (comp - (memfn last-modified)))
-       (map (memfn getName))))
 
 (defn save-to-file [dest input]
   (-> dest
@@ -151,10 +145,10 @@
 (defn snapshot-version? [version]
   (.endsWith version "-SNAPSHOT"))
 
-(defn assert-non-redeploy [group-id artifact-id version]
+(defn assert-non-redeploy [storage group-id artifact-id version]
   (when (and (not (snapshot-version? version))
-          ;; TODO: have this check cloudfiles once that is canon
-          (.exists (io/file (config :repo) (fu/group->path group-id) artifact-id version)))
+          (storage/path-exists? storage
+            (str/join "/" [(fu/group->path group-id) artifact-id version])))
     (throw-invalid "redeploying non-snapshots is not allowed (see http://git.io/vO2Tg)")))
 
 (defn assert-jar-uploaded [artifacts pom]
@@ -207,32 +201,22 @@
       (str "version strings must consist solely of letters, "
         "numbers, dots, pluses, hyphens and underscores (see http://git.io/vO2TO)")))
 
-(defn validate-deploy [dir pom {:keys [group name version]}]
+(defn validate-deploy [storage dir pom {:keys [group name version]}]
   (validate-gav group name version)
   (validate-pom pom group name version)
-  (assert-non-redeploy group name version)
+  (assert-non-redeploy storage group name version)
 
   (let [artifacts (find-artifacts dir)]
     (assert-jar-uploaded artifacts pom)
     (validate-checksums artifacts)
     (assert-signatures (remove (partial match-file-name "maven-metadata.xml") artifacts))))
 
-(defn upload-to-cloudfiles [cloudfiles reporter from-dir file]
-  (let [path (fu/subpath (.getAbsolutePath from-dir) (.getAbsolutePath file))]
-    (try
-      (cf/put-file cloudfiles path file)
-      (catch Exception e
-        ;; catch and report anything that fails for now
-        ;; instead of letting it bubble up, since cloudfiles
-        ;; isn't yet the primary repo
-        (report-error reporter e {:path path :file file})))))
-
 (defmacro profile [meta & body]
   `(let [start# (System/currentTimeMillis)]
      ~@body
      (prn (assoc ~meta :time (- (System/currentTimeMillis) start#)))))
 
-(defn finalize-deploy [cloudfiles db reporter search account repo ^File dir]
+(defn finalize-deploy [storage db reporter search account ^File dir]
   (if-let [pom-file (find-pom dir)]
     (let [pom (try
                 (maven/pom-to-map pom-file)
@@ -258,21 +242,16 @@
         (fu/create-checksum-file md-file :md5)
         (fu/create-checksum-file md-file :sha1))
 
-      (validate-deploy dir pom posted-metadata)
+      (validate-deploy storage dir pom posted-metadata)
       (db/check-and-add-group db account group)
-      (FileUtils/copyDirectory dir (io/file repo)
-        (reify FileFilter
-          (accept [_ f]
-            (not= metadata-edn (.getName f)))))
-
-      ;; disabled since it takes too long to do in band, and causes
-      ;; aether clients to time out on deploy (#546}
-      #_(run!
-        (fn [artifact]
-          (profile {:file artifact
-                    :context 'upload-to-cloudfiles}
-            (upload-to-cloudfiles cloudfiles reporter dir artifact)))
-        (find-artifacts dir false))
+      (run! #(storage/write-artifact
+               storage
+               (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath %))
+               %
+               false)
+        (->> (file-seq dir)
+          (remove (memfn isDirectory))
+          (remove #(some #{(.getName %)} [metadata-edn]))))
 
       (db/add-jar db account pom)
       (search/index! search (assoc pom
@@ -283,11 +262,12 @@
 (defn- deploy-finalized? [dir]
   (.exists (io/file dir ".finalized")))
 
-(defn- deploy-post-finalized-file [cloudfiles reporter repo tmp-repo file]
-  (io/copy file (io/file repo (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file))))
-  (upload-to-cloudfiles cloudfiles reporter tmp-repo file))
+(defn- deploy-post-finalized-file [storage reporter tmp-repo file]
+  (storage/write-artifact storage
+    (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file))
+    file false))
 
-(defn- handle-versioned-upload [cloudfiles db reporter repo body session group artifact version filename]
+(defn- handle-versioned-upload [storage db reporter body session group artifact version filename]
   (let [groupname (fu/path->group group)]
     (upload-request
       db
@@ -307,10 +287,10 @@
             ;; we do it here just in case. Will throw if there are any
             ;; issues.
             (check-group db account groupname)
-            (deploy-post-finalized-file cloudfiles reporter repo upload-dir file)))))))
+            (deploy-post-finalized-file storage reporter upload-dir file)))))))
 
 ;; web handlers
-(defn routes [cloudfiles db reporter search]
+(defn routes [storage db reporter search]
   (compojure/routes
    (PUT ["/:group/:artifact/:file"
          :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
@@ -320,10 +300,10 @@
           ;; treated as a versioned file upload.
           ;; See: https://github.com/clojars/clojars-web/issues/319
           (let [version artifact
-                group-parts (string/split group #"/")
-                group (string/join "/" (butlast group-parts))
+                group-parts (str/split group #"/")
+                group (str/join "/" (butlast group-parts))
                 artifact (last group-parts)]
-            (handle-versioned-upload cloudfiles db reporter (config :repo) body session group artifact version file))
+            (handle-versioned-upload storage db reporter body session group artifact version file))
           (if (re-find #"maven-metadata\.xml$" file)
             ;; ignore metadata sums, since we'll recreate those when
             ;; the deploy is finalizied
@@ -340,8 +320,8 @@
                       (profile {:group groupname
                                 :artifact artifact
                                 :context 'finalize-deploy}
-                        (finalize-deploy cloudfiles db reporter search
-                          account (config :repo) upload-dir))
+                        (finalize-deploy storage db reporter search
+                          account upload-dir))
                       (catch Exception e
                         (rethrow-forbidden e
                           {:account account
@@ -354,7 +334,7 @@
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
          :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
         {body :body session :session {:keys [group artifact version filename]} :params}
-        (handle-versioned-upload cloudfiles db reporter (config :repo) body session group artifact version filename))
+        (handle-versioned-upload storage db reporter body session group artifact version filename))
    (PUT "*" _ {:status 400 :headers {}})
    (not-found "Page not found")))
 

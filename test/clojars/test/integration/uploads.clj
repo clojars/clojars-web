@@ -50,15 +50,14 @@
   
   (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
         base-path "org/clojars/dantheman/test/"
-        cloudfiles (:cloudfiles help/system)
+        cloudfiles (:_cloudfiles help/system)
         repo (:repo config)]
     (is (.exists (io/file repo base-path "maven-metadata.xml")))
-    ;;(is (cf/artifact-exists? cloudfiles (str base-path "maven-metadata.xml")))
+    (is (cf/artifact-exists? cloudfiles (str base-path "maven-metadata.xml")))
     (is (= 6 (count (.list (io/file repo base-path "0.0.1")))))
     (doseq [suffix suffixes]
       (is (.exists (io/file repo base-path "0.0.1" (str "test-0.0.1." suffix))))
-      ;;(is (cf/artifact-exists? cloudfiles (str base-path "0.0.1/test-0.0.1." suffix)))
-      ))
+      (is (cf/artifact-exists? cloudfiles (str base-path "0.0.1/test-0.0.1." suffix)))))
   
   (is (= '{[org.clojars.dantheman/test "0.0.1"] nil}
          (aether/resolve-dependencies
@@ -117,15 +116,13 @@
             {:body f
              :basic-auth ["dantheman" "password"]})))
     (let [base-path "org/clojars/dantheman/test/"
-          cloudfiles (:cloudfiles help/system)
+          cloudfiles (:_cloudfiles help/system)
           repo (:repo config)]
       (doseq [[f no-version?] files]
         (let [fname (.getName f)
               base-path' (if no-version? base-path (str base-path "0.0.1/"))]
           (is (.exists (io/file repo base-path' fname)))
-          ;;(is (cf/artifact-exists? cloudfiles (str base-path' fname)))
-          )))))
-
+          (is (cf/artifact-exists? cloudfiles (str base-path' fname))))))))
 
 (deftest user-can-deploy-to-new-group
    (-> (session (help/app-from-system))
