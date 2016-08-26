@@ -62,6 +62,7 @@
   :pedantic? :abort
   :profiles
   {:dev  [:project/dev  :profiles/dev]
+   :repl {:pedantic? false}
    :test [:project/test :profiles/test]
    :uberjar {:aot :all}
    :profiles/dev  {}
