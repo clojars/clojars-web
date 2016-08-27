@@ -87,7 +87,7 @@
 
 (defn app
   ([] (app {}))
-  ([{:keys [:storage :db :error-reporter :stats :search :mailer]
+  ([{:keys [storage db error-reporter stats search mailer]
      :or {db *db*
           storage (storage/fs-storage (:repo test-config))
           error-reporter (quiet-reporter)
