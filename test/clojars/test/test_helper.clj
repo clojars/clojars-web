@@ -88,12 +88,12 @@
 (defn app
   ([] (app {}))
   ([{:keys [:storage :db :error-reporter :stats :search :mailer]
-     :or {:db *db*
-          :storage (storage/fs-storage (:repo test-config))
-          :error-reporter (quiet-reporter)
-          :stats (no-stats)
-          :search (no-search)
-          :mailer nil}}]
+     :or {db *db*
+          storage (storage/fs-storage (:repo test-config))
+          error-reporter (quiet-reporter)
+          stats (no-stats)
+          search (no-search)
+          mailer nil}}]
    (web/clojars-app storage db error-reporter stats search mailer)))
 
 (declare ^:dynamic system)
