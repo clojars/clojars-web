@@ -47,7 +47,10 @@
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo)
-  
+
+  ;; give the async cloudfiles upload time to finish
+  (Thread/sleep 100)
+
   (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
         base-path "org/clojars/dantheman/test/"
         cloudfiles (:cloudfiles help/system)
@@ -115,6 +118,10 @@
                         (.getName f))
             {:body f
              :basic-auth ["dantheman" "password"]})))
+
+    ;; give the async cloudfiles upload time to finish
+    (Thread/sleep 100)
+
     (let [base-path "org/clojars/dantheman/test/"
           cloudfiles (:cloudfiles help/system)
           repo (:repo config)]
