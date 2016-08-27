@@ -17,6 +17,8 @@
                  [org.codehaus.plexus/plexus-utils "3.0"]
                  [ring-middleware-format "0.7.0"
                   :exclusions [ring/ring-core]]
+                 [factual/durable-queue "0.1.5"
+                  :exclusions [clj-tuple]]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
                  [org.apache.jclouds/jclouds-all "1.9.2"]
                  [org.clojure/tools.logging "0.3.1"] ;; required by jclouds

@@ -3,7 +3,6 @@
              [cloudfiles :as cf]
              [config :as config]
              [errors :as errors]
-             [storage :as storage]
              [system :as system]]
             [clojars.db.migrate :as migrate]
             [clojure.java.io :as io]
@@ -21,10 +20,7 @@
   (config/configure [])
   (assoc (system/new-system (meta-merge config/config dev-env))
     :error-reporter (errors/->StdOutReporter)
-    :storage (storage/multi-storage
-                   (storage/fs-storage (:repo config/config))
-                   ;; TODO: wrap with AsyncStorage
-                   (cf/cloudfiles-storage "" "" "dev" "transient"))))
+    :cloudfiles     (cf/connect "" "" "dev" "transient")))
 
 (ns-unmap *ns* 'test)
 

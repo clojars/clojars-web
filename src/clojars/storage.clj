@@ -1,6 +1,8 @@
 (ns clojars.storage
   (:require [clojars.file-utils :as fu]
-            [clojure.java.io :as io])
+            [clojars.queue :as q]
+            [clojure.java.io :as io]
+            [clojars.cloudfiles :as cf])
   (:import org.apache.commons.io.FileUtils))
 
 (defprotocol Storage
@@ -47,3 +49,55 @@
 
 (defn fs-storage [base-dir]
   (->FileSystemStorage base-dir))
+
+;; write-artifact/remove-path are async
+(defrecord AsyncStorage [storage name queueing]
+  Storage
+  (write-artifact [_ path file force-overwrite?]
+    (q/enqueue! queueing name {:fn 'clojars.storage/write-artifact
+                               :args [path file force-overwrite?]}))
+  (remove-path [_ path]
+    (q/enqueue! queueing name {:fn 'clojars.storage/remove-path
+                               :args [path]}))
+  (path-exists? [_ path]
+    (path-exists? storage path))
+  (artifact-url [_ path]
+    (artifact-url storage path)))
+
+(defn async-handler [storage {:keys [fn args]}]
+  (apply (resolve fn) storage args))
+
+(defn async-storage [name queueing storage]
+  (q/register-handler queueing name (partial async-handler storage))
+  (->AsyncStorage storage name queueing))
+
+(defrecord CloudfileStorage [conn]
+  Storage
+  (write-artifact [_ path file force-overwrite?]
+    (cf/put-file conn path file (not force-overwrite?)))
+  (remove-path [_ path]
+    (if (.endsWith path "/")
+      (run! #(->> % :name (cf/remove-artifact conn))
+        (cf/metadata-seq conn {:in-directory path}))
+      (cf/remove-artifact conn path)))
+  (path-exists? [_ path]
+    (if (.endsWith path "/")
+      (boolean (seq (cf/metadata-seq conn {:in-directory path})))
+      (cf/artifact-exists? conn path)))
+  (artifact-url [_ path]
+    (when-let [uri (->> path (cf/artifact-metadata conn) :uri)]
+      (.toURL uri))))
+
+(defn cloudfiles-storage
+  ([user token container]
+   (cloudfiles-storage (cf/connect user token container)))
+  ([cf]
+   (->CloudfileStorage cf)))
+
+(defn full-storage [on-disk-repo cloudfiles queue]
+  (multi-storage
+    (fs-storage on-disk-repo)
+    (async-storage :cloudfiles queue
+      (cloudfiles-storage cloudfiles))
+    ;; TODO: cdn storage
+    ))

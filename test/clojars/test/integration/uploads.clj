@@ -50,7 +50,7 @@
   
   (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
         base-path "org/clojars/dantheman/test/"
-        cloudfiles (:_cloudfiles help/system)
+        cloudfiles (:cloudfiles help/system)
         repo (:repo config)]
     (is (.exists (io/file repo base-path "maven-metadata.xml")))
     (is (cf/artifact-exists? cloudfiles (str base-path "maven-metadata.xml")))
@@ -116,7 +116,7 @@
             {:body f
              :basic-auth ["dantheman" "password"]})))
     (let [base-path "org/clojars/dantheman/test/"
-          cloudfiles (:_cloudfiles help/system)
+          cloudfiles (:cloudfiles help/system)
           repo (:repo config)]
       (doseq [[f no-version?] files]
         (let [fname (.getName f)

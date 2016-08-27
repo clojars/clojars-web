@@ -7,7 +7,6 @@
              [errors :as errors]
              [stats :as stats]
              [search :as search]
-             [storage :as storage]
              [system :as system]
              [web :as web]]
             [clojars.db.migrate :as migrate]
@@ -29,6 +28,7 @@
                   :db {:classname "org.sqlite.JDBC"
                        :subprotocol "sqlite"
                        :subname ":memory:"}
+                  :queue-storage-dir "data/test/queue-slabs"
                   :repo "data/test/repo"
                   :bcrypt-work-factor 12})
 
@@ -50,6 +50,7 @@
   (using-test-config
    (fn []
      (delete-file-recursively (io/file (config :repo)))
+     (delete-file-recursively (io/file (config :queue-storage-dir)))
      (f))))
 
 (defn quiet-reporter []
@@ -84,17 +85,11 @@
 
 (declare ^:dynamic test-port)
 
-(defn test-storage [& [cf]]
-  (let [cf (or cf (transient-cloudfiles))]
-    (storage/multi-storage
-      (storage/fs-storage (:repo test-config))
-      (cf/cloudfiles-storage cf))))
-
 (defn app
   ([] (app {}))
   ([{:keys [:storage :db :error-reporter :stats :search :mailer]
      :or {:db *db*
-          :storage (test-storage)
+          :storage (storage/fs-storage (:repo test-config))
           :error-reporter (quiet-reporter)
           :stats (no-stats)
           :search (no-search)
@@ -110,22 +105,23 @@
 
 (defn run-test-app
   ([f]
-   (let [cf (transient-cloudfiles)]
-     (binding [system (component/start (assoc (system/new-system test-config)
-                                         :storage (test-storage cf)
-                                         :_cloudfiles cf
-                                         :error-reporter (quiet-reporter)
-                                         :index-factory #(clucy/memory-index)
-                                         :stats (no-stats)))]
-       (let [server (get-in system [:http :server])
-             port (-> server .getConnectors first .getLocalPort)]
-         (binding [test-port port]
-           (try
-             (with-out-str
-               (migrate/migrate (get-in system [:db :spec])))
-             (f)
-             (finally
-               (component/stop system)))))))))
+   (binding [system (try (component/start (assoc (system/new-system test-config)
+                                            :cloudfiles (transient-cloudfiles)
+                                            :error-reporter (quiet-reporter)
+                                            :index-factory #(clucy/memory-index)
+                                            :stats (no-stats)))
+                         (catch Exception e
+                           (println e)
+                           (pr (ex-data e))))]
+     (let [server (get-in system [:http :server])
+           port (-> server .getConnectors first .getLocalPort)]
+       (binding [test-port port]
+         (try
+           (with-out-str
+             (migrate/migrate (get-in system [:db :spec])))
+           (f)
+           (finally
+             (component/stop system))))))))
 
 (defn get-content-type [resp]
   (some-> resp :headers (get "content-type") (str/split #";") first))

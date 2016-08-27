@@ -1,6 +1,5 @@
 (ns clojars.cloudfiles
   (:require [clojars.file-utils :as fu]
-            [clojars.storage :as s]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [org.jclouds.blobstore2 :as jc]
@@ -157,24 +156,4 @@
 
   (defn delete-group [bs container group]))
 
-(defrecord CloudfileStorage [conn]
-  s/Storage
-  (write-artifact [_ path file force-overwrite?]
-    (put-file conn path file (not force-overwrite?)))
-  (remove-path [_ path]
-    (if (.endsWith path "/")
-      (run! #(->> % :name (remove-artifact conn)) (metadata-seq conn {:in-directory path}))
-      (remove-artifact conn path)))
-  (path-exists? [_ path]
-    (if (.endsWith path "/")
-      (boolean (seq (metadata-seq conn {:in-directory path})))
-      (artifact-exists? conn path)))
-  (artifact-url [_ path]
-    (when-let [uri (->> path (artifact-metadata conn) :uri)]
-      (.toURL uri))))
 
-(defn cloudfiles-storage
-  ([user token container]
-   (cloudfiles-storage (cf/connect user token container)))
-  ([cf]
-   (->CloudfileStorage cf)))

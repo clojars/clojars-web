@@ -4,7 +4,6 @@
              [cloudfiles :as cf]
              [config :refer [config configure]]
              [errors :refer [->StdOutReporter multiple-reporters]]
-             [storage :as storage]
              [system :as system]]
             [com.stuartsierra.component :as component]
             [meta-merge.core :refer [meta-merge]]
@@ -21,15 +20,10 @@
         :error-reporter (multiple-reporters
                           (->StdOutReporter)
                           yeller)
-        :storage (storage/multi-storage
-                   (storage/fs-storage (:repo config))
-                   ;; TODO: wrap with AsyncStorage
-                   (cf/cloudfiles-storage
-                     (:cloudfiles-user config)
-                      (:cloudfiles-token config)
-                      (:cloudfiles-container config))
-                   ;; TODO: add CDNStorage (to handle removals)
-                   ))))
+        :cloudfiles     (cf/connect
+                          (:cloudfiles-user config)
+                          (:cloudfiles-token config)
+                          (:cloudfiles-container config)))))
 
 (defn -main [& args]
   (try

@@ -11,6 +11,7 @@
         :subname "data/db"}
    :base-url "https://clojars.org"
    :stats-dir "data/stats"
+   :queue-storage-dir "data/durable-queue-slabs"
    :index-path "data/index"
    :nrepl-port 7991
    :mail {:hostname "127.0.0.1"
