@@ -17,8 +17,7 @@
                  [org.codehaus.plexus/plexus-utils "3.0"]
                  [ring-middleware-format "0.7.0"
                   :exclusions [ring/ring-core]]
-                 [factual/durable-queue "0.1.5"
-                  :exclusions [clj-tuple]]
+                 [factual/durable-queue "0.1.5"]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
                  [org.apache.jclouds/jclouds-all "1.9.2"]
                  [org.clojure/tools.logging "0.3.1"] ;; required by jclouds
@@ -80,7 +79,8 @@
                                   [clj-http "2.2.0"
                                    :exclusions [commons-codec
                                                 commons-io
-                                                slingshot]]
+                                                slingshot
+                                                clj-tuple]]
                                   [com.google.jimfs/jimfs "1.0"]
                                   [net.polyc0l0r/bote "0.1.0"
                                    :exclusions [commons-codec
