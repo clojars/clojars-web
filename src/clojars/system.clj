@@ -37,12 +37,14 @@
 
 (defrecord StorageComponent [delegate on-disk-repo cloudfiles queue]
   storage/Storage
-  (write-artifact [_ path file force-overwrite?]
+  (-write-artifact [_ path file force-overwrite?]
     (storage/write-artifact delegate path file force-overwrite?))
   (remove-path [_ path]
     (storage/remove-path delegate path))
   (path-exists? [_ path]
     (storage/path-exists? delegate path))
+  (path-seq [_ path]
+    (storage/path-seq delegate path))
   (artifact-url [_ path]
     (storage/artifact-url delegate path))
   

@@ -5,22 +5,32 @@
             [clojars.cloudfiles :as cf])
   (:import org.apache.commons.io.FileUtils))
 
+
 (defprotocol Storage
-  (write-artifact [_ path file force-overwrite?])
+  (-write-artifact [_ path file force-overwrite?])
   (remove-path [_ path])
   (path-exists? [_ path])
+  (path-seq [_ path])
   (artifact-url [_ path]))
+
+(defn write-artifact
+  ([storage path file]
+   (write-artifact storage path file false))
+  ([storage path file force-overwrite?]
+   (-write-artifact storage path file force-overwrite?)))
 
 ;; order matters - the first storage is 'primary', and is the only one
 ;; used for path-exists? & artifact-url
 (defrecord MultiStorage [storages]
   Storage
-  (write-artifact [_ path file force-overwrite?]
-    (run! #(write-artifact % path file force-overwrite?) storages))
+  (-write-artifact [_ path file force-overwrite?]
+    (run! #(-write-artifact % path file force-overwrite?) storages))
   (remove-path [_ path]
     (run! #(remove-path % path) storages))
   (path-exists? [_ path]
     (path-exists? (first storages) path))
+  (path-seq [_ path]
+    (path-seq (first storages) path))
   (artifact-url [_ path]
     (artifact-url (first storages) path)))
 
@@ -29,7 +39,7 @@
 
 (defrecord FileSystemStorage [base-dir]
   Storage
-  (write-artifact [_ path file force-overwrite?]
+  (-write-artifact [_ path file force-overwrite?]
     (let [dest (io/file base-dir path)]
       (when (or force-overwrite?
               (not (.exists dest))
@@ -44,16 +54,22 @@
           (.delete f)))))
   (path-exists? [_ path]
     (.exists (io/file base-dir path)))
+  (path-seq [t path]
+    (when (path-exists? t path)
+      (->> (io/file base-dir path)
+        file-seq
+        (filter (memfn isFile))
+        (map #(fu/subpath (.getAbsolutePath base-dir) (.getAbsolutePath %))))))
   (artifact-url [_ path]
     (->> path (io/file base-dir) .toURI .toURL)))
 
 (defn fs-storage [base-dir]
-  (->FileSystemStorage base-dir))
+  (->FileSystemStorage (io/file base-dir)))
 
 ;; write-artifact/remove-path are async
 (defrecord AsyncStorage [storage name queueing]
   Storage
-  (write-artifact [_ path file force-overwrite?]
+  (-write-artifact [_ path file force-overwrite?]
     (q/enqueue! queueing name {:fn 'clojars.storage/write-artifact
                                :args [path file force-overwrite?]}))
   (remove-path [_ path]
@@ -61,6 +77,8 @@
                                :args [path]}))
   (path-exists? [_ path]
     (path-exists? storage path))
+  (path-seq [_ path]
+    (path-seq storage path))
   (artifact-url [_ path]
     (artifact-url storage path)))
 
@@ -73,7 +91,7 @@
 
 (defrecord CloudfileStorage [conn]
   Storage
-  (write-artifact [_ path file force-overwrite?]
+  (-write-artifact [_ path file force-overwrite?]
     (cf/put-file conn path file (not force-overwrite?)))
   (remove-path [_ path]
     (if (.endsWith path "/")
@@ -84,6 +102,8 @@
     (if (.endsWith path "/")
       (boolean (seq (cf/metadata-seq conn {:in-directory path})))
       (cf/artifact-exists? conn path)))
+  (path-seq [_ path]
+    (map :name (cf/metadata-seq conn {:in-directory path})))
   (artifact-url [_ path]
     (when-let [uri (->> path (cf/artifact-metadata conn) :uri)]
       (.toURL uri))))

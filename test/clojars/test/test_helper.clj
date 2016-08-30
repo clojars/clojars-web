@@ -30,6 +30,7 @@
                        :subname ":memory:"}
                   :queue-storage-dir "data/test/queue-slabs"
                   :repo "data/test/repo"
+                  :deletion-backup-dir "data/test/repo-backup"
                   :bcrypt-work-factor 12})
 
 (defn using-test-config [f]
@@ -48,10 +49,13 @@
 
 (defn default-fixture [f]
   (using-test-config
-   (fn []
-     (delete-file-recursively (io/file (config :repo)))
-     (delete-file-recursively (io/file (config :queue-storage-dir)))
-     (f))))
+    (let [cleanup (fn [] (run! 
+                          #(delete-file-recursively (io/file (config %)))
+                          [:deletion-backup-dir :queue-storage-dir :repo]))]
+      (fn []
+        (cleanup)
+        (f)
+        (cleanup)))))
 
 (defn quiet-reporter []
   (reify errors/ErrorReporter

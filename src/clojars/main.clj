@@ -35,8 +35,11 @@
       (let [system (component/start (prod-system config yeller))]
         (println "clojars-web: starting jetty on" (str "http://" (:bind config) ":" (:port config)))
         (admin/init (get-in system [:db :spec])
-                    (:search system))))
+                    (:queue system)
+                    (:search system)
+                    (:storage system))))
     (catch Throwable t
       (binding [*out* *err*]
         (println "Error during app startup:"))
       (.printStackTrace t))))
+

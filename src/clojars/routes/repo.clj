@@ -246,9 +246,7 @@
       (db/check-and-add-group db account group)
       (run! #(storage/write-artifact
                storage
-               (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath %))
-               %
-               false)
+               (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath %)) %)
         (->> (file-seq dir)
           (remove (memfn isDirectory))
           (remove #(some #{(.getName %)} [metadata-edn]))))
@@ -264,8 +262,7 @@
 
 (defn- deploy-post-finalized-file [storage reporter tmp-repo file]
   (storage/write-artifact storage
-    (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file))
-    file false))
+    (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
 
 (defn- handle-versioned-upload [storage db reporter body session group artifact version filename]
   (let [groupname (fu/path->group group)]
