@@ -19,6 +19,10 @@
   ([user key container-name]
    (connect user key container-name "rackspace-cloudfiles-us"))
   ([user key container-name provider]
+   (assert (some? user))
+   (assert (some? key))
+   (assert (some? container-name))
+   (assert (some? provider))
    (let [bs (jc/blobstore provider user key)]
      (when-not (jc/container-exists? bs container-name)
        (jc/create-container bs container-name :public-read? true))
@@ -44,7 +48,7 @@
               (assoc m k (f md)))
       {}
       metadata-builders)))
-  
+
 (defn artifact-metadata [conn path]
   (when-let [md (apply-conn jc/blob-metadata conn path)]
     (metadata->map md)))
