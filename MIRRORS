@@ -1,2 +1,5 @@
 # official public clojars mirrors
 https://clojars-mirror.tcrawley.org/repo/
+
+# beta clojars mirrors (may be unstable!)
+https://beta.clojars.org/repo/
