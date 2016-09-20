@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+# Usage:
+# update-pom-list releases/clojars-web-current.jar /home/clojars/repo cloudfiles-user cloudfiles-key
+
+clojars_jar=$1
+repo=$2
+cf_user=$3
+cf_key=$4
+
+java -cp $clojars_jar clojure.main -m clojars.tools.generate-feeds $cf_user $cf_key $repo 2> /dev/null
