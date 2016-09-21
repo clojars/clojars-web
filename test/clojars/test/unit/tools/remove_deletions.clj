@@ -24,3 +24,19 @@
     (is (cf/artifact-exists? conn "foo/bar/baz.jar"))
     (is (not (cf/artifact-exists? conn "boo/far/baz.jar")))))
 
+(deftest removal-with-subpath
+  (let [conn (cf/connect "" "" "test" "transient")
+        file (io/file (io/resource "fake.jar"))
+        repo (.toFile (Files/createTempDirectory "repo" (make-array FileAttribute 0)))
+        local-file (io/file repo "foo/bar/baz.jar")]
+    (cf/put-file conn "foo/bar/baz.jar" file)
+    (cf/put-file conn "foo/far/baz.jar" file)
+    (cf/put-file conn "boo/far/baz.jar" file)
+        (.mkdirs (.getParentFile local-file))
+    (io/copy file local-file)
+    (with-redefs [connect (constantly conn)]
+      (-main (.getAbsolutePath repo) "test" "xx" "yy" "foo"))
+    (is (cf/artifact-exists? conn "foo/bar/baz.jar"))
+    (is (cf/artifact-exists? conn "boo/far/baz.jar"))
+    (is (not (cf/artifact-exists? conn "foo/far/baz.jar")))))
+

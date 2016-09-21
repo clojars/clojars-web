@@ -1,8 +1,8 @@
 #!/bin/bash
-set -e
-
 # Usage:
 # update-stats releases/clojars-web-current.jar /var/log/nginx/clojars.access.log.1 data/stats 
+
+set -e
 
 clojars_jar=$1
 logfile=$2

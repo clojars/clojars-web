@@ -1,7 +1,8 @@
 #!/bin/bash
-set -e
 # Usage:
 # update-pom-list releases/clojars-web-current.jar /home/clojars/repo cloudfiles-user cloudfiles-key
+
+set -e
 
 clojars_jar=$1
 repo=$2
