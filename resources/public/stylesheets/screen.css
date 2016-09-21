@@ -586,3 +586,7 @@ pre.error-id {
     text-align: center;
     margin-top: 10px;
 }
+
+p.padded-copy {
+    padding: 5px 10px;
+}
