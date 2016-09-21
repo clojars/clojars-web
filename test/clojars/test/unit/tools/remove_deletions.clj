@@ -20,7 +20,8 @@
     (.mkdirs (.getParentFile local-file))
     (io/copy file local-file)
     (with-redefs [connect (constantly conn)]
-      (-main (.getAbsolutePath repo) "test" "xx" "yy"))
+      (with-out-str
+        (-main (.getAbsolutePath repo) "test" "xx" "yy")))
     (is (cf/artifact-exists? conn "foo/bar/baz.jar"))
     (is (not (cf/artifact-exists? conn "boo/far/baz.jar")))))
 
@@ -35,7 +36,8 @@
         (.mkdirs (.getParentFile local-file))
     (io/copy file local-file)
     (with-redefs [connect (constantly conn)]
-      (-main (.getAbsolutePath repo) "test" "xx" "yy" "foo"))
+      (with-out-str
+        (-main (.getAbsolutePath repo) "test" "xx" "yy" "foo")))
     (is (cf/artifact-exists? conn "foo/bar/baz.jar"))
     (is (cf/artifact-exists? conn "boo/far/baz.jar"))
     (is (not (cf/artifact-exists? conn "foo/far/baz.jar")))))
