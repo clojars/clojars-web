@@ -43,8 +43,8 @@
           (link-to "http://www.redhat.com/"
                    (image "/images/red-hat-logo.svg" "Red Hat, Inc."))]
          [:td.sponsor
-          (link-to "http://yellerapp.com/"
-                   (image "/images/yeller-logo.png" "Yeller"))]
+          (link-to "http://fastly.com/"
+                   (image "/images/fastly-logo.png" "Fastly"))]
          [:td.sponsor
           (link-to "https://dnsimple.link/resolving-clojars"
                    [:span "resolving with" [:br]]
