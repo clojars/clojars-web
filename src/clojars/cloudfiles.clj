@@ -2,8 +2,7 @@
   (:require [clojars.file-utils :as fu]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [org.jclouds.blobstore2 :as jc]
-            [clojars.cloudfiles :as cf])
+            [org.jclouds.blobstore2 :as jc])
   (:import [org.jclouds.blobstore
             BlobStore
             domain.PageSet
