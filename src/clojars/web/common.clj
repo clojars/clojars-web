@@ -40,36 +40,29 @@
        [:table
         [:tr
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "http://www.redhat.com/"
+          (link-to "http://www.redhat.com/"
                    (image "/images/red-hat-logo.svg" "Red Hat, Inc."))]
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "http://yellerapp.com/"
+          (link-to "http://yellerapp.com/"
                    (image "/images/yeller-logo.png" "Yeller"))]
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "https://dnsimple.link/resolving-clojars"
+          (link-to "https://dnsimple.link/resolving-clojars"
                    [:span "resolving with" [:br]]
                    [:span
                     (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]
         [:tr
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "https://www.rackspace.com"
+          (link-to "https://www.rackspace.com"
                    (image "/images/rackspace-logo.svg" "Rackspace"))]
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "https://www.statuspage.io"
+          (link-to "https://www.statuspage.io"
                    (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "https://pingometer.com/"
+          (link-to "https://pingometer.com/"
                    (image "/images/pingometer-logo.svg" "Pingometer"))]]]]]
      [:div.row.sponsors
       "remixed by"
-      (link-to {:target "_blank"}
-               "http://www.bendyworks.com/"
+      (link-to "http://www.bendyworks.com/"
                [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]]
     [:footer.row]))
 
