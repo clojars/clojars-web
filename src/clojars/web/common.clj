@@ -133,8 +133,9 @@
      (footer (get ctx :footer-links? true))]]))
 
 (defn html-doc-with-large-header [title ctx & body]
-  (html5
+  (html5 {:lang "en"}
    [:head
+    [:meta {:charset "utf-8"}]
     [:link {:type "application/opensearchdescription+xml"
             :href "/opensearch.xml"
             :rel "search"}]
@@ -158,7 +159,6 @@
     [:meta {:name "msapplication-TileImage" :content "/mstile-144x144.png?v=47K2kprJd7"}]
     [:meta {:name "theme-color" :content "#ffffff"}]
 
-    [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
     (structured-data/meta-tags (assoc ctx :title (if title
                                                    title
@@ -193,12 +193,12 @@
           [(link-to "/login" "login")
            (link-to "/register" "register")]))]
       [:h2.hero-text.row
-       [:div.col-md-12
+       [:span.col-md-12
         [:span.heavy "Clojars"]
         " is a "
         [:span.heavy "dead easy"]
         " community repository for "]
-       [:div.col-md-12
+       [:span.col-md-12
         " open source Clojure libraries."]]]
      [:div.search-form-container.col-md-12.col-xs-12.col-lg-12.col-sm-12
       [:form {:action "/search"}
@@ -213,11 +213,11 @@
                 :value "Search"
                 :type "submit"}]]]
      [:h2.getting-started.row
-      [:div.col-md-12
+      [:span.col-md-12
        "To get started pushing your own project "
        (link-to "/register" "register")
        " and then"]
-      [:div.col-md-12
+      [:span.col-md-12
        " check out the "
        (link-to "http://wiki.github.com/clojars/clojars-web/tutorial" "tutorial")
        ". Alternatively, "
