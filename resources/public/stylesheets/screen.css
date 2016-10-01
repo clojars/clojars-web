@@ -438,16 +438,17 @@ footer a {
 #flash {
   font-weight: bold;
   padding: 10px;
-  margin: 10px;
+  margin: 10px 0;
   border-radius: 10px;
 }
 
 #flash.info {
-      background-color: #ffb33b;
+  background-color: #ffb33b;
 }
 
 #flash.error {
-    background-color: #ff2929;
+  background-color: #ff2929;
+  color: #393536;
 }
 
 .error ul {
