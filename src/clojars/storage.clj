@@ -116,12 +116,12 @@
    (->CloudfileStorage cf)))
 
 ;; we only care about removals for purging
-(defrecord CDNStorage [cdn-key cdn-url]
+(defrecord CDNStorage [cdn-token cdn-url]
   Storage
   (-write-artifact [_ _ _ _])
   (remove-path [t path]
-    (if (and cdn-key cdn-url)
-      (let [{:keys [status] :as resp} (cdn/purge cdn-key cdn-url path)]
+    (if (and cdn-token cdn-url)
+      (let [{:keys [status] :as resp} (cdn/purge cdn-token cdn-url path)]
         (when (not= "ok" status)
           ;; this should only be triggered from the admin ns in the
           ;; repl, so a println is fine. If we ever implement removals
@@ -132,12 +132,12 @@
   (path-exists? [_ _])
   (artifact-url [_ _]))
 
-(defn cdn-storage [cdn-key cdn-url]
-  (->CDNStorage cdn-key cdn-url))
+(defn cdn-storage [cdn-token cdn-url]
+  (->CDNStorage cdn-token cdn-url))
 
-(defn full-storage [on-disk-repo cloudfiles queue cdn-key cdn-url]
+(defn full-storage [on-disk-repo cloudfiles queue cdn-token cdn-url]
   (multi-storage
     (fs-storage on-disk-repo)
     (async-storage :cloudfiles queue
       (cloudfiles-storage cloudfiles))
-    (cdn-storage cdn-key cdn-url)))
+    (cdn-storage cdn-token cdn-url)))

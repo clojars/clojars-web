@@ -60,8 +60,8 @@
 
 (def env-vars
   [["BIND" :bind]
-   ["CDN_KEY" :cdn-key]
-   ["CDN_HOST" :cdn-host]
+   ["CDN_TOKEN" :cdn-token]
+   ["CDN_URL" :cdn-url]
    ["CLOUDFILES_CONTAINER" :cloudfiles-container]
    ["CLOUDFILES_TOKEN" :cloudfiles-token]
    ["CLOUDFILES_USER" :cloudfiles-user]
