@@ -67,8 +67,8 @@
     (binding [clucy/*analyzer* analyzer]
       (let [[old] (try
                     (clucy/search index (format "artifact-id:%s AND group-id:%s"
-                                              (:artifact-id doc)
-                                              (:group-id doc)) 1)
+                                                (QueryParser/escape (:artifact-id doc))
+                                                (QueryParser/escape (:group-id doc))) 1)
                     (catch IndexNotFoundException _
                       ;; This happens when the index is searched before any data
                       ;; is added. We can treat it here as a nil return
@@ -76,8 +76,8 @@
         (if old
           (when (< (Long. (:at old)) (:at doc))
             (clucy/search-and-delete index (format "artifact-id:%s AND group-id:%s"
-                                                   (:artifact-id doc)
-                                                   (:group-id doc)))
+                                                   (QueryParser/escape (:artifact-id doc))
+                                                   (QueryParser/escape (:group-id doc))))
             (clucy/add index (with-meta doc field-settings)))
           (clucy/add index (with-meta doc field-settings)))))))
 
@@ -146,7 +146,7 @@
               parser (QueryParser. clucy/*version*
                                    "_content"
                                    clucy/*analyzer*)
-              query  (.parse parser query)
+              query  (.parse parser (QueryParser/escape query))
               query  (CustomScoreQuery. query (download-values stats))
               hits   (.search searcher query (* per-page page))
               highlighter (#'clucy/make-highlighter query searcher nil)]
