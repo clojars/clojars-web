@@ -120,8 +120,7 @@
             (page-nav page
               (int (Math/ceil (/ total-hits results-per-page)))
               :base-path (str "/search?q=" (url-encode query) "&page="))]))
-       (catch Exception e
-         (prn e)
+       (catch Exception _
          [:p "Could not search; please check your query syntax."]))]))
 
 (defn search [search account params]
