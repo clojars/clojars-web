@@ -6,6 +6,7 @@
 (def default-config
   {:port 8080
    :bind "127.0.0.1"
+   :cdn-url "https://repo.clojars.org"
    :db {:classname "org.sqlite.JDBC"
         :subprotocol "sqlite"
         :subname "data/db"}
@@ -58,19 +59,21 @@
    x))
 
 (def env-vars
-  [["CONFIG_FILE" :config-file]
-   ["PORT" :port #(Integer/parseInt %)]
-   ["BIND" :bind]
+  [["BIND" :bind]
+   ["CDN_KEY" :cdn-key]
+   ["CDN_HOST" :cdn-host]
+   ["CLOUDFILES_CONTAINER" :cloudfiles-container]
+   ["CLOUDFILES_TOKEN" :cloudfiles-token]
+   ["CLOUDFILES_USER" :cloudfiles-user]
    ["DATABASE_URL" :db]
-   ["MAIL_URL" :mail parse-mail-uri]
-   ["REPO" :repo]
    ["DELETION_BACKUP_DIR" :deletion-backup-dir]
+   ["MAIL_URL" :mail parse-mail-uri]
    ["NREPL_PORT" :nrepl-port #(Integer/parseInt %)]
+   ["PORT" :port #(Integer/parseInt %)]
+   ["REPO" :repo]
    ["YELLER_ENV" :yeller-environment]
    ["YELLER_TOKEN" :yeller-token]
-   ["CLOUDFILES_USER" :cloudfiles-user]
-   ["CLOUDFILES_TOKEN" :cloudfiles-token]
-   ["CLOUDFILES_CONTAINER" :cloudfiles-container]])
+   ["CONFIG_FILE" :config-file]])
 
 (defn parse-env []
   (reduce

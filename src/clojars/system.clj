@@ -35,7 +35,7 @@
            :http {:port port :host bind}
            :db {:uri (jdbc-url db)})))
 
-(defrecord StorageComponent [delegate on-disk-repo cloudfiles queue]
+(defrecord StorageComponent [delegate on-disk-repo cloudfiles queue cdn-key cdn-url]
   storage/Storage
   (-write-artifact [_ path file force-overwrite?]
     (storage/write-artifact delegate path file force-overwrite?))
@@ -53,12 +53,14 @@
     (if delegate
       t
       (assoc t
-        :delegate (storage/full-storage on-disk-repo cloudfiles queue))))
+        :delegate (storage/full-storage on-disk-repo cloudfiles queue cdn-key cdn-url))))
   (stop [t]
     (assoc t :delegate nil)))
 
-(defn storage-component [on-disk-repo]
-  (map->StorageComponent {:on-disk-repo on-disk-repo}))
+(defn storage-component [on-disk-repo cdn-key cdn-host]
+  (map->StorageComponent {:on-disk-repo on-disk-repo
+                          :cdn-key cdn-key
+                          :cdn-host cdn-host}))
 
 (defn new-system [config]
   (let [config (meta-merge base-env (translate config))]
@@ -72,7 +74,7 @@
          :search        (lucene-component)
          :mailer        (simple-mailer (:mail config))
          :queue         (queue-component (:queue-storage-dir config))
-         :storage       (storage-component (:repo config))
+         :storage       (storage-component (:repo config) (:cdn-key config) (:cdn-host config))
          :clojars-app   (endpoint-component web/handler-optioned))
         (component/system-using
          {:http [:app]

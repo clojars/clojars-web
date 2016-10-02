@@ -1,5 +1,6 @@
 (ns clojars.storage
-  (:require [clojars.file-utils :as fu]
+  (:require [clojars.cdn :as cdn]
+            [clojars.file-utils :as fu]
             [clojars.queue :as q]
             [clojure.java.io :as io]
             [clojars.cloudfiles :as cf])
@@ -114,10 +115,29 @@
   ([cf]
    (->CloudfileStorage cf)))
 
-(defn full-storage [on-disk-repo cloudfiles queue]
+;; we only care about removals for purging
+(defrecord CDNStorage [cdn-key cdn-url]
+  Storage
+  (-write-artifact [_ _ _ _])
+  (remove-path [t path]
+    (if (and cdn-key cdn-url)
+      (let [{:keys [status] :as resp} (cdn/purge cdn-key cdn-url path)]
+        (when (not= "ok" status)
+          ;; this should only be triggered from the admin ns in the
+          ;; repl, so a println is fine. If we ever implement removals
+          ;; from the UI, this will need to report elsewhere
+          (println (format "CDN purge failed for %s" path))
+          (prn resp)))
+      (println "Either no CDN key or host specified, purging skipped:" t)))
+  (path-exists? [_ _])
+  (artifact-url [_ _]))
+
+(defn cdn-storage [cdn-key cdn-url]
+  (->CDNStorage cdn-key cdn-url))
+
+(defn full-storage [on-disk-repo cloudfiles queue cdn-key cdn-url]
   (multi-storage
     (fs-storage on-disk-repo)
     (async-storage :cloudfiles queue
       (cloudfiles-storage cloudfiles))
-    ;; TODO: cdn storage
-    ))
+    (cdn-storage cdn-key cdn-url)))

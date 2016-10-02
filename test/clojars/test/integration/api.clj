@@ -25,7 +25,7 @@
       ;; when it fails
       (is (= 404 (:status resp))))
     (catch clojure.lang.ExceptionInfo e
-      (is (= 404 (-> e ex-data :object :status))))))
+      (is (= 404 (-> e ex-data :status))))))
 
 (deftest utils-test
   (is (= (help/get-content-type {:headers {"content-type" "application/json"}}) "application/json"))
