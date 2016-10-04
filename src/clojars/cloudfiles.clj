@@ -125,8 +125,26 @@
 
 ;; end jclouds code
 
-(defn metadata-seq [conn]
-  (map metadata->map (apply-conn container-seq conn {:recursive true :with-details false})))
+(defn metadata-seq
+  "Returns a seq of metadata about artifacts.
+
+  Options are:
+
+  * :in-directory path (defaults to nil, giving you the full repo)
+  * :max-results n (defaults to nil, giving you all)"
+  ([conn]
+   (metadata-seq conn nil))
+  ([conn options]
+   (map metadata->map (apply-conn container-seq conn
+                        (merge options {:recursive true :with-details false})))))
+
+
+(defn remove-artifact
+  "Removes the artifact at path.
+
+  If path is a dir, this is a no-op."
+  [conn path]
+ (apply-conn jc/remove-blob conn path))
 
 ;; All deletions require purging from the CDN:
 ;; https://developer.rackspace.com/docs/cdn/v1/developer-guide/#purge-a-cached-asset

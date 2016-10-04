@@ -17,6 +17,8 @@
                  [org.codehaus.plexus/plexus-utils "3.0"]
                  [ring-middleware-format "0.7.0"
                   :exclusions [ring/ring-core]]
+                 [factual/durable-queue "0.1.5"
+                  :exclusions [clj-tuple]]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
                  [org.apache.jclouds/jclouds-all "1.9.2"]
                  [org.clojure/tools.logging "0.3.1"] ;; required by jclouds
@@ -31,7 +33,8 @@
                                org.apache.httpcomponents/httpclient
                                org.apache.httpcomponents/httpcore
                                org.clojure/core.cache
-                               ring/ring-core]]
+                               ring/ring-core
+                               slingshot]]
                  [clj-stacktrace "0.2.8"]
                  [ring/ring-anti-forgery "1.0.1"
                   :exclusions [commons-codec]]
@@ -47,7 +50,9 @@
                  [org.slf4j/slf4j-api "1.7.7"]
                  [duct "0.8.0"]
                  [ring-jetty-component "0.3.1"]
-                 [digest "1.4.4"]]
+                 [digest "1.4.4"]
+                 [clj-http "3.3.0"
+                  :exclusions [commons-io]]]
   :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"
@@ -75,10 +80,6 @@
                                   [kerodon "0.7.0"
                                    :exclusions [org.apache.httpcomponents/httpcore
                                                 ring/ring-codec]]
-                                  [clj-http "2.2.0"
-                                   :exclusions [commons-codec
-                                                commons-io
-                                                slingshot]]
                                   [com.google.jimfs/jimfs "1.0"]
                                   [net.polyc0l0r/bote "0.1.0"
                                    :exclusions [commons-codec

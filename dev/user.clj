@@ -20,7 +20,7 @@
   (config/configure [])
   (assoc (system/new-system (meta-merge config/config dev-env))
     :error-reporter (errors/->StdOutReporter)
-    :cloudfiles (cf/connect "" "" "dev" "transient")))
+    :cloudfiles     (cf/connect "" "" "dev" "transient")))
 
 (ns-unmap *ns* 'test)
 

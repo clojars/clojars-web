@@ -1,0 +1,31 @@
+#!/bin/bash
+# Usage:
+# CLOUDFILES_USER=foo CLOUDFILES_TOKEN=bar CLOUDFILES_CONTAINER=baz maven-index-repo releases/clojars-web-current.jar indexer/indexer-core-4.1.2-cli.jar indexer/index-4.1.2 repo
+
+set -e
+
+clojars_jar=$1
+indexer_jar=$2
+index_dir=$3
+repo=$4
+
+# generate the index shards
+java -jar $indexer_jar -n clojars -i $index_dir -d $repo/.index -r $repo -s -q -t min -l -c -k 50
+
+# remove old sums locally (the indexer removes old shards itself, but doesn't remove the sums for those shards)
+shopt -s extglob
+pushd $repo/.index
+for sum in @(*.gz.md5|*.gz.sha1); do
+    shard=$(ls "$sum" | sed -e 's/\.md5//' -e 's/\.sha1//')
+    if [ ! -f "$shard" ]; then
+        rm "$sum"
+    fi
+done
+popd
+
+# upload new shards and sums to cloudfiles
+java -cp $clojars_jar clojure.main -m clojars.tools.upload-repo $repo $CLOUDFILES_CONTAINER $CLOUDFILES_USER $CLOUDFILES_TOKEN .index 2> /dev/null
+
+# remove old shards and sums from cloudfiles
+java -cp $clojars_jar clojure.main -m clojars.tools.remove-deletions $repo $CLOUDFILES_CONTAINER $CLOUDFILES_USER $CLOUDFILES_TOKEN .index 2> /dev/null
+

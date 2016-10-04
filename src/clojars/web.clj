@@ -116,10 +116,10 @@
           (swap! attempts bad-attempt username)
           nil)))))
 
-(defn clojars-app [cloudfiles db reporter stats search mailer]
+(defn clojars-app [storage db reporter stats search mailer]
   (routes
     (-> (context "/repo" _
-          (-> (repo/routes cloudfiles db reporter search)
+          (-> (repo/routes storage db reporter search)
             (friend/authenticate
               {:credential-fn (credential-fn db)
                :workflows [(workflows/http-basic :realm "clojars")]
@@ -148,5 +148,5 @@
        (wrap-not-modified)
        (wrap-ignore-trailing-slash))))
 
-(defn handler-optioned [{:keys [cloudfiles db error-reporter stats search mailer]}]
-  (clojars-app cloudfiles (:spec db) error-reporter stats search mailer))
+(defn handler-optioned [{:keys [storage db error-reporter stats search mailer]}]
+  (clojars-app storage (:spec db) error-reporter stats search mailer))

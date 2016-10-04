@@ -101,8 +101,7 @@
         [:ul#jar-info-bar.row
          [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
           (if-let [gh-info (github-info jar)]
-            (link-to {:target "_blank"}
-                     (format "https://github.com/%s" gh-info)
+            (link-to (format "https://github.com/%s" gh-info)
                      (helpers/retinized-image "/images/github-mark.png" "GitHub")
                      gh-info)
             [:p.github
@@ -195,7 +194,7 @@
          [:h4 "Version Badge"]
          [:p
           "Want to display the "
-          (link-to {:target "_blank"} (version-badge-url jar) "latest version")
+          (link-to (version-badge-url jar) "latest version")
           " of your project on Github? Use the markdown code below!"]
          [:textarea#version-badge
           {:readonly "readonly" :rows 6 :onClick "selectText('version-badge')"}

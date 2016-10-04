@@ -3,7 +3,9 @@
              [config :refer [config]]
              [db :as db]
              [file-utils :as fu]
-             [search :as search]]
+             [queue :as queue]
+             [search :as search]
+             [storage :as storage]]            
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.nrepl.server :as nrepl])
@@ -14,19 +16,32 @@
   (.format (SimpleDateFormat. "yyyyMMdd") (db/get-time)))
 
 (def ^:dynamic *db*)
+(def ^:dynamic *queue*)
 (def ^:dynamic *search*)
+(def ^:dynamic *storage*)
 
-(defn repo->backup [parts]
-  (let [backup (doto (io/file (:deletion-backup-dir config))
-                 (.mkdirs))
-        parts' (vec (remove nil? parts))]
-    (try
-      (FileUtils/moveDirectory
-        (apply io/file (:repo config)
-                   (fu/group->path (first parts')) (rest parts'))
-        (io/file backup (str/join "-" (conj parts' (current-date-str)))))
-      (catch Exception e
-        (printf "WARNING: failed to backup %s: %s\n" parts' (.getMessage e))))))
+(defn backup-dir [base-dir path]
+  (io/file base-dir
+    (str/join "-" (conj (vec (str/split path #"/"))
+                    (current-date-str)))))
+
+(defn path->backup [path storage base-backup-dir]
+  (let [ts-dir (backup-dir base-backup-dir path)]
+    (run!
+      (fn [p]
+        (try
+          (let [url (storage/artifact-url storage p)
+                dest (io/file ts-dir p)]
+            (.mkdirs (.getParentFile dest))
+            (with-open [in (.openStream url)]
+              (io/copy in dest)))
+          (catch Exception e
+            (printf "WARNING: failed to backup %s: %s\n" p (.getMessage e)))))
+      (storage/path-seq storage path))))
+
+(defn segments->path [segments]
+  (let [[group & rest] (remove nil? segments)]
+    (str/join "/" (concat [(fu/group->path group)] rest))))
 
 (defn help []
   (println
@@ -44,7 +59,9 @@
       (println "Giving you a fn to delete group" group-id)
       (fn []
         (println "Deleting" group-id)
-        (repo->backup [group-id])
+        (let [path (segments->path [group-id])]
+          (path->backup path *storage* (:deletion-backup-dir config))
+          (storage/remove-path *storage* path))
         (db/delete-jars *db* group-id)
         (db/delete-groups *db* group-id)
         (search/delete! *search* group-id)))
@@ -62,11 +79,12 @@
           (println "WARNING: jar description not set to 'delete me':" description))
         (fn []
           (println "Deleting" pretty-coords)
-          (repo->backup [group-id jar-id version])
+          (let [path (segments->path [group-id jar-id version])]
+            (path->backup path *storage* (:deletion-backup-dir config))
+            (storage/remove-path *storage* path))
           (apply db/delete-jars *db* group-id jar-id (if version [version] []))
-          (search/delete! *search* group-id jar-id)))
+          (when-not version (search/delete! *search* group-id jar-id))))
       (println "No artifacts found under" group-id jar-id version))))
-
 
 (defn handler [mapping]
   (nrepl/default-handler
@@ -78,10 +96,12 @@
       {:clojure.tools.nrepl.middleware/descriptor {:requires #{"clone"}
                                                    :expects #{"eval"}}})))
 
-(defn init [db search]
+(defn init [db queue search storage]
   (when-let [port (:nrepl-port config)]
     (printf "clojars-web: starting nrepl on localhost:%s\n" port)
     (nrepl/start-server :port port
                         :bind "127.0.0.1"
-                        :handler (handler {#'*db* db
-                                           #'*search* search}))))
+                        :handler (handler {#'*db*      db
+                                           #'*queue*   queue
+                                           #'*search*  search
+                                           #'*storage* storage}))))

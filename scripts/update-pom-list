@@ -1,0 +1,10 @@
+#!/bin/bash
+# Usage:
+# CLOUDFILES_USER=foo CLOUDFILES_TOKEN=bar update-pom-list releases/clojars-web-current.jar /home/clojars/repo
+
+set -e
+
+clojars_jar=$1
+repo=$2
+
+java -cp $clojars_jar clojure.main -m clojars.tools.generate-feeds $CLOUDFILES_USER $CLOUDFILES_TOKEN $repo 2> /dev/null

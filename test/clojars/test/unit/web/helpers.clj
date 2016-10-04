@@ -1,6 +1,6 @@
 (ns clojars.test.unit.web.helpers
-  (require [clojure.test :refer :all]
-           [clojars.web.helpers :as helpers]))
+  (:require [clojure.test :refer :all]
+            [clojars.web.helpers :as helpers]))
 
 (deftest resource-exists?
   (is (helpers/public-resource-exists? "/test-resource"))

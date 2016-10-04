@@ -40,36 +40,29 @@
        [:table
         [:tr
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "http://www.redhat.com/"
+          (link-to "http://www.redhat.com/"
                    (image "/images/red-hat-logo.svg" "Red Hat, Inc."))]
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "http://yellerapp.com/"
-                   (image "/images/yeller-logo.png" "Yeller"))]
+          (link-to "http://fastly.com/"
+                   (image "/images/fastly-logo.png" "Fastly"))]
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "https://dnsimple.link/resolving-clojars"
+          (link-to "https://dnsimple.link/resolving-clojars"
                    [:span "resolving with" [:br]]
                    [:span
                     (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]
         [:tr
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "https://www.rackspace.com"
+          (link-to "https://www.rackspace.com"
                    (image "/images/rackspace-logo.svg" "Rackspace"))]
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "https://www.statuspage.io"
+          (link-to "https://www.statuspage.io"
                    (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]
          [:td.sponsor
-          (link-to {:target "_blank"}
-                   "https://pingometer.com/"
+          (link-to "https://pingometer.com/"
                    (image "/images/pingometer-logo.svg" "Pingometer"))]]]]]
      [:div.row.sponsors
       "remixed by"
-      (link-to {:target "_blank"}
-               "http://www.bendyworks.com/"
+      (link-to "http://www.bendyworks.com/"
                [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]]
     [:footer.row]))
 
@@ -140,8 +133,9 @@
      (footer (get ctx :footer-links? true))]]))
 
 (defn html-doc-with-large-header [title ctx & body]
-  (html5
+  (html5 {:lang "en"}
    [:head
+    [:meta {:charset "utf-8"}]
     [:link {:type "application/opensearchdescription+xml"
             :href "/opensearch.xml"
             :rel "search"}]
@@ -165,7 +159,6 @@
     [:meta {:name "msapplication-TileImage" :content "/mstile-144x144.png?v=47K2kprJd7"}]
     [:meta {:name "theme-color" :content "#ffffff"}]
 
-    [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
     (structured-data/meta-tags (assoc ctx :title (if title
                                                    title
@@ -200,12 +193,12 @@
           [(link-to "/login" "login")
            (link-to "/register" "register")]))]
       [:h2.hero-text.row
-       [:div.col-md-12
+       [:span.col-md-12
         [:span.heavy "Clojars"]
         " is a "
         [:span.heavy "dead easy"]
         " community repository for "]
-       [:div.col-md-12
+       [:span.col-md-12
         " open source Clojure libraries."]]]
      [:div.search-form-container.col-md-12.col-xs-12.col-lg-12.col-sm-12
       [:form {:action "/search"}
@@ -220,11 +213,11 @@
                 :value "Search"
                 :type "submit"}]]]
      [:h2.getting-started.row
-      [:div.col-md-12
+      [:span.col-md-12
        "To get started pushing your own project "
        (link-to "/register" "register")
        " and then"]
-      [:div.col-md-12
+      [:span.col-md-12
        " check out the "
        (link-to "http://wiki.github.com/clojars/clojars-web/tutorial" "tutorial")
        ". Alternatively, "

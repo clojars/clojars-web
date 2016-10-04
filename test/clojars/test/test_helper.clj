@@ -15,7 +15,8 @@
              [jdbc :as jdbc]]
             [clojure.string :as str]
             [clucy.core :as clucy]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [clojars.storage :as storage])
   (:import java.io.File))
 
 (def tmp-dir (io/file (System/getProperty "java.io.tmpdir")))
@@ -27,7 +28,9 @@
                   :db {:classname "org.sqlite.JDBC"
                        :subprotocol "sqlite"
                        :subname ":memory:"}
+                  :queue-storage-dir "data/test/queue-slabs"
                   :repo "data/test/repo"
+                  :deletion-backup-dir "data/test/repo-backup"
                   :bcrypt-work-factor 12})
 
 (defn using-test-config [f]
@@ -46,13 +49,18 @@
 
 (defn default-fixture [f]
   (using-test-config
-   (fn []
-     (delete-file-recursively (io/file (config :repo)))
-     (f))))
+    (let [cleanup (fn [] (run! 
+                          #(delete-file-recursively (io/file (config %)))
+                          [:deletion-backup-dir :queue-storage-dir :repo]))]
+      (fn []
+        (cleanup)
+        (f)
+        (cleanup)))))
 
 (defn quiet-reporter []
   (reify errors/ErrorReporter
-    (-report-error [t e ex id])))
+    (-report-error [t e ex id]
+      (println t e ex id))))
 
 (declare ^:dynamic *db*)
 
@@ -83,14 +91,14 @@
 
 (defn app
   ([] (app {}))
-  ([{:keys [:cloudfiles :db :error-reporter :stats :search :mailer]
-     :or {:cloudfiles (transient-cloudfiles)
-          :db *db*
-          :error-reporter (quiet-reporter)
-          :stats (no-stats)
-          :search (no-search)
-          :mailer nil}}]
-   (web/clojars-app cloudfiles db error-reporter stats search mailer)))
+  ([{:keys [storage db error-reporter stats search mailer]
+     :or {db *db*
+          storage (storage/fs-storage (:repo test-config))
+          error-reporter (quiet-reporter)
+          stats (no-stats)
+          search (no-search)
+          mailer nil}}]
+   (web/clojars-app storage db error-reporter stats search mailer)))
 
 (declare ^:dynamic system)
 
@@ -101,11 +109,14 @@
 
 (defn run-test-app
   ([f]
-   (binding [system (component/start (assoc (system/new-system test-config)
-                                       :cloudfiles (transient-cloudfiles)
-                                       :error-reporter (quiet-reporter)
-                                       :index-factory #(clucy/memory-index)
-                                       :stats (no-stats)))]
+   (binding [system (try (component/start (assoc (system/new-system test-config)
+                                            :cloudfiles (transient-cloudfiles)
+                                            :error-reporter (quiet-reporter)
+                                            :index-factory #(clucy/memory-index)
+                                            :stats (no-stats)))
+                         (catch Exception e
+                           (println e)
+                           (pr (ex-data e))))]
      (let [server (get-in system [:http :server])
            port (-> server .getConnectors first .getLocalPort)]
        (binding [test-port port]
