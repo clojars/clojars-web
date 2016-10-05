@@ -292,7 +292,7 @@
 
 (defn page-nav [current-page total-pages & {:keys [base-path] :or {base-path "/projects?page="}}]
   (let [previous-text (raw "&#8592; Previous")
-        next-text (raw "Next &#8594")
+        next-text (raw "Next &#8594;")
         page-range 3
         page-url base-path
         current-page (-> current-page (max 1) (min total-pages))

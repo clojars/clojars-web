@@ -42,12 +42,12 @@
 
   (deftest page-nav-renders-disabled-next-page
     (is (=
-         [:span.next-page.disabled "Next &#8594"]
+         [:span.next-page.disabled "Next &#8594;"]
          (-> (common/page-nav 3 3) (last) cook-content))))
 
   (deftest page-nav-renders-active-next-page
     (is (=
-         [:a.next-page {:href "/projects?page=3"} "Next &#8594"]
+         [:a.next-page {:href "/projects?page=3"} "Next &#8594;"]
          (-> (common/page-nav 2 3) (last) cook-content)))))
 
 (deftest page-nav-renders-no-before-links
