@@ -113,7 +113,7 @@
          [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
           downloads-this-version
           " This Version"]]
-        [:h2 "Leiningen"]
+        [:h2 "Leiningen/Boot"]
         [:div#leiningen-coordinates.package-config-example
          {:onClick "selectText('leiningen-coordinates');"}
          [:pre
