@@ -517,7 +517,7 @@ footer a {
   /* reflow the 'hero' and 'getting started' text on small screens  */
   .getting-started > .col-md-12, .hero-text > .col-md-12 {
     display: inline;
-    padding: 0
+    padding: 0;
   }
 
   .small-header {
