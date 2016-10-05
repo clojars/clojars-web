@@ -30,12 +30,22 @@
     structured-data/organisation
     [:article.row
      (helpers/select-text-script)
-     [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
+     [:div.push-information.col-md-4.col-lg-4.col-sm-4.col-xs-12
       [:h3.push-header "Push with Leiningen"]
       [:div#leiningen.push-example {:onClick "selectText('leiningen');"}
        [:pre.push-example-leiningen
         (tag "$") " lein deploy clojars\n"]]]
-     [:div.push-information.col-md-6.col-lg-6.col-sm-6.col-xs-12
+     [:div.push-information.col-md-4.col-lg-4.col-sm-4.col-xs-12
+      [:h3.push-header "Push with "
+        (link-to "http://boot-clj.com/" "Boot")
+        " (using "
+        (link-to "https://github.com/adzerk/bootlaces" "bootlaces")
+        ")"]
+      [:div#boot.push-example {:onClick "selectText('boot');"}
+       [:pre.push-example-boot
+        (tag "$") " boot build-jar push-snapshot\n"
+        (tag "$") " boot build-jar push-release\n"]]]
+     [:div.push-information.col-md-4.col-lg-4.col-sm-4.col-xs-12
       [:h3.push-header "Maven Repository"]
       [:div#maven.push-example {:onClick "selectText('maven');"}
        [:pre
