@@ -399,4 +399,9 @@
   (is (= (db/count-projects-before help/*db* "tester/rocks") 3))
   (is (= (db/count-projects-before help/*db* "z") 4)))
 
+(deftest can-check-jar-exists
+  (db/add-jar help/*db* "test-user" {:name "rock" :group "tester" :version "0.1"})
+  (is (db/jar-exists help/*db* "tester" "rock"))
+  (is (not (db/jar-exists help/*db* "tester" "paper"))))
+
 ;; TODO: recent-versions

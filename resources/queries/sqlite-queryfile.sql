@@ -128,7 +128,7 @@ SELECT EXISTS(
     AND
     jar_name = :jarname
   )
-);
+) as exist;
 
 --name: find-jar
 SELECT *
