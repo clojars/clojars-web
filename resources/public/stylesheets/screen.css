@@ -520,6 +520,11 @@ footer a {
     padding: 0;
   }
 
+  /* slightly tweak padding of 'getting started' for better mobile legibility */
+  .getting-started {
+      padding: 0 25px;
+  }
+
   .small-header {
     padding-bottom: 90px;
   }
