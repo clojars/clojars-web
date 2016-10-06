@@ -226,9 +226,9 @@
     body
     (footer (get ctx :footer-links? true))]))
 
-(defn flash [msg]
-  (when msg
-    [:div#flash.info msg]))
+(defn flash [& msg]
+  (when (some some? msg)
+    (into [:div#flash.info] msg)))
 
 (defn error-list [errors]
   (when errors
