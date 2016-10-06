@@ -101,7 +101,7 @@
                    :jarname jarname}
                   {:connection db
                    :result-set-fn first
-                   :row-fn #(= % 1)}))
+                   :row-fn #(= (:exist %) 1)}))
 
 (let [read-field (fn [m field] (update m field (fnil edn/read-string "nil")))
       read-edn-fields #(when %
