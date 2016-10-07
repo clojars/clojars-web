@@ -93,28 +93,14 @@
                [:h1 "Page not found"]
                [:p "Thundering typhoons!  I think we lost it.  Sorry!"]]))))))
 
-(defn bad-attempt [attempts user]
-  (let [failures (or (attempts user) 0)]
-    (Thread/sleep (* failures failures)))
-  (update-in attempts [user] (fnil inc 0)))
-
 (defn user-credentials [db username]
   (when-let [user (db/find-user db username)]
     (when-not (empty? (:password user))
       (rename-keys user {:user :username}))))
 
 (defn credential-fn [db]
-  (let [attempts (atom {})]
     (fn [{:keys [username] :as auth-map}]
-      (if-let [auth-result (creds/bcrypt-credential-fn
-                             (partial user-credentials db)
-                             auth-map)]
-        (do
-          (swap! attempts dissoc username)
-          auth-result)
-        (do
-          (swap! attempts bad-attempt username)
-          nil)))))
+      (creds/bcrypt-credential-fn (partial user-credentials db) auth-map)))
 
 (defn clojars-app [storage db reporter stats search mailer]
   (routes
