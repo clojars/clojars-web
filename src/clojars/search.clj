@@ -74,8 +74,7 @@
                       ;; is added. We can treat it here as a nil return
                       ))]
         (if old
-          (when (and (< (Long. (:at old)) (:at doc))
-                     (not (re-find #"-SNAPSHOT$" (:version doc))))
+          (when (< (Long. (:at old)) (:at doc))
             (clucy/search-and-delete index (format "artifact-id:%s AND group-id:%s"
                                                    (:artifact-id doc)
                                                    (:group-id doc)))
