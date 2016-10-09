@@ -8,8 +8,8 @@
             [cheshire.core :as json]
             [clojars.errors :as errors]
             [clojure.string :as str]
-            [ring.util.codec :refer [url-encode]
-            [clojars.web.error-api :as error-api]]))
+            [ring.util.codec :refer [url-encode]]
+            [clojars.web.error-api :as error-api]))
 
 (defn- jar->json [jar]
   (let [m {:jar_name (:artifact-id jar)
