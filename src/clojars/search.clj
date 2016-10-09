@@ -146,7 +146,7 @@
               parser (QueryParser. clucy/*version*
                                    "_content"
                                    clucy/*analyzer*)
-              query  (.parse parser (QueryParser/escape query))
+              query  (.parse parser query)
               query  (CustomScoreQuery. query (download-values stats))
               hits   (.search searcher query (* per-page page))
               highlighter (#'clucy/make-highlighter query searcher nil)]
