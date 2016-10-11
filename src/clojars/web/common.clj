@@ -214,7 +214,7 @@
                 :type "submit"}]
        [:span.col-md-12
         "There is multiple search query wildcards available, checkout the "
-        (link-to "" "guide")
+        (link-to "http://github.com/clojars/clojars-web/wiki/Search-Query-Syntax" "guide")
         "."]]]
      [:h2.getting-started.row
       [:span.col-md-12
