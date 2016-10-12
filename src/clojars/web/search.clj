@@ -7,8 +7,9 @@
             [clojars.search :as search]
             [cheshire.core :as json]
             [clojars.errors :as errors]
-            [clojars.web.error-api :as error-api]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [ring.util.codec :refer [url-encode]]
+            [clojars.web.error-api :as error-api]))
 
 (defn- jar->json [jar]
   (let [m {:jar_name (:artifact-id jar)
@@ -118,7 +119,7 @@
                                   [:td (format-date created)])]]])]
             (page-nav page
               (int (Math/ceil (/ total-hits results-per-page)))
-              :base-path (str "/search?q=" query "&page="))]))
+              :base-path (str "/search?q=" (url-encode query) "&page="))]))
        (catch Exception _
          [:p "Could not search; please check your query syntax."]))]))
 
