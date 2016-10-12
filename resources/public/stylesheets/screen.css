@@ -236,8 +236,8 @@ footer a {
   margin: 50px 0;
 }
 
-.search-form-container > form > .col-md-12 {
-  color: #717171;
+.search-query-syntax {
+    margin-bottom: 15px;
 }
 
 #content-wrapper {

@@ -95,6 +95,9 @@
               "."
               [:br]
               [:small "org.clojure artifacts are distributed via Maven Central instead of Clojars."]))
+     [:p.search-query-syntax "For details on the search query syntax, see the "
+      (link-to "http://github.com/clojars/clojars-web/wiki/Search-Query-Syntax" "guide")
+      "."]
      (try
        (let [results (search/search search query page)
              {:keys [total-hits results-per-page offset]} (meta results)]
