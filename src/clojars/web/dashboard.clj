@@ -31,7 +31,8 @@
     [:article.row
      (helpers/select-text-script)
      [:div.push-information.col-md-4.col-lg-4.col-sm-4.col-xs-12
-      [:h3.push-header "Push with Leiningen"]
+      [:h3.push-header "Push with "
+       (link-to "http://leiningen.org/" "Leiningen")]
       [:div#leiningen.push-example {:onClick "selectText('leiningen');"}
        [:pre.push-example-leiningen
         (tag "$") " lein deploy clojars\n"]]]
