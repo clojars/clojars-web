@@ -99,7 +99,7 @@
       (rename-keys user {:user :username}))))
 
 (defn credential-fn [db]
-    (fn [{:keys [username] :as auth-map}]
+    (fn [auth-map]
       (creds/bcrypt-credential-fn (partial user-credentials db) auth-map)))
 
 (defn clojars-app [storage db reporter stats search mailer]
