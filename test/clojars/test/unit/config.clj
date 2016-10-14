@@ -22,7 +22,5 @@
 (deftest parse-mail
   (is (= (config/parse-mail {:hostname "x"})
          {:hostname "x"}))
-  (is (= (config/parse-mail "{:hostname \"x\"}")
-         {:hostname "x"}))
   (is (= (config/parse-mail "smtp://x")
          {:hostname "x" :ssl false})))

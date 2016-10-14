@@ -1,0 +1,23 @@
+{:port 8080
+ :bind "127.0.0.1"
+ :cdn-url "https://repo.clojars.org"
+ :db {:classname "org.sqlite.JDBC"
+      :subprotocol "sqlite"
+      :subname "data/db"}
+ :base-url "https://clojars.org"
+ :stats-dir "data/stats"
+ :queue-storage-dir "data/durable-queue-slabs"
+ :index-path "data/index"
+ :nrepl-port 7991
+ :mail {:hostname "127.0.0.1"
+        :ssl false
+        :from "noreply@clojars.org"}
+ :bcrypt-work-factor 12
+ :cloudfiles-user #env "CLOUDFILES_USER"
+ :deletion-backup-dir #env "DELETION_BACKUP_DIR"
+ :cloudfiles-token #env "CLOUDFILES_TOKEN"
+ :cdn-token #env "CDN_TOKEN"
+ :cloudfiles-container #env "CLOUDFILES_CONTAINER"
+ :yeller-environment "development"
+ :yeller-token #env "YELLER_TOKEN"
+ :repo #env "REPO"}

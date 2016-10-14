@@ -52,7 +52,8 @@
                  [ring-jetty-component "0.3.1"]
                  [digest "1.4.4"]
                  [clj-http "3.3.0"
-                  :exclusions [commons-io]]]
+                  :exclusions [commons-io]]
+                 [aero "1.0.1"]]
   :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"
