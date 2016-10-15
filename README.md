@@ -129,7 +129,7 @@ Also see [Configuration](#configuration).
 1. Compile with: `lein uberjar`
 1. Deploy `target/uberjar/clojars-web-*-standalone.jar` to the server
 1. Run the migrations `java -cp clojars-web-*-standalone.jar clojure.main -m clojars.tools.migrate-db`
-1. Set Yeller token `export YELLER_TOKEN="foo-bar"`
+1. Set Sentry DSN url `export RAVEN_DSN="https://b70a31b3510c4cf793964a185cfe1fd0:b7d80b520139450f903720eb7991bf3d@example.com/1"`
 1. Run the production system: `java -jar clojars-web-*-standalone.jar`
 
 Configuration
