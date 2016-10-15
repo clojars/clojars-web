@@ -4,7 +4,7 @@
              [config :refer [config]]
              [db :as db]
              [email :as email]
-             [errors :as errors]
+             [errors :refer [ErrorReporter] :as errors]
              [stats :as stats]
              [search :as search]
              [system :as system]
@@ -49,7 +49,7 @@
 
 (defn default-fixture [f]
   (using-test-config
-    (let [cleanup (fn [] (run! 
+    (let [cleanup (fn [] (run!
                           #(delete-file-recursively (io/file (config %)))
                           [:deletion-backup-dir :queue-storage-dir :repo]))]
       (fn []
