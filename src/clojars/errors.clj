@@ -1,6 +1,7 @@
 (ns clojars.errors
   (:require [raven-clj.core :as raven-clj]
             [raven-clj.interfaces :as interfaces]
+            [clojure.walk :as walk]
             [clojars.config :refer [config]]
             [clj-stacktrace.repl :refer [pst]]
             [clojars.web.error-page :as error-page]
@@ -10,9 +11,9 @@
 
 (defn raven-event-info [message e extra]
   (cond-> {}
-          message   (assoc :message message)
+          message (assoc :message message)
           e (interfaces/stacktrace e ["clojars"])
-          extra     (merge extra)))
+          extra (merge extra)))
 
 (defn raven-error-report
   ([dsn message e extra]
@@ -68,9 +69,24 @@
        (-report-error reporter e extra id))
      id)))
 
-(defn alter-fn [request]
-    ;(dissoc request :data)) ; TODO:
-    request)
+(defn replace-kv
+  "Walk form looking for map entries with the keyword kw and, if found, replace the entry with replacement"
+  [kw replacement form]
+  (walk/postwalk
+    (fn [original]
+      (if (and (vector? original) (= (count original) 2) (= kw (first original)))
+        replacement
+        original))
+    form))
+
+(defn alter-fn
+  "Function called by raven-clj.interfaces.http to scrub data from the passed http-info map.
+   Returns the scrubbed http-info map.
+   See also: https://docs.sentry.io/clientdev/interfaces/#special-interfaces"
+  [http-event-map]
+  (->> http-event-map
+       (replace-kv :password [:password "SCRUBBED"])
+       (replace-kv :confirm [:confirm "SCRUBBED"]))) ; TODO: add more? auth tokens?
 
 (defn report-ring-error [reporter e request]
   (report-error reporter

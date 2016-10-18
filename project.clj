@@ -3,6 +3,7 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.clojure/core.memoize "0.5.8"]
+                 [org.clojure/data.json "0.2.6"]
                  [raven-clj "1.4.3"]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
