@@ -86,7 +86,7 @@
             true (str "http://search.maven.org/#search"))))
 
 (defn html-search [search account query page]
-  (html-doc (str query " - search") {:account account :query query :description (format "Clojars search results for '%s'" query)}
+  (html-doc (str query " - search - page " page) {:account account :query query :description (format "Clojars search results page %d for '%s'" page query)}
     [:div.light-article.row
      [:h1 (format "Search for '%s'" query)]
      (when-let [mvn-tuple (on-maven-central query)]

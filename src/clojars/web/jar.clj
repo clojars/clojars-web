@@ -77,9 +77,10 @@
                                                          (:group_name jar)
                                                          (:jar_name jar)
                                                          (:version jar))
-                                   (stats/format-stats))]
+                                   (stats/format-stats))
+        title (format "[%s/%s \"%s\"]" (:group_name jar) (:jar_name jar) (:version jar))]
     (html-doc
-      (str (:jar_name jar) " " (:version jar)) {:account account :description (format "%s - %s" (:description jar) (:version jar))
+      title {:account account :description (format "%s %s" title (:description jar))
                                                 :label1  (str "Total downloads / this version")
                                                 :data1   (format "%s / %s" total-downloads downloads-this-version)
                                                 :label2  "Coordinates"

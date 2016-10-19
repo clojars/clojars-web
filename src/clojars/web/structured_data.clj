@@ -47,12 +47,18 @@
   (when-not (str/blank? content)
     [:meta {:name name :content content}]))
 
+(defn limit-size
+  [s n] 
+ (if (> (count s) n)
+   (str (subs s 0 (- n 3)) "...")
+   s))
+
 (defn meta-tags
   "Returns meta tags for description, twitter cards, and facebook opengraph."
   [ctx]
   (list
     ;; meta description
-    (meta-name "description" (:description ctx))
+    (meta-name "description" (limit-size (:description ctx) 150))
 
     ;; twitter metadata
     [:meta {:name "twitter:card" :content "summary"}]
