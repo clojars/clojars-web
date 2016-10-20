@@ -33,7 +33,7 @@
     x))
 
 (def default-config
-  (aero/read-config "resources/default_config.edn"))
+  (aero/read-config (io/resource "resources/default_config.edn")))
 
 ;; we attempt to read a file defined on clojars.config.file property at load time
 ;; this is handy for interactive development and unit tests
