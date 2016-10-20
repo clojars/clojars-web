@@ -13,11 +13,11 @@
         :ssl false
         :from "noreply@clojars.org"}
  :bcrypt-work-factor 12
- :cloudfiles-user #env "CLOUDFILES_USER"
- :deletion-backup-dir #env "DELETION_BACKUP_DIR"
- :cloudfiles-token #env "CLOUDFILES_TOKEN"
- :cdn-token #env "CDN_TOKEN"
- :cloudfiles-container #env "CLOUDFILES_CONTAINER"
+ :cloudfiles-user "NOTSET"
+ :deletion-backup-dir "NOTSET"
+ :cloudfiles-token "NOTSET"
+ :cdn-token "NOTSET"
+ :cloudfiles-container "NOTSET"
  :yeller-environment "development"
- :yeller-token #env "YELLER_TOKEN"
- :repo #env "REPO"}
+ :yeller-token "NOTSET"
+ :repo "NOTSET"}
