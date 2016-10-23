@@ -2,9 +2,8 @@
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.cli "0.2.1"]
-                 [yeller-clojure-client "1.4.2"
-                  :exclusions [com.fasterxml.jackson.core/jackson-core
-                               commons-codec]]
+                 [org.clojure/core.memoize "0.5.8"]
+                 [raven-clj "1.4.3"]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
                   [org.codehaus.plexus/plexus-utils]]
@@ -16,7 +15,10 @@
                  ;; pomegranate transitively depends on two versions, so we explicitly bring in one
                  [org.codehaus.plexus/plexus-utils "3.0"]
                  [ring-middleware-format "0.7.0"
-                  :exclusions [ring/ring-core]]
+                  :exclusions [ring/ring-core
+                               cheshire
+                               com.fasterxml.jackson.core/jackson-core
+                               com.fasterxml.jackson.dataformat/jackson-dataformat-smile]]
                  [factual/durable-queue "0.1.5"
                   :exclusions [clj-tuple]]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
@@ -48,8 +50,10 @@
                                org.slf4j/slf4j-api]]
                  ;; hikaricp-component transitively depends on two versions, so we explicitly bring in one
                  [org.slf4j/slf4j-api "1.7.7"]
-                 [duct "0.8.0"]
-                 [ring-jetty-component "0.3.1"]
+                 [duct "0.8.0"
+                  :exclusions [org.clojure/tools.reader]]
+                 [ring-jetty-component "0.3.1"
+                  :exclusions [org.clojure/tools.reader]]
                  [digest "1.4.4"]
                  [clj-http "3.3.0"
                   :exclusions [commons-io]]]

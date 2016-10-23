@@ -18,8 +18,7 @@
    :mail {:hostname "127.0.0.1"
           :ssl false
           :from "noreply@clojars.org"}
-   :bcrypt-work-factor 12
-   :yeller-environment "development"})
+   :bcrypt-work-factor 12})
 
 (defn parse-resource [f]
   (when-let [r (io/resource f)] (read-string (slurp r))))
@@ -71,8 +70,7 @@
    ["NREPL_PORT" :nrepl-port #(Integer/parseInt %)]
    ["PORT" :port #(Integer/parseInt %)]
    ["REPO" :repo]
-   ["YELLER_ENV" :yeller-environment]
-   ["YELLER_TOKEN" :yeller-token]
+   ["SENTRY_DSN" :sentry-dsn]
    ["CONFIG_FILE" :config-file]])
 
 (defn parse-env []
