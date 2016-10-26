@@ -1,7 +1,6 @@
 (ns clojars.routes.repo
   (:require [clojars
              [auth :refer [with-account]]
-             [config :refer [config]]
              [db :as db]
              [errors :refer [report-error]]
              [file-utils :as fu]

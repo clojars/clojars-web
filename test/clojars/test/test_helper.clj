@@ -32,8 +32,9 @@
                   :deletion-backup-dir "data/test/repo-backup"})
 
 (defn using-test-config [f]
-  (with-redefs [config (merge config test-config)]
-    (f)))
+  (let [orig-config @config]
+    (with-redefs [config (delay (merge orig-config test-config))]
+      (f))))
 
 (defn delete-file-recursively
   "Delete file f. If it's a directory, recursively delete all its contents."
@@ -48,7 +49,7 @@
 (defn default-fixture [f]
   (using-test-config
     (let [cleanup (fn [] (run!
-                          #(delete-file-recursively (io/file (config %)))
+                          #(delete-file-recursively (io/file (@config %)))
                           [:deletion-backup-dir :queue-storage-dir :repo]))]
       (fn []
         (cleanup)

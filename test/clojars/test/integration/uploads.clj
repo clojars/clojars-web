@@ -54,7 +54,7 @@
   (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
         base-path "org/clojars/dantheman/test/"
         cloudfiles (:cloudfiles help/system)
-        repo (:repo config)]
+        repo (:repo @config)]
     (is (.exists (io/file repo base-path "maven-metadata.xml")))
     (is (cf/artifact-exists? cloudfiles (str base-path "maven-metadata.xml")))
     (is (= 6 (count (.list (io/file repo base-path "0.0.1")))))
@@ -124,7 +124,7 @@
 
     (let [base-path "org/clojars/dantheman/test/"
           cloudfiles (:cloudfiles help/system)
-          repo (:repo config)]
+          repo (:repo @config)]
       (doseq [[f no-version?] files]
         (let [fname (.getName f)
               base-path' (if no-version? base-path (str base-path "0.0.1/"))]
@@ -515,4 +515,4 @@
                                                                   "UTF-8"))
                                                       "UTF-8"))})
         (has (status? 403))))
-  (is (not (.exists (io/file (:repo config) "group3/artifact3/1.0.0/test.jar")))))
+  (is (not (.exists (io/file (:repo @config) "group3/artifact3/1.0.0/test.jar")))))

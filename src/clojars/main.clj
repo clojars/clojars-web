@@ -28,15 +28,15 @@
 (defn -main [& args]
   (try
     (configure args)
-    (println "clojars-web: enabling raven-clj client dsn:project-id:" (:project-id (raven-clj/parse-dsn (:raven-dsn config))))
-    (let [dsn (:sentry-dsn config)]
+    (println "clojars-web: enabling raven-clj client dsn:project-id:" (:project-id (raven-clj/parse-dsn (:raven-dsn @config))))
+    (let [dsn (:sentry-dsn @config)]
       (if (not dsn)
-        (throw (Exception. (str "No :sentry-dsn key value found in config - " config))))
+        (throw (Exception. (str "No :sentry-dsn key value found in config - " @config))))
       (println "clojars-web: enabling raven-clj client dsn:project-id:" (:project-id (raven-clj/parse-dsn dsn)))
       (let [raven-reporter (raven-error-reporter {:dsn dsn})]
         (Thread/setDefaultUncaughtExceptionHandler raven-reporter)
-        (let [system (component/start (prod-system config raven-reporter))]
-          (println "clojars-web: starting jetty on" (str "http://" (:bind config) ":" (:port config)))
+        (let [system (component/start (prod-system @config raven-reporter))]
+          (println "clojars-web: starting jetty on" (str "http://" (:bind @config) ":" (:port @config)))
           (admin/init (get-in system [:db :spec])
             (:queue system)
             (:search system)

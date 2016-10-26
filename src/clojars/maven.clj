@@ -85,7 +85,7 @@
 (defn directory-for
   "Directory for a jar under repo"
   [{:keys [group_name jar_name version]}]
-  (apply io/file (concat [(config :repo)] (str/split group_name #"\.") [jar_name version])))
+  (apply io/file (concat [(@config :repo)] (str/split group_name #"\.") [jar_name version])))
 
 (defn snapshot-pom-file [{:keys [jar_name version] :as jar}]
   (let [metadata-file (io/file (directory-for jar) "maven-metadata.xml")

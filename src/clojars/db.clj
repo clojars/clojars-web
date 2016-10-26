@@ -38,7 +38,7 @@
   (Date.))
 
 (defn bcrypt [s]
-  (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor config)))
+  (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor @config)))
 
 (defn find-user [db username]
   (sql/find-user {:username username}

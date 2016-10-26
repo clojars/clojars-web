@@ -135,7 +135,7 @@
 (defn forgot-password [db mailer {:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email db email-or-username)]
     (let [reset-code (db/set-password-reset-code! db (:user user))
-          base-url (:base-url config)
+          base-url (:base-url @config)
           reset-password-url (str base-url "/password-resets/" reset-code)]
       (mailer (:email user)
         "Password reset for Clojars"

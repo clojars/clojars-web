@@ -1,7 +1,7 @@
 (ns clojars.tools.generate-feeds
   (:require [clojure.java.io :as io]
             [clojars.maven :as maven]
-            [clojars.config :refer [config configure]]
+            [clojars.config :refer [config]]
             [clojure.set :as set]
             [clojars.db :as db]
             [clojars.cloudfiles :as cf]
@@ -98,6 +98,5 @@
   (if (not= 3 (count args))
     (println "args: cf-user cf-key dest-dir")
     (let [[cf-user cf-key dest-dir] args]
-      (configure nil)
-      (generate-feeds dest-dir (:db config) (cf/connect cf-user cf-key "repo")))))
+      (generate-feeds dest-dir (:db @config) (cf/connect cf-user cf-key "repo")))))
 

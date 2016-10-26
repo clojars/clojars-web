@@ -1,5 +1,5 @@
 (ns clojars.tools.update-db-from-pom
-  (:require [clojars.config :refer [config configure]]
+  (:require [clojars.config :refer [config]]
             [clojars.db :as db]
             [clojars.file-utils :as fu]
             [clojars.maven :as maven]
@@ -82,16 +82,15 @@
     (when (= 0 (rem (inc n) 1000))
       (println "Perform: processed" (inc n) "poms"))
     (if-let [jar (db/find-jar db group name version)]
-      (update-jar (:db config) jar pom)
+      (update-jar (:db @config) jar pom)
       (println (format "%s/%s:%s not found in db" group name version)))))
 
 (defn -main [mode data-file repo]
   (if-not (and mode repo)
     (println "Usage: [prepare|perform] data-file repo-path")
     (let [data-file (io/file data-file)]
-      (configure nil)
-      (println (config :db))
+      (println (@config :db))
       (case mode
         "prepare" (-> data-file read-data (prepare repo) (write-data data-file))
-        "perform" (->> data-file read-data (perform (config :db)))
+        "perform" (->> data-file read-data (perform (@config :db)))
         (println "Unknown mode:" mode)))))

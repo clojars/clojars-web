@@ -26,10 +26,10 @@
     (is (= "/tmp/a-b-c-20160827" (.getAbsolutePath (backup-dir "/tmp" "a/b/c"))))))
 
 (defn backup-exists? [path sub-path]
-  (.exists (io/file (backup-dir (:deletion-backup-dir config) path) path sub-path)))
+  (.exists (io/file (backup-dir (:deletion-backup-dir @config) path) path sub-path)))
 
 (defn in-backup-somewhere? [name]
-  (some #{name} (map (memfn getName) (file-seq (io/file (:deletion-backup-dir config))))))
+  (some #{name} (map (memfn getName) (file-seq (io/file (:deletion-backup-dir @config))))))
 
 (def ^:dynamic *search-removals*)
 
@@ -42,7 +42,7 @@
                             (swap! *search-removals* conj group#))
                           (delete! [_ group# artifact#]
                             (swap! *search-removals* conj (format "%s/%s" group# artifact#))))
-               *storage* (storage/fs-storage (:repo config))]
+               *storage* (storage/fs-storage (:repo @config))]
        (db/add-jar *db* "testuser" {:group "org.ham" :name "biscuit" :version "1" :description "delete me"})
        (db/add-jar *db* "testuser" {:group "org.ham" :name "biscuit" :version "2" :description ""})
        (db/add-jar *db* "testuser" {:group "org.ham" :name "sandwich" :version "1" :description ""})
@@ -68,7 +68,7 @@
     (is (backup-exists? "org/ham" "sandwich/1/sandwich-1.jar"))
     (is (backup-exists? "org/ham" "sandwich/1/sandwich-1.pom"))
 
-    (is (not (.exists (io/file (:repo config) "org/ham"))))
+    (is (not (.exists (io/file (:repo @config) "org/ham"))))
 
     (is (not (db/find-jar *db* "org.ham" "biscuit")))
     (is (not (db/find-jar *db* "org.ham" "sandwich")))
@@ -87,12 +87,12 @@
     (is (not (in-backup-somewhere? "sandwich-1.jar")))
     (is (not (in-backup-somewhere? "sandwich-1.pom")))
 
-    (is  (not (.exists (io/file (:repo config) "org/ham/biscuit/1/biscuit-1.jar"))))
-    (is  (not (.exists (io/file (:repo config) "org/ham/biscuit/1/biscuit-1.pom"))))
-    (is  (not (.exists (io/file (:repo config) "org/ham/biscuit/2/biscuit-2.jar"))))
-    (is  (not (.exists (io/file (:repo config) "org/ham/biscuit/2/biscuit-2.pom"))))
-    (is  (.exists (io/file (:repo config) "org/ham/sandwich/1/sandwich-1.jar")))
-    (is  (.exists (io/file (:repo config) "org/ham/sandwich/1/sandwich-1.pom")))
+    (is  (not (.exists (io/file (:repo @config) "org/ham/biscuit/1/biscuit-1.jar"))))
+    (is  (not (.exists (io/file (:repo @config) "org/ham/biscuit/1/biscuit-1.pom"))))
+    (is  (not (.exists (io/file (:repo @config) "org/ham/biscuit/2/biscuit-2.jar"))))
+    (is  (not (.exists (io/file (:repo @config) "org/ham/biscuit/2/biscuit-2.pom"))))
+    (is  (.exists (io/file (:repo @config) "org/ham/sandwich/1/sandwich-1.jar")))
+    (is  (.exists (io/file (:repo @config) "org/ham/sandwich/1/sandwich-1.pom")))
 
     (is (not (db/find-jar *db* "org.ham" "biscuit")))
     (is (db/find-jar *db* "org.ham" "sandwich"))
@@ -111,12 +111,12 @@
     (is (not (in-backup-somewhere? "sandwich-1.jar")))
     (is (not (in-backup-somewhere? "sandwich-1.pom")))
 
-    (is  (not (.exists (io/file (:repo config) "org/ham/biscuit/1/biscuit-1.jar"))))
-    (is  (not (.exists (io/file (:repo config) "org/ham/biscuit/1/biscuit-1.pom"))))
-    (is  (.exists (io/file (:repo config) "org/ham/biscuit/2/biscuit-2.jar")))
-    (is  (.exists (io/file (:repo config) "org/ham/biscuit/2/biscuit-2.pom")))
-    (is  (.exists (io/file (:repo config) "org/ham/sandwich/1/sandwich-1.jar")))
-    (is  (.exists (io/file (:repo config) "org/ham/sandwich/1/sandwich-1.pom")))
+    (is  (not (.exists (io/file (:repo @config) "org/ham/biscuit/1/biscuit-1.jar"))))
+    (is  (not (.exists (io/file (:repo @config) "org/ham/biscuit/1/biscuit-1.pom"))))
+    (is  (.exists (io/file (:repo @config) "org/ham/biscuit/2/biscuit-2.jar")))
+    (is  (.exists (io/file (:repo @config) "org/ham/biscuit/2/biscuit-2.pom")))
+    (is  (.exists (io/file (:repo @config) "org/ham/sandwich/1/sandwich-1.jar")))
+    (is  (.exists (io/file (:repo @config) "org/ham/sandwich/1/sandwich-1.pom")))
     
     (is (not (db/find-jar *db* "org.ham" "biscuit" "1")))
     (is (db/find-jar *db* "org.ham" "biscuit" "2"))

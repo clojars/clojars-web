@@ -33,17 +33,19 @@
     x))
 
 (def default-config
-  (if-let [cfg (io/resource "default_config.edn")]
-    (aero/read-config cfg)
-    (println "WARNING: failed to find default_config.edn")))
+  (delay
+    (if-let [cfg (io/resource "default_config.edn")]
+      (aero/read-config cfg)
+      (println "WARNING: failed to find default_config.edn"))))
 
 ;; we attempt to read a file defined on clojars.config.file property at load time
 ;; this is handy for interactive development and unit tests
 (def config
-  (-> default-config
+  (delay
+    (-> @default-config
       (merge (when-let [extra-config (System/getProperty "clojars.config.file")]
                (aero/read-config extra-config)))
-      (update :mail parse-mail)))
+      (update :mail parse-mail))))
 
 (defn parse-args [args]
   (cli args

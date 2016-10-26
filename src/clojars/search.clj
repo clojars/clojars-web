@@ -83,7 +83,7 @@
 
 (defn generate-index [db]
   (let [indexed (atom 0)]
-    (with-open [index (clucy/disk-index (config :index-path))]
+    (with-open [index (clucy/disk-index (@config :index-path))]
       ;; searching with an empty index creates an exception
       (clucy/add index {:dummy true})
       (doseq [jar (db/all-jars db)]

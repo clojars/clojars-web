@@ -17,8 +17,7 @@
 
 (defn new-system []
   (refresh)
-  (config/configure [])
-  (assoc (system/new-system (meta-merge config/config dev-env))
+  (assoc (system/new-system (meta-merge @config/config dev-env))
     :error-reporter (errors/->StdOutReporter)
     :cloudfiles     (cf/connect "" "" "dev" "transient")))
 
@@ -41,7 +40,7 @@
   (load "local"))
 
 (defn migrate []
-  (migrate/migrate (:db config/config)))
+  (migrate/migrate (:db @config/config)))
 
 ;; TODO: function to setup fake data (from clojars.dev.setup?)
 

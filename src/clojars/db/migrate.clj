@@ -1,7 +1,6 @@
 (ns clojars.db.migrate
   (:require [clojure.java.jdbc :as sql]
             [clojure.java.io :as io]
-            [clojars.config :refer [config]]
             [clojure.string :as str])
   (:import (java.sql Timestamp BatchUpdateException)
            (java.io File)))

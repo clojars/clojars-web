@@ -2,7 +2,6 @@
   (:require [raven-clj.core :as raven-clj]
             [raven-clj.interfaces :as interfaces]
             [clojure.walk :as walk]
-            [clojars.config :refer [config]]
             [clj-stacktrace.repl :refer [pst]]
             [clojars.web.error-page :as error-page]
             [clojars.web.error-api :as error-api])

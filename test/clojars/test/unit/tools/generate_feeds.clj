@@ -1,6 +1,5 @@
 (ns clojars.test.unit.tools.generate-feeds
   (:require [clojars.tools.generate-feeds :refer :all]
-            [clojars.config :refer [config]]
             [clojars.db :as db]
             [clojure.test :refer :all]
             [clojars.test.test-helper :as help]

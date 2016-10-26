@@ -31,7 +31,7 @@
     (is (= "http://example.com/license2" (:url l2)))))
 
 (deftest directory-for-handles-group-names-with-dots
-  (is (= (io/file (config :repo) "com" "novemberain" "monger" "1.2.0-alpha1")
+  (is (= (io/file (@config :repo) "com" "novemberain" "monger" "1.2.0-alpha1")
          (directory-for {:group_name "com.novemberain"
                          :jar_name "monger"
                          :version "1.2.0-alpha1"}))))
@@ -39,7 +39,7 @@
 (def snapshot "20120806.052549-1")
 
 (defn expected-file [& [d1 d2 d3 file :as args]]
-  (io/file (config :repo) d1 d2 d3 (str file "-" snapshot ".pom")))
+  (io/file (@config :repo) d1 d2 d3 (str file "-" snapshot ".pom")))
 
 (defn snapshot-pom-file-with [jar-map]
   (with-redefs [snapshot-version (constantly snapshot)]

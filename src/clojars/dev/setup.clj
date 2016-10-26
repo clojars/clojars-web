@@ -101,7 +101,7 @@
     (println "Wrote download stats to" (.getAbsolutePath stats-file))))
 
 (defn setup-dev-environment []
-  (let [{:keys [repo stats-dir db]} config]
+  (let [{:keys [repo stats-dir db]} @config]
     (println "NOTE: this will clear the contents of" db
       "and import all of the projects in" repo "into the db.\n")
     (print "Are you sure you want to continue? [y/N] ")
