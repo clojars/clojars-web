@@ -24,17 +24,15 @@
 (def local-repo2 (io/file tmp-dir "clojars" "test" "local-repo2"))
 
 (def test-config {:port 0
-                  :bind "127.0.0.1"
                   :db {:classname "org.sqlite.JDBC"
                        :subprotocol "sqlite"
                        :subname ":memory:"}
                   :queue-storage-dir "data/test/queue-slabs"
                   :repo "data/test/repo"
-                  :deletion-backup-dir "data/test/repo-backup"
-                  :bcrypt-work-factor 12})
+                  :deletion-backup-dir "data/test/repo-backup"})
 
 (defn using-test-config [f]
-  (with-redefs [config test-config]
+  (with-redefs [config (merge config test-config)]
     (f)))
 
 (defn delete-file-recursively
