@@ -1,22 +1,22 @@
-{:port 8080
- :bind "127.0.0.1"
- :cdn-url "https://repo.clojars.org"
- :db {:classname "org.sqlite.JDBC"
-      :subprotocol "sqlite"
-      :subname "data/db"}
- :base-url "https://clojars.org"
- :stats-dir "data/stats"
- :queue-storage-dir "data/durable-queue-slabs"
- :index-path "data/index"
- :nrepl-port 7991
- :mail {:hostname "127.0.0.1"
-        :ssl false
-        :from "noreply@clojars.org"}
+{:base-url "https://clojars.org"
  :bcrypt-work-factor 12
- :cloudfiles-user "NOTSET"
- :deletion-backup-dir "NOTSET"
- :cloudfiles-token "NOTSET"
+ :bind "127.0.0.1"
  :cdn-token "NOTSET"
+ :cdn-url "https://repo.clojars.org"
  :cloudfiles-container "NOTSET"
+ :cloudfiles-token "NOTSET"
+ :cloudfiles-user "NOTSET"
+ :db {:classname "org.sqlite.JDBC"
+      :subname "data/db"
+      :subprotocol "sqlite"}
+ :deletion-backup-dir "NOTSET"
+ :index-path "data/index"
+ :mail {:from "noreply@clojars.org"
+        :hostname "127.0.0.1"
+        :ssl false}
+ :nrepl-port 7991
+ :port 8080
+ :queue-storage-dir "data/durable-queue-slabs"
+ :repo "NOTSET"
  :sentry-dsn "NOTSET"
- :repo "NOTSET"}
+ :stats-dir "data/stats"}
