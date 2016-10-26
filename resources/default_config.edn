@@ -18,6 +18,5 @@
  :cloudfiles-token "NOTSET"
  :cdn-token "NOTSET"
  :cloudfiles-container "NOTSET"
- :yeller-environment "development"
- :yeller-token "NOTSET"
+ :sentry-dsn "NOTSET"
  :repo "NOTSET"}
