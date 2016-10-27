@@ -364,7 +364,6 @@ footer a {
 
 .recent-jar-description {
   font-size: 1.1em;
-  margin-top: 35px;
 }
 
 .recent-jar-title {
@@ -375,18 +374,10 @@ footer a {
 .recent-jar-title a {
   color: #4098cf;
 
-  /* FIXME: this doesn't work well on long names and mobile */
-  white-space: nowrap;
+  overflow-wrap: break-word;
 
-  /* make the entire box clickable
-   *
-   * this is the only link in this box
-   */
   width: 100%;
   display: block;
-  padding: 20px 20px 110px;
-  margin: -20px 0 0 -20px;
-  position: absolute;
 }
 
 /* FIXME: should this be a class? */
@@ -457,6 +448,7 @@ footer a {
 
 #jar-title h1 a {
   color: #393536;
+  overflow-wrap: break-word;
 }
 
 #jar-title .description {
