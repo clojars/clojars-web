@@ -555,14 +555,16 @@ footer a {
 
 .sponsors table {
     margin: auto;
+    margin-top: 10px;
 }
 
 .sponsors td {
     vertical-align: middle;
+    padding: 0 3px;
 }
 
 .sponsor img {
-    width: 90px;
+    width: 120px;
 }
 
 .result a.fork {
