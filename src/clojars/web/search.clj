@@ -89,12 +89,13 @@
   (html-doc (str query " - search - page " page) {:account account :query query :description (format "Clojars search results page %d for '%s'" page query)}
     [:div.light-article.row
      [:h1 (format "Search for '%s'" query)]
-     (when-let [mvn-tuple (on-maven-central query)]
-       (flash "Given your search terms, you may also want to "
-              (link-to (apply maven-search-link mvn-tuple) "search Maven Central")
-              "."
-              [:br]
-              [:small "org.clojure artifacts are distributed via Maven Central instead of Clojars."]))
+     (when query
+       (when-let [mvn-tuple (on-maven-central query)]
+         (flash "Given your search terms, you may also want to "
+           (link-to (apply maven-search-link mvn-tuple) "search Maven Central")
+           "."
+           [:br]
+           [:small "org.clojure artifacts are distributed via Maven Central instead of Clojars."])))
      [:p.search-query-syntax "For details on the search query syntax, see the "
       (link-to "http://github.com/clojars/clojars-web/wiki/Search-Query-Syntax" "guide")
       "."]
