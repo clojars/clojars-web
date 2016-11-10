@@ -10,6 +10,7 @@
   (:gen-class))
 
 (def time-clf (timef/formatter "dd/MMM/YYYY:HH:mm:ss Z"))
+(def time-cdn (timef/formatters :date-time-no-ms))
 
 ;; net.cgrand/regex currently doesn't allow Patterns
 ;; but they're too handy so let's enable them anyway
@@ -36,15 +37,34 @@
               [field :as :size]
               #".*")))
 
+(def re-cdn ; log format from our fastly cdn
+  (let [field #"\S+"
+        nonquote #"[^\" ]+"
+        reqline (list [nonquote :as :method] \space
+                      [nonquote :as :path])]
+    (re/regex \< #"\d+" \>
+      [field :as :time] \space
+      [field :as :cache-host] \space
+      [field :as :endpoint] \: \space
+      [field :as :host] \space
+      \" [field :as :ident] \" \space
+      \" reqline \" \space
+      [field :as :status] \space
+      [field :as :size]
+      #".*")))
+
 (def re-path
   (let [segment #"[^/]+"
         sep #"/+"]
-    (re/regex sep "repo" sep
+    (re/regex (re/? sep "repo") sep
               [(re/* segment sep) segment :as :group] sep
               [segment :as :name] sep
               [segment :as :version] sep
               segment \.
               [#"\w+" :as :ext])))
+
+(defn is-cdn? [line]
+  (.startsWith line "<"))
 
 (defn parse-path [s]
   (when s
@@ -59,14 +79,15 @@
     (try (Long/parseLong s)
          (catch NumberFormatException e))))
 
-(defn parse-clf [line]
-  (let [m (re/exec re-clf line)]
+(defn parse-line [line]
+  (let [cdn? (is-cdn? line)
+        m (re/exec (if cdn? re-cdn re-clf) line)]
     (merge
      (parse-path (:path m))
      {:status (parse-long (:status m))
       :method (:method m)
       :size (parse-long (:size m))
-      :time (when (:time m) (try (timef/parse time-clf (:time m))
+      :time (when (:time m) (try (timef/parse (if cdn? time-cdn time-clf) (:time m))
                                  (catch IllegalArgumentException e)))})))
 
 (defn valid-download? [m]
@@ -79,7 +100,7 @@
 
 (defn compute-stats [lines]
   (->> lines
-       (map parse-clf)
+       (map parse-line)
        (filter valid-download?)
        (map (juxt :group :name :version))
        (frequencies)

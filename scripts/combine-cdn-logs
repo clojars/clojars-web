@@ -1,0 +1,14 @@
+#!/bin/bash
+# Usage:
+# combine-cdn-logs releases/clojars-web-current.jar /tmp/foo.log [2016-11-09]
+
+set -e
+
+clojars_jar=$1
+output_file=$2
+DATE=$3
+if [ -z "$DATE" ]; then
+    DATE=$(gdate --date='1 day ago' +%Y-%m-%d)
+fi
+
+java -cp $clojars_jar clojure.main -m clojars.tools.combine-cdn-logs $CDN_LOG_CONTAINER $CDN_COMBINED_LOG_CONTAINER $CLOUDFILES_USER $CLOUDFILES_TOKEN $DATE $output_file

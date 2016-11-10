@@ -1,14 +1,19 @@
 #!/bin/bash
 # Usage:
-# update-stats releases/clojars-web-current.jar /var/log/nginx/clojars.access.log.1 data/stats 
+# update-stats releases/clojars-web-current.jar /var/log/nginx/clojars.access.log.1 data/tmp/cdn-access-yesterday.log data/stats 
 
 set -e
 
 clojars_jar=$1
-logfile=$2
-output_dir=$3
+local_logfile=$2
+cdn_logfile=$3
+output_dir=$4
 
-DATE=$(date --date='1 day ago' +%Y%m%d)
-cat $logfile | java -cp $clojars_jar clojure.main -m clojars.tools.process-stats > $output_dir/downloads-$DATE.edn
-java -cp $clojars_jar clojure.main -m clojars.tools.merge-stats $output_dir/all.edn $output_dir/downloads-$DATE.edn > /tmp/all.edn
-mv /tmp/all.edn $output_dir/all.edn
+date=$(date --date='1 day ago' +%Y%m%d)
+downloads_date=$output_dir/downloads-$date.edn
+downloads_all=$output_dir/all.edn
+downloads_all_tmp=/tmp/all.edn
+
+cat $local_logfile $cdn_logfile | java -cp $clojars_jar clojure.main -m clojars.tools.process-stats > $downloads_date
+java -cp $clojars_jar clojure.main -m clojars.tools.merge-stats $downloads_all $downloads_date > $downloads_all_tmp
+mv $downloads_all_tmp $downloads_all

@@ -146,13 +146,7 @@
   [conn path]
  (apply-conn jc/remove-blob conn path))
 
-;; All deletions require purging from the CDN:
-;; https://developer.rackspace.com/docs/cdn/v1/developer-guide/#purge-a-cached-asset
-(comment
-  (defn delete-version [conn group name version])
-
-  (defn delete-all-versions [conn group name])
-
-  (defn delete-group [bs container group]))
-
-
+(defn artifact-stream
+  "Gets an input-stream for the artifact."
+  [conn path]
+  (apply-conn jc/get-blob-stream conn path))
