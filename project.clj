@@ -1,4 +1,4 @@
-(defproject clojars-web "52"
+(defproject clojars-web "53-SNAPSHOT"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.cli "0.2.1"]
