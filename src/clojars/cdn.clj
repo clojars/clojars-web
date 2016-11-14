@@ -4,7 +4,7 @@
 
 (defn purge [key cdn-url path]
   (let [res (http/request {:method "PURGE"
-                           :url (str cdn-url path)
+                           :url (format "%/%s" cdn-url path)
                            :headers {"Fastly-Key" key}})
         body (json/parse-string (:body res) true)]
     (assoc body :http-status (:status res))))
