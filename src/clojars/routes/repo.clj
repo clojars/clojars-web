@@ -148,7 +148,7 @@
   (when (and (not (snapshot-version? version))
           (storage/path-exists? storage
             (str/join "/" [(fu/group->path group-id) artifact-id version])))
-    (throw-invalid "redeploying non-snapshots is not allowed (see http://git.io/vO2Tg)")))
+    (throw-invalid "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
 
 (defn assert-jar-uploaded [artifacts pom]
   (when (and (= :jar (:packaging pom))
@@ -185,11 +185,11 @@
     ;; OSes, URLs and tools.
     (validate-regex name #"^[a-z0-9_.-]+$"
       (str "project names must consist solely of lowercase "
-        "letters, numbers, hyphens and underscores (see http://git.io/vO2Uy)"))
+        "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
     
     (validate-regex group #"^[a-z0-9_.-]+$"
       (str "group names must consist solely of lowercase "
-        "letters, numbers, hyphens and underscores (see http://git.io/vO2Uy)"))
+        "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
     
     ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
     ;; bar one broken non-ascii exception only these characters have been used.
@@ -198,7 +198,7 @@
     ;; compatible for everyone let's lock it down.
     (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
       (str "version strings must consist solely of letters, "
-        "numbers, dots, pluses, hyphens and underscores (see http://git.io/vO2TO)")))
+        "numbers, dots, pluses, hyphens and underscores (see https://git.io/v1IA2)")))
 
 (defn validate-deploy [storage dir pom {:keys [group name version]}]
   (validate-gav group name version)
