@@ -15,7 +15,8 @@
              [route :refer [not-found]]]
             [ring.util
              [codec :as codec]
-             [response :as response]])
+             [response :as response]]
+            [clojars.maven :as mvn])
   (:import java.util.UUID
            org.apache.commons.io.FileUtils
            (java.io FileFilter IOException FileNotFoundException File)))
@@ -150,6 +151,30 @@
             (str/join "/" [(fu/group->path group-id) artifact-id version])))
     (throw-invalid "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
 
+(defn exists-on-central?  [group-id artifact-id]
+  (try
+    (mvn/exists-on-central? group-id artifact-id)
+    (catch Exception _
+      ::failure)))
+
+(defn assert-non-central-shadow [group-id artifact-id]
+  (when-let [ret (loop [attempt 0]
+                   (let [ret (exists-on-central? group-id artifact-id)]
+                     (if (and (= ret ::failure) (< attempt 9))
+                       (do
+                         (Thread/sleep (bit-shift-left 1 (inc attempt)))
+                         (recur (inc attempt)))
+                       ret)))]
+    (let [meta {:group-id group-id
+                :artifact-id artifact-id
+                ;; report both failures to reach central and shadow attempts to sentry
+                :report? true}] 
+      (if (= ret ::failure)
+        (throw-invalid "failed to contact Maven Central to verify project name (see https://git.io/vMUHN)"
+          (assoc meta :status 503))
+        (throw-invalid "shadowing Maven Central artifacts is not allowed (see https://git.io/vMUHN)"
+          meta)))))
+ 
 (defn assert-jar-uploaded [artifacts pom]
   (when (and (= :jar (:packaging pom))
           (not (some (partial match-file-name #"\.jar$") artifacts)))
@@ -186,11 +211,11 @@
     (validate-regex name #"^[a-z0-9_.-]+$"
       (str "project names must consist solely of lowercase "
         "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
-    
+
     (validate-regex group #"^[a-z0-9_.-]+$"
       (str "group names must consist solely of lowercase "
         "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
-    
+
     ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
     ;; bar one broken non-ascii exception only these characters have been used.
     ;; Even if we manage to support obscure characters some filesystems do not
@@ -204,6 +229,7 @@
   (validate-gav group name version)
   (validate-pom pom group name version)
   (assert-non-redeploy storage group name version)
+  (assert-non-central-shadow group name)
 
   (let [artifacts (find-artifacts dir)]
     (assert-jar-uploaded artifacts pom)

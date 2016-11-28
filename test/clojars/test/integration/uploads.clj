@@ -218,6 +218,23 @@
                                :password "password"}}
           :local-repo help/local-repo))))
 
+(deftest deploy-cannot-shadow-central
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (is (thrown-with-msg?
+        org.sonatype.aether.deployment.DeploymentException
+        #"Forbidden - shadowing Maven Central"
+        (aether/deploy
+          :coordinates '[org.tcrawley/dynapath "0.0.1"]
+          :jar-file (io/file (io/resource "test.jar"))
+          :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                      {:groupId "org.tcrawley"
+                       :artifactId "dynapath"})
+          :repository {"test" {:url (repo-url)
+                               :username "dantheman"
+                               :password "password"}}
+          :local-repo help/local-repo))))
+
 (deftest user-can-redeploy-snapshots
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
