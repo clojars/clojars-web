@@ -2,7 +2,8 @@
   (:require [clojure.java.io :as io]
             [clojars.config :refer [config]]
             [clojure.string :as str]
-            [clojars.errors :refer [report-error]])
+            [clojars.errors :refer [report-error]]
+            [clojars.file-utils :as fu])
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
            java.io.IOException
@@ -200,4 +201,18 @@
       (compare (:incremental x 0) (:incremental y 0))
       (compare-qualifiers (:qualifier x) (:qualifier y))
       (compare (:build-number x 0) (:build-number y 0)))))
+
+(defn central-metadata
+  "Read the metadata from maven central for the given artifact."
+  [group name]
+  (try
+    (read-metadata
+      (format "https://repo1.maven.org/maven2/%s/%s/maven-metadata.xml" (fu/group->path group) name))
+    (catch java.io.FileNotFoundException _)))
+
+(def exists-on-central?
+  "Checks if any versions of the given artifact exist on central."
+  (comp boolean central-metadata))
+
+
 
