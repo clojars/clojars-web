@@ -23,17 +23,6 @@
     "webmaster" "profile" "dashboard" "settings" "options"
     "index" "files" "releases" "snapshots"})
 
-(def ^{:private true} constituent-chars
-  (->> [[\a \z] [\A \Z] [\0 \9]]
-       (mapcat (fn [[x y]] (range (int x) (inc (int y)))))
-       (map char)
-       vec))
-
-(defn rand-string
-  "Generates a random string of [A-z0-9] of length n."
-  [n]
-  (str/join (repeatedly n #(rand-nth constituent-chars))))
-
 (defn get-time []
   (Date.))
 
@@ -265,7 +254,7 @@
     (when (and (seq members)
             (not (some #{account} members)))
       (err (format "You don't have access to the '%s' group" groupname)))))
-  
+
 (defn check-and-add-group [db account groupname]
   (let [members (group-membernames db groupname)]
     (check-group members account groupname)
