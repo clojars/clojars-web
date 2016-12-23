@@ -15,7 +15,8 @@
              [route :refer [not-found]]]
             [ring.util
              [codec :as codec]
-             [response :as response]])
+             [response :as response]]
+            [clojars.maven :as mvn])
   (:import java.util.UUID
            org.apache.commons.io.FileUtils
            (java.io FileFilter IOException FileNotFoundException File)))
@@ -150,6 +151,17 @@
             (str/join "/" [(fu/group->path group-id) artifact-id version])))
     (throw-invalid "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
 
+(defn assert-non-central-shadow [group-id artifact-id]
+  (when (try
+          (mvn/exists-on-central? group-id artifact-id)
+          (catch Exception _
+            ;; this will happen if there is a network error to
+            ;; central. Since shadow deploys are rare, I'd rather
+            ;; chance letting one through instead of failing a deploy
+            ;; based on the availability of a remote service 
+            ))
+    (throw-invalid "shadowing Maven Central artifacts is not allowed (see TODO)")))
+
 (defn assert-jar-uploaded [artifacts pom]
   (when (and (= :jar (:packaging pom))
           (not (some (partial match-file-name #"\.jar$") artifacts)))
@@ -204,6 +216,7 @@
   (validate-gav group name version)
   (validate-pom pom group name version)
   (assert-non-redeploy storage group name version)
+  (assert-non-central-shadow group name)
 
   (let [artifacts (find-artifacts dir)]
     (assert-jar-uploaded artifacts pom)
