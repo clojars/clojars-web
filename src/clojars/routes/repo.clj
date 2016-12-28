@@ -142,11 +142,8 @@
   (validate-pom-entry pom :name name)
   (validate-pom-entry pom :version version))
 
-(defn snapshot-version? [version]
-  (.endsWith version "-SNAPSHOT"))
-
 (defn assert-non-redeploy [storage group-id artifact-id version]
-  (when (and (not (snapshot-version? version))
+  (when (and (not (mvn/snapshot-version? version))
           (storage/path-exists? storage
             (str/join "/" [(fu/group->path group-id) artifact-id version])))
     (throw-invalid "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
@@ -317,7 +314,7 @@
    (PUT ["/:group/:artifact/:file"
          :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
         {body :body session :session {:keys [group artifact file]} :params}
-        (if (snapshot-version? artifact)
+        (if (mvn/snapshot-version? artifact)
           ;; SNAPSHOT metadata will hit this route, but should be
           ;; treated as a versioned file upload.
           ;; See: https://github.com/clojars/clojars-web/issues/319

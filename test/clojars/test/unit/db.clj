@@ -148,6 +148,28 @@
              :dep_scope      "test"}
             (first deps))))))
 
+(deftest added-snapshot-jars-do-not-duplicate-dependencies
+  (let [name "tester"
+        ms (long 0)
+        jarmap {:name name :group name :version "1.0-SNAPSHOT"
+                :description "An dog awesome and non-existent test jar."
+                :homepage "http://clojars.org/"
+                :authors ["Alex Osborne" "a little fish"]
+                :dependencies [{:group_name "foo" :jar_name "bar" :version "1" :scope "test"}]}]
+    (db/add-jar help/*db* "test-user" jarmap)
+    (db/add-jar help/*db* "test-user" jarmap)
+    (let [deps (db/find-dependencies help/*db* name name "1.0-SNAPSHOT")]
+      (is (= 1 (count deps)))
+      (is (submap
+            {:jar_name       name
+             :group_name     name
+             :version        "1.0-SNAPSHOT"
+             :dep_jar_name   "bar"
+             :dep_group_name "foo"
+             :dep_version    "1"
+             :dep_scope      "test"}
+            (first deps))))))
+
 (deftest jars-can-be-deleted-by-group
   (let [group "foo"
         jar {:name "one" :group group :version "1.0"

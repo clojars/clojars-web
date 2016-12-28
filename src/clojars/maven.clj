@@ -214,5 +214,7 @@
   "Checks if any versions of the given artifact exist on central."
   (comp boolean central-metadata))
 
+(defn snapshot-version? [version]
+  (.endsWith version "-SNAPSHOT"))
 
 

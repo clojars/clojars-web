@@ -4,6 +4,7 @@
             [clj-time.coerce :as time.coerce]
             [clojars.config :refer [config]]
             [clojars.db.sql :as sql]
+            [clojars.maven :as mvn]
             [cemerick.friend.credentials :as creds]
             [clojure.edn :as edn]
             [clojure.set :as set])
@@ -277,6 +278,12 @@
                                  :authors     (str/join ", " (map #(.replace % "," "")
                                                                   authors))}
                                 {:connection db})
+                  (when (mvn/snapshot-version? version)
+                    (sql/delete-dependencies-version!
+                      {:group_id group
+                       :jar_id name
+                       :version version}
+                      {:connection db}))
                   (doseq [dep dependencies]
                     (sql/add-dependency! (-> dep
                                              (set/rename-keys {:group_name :dep_groupname
