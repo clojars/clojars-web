@@ -48,6 +48,16 @@
     (println "ERROR ID:" id)
     (pst e)))
 
+(defn stdout-reporter []
+  (->StdOutReporter))
+
+(defrecord NullReporter []
+  ErrorReporter
+  (-report-error [_ _ _ _]))
+
+(defn null-reporter []
+  (->NullReporter))
+
 (defrecord MultiReporter [reporters]
   ErrorReporter
   (-report-error [reporter e extra id]

@@ -68,6 +68,13 @@ user=> (go)
 
 By default this creates a running development system at <http://localhost:8080>.
 
+**Note:** You may get the following error in the browser when accessing the dev
+system after running `(go)` for the first time:
+
+    No implementation of method: :-report-error of protocol: #'clojars.errors/ErrorReporter found for class: clojars.errors.StdOutReporter
+
+If so, running `(go)` a second time should eliminate the error.
+
 When you make changes to your source files, use `reset` to reload any
 modified files and reset the server.
 
@@ -134,25 +141,10 @@ Also see [Configuration](#configuration).
 Configuration
 -------------
 
-Some options can be set using environment variables.  See `lein run -h` for the
-full list.
-
-Options may be read from a file by putting a file named
-`config.clj` on the classpath.  The config file should be a bare
-Clojure map:
-
-    {:db {:classname "org.sqlite.JDBC"
-          :subprotocol "sqlite"
-          :subname "data/dev_db"}
-     :repo "data/dev_repo"
-     :bcrypt-work-factor 12
-     :mail {:hostname "localhost"
-            :from "noreply@clojars.org"
-            :ssl false}}
-
-The classpath option can be used with lein profiles.  When
-running out of a source checkout using `lein run` or `lein repl` the
-configuration will be read from `dev-resources/config.clj`.
+The default configuration is loaded from
+`resources/default_config.edn`. To override values from the default
+config, place them in map in an edn file, and specify the path to that
+file via the `clojars.config.file` system property.
 
 When running automated tests at the repl, or with `lein test`, a test environment
 is used to provide isolation. It can be found in `test/clojars/test/test_helper.clj`.
@@ -160,8 +152,8 @@ is used to provide isolation. It can be found in `test/clojars/test/test_helper.
 License
 -------
 
-Copyright © 2009-2015 Alex Osborne, Phil Hagelberg, Nelson Morris,
-Toby Crawley and
+Copyright © 2009-2017 Alex Osborne, Phil Hagelberg, Nelson Morris,
+Toby Crawley, Daniel Compton and
 [contributors](https://github.com/ato/clojars-web/graphs/contributors).
 
 Distributed under the Eclipse Public License, the same as Clojure. See the file COPYING.

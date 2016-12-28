@@ -18,7 +18,7 @@
 (defn new-system []
   (refresh)
   (assoc (system/new-system (meta-merge @config/config dev-env))
-    :error-reporter (errors/->StdOutReporter)
+    :error-reporter (errors/stdout-reporter)
     :cloudfiles     (cf/connect "" "" "dev" "transient")))
 
 (ns-unmap *ns* 'test)
