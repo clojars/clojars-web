@@ -75,7 +75,7 @@
       (do
         (println "Giving you a fn to delete jars that match" pretty-coords)
         (when-not
-            (re-find #"(?i)delete me" description)
+            (and description (re-find #"(?i)delete me" description))
           (println "WARNING: jar description not set to 'delete me':" description))
         (fn []
           (println "Deleting" pretty-coords)
