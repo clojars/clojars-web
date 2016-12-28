@@ -344,7 +344,6 @@ footer a {
   overflow-x: auto;
   overflow-y: hidden;
   position: relative;
-  cursor: pointer;
   background: white;
   border-top: 8px solid #87cf29;
   padding: 10px 20px;
