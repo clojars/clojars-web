@@ -208,7 +208,7 @@
              [:div.versions
               [:ul
                (for [v versions]
-                 [:li.col-md-4.col-lg-3.col-sm-6.col-xs-12
+                 [:li.col-xs-12.col-sm-6.col-md-4.col-lg-3
                   (link-to (url-for (assoc jar
                                       :version (:version v)))
                            (:version v))])]]]))
