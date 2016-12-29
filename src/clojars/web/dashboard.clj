@@ -9,7 +9,7 @@
 (defn recent-jar [stats jar-map]
   (let [description (:description jar-map)
         truncate-length 120]
-    [:li.col-md-4.col-sm-6.col-xs-12.col-lg-4
+    [:li.col-xs-12.col-sm-6.col-md-4
      [:div.recent-jar
       [:h3.recent-jar-title
        (jar-link jar-map)]
@@ -30,13 +30,13 @@
     structured-data/organisation
     [:article.row
      (helpers/select-text-script)
-     [:div.push-information.col-md-4.col-lg-4.col-sm-4.col-xs-12
+     [:div.push-information.col-xs-12.col-sm-4
       [:h3.push-header "Push with "
        (link-to "http://leiningen.org/" "Leiningen")]
       [:div#leiningen.push-example {:onClick "selectText('leiningen');"}
        [:pre.push-example-leiningen
         (tag "$") " lein deploy clojars\n"]]]
-     [:div.push-information.col-md-4.col-lg-4.col-sm-4.col-xs-12
+     [:div.push-information.col-xs-12.col-sm-4
       [:h3.push-header "Push with "
         (link-to "http://boot-clj.com/" "Boot")
         " (using "
@@ -46,7 +46,7 @@
        [:pre.push-example-boot
         (tag "$") " boot build-jar push-snapshot\n"
         (tag "$") " boot build-jar push-release\n"]]]
-     [:div.push-information.col-md-4.col-lg-4.col-sm-4.col-xs-12
+     [:div.push-information.col-xs-12.col-sm-4
       [:h3.push-header "Maven Repository"]
       [:div#maven.push-example {:onClick "selectText('maven');"}
        [:pre
@@ -55,15 +55,15 @@
         (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
         (tag "</repository>")]]]]
     [:div.recent-jars-header-container.row
-     [:h2.recent-jars-header.col-md-12.col-lg-12.col-sm-12.col-xs-12
+     [:h2.recent-jars-header.col-xs-12
       "Recently pushed projects"]]
     [:ul.recent-jars-list.row (map #(recent-jar stats %) (recent-jars db))]))
 
 (defn dashboard [db account]
   (html-doc "Dashboard" {:account account}
-    [:div.light-article.col-md-12.col-lg-12.col-xs-12.col-sm-12
+    [:div.light-article.col-xs-12
      [:h1 (str "Dashboard (" account ")")]
-     [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
+     [:div.col-xs-12.col-sm-4
       [:div.dash-palette
        [:h2 "Your Projects"]
        (let [jars (jars-by-username db account)]
@@ -72,11 +72,11 @@
            [:p "You don't have any projects, would you like to "
             (link-to "http://wiki.github.com/clojars/clojars-web/pushing" "add one")
             "?"]))]]
-     [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
+     [:div.col-xs-12.col-sm-4
       [:div.dash-palette
        [:h2 "Your Groups"]
        (unordered-list (map group-link (find-groupnames db account)))]]
-     [:div.col-md-4.col-lg-4.col-sm-4.col-xs-12
+     [:div.col-xs-12.col-sm-4
       [:div.dash-palette
        [:h2 "FAQ"]
        [:ul

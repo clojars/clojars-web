@@ -113,10 +113,10 @@
    [:body.container-fluid
     [:div#content-wrapper
      [:header.small-header.row
-      [:div.home.col-md-3.col-sm-3.col-xs-6.col-lg-3
+      [:div.home.col-xs-6.col-sm-3
        (link-to "/" (helpers/retinized-image "/images/clojars-logo-tiny.png" "Clojars"))
        [:h1 (link-to "/" "Clojars")]]
-      [:div.col-md-3.col-sm-3.col-xs-6.col-lg-3
+      [:div.col-xs-6.col-sm-3
        [:form {:action "/search"}
         [:input {:type "search"
                  :name "q"
@@ -125,7 +125,7 @@
                  :placeholder "Search projects..."
                  :value (:query ctx)
                  :required true}]]]
-      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-12.col-lg-6
+      [:nav.main-navigation.col-xs-12.col-sm-6
        (if (:account ctx)
          (unordered-list
           [(link-to "/" "dashboard")
@@ -184,11 +184,11 @@
    [:body.container-fluid
     [:div.hero.row
      [:header
-      [:div.home.col-md-6.col-sm-6.col-xs-12.col-lg-6
+      [:div.home.col-xs-12.col-sm-6
        (link-to "/" (helpers/retinized-image "/images/clojars-logo.png" "Clojars"))
        [:h1
         (link-to "/" "Clojars")]]
-      [:nav.main-navigation.col-md-6.col-sm-6.col-xs-12.col-lg-6
+      [:nav.main-navigation.col-xs-12.col-sm-6
        (if (:account ctx)
          (unordered-list
           [(link-to "/" "dashboard")
@@ -205,7 +205,7 @@
         " community repository for "]
        [:span.col-md-12
         " open source Clojure libraries."]]]
-     [:div.search-form-container.col-md-12.col-xs-12.col-lg-12.col-sm-12
+     [:div.search-form-container.col-xs-12
       [:form {:action "/search"}
        [:input {:type "search"
                 :name "q"

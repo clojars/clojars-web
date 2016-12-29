@@ -96,11 +96,11 @@
                                         :name (:jar_name jar)}]))
 
        (helpers/select-text-script)
-       [:div#jar-title.col-sm-9.col-lg-9.col-xs-12.col-md-9
+       [:div#jar-title.col-xs-12.col-sm-9
         [:h1 (jar-link jar)]
         [:p.description (:description jar)]
         [:ul#jar-info-bar.row
-         [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+         [:li.col-xs-12.col-sm-4
           (if-let [gh-info (github-info jar)]
             (link-to (format "https://github.com/%s" gh-info)
                      (helpers/retinized-image "/images/github-mark.png" "GitHub")
@@ -108,10 +108,10 @@
             [:p.github
              (helpers/retinized-image "/images/github-mark.png" "GitHub")
              "N/A"])]
-         [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+         [:li.col-xs-12.col-sm-4
           total-downloads
           " Downloads"]
-         [:li.col-md-4.col-sm-4.col-xs-12.col-lg-4
+         [:li.col-xs-12.col-sm-4
           downloads-this-version
           " This Version"]]
         [:h2 "Leiningen/Boot"]
@@ -148,7 +148,7 @@
           (tag "</dependency>")]]
         (list
           (fork-notice jar))]
-       [:ul#jar-sidebar.col-sm-3.col-xs-12.col-md-3.col-lg-3
+       [:ul#jar-sidebar.col-xs-12.col-sm-3
         [:li
          [:h4 "Pushed by"]
          (user-link (:user jar)) " on "

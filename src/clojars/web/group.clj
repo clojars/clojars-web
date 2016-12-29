@@ -9,7 +9,7 @@
 
 (defn show-group [db account groupname membernames & errors]
   (html-doc (str groupname " group") {:account account :description (format "Clojars projects in the %s group" groupname)}
-    [:div.small-section.col-md-6.col-lg-6.col-sm-6.col-xs-12
+    [:div.small-section.col-xs-12.col-sm-6
      (structured-data/breadcrumbs [{:url  (str "https://clojars.org/groups/" groupname)
                                     :name groupname}])
      [:h1 (str groupname " group")]
