@@ -159,13 +159,14 @@
   ["alpha" "beta" "cr" "rc" "snapshot" "final" "release"])
 
 (defn compare-qualifier-fraction [x y]
-  (let [x-value (.indexOf common-qualifiers x)
-        y-value (.indexOf common-qualifiers y)]
+  (let [x-value (when (some #{x} common-qualifiers) (.indexOf common-qualifiers x))
+        y-value (when (some #{y} common-qualifiers) (.indexOf common-qualifiers y))]
     (cond
-      (< -1 x-value y-value)      -1 ; both fractions are common, x has a lower sort order
+      (not (or x-value y-value))   0 ; neither are common. no winner
       (and x-value (not y-value)) -1 ; x is known, but y isn't. x wins
-      (< -1 y-value x-value)       1 ; both fractions are common, x has a lower sort order
       (and y-value (not x-value))  1 ; y is known, but x isn't. y wins
+      (< -1 x-value y-value)      -1 ; both fractions are common, x has a lower sort order
+      (< -1 y-value x-value)       1 ; both fractions are common, y has a lower sort order
       :default                     0)))
 
 (defn compare-qualifiers [qx qy]
