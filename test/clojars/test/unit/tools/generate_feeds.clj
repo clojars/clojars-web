@@ -12,7 +12,7 @@
 
 (defn setup-db [f]
   (doseq [name ["fake" "test"]
-          version ["0.0.3-SNAPSHOT" "0.0.1" "0.0.2"]
+          version ["0.0.3-SNAPSHOT" "0.0.3-SNAPSHOT" "0.0.1" "0.0.2"]
           :let [pom-data (maven/pom-to-map (io/resource (format "%s-%s/%s.pom" name version name)))]]
     (db/add-jar help/*db* "testuser" pom-data))
   (f))

@@ -48,13 +48,14 @@
           (cf/metadata-seq cloudfiles))))
 
 (defn jar-list [db]
-  (sort
+  (->> (db/all-jars db)
     (map (fn [{:keys [group_name jar_name version]}]
            [(if (= group_name jar_name)
               (symbol jar_name)
               (symbol group_name jar_name))
-            version])
-         (db/all-jars db))))
+            version]))
+    distinct
+    sort))
 
 (defn write-sums [f]
   [(fu/create-checksum-file f :md5)
