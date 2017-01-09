@@ -40,6 +40,12 @@
 (defn add-added-by [trans]
   (sql/db-do-commands trans "ALTER TABLE groups ADD COLUMN added_by TEXT"))
 
+(defn add-admin-and-inactive-and-inactivated-by [trans]
+  (sql/db-do-commands trans
+                      "ALTER TABLE groups ADD COLUMN admin BOOLEAN"
+                      "ALTER TABLE groups ADD COLUMN inactive BOOLEAN"
+                      "ALTER TABLE groups ADD COLUMN inactivated_by TEXT"))
+
 (defn add-password-reset-code [trans]
   (sql/db-do-commands trans "ALTER TABLE users ADD COLUMN password_reset_code TEXT"))
 
@@ -101,7 +107,8 @@
    #'add-licenses-and-packaging
    #'restore-deps-table
    #'add-scope
-   #'drop-search-table-and-triggers])
+   #'drop-search-table-and-triggers
+   #'add-admin-and-inactive-and-inactivated-by])
 
 (defn migrate [db]
   (try (sql/db-do-commands db
