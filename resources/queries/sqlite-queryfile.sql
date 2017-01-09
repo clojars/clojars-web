@@ -27,12 +27,31 @@ LIMIT 1;
 --name: find-groupnames
 SELECT name
 FROM groups
-WHERE user = :username;
+WHERE (
+      user = :username
+      AND
+      inactive != 1
+);
 
 --name: group-membernames
 SELECT user
 FROM groups
-WHERE name = :groupname;
+WHERE (
+      name = :groupname
+      AND
+      inactive != 1
+);
+
+--name: inactivate-member!
+UPDATE groups
+SET inactive = 1, inactivated_by = :admin
+WHERE (
+      user = :username
+      AND
+      name = :groupname
+      AND
+      inactive = 0
+);
 
 --name: jars-by-username
 SELECT j.*
