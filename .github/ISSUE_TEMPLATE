@@ -4,7 +4,7 @@ If you are requesting a JAR deletion, please read the following
 JARs are removed from Clojars for two reasons:
 
 * There is a security vulnerability in a published JAR, i.e. malicious code
-* Private credentials have been included in the JAR. 
+* Private credentials or code have been published.
 
 Otherwise JARs are not deleted, to preserve the immutable nature of the Clojars repository.
 
