@@ -46,6 +46,10 @@
                       "ALTER TABLE groups ADD COLUMN inactive BOOLEAN"
                       "ALTER TABLE groups ADD COLUMN inactivated_by TEXT"))
 
+(defn make-primary-user-admin [trans]
+  (sql/db-do-commands trans
+                      "UPDATE groups SET admin = 1 WHERE added_by = \"clojars\""))
+
 (defn add-password-reset-code [trans]
   (sql/db-do-commands trans "ALTER TABLE users ADD COLUMN password_reset_code TEXT"))
 
@@ -108,7 +112,8 @@
    #'restore-deps-table
    #'add-scope
    #'drop-search-table-and-triggers
-   #'add-admin-and-inactive-and-inactivated-by])
+   #'add-admin-and-inactive-and-inactivated-by
+   #'make-primary-user-admin])
 
 (defn migrate [db]
   (try (sql/db-do-commands db
