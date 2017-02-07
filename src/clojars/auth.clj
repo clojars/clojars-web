@@ -1,6 +1,6 @@
 (ns clojars.auth
   (:require [cemerick.friend :as friend]
-            [clojars.db :refer [group-membernames]]))
+            [clojars.db :refer [group-adminnames]]))
 
 (defn try-account [f]
   (f (:username (friend/current-authentication))))
@@ -10,7 +10,7 @@
 
 (defn authorized? [db account group]
   (when account
-    (let [names (group-membernames db group)]
+    (let [names (group-adminnames db group)]
       (or (some #{account} names) (empty? names)))))
 
 (defn require-authorization [db account group f]

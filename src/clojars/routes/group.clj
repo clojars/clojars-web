@@ -8,26 +8,40 @@
 (defn routes [db]
   (compojure/routes
    (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
-        (if-let [membernames (seq (db/group-membernames db groupname))]
+     (let [actives (seq (db/group-actives db groupname))]
+        (when (seq actives)
           (auth/try-account
-           #(view/show-group db % groupname membernames))))
+           #(view/show-group db % groupname actives)))))
    (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username]
-         (if-let [membernames (seq (db/group-membernames db groupname))]
-           (auth/try-account
-             (fn [account]
-               (auth/require-authorization
-                 db
-                 account
-                 groupname
-                 #(cond
-                   (some #{username} membernames)
-                   (view/show-group db account groupname membernames
-                     "They're already a member!")
-                   (db/find-user db username)
-                   (do (db/add-member db groupname username account)
-                       (view/show-group db account groupname
-                         (conj membernames username)))
-                   :else
-                   (view/show-group db account groupname membernames
-                     (str "No such user: "
-                       username))))))))))
+     (let [actives (seq (db/group-actives db groupname))
+           membernames (->> actives
+                            (filter #(not= 1 (:admin %)))
+                            (map :user))
+           adminnames (->> actives
+                            (filter #(= 1 (:admin %)))
+                            (map :user))]
+       (when (seq actives)
+         (auth/try-account
+           (fn [account]
+             (auth/require-authorization
+               db
+               account
+               groupname
+               #(cond
+                  (some #{username} membernames)
+                  (view/show-group db account groupname actives
+                    "They're already a member!")
+
+                  (some #{username} membernames)
+                  (view/show-group db account groupname actives
+                    "They're already a admin!")
+
+                  (db/find-user db username)
+                  (do (db/add-member db groupname username account)
+                    (view/show-group db account groupname
+                      (conj actives {:user username :admin 0})))
+
+                  :else
+                  (view/show-group db account groupname actives
+                    (str "No such user: "
+                      username)))))))))))

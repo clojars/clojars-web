@@ -57,6 +57,20 @@
                          {:connection db
                           :row-fn :user}))
 
+(defn group-adminnames [db groupname]
+  (sql/group-adminnames {:groupname groupname}
+                         {:connection db
+                          :row-fn :user}))
+
+(defn group-activenames [db groupname]
+  (sql/group-activenames {:groupname groupname}
+                         {:connection db
+                          :row-fn :user}))
+
+(defn group-actives [db groupname]
+  (sql/group-actives {:groupname groupname}
+                     {:connection db}))
+
 (defn jars-by-username [db username]
   (sql/jars-by-username {:username username}
                         {:connection db}))
@@ -186,8 +200,11 @@
     (serialize-task :add-user
                     (sql/insert-user! record
                                       {:connection db})
-                    (sql/insert-group! {:groupname groupname :username username}
-                                       {:connection db}))
+                    (sql/add-member! {:groupname groupname
+                                      :username username
+                                      :admin 1
+                                      :added_by "clojars"}
+                                     {:connection db}))
     record))
 
 (defn update-user [db account email username password]
@@ -241,26 +258,35 @@
   (serialize-task :add-member
                   (sql/add-member! {:groupname groupname
                                     :username username
+                                    :admin 0
+                                    :added_by added-by}
+                                   {:connection db})))
+
+(defn add-admin [db groupname username added-by]
+  (serialize-task :add-admin
+                  (sql/add-member! {:groupname groupname
+                                    :username username
+                                    :admin 1
                                     :added_by added-by}
                                    {:connection db})))
 
 (defn check-group
   "Throws if the group is invalid or not accessible to the account"
-  [members account groupname]
+  [actives account groupname]
   (let [err (fn [msg]
               (throw (ex-info msg {:account account
                                    :group groupname})))]
     (when (reserved-names groupname)
       (err (format "The group name '%s' is reserved" groupname)))
-    (when (and (seq members)
-            (not (some #{account} members)))
+    (when (and (seq actives)
+            (not (some #{account} actives)))
       (err (format "You don't have access to the '%s' group" groupname)))))
 
 (defn check-and-add-group [db account groupname]
-  (let [members (group-membernames db groupname)]
-    (check-group members account groupname)
-    (when (empty? members)
-      (add-member db groupname account "clojars"))))
+  (let [actives (group-activenames db groupname)]
+    (check-group actives account groupname)
+    (when (empty? actives)
+      (add-admin db groupname account "clojars"))))
 
 (defn add-jar [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]
   (check-and-add-group db account group)
