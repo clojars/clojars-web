@@ -86,18 +86,20 @@
         name "testuser"
         password "password"]
     (db/add-user help/*db* email name password)
-    (is (= ["testuser"]
-           (db/group-adminnames help/*db* (str "org.clojars." name))))
-    (is (= ["org.clojars.testuser"]
-           (db/find-groupnames help/*db* name)))))
+    (is (= ["testuser"] (db/group-adminnames help/*db* (str "org.clojars." name))))
+    (is (= ["testuser"] (db/group-activenames help/*db* (str "org.clojars." name))))
+    (is (= [] (db/group-membernames help/*db* (str "org.clojars." name))))
+    (is (= ["org.clojars.testuser"] (db/find-groupnames help/*db* name)))))
 
-(deftest users-can-be-added-to-groups
+(deftest members-can-be-added-to-groups
   (let [email "test@example.com"
         name "testuser"
         password "password"]
     (db/add-user help/*db* email name password)
     (db/add-member help/*db* "test-group" name "some-dude")
+    (is (= ["testuser"] (db/group-activenames help/*db* "test-group")))
     (is (= ["testuser"] (db/group-membernames help/*db* "test-group")))
+    (is (= [] (db/group-adminnames help/*db* "test-group")))
     (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))
 
 (deftest admins-can-be-added-to-groups
@@ -107,6 +109,7 @@
     (db/add-user help/*db* email name password)
     (db/add-admin help/*db* "test-group" name "some-dude")
     (is (= ["testadmin"] (db/group-activenames help/*db* "test-group")))
+    (is (= [] (db/group-membernames help/*db* "test-group")))
     (is (= ["testadmin"] (db/group-adminnames help/*db* "test-group")))
     (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))
 

@@ -75,7 +75,7 @@ WHERE (
 
 --name: inactivate-member!
 UPDATE groups
-SET inactive = 1, inactivated_by = :admin
+SET inactive = 1, inactivated_by = :inactivated_by
 WHERE (
       user = :username
       AND

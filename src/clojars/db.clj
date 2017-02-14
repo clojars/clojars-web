@@ -256,6 +256,10 @@
 
 (defn add-member [db groupname username added-by]
   (serialize-task :add-member
+                  (sql/inactivate-member! {:groupname groupname
+                                           :username username
+                                           :inactivated_by added-by}
+                                          {:connection db})
                   (sql/add-member! {:groupname groupname
                                     :username username
                                     :admin 0
@@ -264,6 +268,10 @@
 
 (defn add-admin [db groupname username added-by]
   (serialize-task :add-admin
+                  (sql/inactivate-member! {:groupname groupname
+                                           :username username
+                                           :inactivated_by added-by}
+                                          {:connection db})
                   (sql/add-member! {:groupname groupname
                                     :username username
                                     :admin 1
