@@ -278,6 +278,13 @@
                                     :added_by added-by}
                                    {:connection db})))
 
+(defn inactivate-member [db groupname username inactivated-by]
+  (serialize-task :inactivate-member
+                  (sql/inactivate-member! {:groupname groupname
+                                           :username username
+                                           :inactivated_by inactivated-by}
+                                          {:connection db})))
+
 (defn check-group
   "Throws if the group is invalid or not accessible to the account"
   [actives account groupname]

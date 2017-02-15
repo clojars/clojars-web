@@ -3,7 +3,7 @@
             [clojars.db :refer [jars-by-groupname]]
             [clojars.auth :refer [authorized?]]
             [hiccup.element :refer [unordered-list]]
-            [hiccup.form :refer [text-field submit-button]]
+            [hiccup.form :refer [text-field submit-button hidden-field]]
             [clojars.web.safe-hiccup :refer [form-to]]
             [clojars.web.structured-data :as structured-data]))
 
@@ -28,16 +28,38 @@
            (for [active (sort-by :user actives)]
              [:tr
               [:td (user-link (:user active))]
-              [:td (if (is-admin? active) "Admin" "Member")]
-              (when admin? (list [:td (if (is-admin? active) "Make Member" "Make Admin")] [:td "Remove"]))])]]
+              [:td (if (is-admin? active)
+                     "Admin"
+                     "Member")]
+              (when admin?
+                (list
+                  [:td (cond
+                         (= account (:user active)) ""
+                         (is-admin? active)
+                         (form-to [:post (str "/groups/" groupname)]
+                                  (hidden-field "username" (:user active))
+                                  (hidden-field "admin" 0)
+                                  (submit-button "Make Member"))
+                         :else
+                         (form-to [:post (str "/groups/" groupname)]
+                                  (hidden-field "username" (:user active))
+                                  (hidden-field "admin" 1)
+                                  (submit-button "Make Admin")))]
+                  [:td (if (= account (:user active))
+                         ""
+                         (form-to [:delete (str "/groups/" groupname)]
+                                  (hidden-field "username" (:user active))
+                                  (submit-button "Remove")))]))])]]
          (error-list errors)
          (when admin?
            [:div.add-member
             (form-to [:post (str "/groups/" groupname)]
                      (text-field "username")
+                     (hidden-field "admin" 0)
                      (submit-button "add member"))])
          (when admin?
            [:div.add-admin
-            (form-to [:post (str "/groups/" groupname "/admin")]
+            (form-to [:post (str "/groups/" groupname)]
                      (text-field "username")
+                     (hidden-field "admin" 1)
                      (submit-button "add admin"))])])))
