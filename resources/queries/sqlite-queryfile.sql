@@ -81,7 +81,7 @@ WHERE (
       AND
       name = :groupname
       AND
-      inactive IS 0
+      inactive IS NOT 1
 );
 
 --name: jars-by-username
