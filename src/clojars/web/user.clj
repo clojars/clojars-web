@@ -110,12 +110,12 @@
 (defn show-user [db account user]
   (html-doc (user :user) {:account account}
             [:div.light-article.row
-             [:h1.col-md-12.col-sm-12.col-xs-12.col-lg-12
+             [:h1.col-xs-12
               (user :user)]
-             [:div.col-sm-6.col-lg-6.col-xs-12.col-md-6
+             [:div.col-xs-12.col-sm-6
               [:h2 "Projects"]
               (unordered-list (map jar-link (jars-by-username db (user :user))))]
-             [:div.col-sm-6.col-lg-6.col-xs-12.col-md-6
+             [:div.col-xs-12.col-sm-6
               [:h2 "Groups"]
               (unordered-list (map group-link (find-groupnames db (user :user))))]]))
 
