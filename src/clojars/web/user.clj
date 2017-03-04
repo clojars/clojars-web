@@ -84,6 +84,7 @@
              (flash flash-msg)
              [:h1 "Profile"]
              (error-list errors)
+             [:p "Your Clojars profile is just your email address and your password. You can change them here, if want."]
              (form-to [:post "/profile"]
                       (label :email "Email")
                       [:input {:type :email :name :email :id
