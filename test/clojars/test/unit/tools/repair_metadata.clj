@@ -40,8 +40,11 @@
   (let [backup-dir (doto (io/file (FileUtils/getTempDirectory)
                                   (str "bad-metadata-backup" (System/currentTimeMillis)))
                      .mkdirs)
-        bar-file (io/file *tmp-repo* "foo/bar/maven-metadata.xml")]
+        bar-file (io/file *tmp-repo* "foo/bar/maven-metadata.xml")
+        versions ["0.1.0" "0.2.0" "0.4.0" "0.5.0-SNAPSHOT"]]
     (try
+      (doseq [v versions :let [n (atom (System/currentTimeMillis))]]
+        (.setLastModified (io/file *tmp-repo* "foo/bar" v) (swap! n inc)))
       (rmd/repair-metadata backup-dir (metadata-for-artifact (rmd/find-bad-metadata *tmp-repo*) "bar"))
       (testing "makes a backup"
         (is (= 1 (count (filter #(= "maven-metadata.xml" (.getName %)) (file-seq backup-dir))))))
@@ -50,7 +53,7 @@
         (let [md (mvn/read-metadata bar-file)
               versioning (.getVersioning md)]
           (is (= "0.4.0" (.getRelease versioning)))
-          (is (= ["0.1.0" "0.2.0" "0.4.0" "0.5.0-SNAPSHOT"] (.getVersions versioning)))))
+          (is (= versions (.getVersions versioning)))))
 
       (testing "writes correct sums"
         (is (futil/valid-checksum-file? bar-file :md5))
