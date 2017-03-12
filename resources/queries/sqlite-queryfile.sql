@@ -53,6 +53,14 @@ WHERE (
       inactive IS NOT 1
 );
 
+--name: group-allnames
+SELECT user
+FROM groups
+WHERE (
+      name = :groupname
+);
+
+
 --name: group-actives
 SELECT user, admin
 FROM groups

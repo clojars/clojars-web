@@ -67,6 +67,11 @@
                          {:connection db
                           :row-fn :user}))
 
+(defn group-allnames [db groupname]
+  (sql/group-actives {:groupname groupname}
+                     {:connection db
+                      :row-fn :user}))
+
 (defn group-actives [db groupname]
   (sql/group-actives {:groupname groupname}
                      {:connection db}))
