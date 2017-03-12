@@ -3,7 +3,7 @@
             [clojars.db :refer [jars-by-groupname]]
             [clojars.auth :refer [authorized?]]
             [hiccup.element :refer [unordered-list]]
-            [hiccup.form :refer [text-field submit-button hidden-field]]
+            [hiccup.form :refer [text-field submit-button hidden-field check-box]]
             [clojars.web.safe-hiccup :refer [form-to]]
             [clojars.web.structured-data :as structured-data]))
 
@@ -27,39 +27,45 @@
           [:tbody
            (for [active (sort-by :user actives)]
              [:tr
-              [:td (user-link (:user active))]
-              [:td (if (is-admin? active)
+              [:td {:style "padding:0 5px"} (user-link (:user active))]
+              [:td {:style "padding:0 5px"}
+               (if (is-admin? active)
                      "Admin"
                      "Member")]
               (when admin?
                 (list
-                  [:td (cond
+                  [:td {:style "padding:0 5px"}
+                   (cond
                          (= account (:user active)) ""
                          (is-admin? active)
                          (form-to [:post (str "/groups/" groupname)]
                                   (hidden-field "username" (:user active))
                                   (hidden-field "admin" 0)
-                                  (submit-button "Make Member"))
+                                  [:input {:style "font-size:14px; letter-spacing:0px; margin:5px; padding:5px" :type "submit" :value "Make Member"}])
                          :else
                          (form-to [:post (str "/groups/" groupname)]
                                   (hidden-field "username" (:user active))
                                   (hidden-field "admin" 1)
-                                  (submit-button "Make Admin")))]
-                  [:td (if (= account (:user active))
+                                  [:input {:style "font-size:14px; letter-spacing:0px; margin:5px; padding:5px; background-color:green" :type "submit" :value "Make Admin"}]))]
+                  [:td {:style "padding:0 5px"}
+                   (if (= account (:user active))
                          ""
                          (form-to [:delete (str "/groups/" groupname)]
                                   (hidden-field "username" (:user active))
-                                  (submit-button "Remove")))]))])]]
+                                  [:input {:style "font-size:14px; letter-spacing:0px; margin:5px; padding:5px; background-color:red" :type "submit" :value "Remove"}]))]))])]]
          (error-list errors)
+         [:h2 "Add member"]
          (when admin?
            [:div.add-member
             (form-to [:post (str "/groups/" groupname)]
                      (text-field "username")
-                     (hidden-field "admin" 0)
-                     (submit-button "add member"))])
-         (when admin?
-           [:div.add-admin
-            (form-to [:post (str "/groups/" groupname)]
-                     (text-field "username")
-                     (hidden-field "admin" 1)
-                     (submit-button "add admin"))])])))
+                     [:div {:class "checkbox"}
+                      [:label
+                       [:input {:type "checkbox"
+                                :name "admin"
+                                :id "admin"
+                                :value 1
+                                :style "width:auto;margin-right:5px"
+                                :checked false}]
+                       "admin?"]]
+                     (submit-button "add member"))])])))
