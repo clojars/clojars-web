@@ -589,3 +589,15 @@ pre.error-id {
     text-align: center;
     margin-top: 10px;
 }
+
+.raw-text p, .raw-text li, .raw-text ul {
+  margin-bottom: 14px;
+}
+
+.raw-text ul {
+  padding-left: 40px;
+}
+
+.raw-text li {
+  list-style-type: initial;
+}

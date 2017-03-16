@@ -76,6 +76,10 @@
         (try-account
           #(html-doc "Security" {:account %}
              (raw (slurp (io/resource "security.html"))))))
+   (GET "/dmca" []
+        (try-account
+          #(html-doc "DMCA" {:account %}
+             (raw (slurp (io/resource "dmca.html"))))))
    session/routes
    (group/routes db)
    (artifact/routes db reporter stats)

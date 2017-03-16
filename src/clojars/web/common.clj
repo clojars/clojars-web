@@ -30,6 +30,7 @@
      (link-to "https://github.com/clojars/clojars-web/wiki/Contact" "contact")
      (link-to "https://github.com/clojars/clojars-web" "code")
      (link-to "/security" "security")
+     (link-to "/dmca" "DMCA")
      (link-to "https://github.com/clojars/clojars-web/wiki/" "help")
      [:div.sponsors
       [:div.row
@@ -72,13 +73,13 @@
     [:footer.row]))
 
 (defn google-analytics-js []
-  [:script "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  [:script (raw "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
   ga('create', 'UA-51806851-1', 'clojars.org');
-  ga('send', 'pageview');"])
+  ga('send', 'pageview');")])
 
 (defn typekit-js []
   [:script "try{Typekit.load({async:true});}catch(e){}"])
