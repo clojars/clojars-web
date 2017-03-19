@@ -72,7 +72,7 @@
 
     (is (not (db/find-jar *db* "org.ham" "biscuit")))
     (is (not (db/find-jar *db* "org.ham" "sandwich")))
-    (is (empty? (db/group-membernames *db* "org.ham")))
+    (is (empty? (db/group-activenames *db* "org.ham")))
     (is (= #{"org.ham"} @*search-removals*))))
 
 (deftest delete-jar-without-version-should-work
@@ -96,7 +96,7 @@
 
     (is (not (db/find-jar *db* "org.ham" "biscuit")))
     (is (db/find-jar *db* "org.ham" "sandwich"))
-    (is (seq (db/group-membernames *db* "org.ham")))
+    (is (seq (db/group-activenames *db* "org.ham")))
     (is (= #{"org.ham/biscuit"} @*search-removals*))))
 
 (deftest delete-jar-with-version-should-work
@@ -121,5 +121,5 @@
     (is (not (db/find-jar *db* "org.ham" "biscuit" "1")))
     (is (db/find-jar *db* "org.ham" "biscuit" "2"))
     (is (db/find-jar *db* "org.ham" "sandwich"))
-    (is (seq (db/group-membernames *db* "org.ham")))
+    (is (seq (db/group-activenames *db* "org.ham")))
     (is (empty? @*search-removals*))))

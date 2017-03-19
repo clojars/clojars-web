@@ -1,5 +1,5 @@
 (ns clojars.web.user
-  (:require [clojars.db :as db :refer [find-user group-membernames add-user
+  (:require [clojars.db :as db :refer [find-user group-activenames add-user
                                 reserved-names update-user jars-by-username
                                 find-groupnames find-user-by-user-or-email]]
             [clojars.web.common :refer [html-doc error-list jar-link
@@ -65,7 +65,7 @@
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (reserved-names %)
                                 (find-user db %)
-                                (seq (group-membernames db %))))
+                                (seq (group-activenames db %))))
             "Username is already taken"]]
           (user-validations)
           (password-validations confirm)))

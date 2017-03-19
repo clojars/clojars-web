@@ -27,12 +27,70 @@ LIMIT 1;
 --name: find-groupnames
 SELECT name
 FROM groups
-WHERE user = :username;
+WHERE (
+      user = :username
+      AND
+      inactive IS NOT 1
+);
 
 --name: group-membernames
 SELECT user
 FROM groups
-WHERE name = :groupname;
+WHERE (
+      name = :groupname
+      AND
+      inactive IS NOT 1
+      AND
+      admin IS NOT 1
+);
+
+--name: group-activenames
+SELECT user
+FROM groups
+WHERE (
+      name = :groupname
+      AND
+      inactive IS NOT 1
+);
+
+--name: group-allnames
+SELECT user
+FROM groups
+WHERE (
+      name = :groupname
+);
+
+
+--name: group-actives
+SELECT user, admin
+FROM groups
+WHERE (
+      name = :groupname
+      AND
+      inactive IS NOT 1
+);
+
+--name: group-adminnames
+SELECT user
+FROM groups
+WHERE (
+      name = :groupname
+      AND
+      inactive IS NOT 1
+      AND
+      admin = 1
+);
+
+--name: inactivate-member!
+UPDATE groups
+SET inactive = 1, inactivated_by = :inactivated_by
+WHERE (
+      user = :username
+      AND
+      name = :groupname
+      AND
+      inactive IS NOT 1
+);
 
 --name: jars-by-username
 SELECT j.*
@@ -192,10 +250,6 @@ WHERE group_name || '/' || jar_name < :s;
 INSERT INTO 'users' (email, user, password, pgp_key, created, ssh_key, salt)
 VALUES (:email, :username, :password, '', :created, '', '');
 
---name: insert-group!
-INSERT INTO 'groups' (name, user)
-VALUES (:groupname, :username);
-
 --name: update-user!
 UPDATE users
 SET email = :email, user = :username, pgp_key = '', password_reset_code = NULL, password_reset_code_created_at = NULL
@@ -293,8 +347,8 @@ AND j.jar_name = :artifact_id
 ORDER BY j.group_name ASC, j.jar_name ASC;
 
 --name: add-member!
-INSERT INTO groups (name, user, added_by)
-VALUES (:groupname, :username, :added_by);
+INSERT INTO groups (name, user, added_by, admin)
+VALUES (:groupname, :username, :added_by, :admin);
 
 --name: add-jar!
 INSERT INTO jars (group_name, jar_name, version, user, created, description, homepage, authors, packaging, licenses, scm)
