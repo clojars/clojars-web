@@ -79,7 +79,7 @@
 
 (defn- check-group [db account group]
   (try
-    (db/check-group (db/group-membernames db group) account group)
+    (db/check-group (db/group-activenames db group) account group)
     (catch Exception e
       (rethrow-forbidden e
         {:account account
