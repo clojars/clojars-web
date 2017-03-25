@@ -54,7 +54,7 @@
        "     if no version is provided"])))
 
 (defn delete-group [group-id]
-  (if (seq (db/group-membernames *db* group-id))
+  (if (seq (db/group-activenames *db* group-id))
     (do
       (println "Giving you a fn to delete group" group-id)
       (fn []

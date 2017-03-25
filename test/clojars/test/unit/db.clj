@@ -81,23 +81,36 @@
         (is (= email2 (:email user)))
         (is (= (:password old-user) (:password user)))))))
 
-(deftest added-users-are-added-only-to-their-org-clojars-group
+(deftest added-users-are-added-only-to-their-org-clojars-group-as-admins
   (let [email "test@example.com"
         name "testuser"
         password "password"]
     (db/add-user help/*db* email name password)
-    (is (= ["testuser"]
-           (db/group-membernames help/*db* (str "org.clojars." name))))
-    (is (= ["org.clojars.testuser"]
-           (db/find-groupnames help/*db* name)))))
+    (is (= ["testuser"] (db/group-adminnames help/*db* (str "org.clojars." name))))
+    (is (= ["testuser"] (db/group-activenames help/*db* (str "org.clojars." name))))
+    (is (= [] (db/group-membernames help/*db* (str "org.clojars." name))))
+    (is (= ["org.clojars.testuser"] (db/find-groupnames help/*db* name)))))
 
-(deftest users-can-be-added-to-groups
+(deftest members-can-be-added-to-groups
   (let [email "test@example.com"
         name "testuser"
         password "password"]
     (db/add-user help/*db* email name password)
     (db/add-member help/*db* "test-group" name "some-dude")
+    (is (= ["testuser"] (db/group-activenames help/*db* "test-group")))
     (is (= ["testuser"] (db/group-membernames help/*db* "test-group")))
+    (is (= [] (db/group-adminnames help/*db* "test-group")))
+    (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))
+
+(deftest admins-can-be-added-to-groups
+  (let [email "test@example.com"
+        name "testadmin"
+        password "password"]
+    (db/add-user help/*db* email name password)
+    (db/add-admin help/*db* "test-group" name "some-dude")
+    (is (= ["testadmin"] (db/group-activenames help/*db* "test-group")))
+    (is (= [] (db/group-membernames help/*db* "test-group")))
+    (is (= ["testadmin"] (db/group-adminnames help/*db* "test-group")))
     (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))
 
 ;;TODO: Tests below should have the users added first.
@@ -338,11 +351,11 @@
       (is (thrown? Exception (db/add-jar help/*db* "test-user" jarmap)))))
 
 
-(deftest add-jar-creates-single-member-group-for-user
+(deftest add-jar-creates-single-member-group-for-user-as-admin
     (let [jarmap {:name "jar-name" :version "1" :group "group-name"}]
-      (is (empty? (db/group-membernames help/*db* "group-name")))
+      (is (empty? (db/group-activenames help/*db* "group-name")))
       (db/add-jar help/*db* "test-user" jarmap)
-      (is (= ["test-user"] (db/group-membernames help/*db* "group-name")))
+      (is (= ["test-user"] (db/group-adminnames help/*db* "group-name")))
       (is (= ["group-name"]
              (db/find-groupnames help/*db* "test-user")))))
 

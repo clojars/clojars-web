@@ -171,24 +171,27 @@
       (within [:p]
         (has (text? "The reset code was not found. Please ask for a new code in the forgot password page")))))
 
-(deftest member-can-add-user-to-group
+(deftest admin-can-add-user-to-group
   (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password"))
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
-      (press "add member")
+      (press "Add Member")
       ;;(follow-redirect)
-      (within [:div.small-section :ul]
-              (has (text? "danthemanfixture")))))
+      (within [:div.small-section
+               :table
+               [:tr enlive/last-of-type]
+               [:td enlive/first-of-type]]
+              (has (text? "fixture")))))
 
 (deftest user-must-exist-to-be-added-to-group
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
-      (press "add member")
+      (press "Add Member")
       (within [:div.error :ul :li]
               (has (text? "No such user: fixture")))))
 
