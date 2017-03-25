@@ -171,13 +171,37 @@
   (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
         #"Forbidden - You don't have access to the 'org\.clojars\.fixture' group\.$"
         (aether/deploy
-         :coordinates '[org.clojars.fixture/test "1.0.0"]
+         :coordinates '[org.clojars.fixture/test "0.0.1"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
          :repository {"test" {:url (repo-url)
                               :username "dantheman"
                               :password "password"}}
          :local-repo help/local-repo))))
+
+(deftest user-can-deploy-to-group-when-not-admin
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (-> (session (help/app-from-system))
+      (register-as "fixture" "fixture@example.org" "password")
+      (visit "/groups/org.clojars.fixture")
+      (fill-in [:#username] "dantheman")
+      (press "Add Member"))
+  (aether/deploy
+    :coordinates '[org.clojars.fixture/test "0.0.1"]
+    :jar-file (io/file (io/resource "test.jar"))
+    :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                {:groupId "org.clojars.fixture"})
+    :repository {"test" {:url (repo-url)
+                         :username "dantheman"
+                         :password "password"}}
+    :local-repo help/local-repo)
+  (is (= '{[org.clojars.fixture/test "0.0.1"] nil}
+          (aether/resolve-dependencies
+           :coordinates '[[org.clojars.fixture/test "0.0.1"]]
+           :repositories {"test" {:url
+                                  (repo-url)}}
+           :local-repo help/local-repo2))))
 
 (deftest user-cannot-deploy-to-reserved-groups
   (-> (session (help/app-from-system))

@@ -7,7 +7,6 @@
             [hiccup.element :refer [link-to image]]
             [hiccup.form :refer [submit-button]]
             [clojars.web.safe-hiccup :refer [form-to raw]]
-            [clojars.auth :refer [authorized?]]
             [clojars.db :refer [find-jar jar-exists]]
             [clojars.stats :as stats]
             [ring.util.codec :refer [url-encode]]

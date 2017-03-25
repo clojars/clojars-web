@@ -23,7 +23,7 @@
        (when (seq actives)
            (auth/try-account
              (fn [account]
-               (auth/require-authorization
+               (auth/require-admin-authorization
                  db
                  account
                  groupname
@@ -69,7 +69,7 @@
        (when (seq actives)
            (auth/try-account
              (fn [account]
-               (auth/require-authorization
+               (auth/require-admin-authorization
                  db
                  account
                  groupname

@@ -46,9 +46,9 @@
                       "ALTER TABLE groups ADD COLUMN inactive BOOLEAN"
                       "ALTER TABLE groups ADD COLUMN inactivated_by TEXT"))
 
-(defn change-added-by-null-to-clojars [trans]
+(defn change-added-by-null-or-blank-to-clojars [trans]
   (sql/db-do-commands trans
-                      "UPDATE groups SET added_by = \"clojars\" WHERE added_by is NULL"))
+                      "UPDATE groups SET added_by = \"clojars\" WHERE added_by is NULL OR added_by = \"\""))
 
 (defn make-primary-user-admin [trans]
   (sql/db-do-commands trans
@@ -117,7 +117,7 @@
    #'add-scope
    #'drop-search-table-and-triggers
    #'add-admin-and-inactive-and-inactivated-by
-   #'change-added-by-null-to-clojars
+   #'change-added-by-null-or-blank-to-clojars
    #'make-primary-user-admin])
 
 (defn migrate [db]

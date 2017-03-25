@@ -601,3 +601,27 @@ pre.error-id {
 .raw-text li {
   list-style-type: initial;
 }
+
+.add-member input#username {
+    width: auto;
+}
+
+input.button {
+    font-size: 14px;
+    letter-spacing: 0px;
+    margin: 5px;
+    padding: 5px;
+}
+
+input.green-button {
+    background-color: green;
+}
+
+input.red-button {
+    background-color: red;
+}
+
+.group-member-list th,
+.group-member-list td {
+    padding: 0 5px;
+}
