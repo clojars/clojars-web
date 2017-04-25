@@ -1,13 +1,22 @@
 (ns clojars.web.error-api
   (:require [ring.util.response :refer [response status content-type]]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [clojure.xml :as xml]))
 
 (defn error-api-response [error-options error-id]
   (let [defaults {:status 500}
         options (merge defaults error-options)]
-    {:status (:status options)
-     :headers {"Content-Type" "application/json; charset=UTF-8"
-               "Access-Control-Allow-Origin" "*"}
-     :body (json/generate-string
-             {:error (:error-message options)
-              :error-id error-id})}))
+    (if (= :xml (:format options))
+      {:status (:status options)
+       :headers {"Content-Type" "text/xml; charset=UTF-8"
+                 "Access-Control-Allow-Origin" "*"}
+       :body (with-out-str
+               (xml/emit {:tag :error
+                          :attrs {:message (:error-message options)
+                                  :id error-id}}))}
+      {:status (:status options)
+       :headers {"Content-Type" "application/json; charset=UTF-8"
+                 "Access-Control-Allow-Origin" "*"}
+       :body (json/generate-string
+              {:error (:error-message options)
+               :error-id error-id})})))
