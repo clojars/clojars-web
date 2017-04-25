@@ -4,6 +4,7 @@
             [clojars.search :as search]
             [clojars.test.test-helper :as help]
             [clojure.set :as set]
+            [clojure.xml :as xml]
             [clojure.test :refer :all]))
 
 (use-fixtures :each
@@ -42,6 +43,16 @@
 
     (testing "json request uses permissive cors headers"
       (is (help/assert-cors-header (do-search :json "test"))))
+
+    (testing "xml request returns xml"
+      (let [resp (do-search :xml "test")
+            parsed (xml/parse (java.io.ByteArrayInputStream.
+                               (.getBytes (:body resp))))]
+        (is (= 200 (:status resp)))
+        (is (= "text/xml" (help/get-content-type resp)))
+        (is (map? parsed))
+        (is (= "2" (:count (:attrs parsed))))
+        (is (= 2 (count (:content parsed))))))
 
     (testing "default request returns html"
       (let [resp (do-search "" "test")]
