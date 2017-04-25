@@ -6,6 +6,7 @@
             [ring.util.codec :refer [url-encode]]
             [clojars.search :as search]
             [cheshire.core :as json]
+            [clojure.xml :as xml]
             [clojars.errors :as errors]
             [clojure.string :as str]
             [ring.util.codec :refer [url-encode]]
@@ -33,6 +34,35 @@
       (catch Exception _
         (error-api/error-api-response
          {:status 400
+          :format :json
+          :error-message (format "Invalid search syntax for query `%s`" query)}
+         (errors/error-id))))))
+
+(defn- jar->xml [jar]
+  (let [attrs {:jar_name (:artifact-id jar)
+               :group_name (:group-id jar)
+               :version (:version jar)
+               :description (:description jar)}
+        created (:at jar)]
+    {:tag :result :attrs (if created
+                           (assoc attrs :created created)
+                           attrs)}))
+
+(defn xml-search [search query]
+  (let [response {:status 200
+                  :headers {"Content-Type" "text/xml; charset=UTF-8"
+                            "Access-Control-Allow-Origin" "*"}}]
+    (try
+      (assoc response
+             :body (let [results (search/search search query 1)]
+                     (with-out-str
+                       (xml/emit {:tag :results
+                                  :attrs {:count (count results)}
+                                  :content (map jar->xml results)}))))
+      (catch Exception _
+        (error-api/error-api-response
+         {:status 400
+          :format :xml
           :error-message (format "Invalid search syntax for query `%s`" query)}
          (errors/error-id))))))
 
@@ -130,6 +160,7 @@
 (defn search [search account params]
   (let [q (params :q)
         page (or (params :page) 1)]
-    (if (= (params :format) "json")
-      (json-search search q)
+    (case (params :format)
+      "json" (json-search search q)
+      "xml"  (xml-search search q)
       (html-search search account q page))))
