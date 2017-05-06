@@ -83,6 +83,10 @@
   (let [versioning (-> (read-metadata file) .getVersioning .getSnapshot)]
     (str (.getTimestamp versioning) "-" (.getBuildNumber versioning))))
 
+(defn snapshot-timestamp-version
+  [filename]
+  (second (re-find #"-(\d{8}\.\d{6}-\d+)\." filename)))
+
 (defn directory-for
   "Directory for a jar under repo"
   [{:keys [group_name jar_name version]}]

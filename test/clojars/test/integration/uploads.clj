@@ -9,6 +9,7 @@
             [clojars.test.test-helper :as help]
             [clojure.data.codec.base64 :as base64]
             [clojure.java.io :as io]
+            [clojure.string :as str]
             [clojure.test :refer :all]
             [clj-http.client :as client]
             [kerodon
@@ -310,6 +311,45 @@
                              (reset! timestamped-jar name))))
     (is @timestamped-jar)
     (is (.exists (io/file (:repo help/test-config) @timestamped-jar)))))
+
+(deftest deploys-sharing-the-same-session-work
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [add-checksums (partial mapcat (fn [[f no-version?]]
+                                        [[f no-version?]
+                                         [(tmp-checksum-file f :md5) no-version?]
+                                         [(tmp-checksum-file f :sha1) no-version?]]))
+        files (add-checksums [[(tmp-file
+                                 (io/file (io/resource "test.jar")) "test-0.0.3-%.jar")]
+                              [(tmp-file
+                                 (help/rewrite-pom (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
+                                   {:groupId "org.clojars.dantheman"})
+                                 "test-0.0.3-%.pom")]
+                              [(tmp-file
+                                 (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                 "maven-metadata.xml")
+                               :no-version]])
+        versioned-name #(str/replace (.getName %1) #"%" %2)]
+    ;; we use clj-http here instead of aether to have control over the
+    ;; cookies
+    (binding [clj-http.core/*cookie-store* (clj-http.cookies/cookie-store)]
+      (doseq [[f no-version?] files]
+          (client/put (format "%s/org/clojars/dantheman/test/%s%s"
+                        (repo-url)
+                        (if no-version? "" "0.0.3-SNAPSHOT/")
+                        (versioned-name f "20170505.125640-1"))
+            {:body f
+             :throw-entire-message? true
+             :basic-auth ["dantheman" "password"]}))
+
+      (doseq [[f no-version?] files]
+          (client/put (format "%s/org/clojars/dantheman/test/%s%s"
+                        (repo-url)
+                        (if no-version? "" "0.0.3-SNAPSHOT/")
+                        (versioned-name f "20170505.125655-99"))
+            {:body f
+             :throw-entire-message? true
+             :basic-auth ["dantheman" "password"]})))))
 
 (deftest user-can-deploy-with-classifiers
   (-> (session (help/app-from-system))

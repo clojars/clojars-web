@@ -46,11 +46,25 @@
     (when (.exists md-file)
       (read-string (slurp md-file)))))
 
-(defn find-upload-dir [group artifact {:keys [upload-dirs]}]
+(defn write-metadata [dir group-name group-path artifact version timestamp-version]
+  (spit (io/file dir metadata-edn)
+    (pr-str (merge-with #(if %2 %2 %1)
+              (read-metadata dir)
+              {:group group-name
+               :group-path group-path
+               :name artifact
+               :version version
+               :timestamp-version timestamp-version}))))
+
+(defn find-upload-dir [group artifact version timestamp-version {:keys [upload-dirs]}]
   (if-let [dir (some (fn [dir]
-                       (let [dir (io/file dir)]
-                         (when (and dir (.exists dir)
-                                 (= [group artifact] ((juxt :group :name) (read-metadata dir))))
+                       (let [dir (io/file dir)
+                             metadata (read-metadata dir)
+                             if= #(if (and %1 %2) (= %1 %2) true)]
+                         (if (and dir (.exists dir)
+                               (= [group artifact] ((juxt :group :name) metadata))
+                               (if= (:version metadata) version)
+                               (if= (:timestamp-version metadata) timestamp-version))
                            dir)))
                  upload-dirs)]
     dir
@@ -85,17 +99,17 @@
         {:account account
          :group group}))))
 
-(defn upload-request [db groupname artifact session f]
+(defn upload-request [db groupname artifact version timestamp-version session f]
   (with-account
     (fn [account]
       (check-group db account groupname) ;; will throw if there are any issues
-      (let [upload-dir (find-upload-dir groupname artifact session)]
+      (let [upload-dir (find-upload-dir groupname artifact version timestamp-version session)]
         (f account upload-dir)
         ;; should we only do 201 if the file didn't already exist?
         {:status 201
          :headers {}
          :session (update session
-                    :upload-dirs #((fnil conj #{}) % (.getAbsolutePath upload-dir)))
+                    :upload-dirs #(cons (.getAbsolutePath upload-dir) %))
          :body nil}))))
 
 (defn find-pom [dir]
@@ -287,18 +301,23 @@
     (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
 
 (defn- handle-versioned-upload [storage db reporter body session group artifact version filename]
-  (let [groupname (fu/path->group group)]
+  (let [groupname (fu/path->group group)
+        timestamp-version (if (mvn/snapshot-version? version) (mvn/snapshot-timestamp-version filename))]
     (upload-request
       db
       groupname
       artifact
+      version
+      timestamp-version
       session
       (fn [account upload-dir]
-        (spit (io/file upload-dir metadata-edn)
-          (pr-str {:group groupname
-                   :group-path group
-                   :name  artifact
-                   :version version}))
+        (write-metadata
+          upload-dir
+          groupname
+          group
+          artifact
+          version
+          timestamp-version)
         (let [file (try-save-to-file (io/file upload-dir group artifact version filename) body)]
           (when (deploy-finalized? upload-dir)
             ;; a deploy should never get this far with a bad group,
@@ -331,6 +350,8 @@
                 db
                 groupname
                 artifact
+                nil
+                nil
                 session
                 (fn [account upload-dir]
                   (let [file (io/file upload-dir group artifact file)]
