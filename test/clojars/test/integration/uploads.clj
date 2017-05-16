@@ -260,6 +260,20 @@
                                :password "password"}}
           :local-repo help/local-repo))))
 
+(deftest deploy-cannot-shadow-central-unless-whitelisted
+  (-> (session (help/app-from-system))
+    (register-as "dantheman" "test@example.org" "password"))
+  (aether/deploy
+    :coordinates '[net.mikera/clojure-pom "0.0.1"]
+    :jar-file (io/file (io/resource "test.jar"))
+    :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                {:groupId "net.mikera"
+                 :artifactId "clojure-pom"})
+    :repository {"test" {:url (repo-url)
+                         :username "dantheman"
+                         :password "password"}}
+    :local-repo help/local-repo))
+
 (deftest user-can-redeploy-snapshots
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
