@@ -361,11 +361,8 @@
                   (let [file (io/file upload-dir group artifact file)]
                     (try-save-to-file file body)
                     (try
-                      (profile {:group groupname
-                                :artifact artifact
-                                :context 'finalize-deploy}
-                        (finalize-deploy storage db reporter search
-                          account upload-dir))
+                      (finalize-deploy storage db reporter search
+                        account upload-dir)
                       (catch Exception e
                         (rethrow-forbidden e
                           {:account account
