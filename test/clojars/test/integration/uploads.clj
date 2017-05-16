@@ -107,6 +107,12 @@
                                  (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
                                  "maven-metadata.xml")
                                :no-version]
+                              ;; maven 3.5 will upload maven-metadata.xml twice when there are classified artifacts
+                              ;; see https://github.com/clojars/clojars-web/issues/640
+                              [(tmp-file
+                                 (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                 "maven-metadata.xml")
+                               :no-version]
                               [(tmp-file
                                  (io/file (io/resource "test.jar")) "test-sources-0.0.1.jar")]])]
     ;; we use clj-http here instead of aether to have control over the

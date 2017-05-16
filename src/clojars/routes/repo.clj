@@ -358,16 +358,23 @@
                 nil
                 session
                 (fn [account upload-dir]
-                  (let [file (io/file upload-dir group artifact file)]
+                  (let [file (io/file upload-dir group artifact file)
+                        existing-sum (if (.exists file) (fu/checksum file :sha1))]
                     (try-save-to-file file body)
-                    (try
-                      (finalize-deploy storage db reporter search
-                        account upload-dir)
-                      (catch Exception e
-                        (rethrow-forbidden e
-                          {:account account
-                           :group group
-                           :name name})))))))
+                    ;; only finalize if we haven't already or the
+                    ;; maven-metadata.xml file doesn't match the one
+                    ;; we already have
+                    ;; https://github.com/clojars/clojars-web/issues/640
+                    (if-not (or (deploy-finalized? upload-dir)
+                              (= (fu/checksum file :sha1) existing-sum))
+                      (try
+                        (finalize-deploy storage db reporter search
+                          account upload-dir)
+                        (catch Exception e
+                          (rethrow-forbidden e
+                            {:account account
+                             :group group
+                             :name name}))))))))
             {:status 201
              :headers {}
              :body nil})))
