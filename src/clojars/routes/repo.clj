@@ -16,8 +16,7 @@
              [route :refer [not-found]]]
             [ring.util
              [codec :as codec]
-             [response :as response]]
-            [clojars.maven :as mvn])
+             [response :as response]])
   (:import java.util.UUID
            org.apache.commons.io.FileUtils
            (java.io FileFilter IOException FileNotFoundException File)))
@@ -158,14 +157,14 @@
   (validate-pom-entry pom :version version))
 
 (defn assert-non-redeploy [storage group-id artifact-id version]
-  (when (and (not (mvn/snapshot-version? version))
+  (when (and (not (maven/snapshot-version? version))
           (storage/path-exists? storage
             (str/join "/" [(fu/group->path group-id) artifact-id version])))
     (throw-invalid "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
 
 (defn exists-on-central?  [group-id artifact-id]
   (try
-    (mvn/exists-on-central? group-id artifact-id)
+    (maven/exists-on-central? group-id artifact-id)
     (catch Exception _
       ::failure)))
 
@@ -307,7 +306,7 @@
 
 (defn- handle-versioned-upload [storage db reporter body session group artifact version filename]
   (let [groupname (fu/path->group group)
-        timestamp-version (if (mvn/snapshot-version? version) (mvn/snapshot-timestamp-version filename))]
+        timestamp-version (if (maven/snapshot-version? version) (maven/snapshot-timestamp-version filename))]
     (upload-request
       db
       groupname
@@ -338,7 +337,7 @@
    (PUT ["/:group/:artifact/:file"
          :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
         {body :body session :session {:keys [group artifact file]} :params}
-        (if (mvn/snapshot-version? artifact)
+        (if (maven/snapshot-version? artifact)
           ;; SNAPSHOT metadata will hit this route, but should be
           ;; treated as a versioned file upload.
           ;; See: https://github.com/clojars/clojars-web/issues/319
