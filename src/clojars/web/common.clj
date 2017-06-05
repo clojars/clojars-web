@@ -69,7 +69,11 @@
      [:div.row.sponsors
       "remixed by"
       (link-to "http://www.bendyworks.com/"
-               [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]]
+               [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])
+      "member project of"
+      (link-to "https://sfconservancy.org/"
+               [:img {:src "/images/sfconservancy-logo.svg" :alt "Software Freedom Conservancy" :height "40"}])]
+     ]
     [:footer.row]))
 
 (defn google-analytics-js []
