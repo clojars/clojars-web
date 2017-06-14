@@ -19,6 +19,9 @@
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
 
+(defn repo-url [jar]
+  (str "https://repo.clojars.org/" (:group_name jar) "/" (:jar_name jar) "/"))
+
 (defn maven-jar-url [jar]
  (str "http://search.maven.org/#"
    (url-encode (apply format "artifactdetails|%s|%s|%s|jar"
@@ -200,6 +203,13 @@
           {:readonly "readonly" :rows 6 :onClick "selectText('version-badge')"}
           (badge-markdown jar)]]]])))
 
+(defn repo-note [jar]
+  [:div
+   [:h2 "Maven Repository"]
+   [:p
+    "If you are looking for URLs to jar files or stable identifiers for SNAPSHOT versions you can take a look at "
+    [:a {:href (repo-url jar)} (str "the full Maven repository for " (jar-name jar) ".")]]])
+
 (defn show-versions [account jar versions]
   (html-doc (str "all versions of "(jar-name jar)) {:account account}
             [:div.light-article
@@ -208,9 +218,10 @@
               [:ul
                (for [v versions]
                  [:li.col-xs-12.col-sm-6.col-md-4.col-lg-3
-                  (link-to (url-for (assoc jar
-                                      :version (:version v)))
-                           (:version v))])]]]))
+                  (link-to (url-for (assoc jar :version (:version v)))
+                           (:version v))])]]]
+            [:div.light-article
+             (repo-note jar)]))
 
 (let [border-color "#e2e4e3"
       bg-color "#fff"
