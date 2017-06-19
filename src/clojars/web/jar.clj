@@ -9,6 +9,7 @@
             [clojars.web.safe-hiccup :refer [form-to raw]]
             [clojars.db :refer [find-jar jar-exists]]
             [clojars.stats :as stats]
+            [clojars.config :refer [config]]
             [ring.util.codec :refer [url-encode]]
             [cheshire.core :as json]
             [clojars.web.helpers :as helpers]
@@ -20,7 +21,7 @@
   (str (jar-url jar) "/versions/" (:version jar)))
 
 (defn repo-url [jar]
-  (str "https://repo.clojars.org/" (:group_name jar) "/" (:jar_name jar) "/"))
+  (str (:cdn-url @config) "/" (:group_name jar) "/" (:jar_name jar) "/"))
 
 (defn maven-jar-url [jar]
  (str "http://search.maven.org/#"
@@ -207,8 +208,10 @@
   [:div
    [:h2 "Maven Repository"]
    [:p
-    "If you are looking for URLs to jar files or stable identifiers for SNAPSHOT versions you can take a look at "
-    [:a {:href (repo-url jar)} (str "the full Maven repository for " (jar-name jar) ".")]]])
+    "If you are looking for URLs to jar files or "
+    (link-to "https://github.com/clojars/clojars-web/wiki/Stable-SNAPSHOT-Identifiers" "stable identifiers")
+    " for SNAPSHOT versions you can take a look at "
+    (link-to  (repo-url jar) (str "the full Maven repository for " (jar-name jar) "."))]])
 
 (defn show-versions [account jar versions]
   (html-doc (str "all versions of "(jar-name jar)) {:account account}
