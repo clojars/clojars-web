@@ -94,6 +94,7 @@
     [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
     [:link {:type "application/opensearchdescription+xml"
+            :title "Clojars"
             :href "/opensearch.xml"
             :rel "search"}]
     [:link {:type "image/png"
@@ -147,6 +148,7 @@
    [:head
     [:meta {:charset "utf-8"}]
     [:link {:type "application/opensearchdescription+xml"
+            :title "Clojars"
             :href "/opensearch.xml"
             :rel "search"}]
 
