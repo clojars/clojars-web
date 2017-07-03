@@ -8,19 +8,25 @@
   (:import java.util.UUID))
 
 
-(defn raven-event-info [message e extra]
+(defn raven-extra-data [e extra]
+  (-> (ex-data e)
+    (merge extra)
+    (dissoc :message)))
+
+(defn raven-event-info [id message e extra]
   (cond-> {}
           message (assoc :message message)
           e (interfaces/stacktrace e ["clojars"])
-          extra (merge extra)))
+          (or e extra) (assoc :extra (raven-extra-data e extra))
+          id (assoc-in [:extra :error-id] id)))
 
 (defn raven-error-report
-  ([dsn message e extra]
-   (raven-clj/capture dsn (raven-event-info message e extra)))
-  ([dsn message e]
-   (raven-clj/capture dsn (raven-event-info message e nil)))
-  ([dsn message]
-   (raven-clj/capture dsn (raven-event-info message nil nil))))
+  ([dsn id message e extra]
+   (raven-clj/capture dsn (raven-event-info id message e extra)))
+  ([dsn id message e]
+   (raven-error-report dsn id message e nil))
+  ([dsn id message]
+   (raven-error-report dsn id message nil nil)))
 
 (defprotocol ErrorReporter
   (-report-error [reporter e extra id]))
@@ -29,13 +35,15 @@
    ErrorReporter
    (-report-error [_ e extra id]
      (raven-error-report (:dsn raven-config)
+                         id
                          (or (:message extra) "RavenErrorReporter capture")
                          e
-                         (merge extra {:extra {:error-id id}})))
+                         extra))
  
    Thread$UncaughtExceptionHandler
    (uncaughtException [this thread throwable]
      (raven-error-report (:dsn raven-config)
+                         nil
                          ("UncaughtExceptionHandler capture")
                          throwable)))
  
