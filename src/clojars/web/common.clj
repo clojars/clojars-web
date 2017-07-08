@@ -50,16 +50,13 @@
                    (image "/images/fastly-logo.png" "Fastly"))]
          [:td.sponsor
           (link-to "https://pingometer.com/"
-                   (image "/images/pingometer-logo.svg" "Pingometer"))]
-         [:td.sponsor
-          (link-to "https://www.rackspace.com"
-                   (image "/images/rackspace-logo.svg" "Rackspace"))]]]]
+                   (image "/images/pingometer-logo.svg" "Pingometer"))]]]]
       [:div.row
        [:table
         [:tr
          [:td.sponsor
-          (link-to "http://www.redhat.com/"
-                   (image "/images/red-hat-logo.svg" "Red Hat, Inc."))]
+          (link-to "https://www.rackspace.com"
+                   (image "/images/rackspace-logo.svg" "Rackspace"))]
          [:td.sponsor
           (link-to "http://sentry.io/"
                    (image "/images/sentry-logo.png" "Sentry"))]
