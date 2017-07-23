@@ -10,6 +10,7 @@
             [clojars.db :refer [find-jar jar-exists]]
             [clojars.stats :as stats]
             [clojars.config :refer [config]]
+            [clojars.file-utils :as fu]
             [ring.util.codec :refer [url-encode]]
             [cheshire.core :as json]
             [clojars.web.helpers :as helpers]
@@ -21,7 +22,7 @@
   (str (jar-url jar) "/versions/" (:version jar)))
 
 (defn repo-url [jar]
-  (str (:cdn-url @config) "/" (:group_name jar) "/" (:jar_name jar) "/"))
+  (str (:cdn-url @config) "/" (-> jar :group_name fu/group->path) "/" (:jar_name jar) "/"))
 
 (defn maven-jar-url [jar]
  (str "http://search.maven.org/#"

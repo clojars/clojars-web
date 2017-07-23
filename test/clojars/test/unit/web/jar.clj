@@ -34,3 +34,13 @@
                            []
                            0)]
     (is (not (.contains html "<script>alert('hi')</script>")))))
+
+(deftest groups-are-converted-to-paths
+  (let [html (jar/show-versions nil
+                                {:homepage "whatever"
+                                 :created 3
+                                 :version "1"
+                                 :group_name "test.foo"
+                                 :jar_name "test"}
+                                ["1"])]
+    (is (re-find #"/test/foo/test" html))))
