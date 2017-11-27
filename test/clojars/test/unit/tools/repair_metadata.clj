@@ -53,7 +53,7 @@
         (let [md (mvn/read-metadata bar-file)
               versioning (.getVersioning md)]
           (is (= "0.4.0" (.getRelease versioning)))
-          (is (= versions (.getVersions versioning)))))
+          (is (= (set versions) (set (.getVersions versioning))))))
 
       (testing "writes correct sums"
         (is (futil/valid-checksum-file? bar-file :md5))
