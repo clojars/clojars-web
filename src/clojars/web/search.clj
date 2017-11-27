@@ -1,7 +1,7 @@
 (ns clojars.web.search
   (:require [clojars.web.common :refer [html-doc jar-link jar-fork?
                                         collection-fork-notice user-link
-                                        format-date page-nav flash]]
+                                        format-date page-nav flash xml-escape]]
             [hiccup.element :refer [link-to]]
             [ring.util.codec :refer [url-encode]]
             [clojars.search :as search]
@@ -42,7 +42,7 @@
   (let [attrs {:jar_name (:artifact-id jar)
                :group_name (:group-id jar)
                :version (:version jar)
-               :description (:description jar)}
+               :description (xml-escape (:description jar))}
         created (:at jar)]
     {:tag :result :attrs (if created
                            (assoc attrs :created created)

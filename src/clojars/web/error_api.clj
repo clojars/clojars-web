@@ -1,6 +1,8 @@
 (ns clojars.web.error-api
   (:require [ring.util.response :refer [response status content-type]]
+            [clojars.web.common :refer [xml-escape]]
             [cheshire.core :as json]
+            [clojure.string :as str]
             [clojure.xml :as xml]))
 
 (defn error-api-response [error-options error-id]
@@ -12,7 +14,7 @@
                  "Access-Control-Allow-Origin" "*"}
        :body (with-out-str
                (xml/emit {:tag :error
-                          :attrs {:message (:error-message options)
+                          :attrs {:message (xml-escape (:error-message options))
                                   :id error-id}}))}
       {:status (:status options)
        :headers {"Content-Type" "application/json; charset=UTF-8"
