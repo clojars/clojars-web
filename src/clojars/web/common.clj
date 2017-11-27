@@ -340,3 +340,6 @@
      [:b (str (-> upper (- per-page) inc) " - " (min upper total))]
      " of "
      [:b total]]))
+
+(defn xml-escape [s]
+  (str/escape s {"'" "&apos;" "&" "&amp;" "<" "&lt;" ">" "&gt;"}))
