@@ -68,7 +68,10 @@
                   ["change" "version" "super.sport/bump-version"]
                   ["vcs" "commit"]
                   ["vcs" "push"]]
-  :aliases {"migrate" ["run" "-m" "clojars.tools.migrate-db"]}
+  :aliases {"migrate" ["run" "-m" "clojars.tools.migrate-db"]
+            "test" ["run" "-m" "circleci.test/dir" :project/test-paths]
+            "tests" ["run" "-m" "circleci.test"]
+            "retest" ["run" "-m" "circleci.test.retest"]}
   :pedantic? :abort
   :profiles
   {:dev  [:project/dev  :profiles/dev]
@@ -82,6 +85,7 @@
                    :dependencies [[reloaded.repl "0.2.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [eftest "0.1.0"]
+                                  [circleci/circleci.test "0.3.1"]
                                   [kerodon "0.7.0"
                                    :exclusions [org.apache.httpcomponents/httpcore
                                                 ring/ring-codec]]
