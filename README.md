@@ -4,7 +4,7 @@ Clojars web interface
 [![Build Status](https://travis-ci.org/clojars/clojars-web.svg)](https://travis-ci.org/clojars/clojars-web)
 [![Dependencies Status](https://versions.deps.co/clojars/clojars-web/status.svg)](https://versions.deps.co/clojars/clojars-web)
 
-This is the source code for the [Clojars](http://clojars.org/) jar
+This is the source code for the [Clojars](https://clojars.org/) jar
 repository webapp.
 
 If you're looking for user documentation, try

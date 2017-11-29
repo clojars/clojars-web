@@ -52,7 +52,7 @@
        [:pre
         (tag "<repository>\n")
         (tag "  <id>") "clojars.org" (tag "</id>\n")
-        (tag "  <url>") "http://clojars.org/repo" (tag "</url>\n")
+        (tag "  <url>") "https://repo.clojars.org" (tag "</url>\n")
         (tag "</repository>")]]]]
     [:div.recent-jars-header-container.row
      [:h2.recent-jars-header.col-xs-12
