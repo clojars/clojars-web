@@ -1,8 +1,0 @@
-sudo: false
-language: clojure
-lein: lein
-jdk:
-  - oraclejdk8
-script:
-  - lein test
-  - lein uberjar

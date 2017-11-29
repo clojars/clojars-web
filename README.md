@@ -1,7 +1,7 @@
 Clojars web interface
 =====================
 
-[![Build Status](https://travis-ci.org/clojars/clojars-web.svg)](https://travis-ci.org/clojars/clojars-web)
+[![CircleCI](https://circleci.com/gh/clojars/clojars-web.svg?style=svg)](https://circleci.com/gh/clojars/clojars-web)
 [![Dependencies Status](https://versions.deps.co/clojars/clojars-web/status.svg)](https://versions.deps.co/clojars/clojars-web)
 
 This is the source code for the [Clojars](http://clojars.org/) jar
