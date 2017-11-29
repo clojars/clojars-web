@@ -63,7 +63,7 @@
 
 (defn repair-versions [{:keys [file metadata version-dirs]}]
   (let [versioning (get-versioning metadata)
-        sorted-dirs (sort-by #(.lastModified %) version-dirs)]
+        sorted-dirs (sort-by (juxt (memfn lastModified) str) version-dirs)]
     ;; remove existing versions, then write dir versions in dir creation order
     (run! #(.removeVersion versioning %) (into [] (.getVersions versioning)))
     (run! #(.addVersion versioning %) (map (memfn getName) sorted-dirs))
