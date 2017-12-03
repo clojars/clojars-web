@@ -12,6 +12,7 @@
                                  submit-button
                                  email-field]]
             [clojars.web.safe-hiccup :refer [form-to]]
+            [cemerick.friend.credentials :as creds]
             [ring.util.response :refer [response redirect]]
             [valip.core :refer [validate]]
             [valip.predicates :as pred]))
@@ -76,6 +77,16 @@
      [:reset-code pred/present? "Reset code can't be blank."]]
     (password-validations confirm)))
 
+(defn correct-password? [db username current-password]
+  (let [user (find-user db username)]
+    (when (and user (not (blank? current-password)))
+      (creds/bcrypt-verify current-password (:password user)))))
+
+(defn current-password-validations [db username]
+  [[:current-password pred/present? "Current password can't be blank"]
+   [:current-password #(correct-password? db username %)
+    "Current password is incorrect"]])
+
 ;;
 
 (defn profile-form [account user flash-msg & [errors]]
@@ -89,20 +100,25 @@
                       (label :email "Email")
                       [:input {:type :email :name :email :id
                                :email :value (user :email)}]
-                      (label :password "Password")
+                      (label :current-password "Current password")
+                      (password-field :current-password)
+                      (label :password "New password")
                       (password-field :password)
-                      (label :confirm "Confirm password")
+                      (label :confirm "Confirm new password")
                       (password-field :confirm)
                       (submit-button "Update"))]))
 
-(defn update-profile [db account {:keys [email password confirm] :as params}]
+(defn update-profile [db account {:keys [email current-password password confirm] :as params}]
   (let [email (and email (.trim email))]
     (if-let [errors (apply validate {:email email
+                                     :current-password current-password
                                      :username account
                                      :password password}
-                           (if (empty? password)
-                             (user-validations)
-                             (concat (user-validations) (password-validations confirm))))]
+                           (concat
+                            (user-validations)
+                            (current-password-validations db account)
+                            (when-not (blank? password)
+                              (password-validations confirm))))]
       (profile-form account params nil (apply concat (vals errors)))
       (do (update-user db account email account password)
           (assoc (redirect "/profile")

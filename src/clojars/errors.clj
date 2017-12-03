@@ -103,6 +103,7 @@
   [http-event-map]
   (->> http-event-map
        (replace-kv :password [:password "SCRUBBED"])
+       (replace-kv :current-password [:current-password "SCRUBBED"])
        (replace-kv :confirm [:confirm "SCRUBBED"]))) ; TODO: add more? auth tokens?
 
 (defn report-ring-error [reporter e request]

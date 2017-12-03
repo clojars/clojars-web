@@ -85,8 +85,9 @@
       (follow-redirect)
       (follow "profile")
       (fill-in "Email" "fixture2@example.org")
-      (fill-in "Password" "password2")
-      (fill-in "Confirm password" "password2")
+      (fill-in "Current password" "password")
+      (fill-in "New password" "password2")
+      (fill-in "Confirm new password" "password2")
       (press "Update")
       (follow-redirect)
       (within [:div#flash]
@@ -111,12 +112,26 @@
       (within [:title]
               (has (text? "Profile - Clojars")))
 
-      (fill-in "Password" "password")
+      (fill-in "Current password" "")
+      (press "Update")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+              (has (text? "Current password can't be blankCurrent password is incorrect")))
+
+      (fill-in "Current password" "wrong-password")
+      (press "Update")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+              (has (text? "Current password is incorrect")))
+
+      (fill-in "Current password" "password")
+      (fill-in "New password" "newpassword")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
               (has (text? "Password and confirm password must match")))
 
+      (fill-in "Current password" "password")
       (fill-in "Email" "")
       (press "Update")
       (has (status? 200))
