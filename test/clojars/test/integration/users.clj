@@ -124,6 +124,13 @@
       (within [:div.error :ul :li]
               (has (text? "Current password is incorrect")))
 
+      (fill-in "New password" "newpassword")
+      (fill-in "Confirm new password" "newpassword")
+      (press "Update")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+              (has (text? "Current password can't be blankCurrent password is incorrect")))
+
       (fill-in "Current password" "password")
       (fill-in "New password" "newpassword")
       (press "Update")
