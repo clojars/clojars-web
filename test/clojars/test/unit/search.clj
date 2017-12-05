@@ -124,6 +124,63 @@
       (finally
         (component/stop lc)))))
 
+(deftest search-by-creation-time-in-epoch-milliseconds
+  (let [lc (component/start (assoc (lucene-component)
+                                   :stats (reify stats/Stats
+                                            (download-count [t g a] 1)
+                                            (total-downloads [t] 100))
+                                   :index-factory #(clucy/memory-index)))
+        lein-ring-old {:description "lein-ring old" :at (date-in-epoch-ms "2012-01-15T00:00:00Z")}
+        lein-ring-new {:description "lein-ring new" :at (date-in-epoch-ms "2015-01-15T00:00:00Z")}
+        lib-foo       {:description "lib-foo" :at (date-in-epoch-ms "2014-01-15T00:00:00Z")}]
+    (try
+      (doseq [data [lein-ring-old
+                    lein-ring-new
+                    lib-foo
+                    {:group-id "c"}]]
+        (index! lc data))
+      (is (= (map #(dissoc % :licenses)
+                  (search lc (format "at:[%s TO %s]" (date-in-epoch-ms "2014-01-01T00:00:00Z") (date-in-epoch-ms "2016-01-01T00:00:00Z")) 1))
+             [lein-ring-new lib-foo]))
+      (is (= (map #(dissoc % :licenses)
+                  (search lc (str "lein " (format "at:[%s TO %s]" (date-in-epoch-ms "2014-01-01T00:00:00Z") (date-in-epoch-ms "2016-01-01T00:00:00Z"))) 1))
+             [lein-ring-new lib-foo lein-ring-old]))
+      (is (= (map #(dissoc % :licenses)
+                  (search lc (str "lein AND " (format "at:[%s TO %s]" (date-in-epoch-ms "2014-01-01T00:00:00Z") (date-in-epoch-ms "2016-01-01T00:00:00Z"))) 1))
+             [lein-ring-new]))
+      (finally
+        (component/stop lc)))))
+
+(deftest search-by-human-readable-creation-time
+  (let [lc (component/start (assoc (lucene-component)
+                                   :stats (reify stats/Stats
+                                            (download-count [t g a] 1)
+                                            (total-downloads [t] 100))
+                                   :index-factory #(clucy/memory-index)))
+        lein-ring-old {:description "lein-ring old" :at (date-in-epoch-ms "2012-01-15T00:00:00Z")}
+        lein-ring-new {:description "lein-ring new" :at (date-in-epoch-ms "2015-01-15T00:00:00Z")}
+        lib-foo       {:description "lib-foo" :at (date-in-epoch-ms "2014-01-15T00:00:00Z")}]
+    (try
+      (doseq [data [lein-ring-old
+                    lein-ring-new
+                    lib-foo
+                    {:group-id "c"}]]
+        (index! lc data))
+      (is (= (map #(dissoc % :licenses)
+                  (search lc (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z") 1))
+             [lein-ring-new lib-foo]))
+      (is (= (map #(dissoc % :licenses)
+                  (search lc (str "lein " (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z")) 1))
+             [lein-ring-new lib-foo lein-ring-old]))
+      (is (= (map #(dissoc % :licenses)
+                  (search lc (str "lein AND " (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z")) 1))
+             [lein-ring-new]))
+      (is (= (map #(dissoc % :licenses)
+                  (search lc (format "at:[%s TO %s]" "2014-01-01" "2016-FOO/BAR") 1))
+             []))
+      (finally
+        (component/stop lc)))))
+
 (deftest deleting-by-group-id
   (let [lc (component/start (assoc (lucene-component)
                                    :stats (reify stats/Stats
