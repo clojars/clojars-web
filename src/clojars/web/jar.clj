@@ -127,6 +127,17 @@
           [:span.string " \""
            (:version jar) "\""] (tag "]")]]
 
+        [:h2 "Clojure CLI"]
+        [:div#deps-coordinates.package-config-example
+         {:onClick "selectText('deps-coordinates');"}
+         [:pre
+          (jar-name jar)
+          \space
+          (tag "{")
+          ":mvn/version "
+          [:span.string \" (:version jar) \"]
+          (tag "}")]]
+
         [:h2 "Gradle"]
         [:div#gradle-coordinates.package-config-example
          {:onClick "selectText('gradle-coordinates');"}
