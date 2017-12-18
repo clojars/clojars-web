@@ -133,13 +133,13 @@
          [:pre
           "compile "
           [:span.string
-           \"
+           \'
            (:group_name jar)
            ":"
            (:jar_name jar)
            ":"
            (:version jar)
-           \"]]]
+           \']]]
 
         [:h2 "Maven"]
         [:div#maven-coordinates.package-config-example
