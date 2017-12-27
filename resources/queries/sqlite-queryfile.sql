@@ -37,7 +37,7 @@ WHERE (
 SELECT user
 FROM groups
 WHERE (
-      name = :groupname
+      name = :group_id
       AND
       inactive IS NOT 1
       AND
@@ -48,7 +48,7 @@ WHERE (
 SELECT user
 FROM groups
 WHERE (
-      name = :groupname
+      name = :group_id
       AND
       inactive IS NOT 1
 );
@@ -57,7 +57,7 @@ WHERE (
 SELECT user
 FROM groups
 WHERE (
-      name = :groupname
+      name = :group_id
 );
 
 
@@ -74,7 +74,7 @@ WHERE (
 SELECT user
 FROM groups
 WHERE (
-      name = :groupname
+      name = :group_id
       AND
       inactive IS NOT 1
       AND
@@ -87,7 +87,7 @@ SET inactive = 1, inactivated_by = :inactivated_by
 WHERE (
       user = :username
       AND
-      name = :groupname
+      name = :group_id
       AND
       inactive IS NOT 1
 );
@@ -123,14 +123,14 @@ ON (
    AND
    j.created = l.created
 )
-WHERE j.group_name = :groupname
+WHERE j.group_name = :group_id
 ORDER BY j.group_name ASC, j.jar_name ASC;
 
 --name: recent-versions
 SELECT DISTINCT(version)
 FROM jars
 WHERE (
-  group_name = :groupname
+  group_name = :group_id
   AND
   jar_name = :jarname
 )
@@ -140,7 +140,7 @@ ORDER BY created DESC;
 SELECT DISTINCT(version)
 FROM jars
 WHERE (
-  group_name = :groupname
+  group_name = :group_id
   AND
   jar_name = :jarname
 )
@@ -151,7 +151,7 @@ LIMIT :num;
 SELECT COUNT(DISTINCT version) AS count
 FROM jars
 WHERE (
-  group_name = :groupname
+  group_name = :group_id
   AND
   jar_name = :jarname
 );
@@ -182,7 +182,7 @@ SELECT EXISTS(
   SELECT 1
   FROM jars
   WHERE (
-    group_name = :groupname
+    group_name = :group_id
     AND
     jar_name = :jarname
   )
@@ -192,7 +192,7 @@ SELECT EXISTS(
 SELECT *
 FROM jars
 WHERE (
-  group_name = :groupname
+  group_name = :group_id
   AND
   jar_name = :jarname
 )
@@ -203,7 +203,7 @@ LIMIT 1;
 SELECT *
 FROM jars
 WHERE (
-  group_name = :groupname
+  group_name = :group_id
   AND
   jar_name = :jarname
   AND
@@ -216,7 +216,7 @@ LIMIT 1;
 SELECT *
 FROM deps
 WHERE (
-  group_name = :groupname
+  group_name = :group_id
   AND
   jar_name = :jarname
   AND
@@ -348,15 +348,15 @@ ORDER BY j.group_name ASC, j.jar_name ASC;
 
 --name: add-member!
 INSERT INTO groups (name, user, added_by, admin)
-VALUES (:groupname, :username, :added_by, :admin);
+VALUES (:group_id, :username, :added_by, :admin);
 
 --name: add-jar!
 INSERT INTO jars (group_name, jar_name, version, user, created, description, homepage, authors, packaging, licenses, scm)
-VALUES (:groupname, :jarname, :version, :user, :created, :description, :homepage, :authors, :packaging, :licenses, :scm);
+VALUES (:group_id, :jarname, :version, :user, :created, :description, :homepage, :authors, :packaging, :licenses, :scm);
 
 --name: add-dependency!
 INSERT INTO deps (group_name, jar_name, version, dep_group_name, dep_jar_name, dep_version, dep_scope)
-VALUES (:groupname, :jarname, :version, :dep_groupname, :dep_jarname, :dep_version, :dep_scope);
+VALUES (:group_id, :jarname, :version, :dep_groupname, :dep_jarname, :dep_version, :dep_scope);
 
 --name: delete-groups-jars!
 DELETE FROM jars

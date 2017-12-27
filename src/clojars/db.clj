@@ -52,18 +52,18 @@
                        {:connection db
                         :row-fn :name}))
 
-(defn group-membernames [db groupname]
-  (sql/group-membernames {:groupname groupname}
+(defn group-membernames [db group-id]
+  (sql/group-membernames {:group_id group-id}
                          {:connection db
                           :row-fn :user}))
 
-(defn group-adminnames [db groupname]
-  (sql/group-adminnames {:groupname groupname}
+(defn group-adminnames [db group-id]
+  (sql/group-adminnames {:group_id group-id}
                          {:connection db
                           :row-fn :user}))
 
-(defn group-activenames [db groupname]
-  (sql/group-activenames {:groupname groupname}
+(defn group-activenames [db group-id]
+  (sql/group-activenames {:group_id group-id}
                          {:connection db
                           :row-fn :user}))
 
@@ -80,23 +80,23 @@
   (sql/jars-by-username {:username username}
                         {:connection db}))
 
-(defn jars-by-groupname [db groupname]
-  (sql/jars-by-groupname {:groupname groupname}
+(defn jars-by-groupname [db group-id]
+  (sql/jars-by-groupname {:group_id group-id}
                          {:connection db}))
 
 (defn recent-versions
-  ([db groupname jarname]
-   (sql/recent-versions {:groupname groupname
+  ([db group-id jarname]
+   (sql/recent-versions {:group_id group-id
                          :jarname jarname}
                         {:connection db}))
-  ([db groupname jarname num]
-   (sql/recent-versions-limit {:groupname groupname
+  ([db group-id jarname num]
+   (sql/recent-versions-limit {:group_id group-id
                                :jarname jarname
                                :num num}
                               {:connection db})))
 
-(defn count-versions [db groupname jarname]
-  (sql/count-versions {:groupname groupname
+(defn count-versions [db group-id jarname]
+  (sql/count-versions {:group_id group-id
                        :jarname jarname}
                       {:connection db
                        :result-set-fn first
@@ -105,8 +105,8 @@
 (defn recent-jars [db]
   (sql/recent-jars {} {:connection db}))
 
-(defn jar-exists [db groupname jarname]
-  (sql/jar-exists {:groupname groupname
+(defn jar-exists [db group-id jarname]
+  (sql/jar-exists {:group_id group-id
                    :jarname jarname}
                   {:connection db
                    :result-set-fn first
@@ -118,15 +118,15 @@
                             (read-field :licenses)
                             (read-field :scm)))]
   (defn find-jar
-    ([db groupname jarname]
+    ([db group-id jarname]
      (read-edn-fields
-       (sql/find-jar {:groupname groupname
+       (sql/find-jar {:group_id group-id
                       :jarname   jarname}
                      {:connection    db
                       :result-set-fn first})))
-    ([db groupname jarname version]
+    ([db group-id jarname version]
      (read-edn-fields
-       (sql/find-jar-versioned {:groupname groupname
+       (sql/find-jar-versioned {:group_id group-id
                                 :jarname   jarname
                                 :version   version}
                                {:connection    db
@@ -136,8 +136,8 @@
          (sql/all-jars {} {:connection db}))))
 
 (defn find-dependencies
-  [db groupname jarname version]
-  (sql/find-dependencies {:groupname groupname
+  [db group-id jarname version]
+  (sql/find-dependencies {:group_id group-id
                           :jarname   jarname
                           :version   version}
                          {:connection db}))
@@ -201,11 +201,11 @@
 (defn add-user [db email username password]
   (let [record {:email email, :username username, :password (bcrypt password),
                 :created (get-time)}
-        groupname (str "org.clojars." username)]
+        group-id (str "org.clojars." username)]
     (serialize-task :add-user
                     (sql/insert-user! record
                                       {:connection db})
-                    (sql/add-member! {:groupname groupname
+                    (sql/add-member! {:group_id group-id
                                       :username username
                                       :admin 1
                                       :added_by "clojars"}
@@ -259,59 +259,59 @@
                                                   {:connection db}))
     reset-code))
 
-(defn add-member [db groupname username added-by]
+(defn add-member [db group-id username added-by]
   (serialize-task :add-member
-                  (sql/inactivate-member! {:groupname groupname
+                  (sql/inactivate-member! {:group_id group-id
                                            :username username
                                            :inactivated_by added-by}
                                           {:connection db})
-                  (sql/add-member! {:groupname groupname
+                  (sql/add-member! {:group_id group-id
                                     :username username
                                     :admin 0
                                     :added_by added-by}
                                    {:connection db})))
 
-(defn add-admin [db groupname username added-by]
+(defn add-admin [db group-id username added-by]
   (serialize-task :add-admin
-                  (sql/inactivate-member! {:groupname groupname
+                  (sql/inactivate-member! {:group_id group-id
                                            :username username
                                            :inactivated_by added-by}
                                           {:connection db})
-                  (sql/add-member! {:groupname groupname
+                  (sql/add-member! {:group_id group-id
                                     :username username
                                     :admin 1
                                     :added_by added-by}
                                    {:connection db})))
 
-(defn inactivate-member [db groupname username inactivated-by]
+(defn inactivate-member [db group-id username inactivated-by]
   (serialize-task :inactivate-member
-                  (sql/inactivate-member! {:groupname groupname
+                  (sql/inactivate-member! {:group_id group-id
                                            :username username
                                            :inactivated_by inactivated-by}
                                           {:connection db})))
 
 (defn check-group
   "Throws if the group is invalid or not accessible to the account"
-  [actives account groupname]
+  [actives account group-id]
   (let [err (fn [msg]
               (throw (ex-info msg {:account account
-                                   :group groupname})))]
-    (when (reserved-names groupname)
-      (err (format "The group name '%s' is reserved" groupname)))
+                                   :group group-id})))]
+    (when (reserved-names group-id)
+      (err (format "The group name '%s' is reserved" group-id)))
     (when (and (seq actives)
             (not (some #{account} actives)))
-      (err (format "You don't have access to the '%s' group" groupname)))))
+      (err (format "You don't have access to the '%s' group" group-id)))))
 
-(defn check-and-add-group [db account groupname]
-  (let [actives (group-activenames db groupname)]
-    (check-group actives account groupname)
+(defn check-and-add-group [db account group-id]
+  (let [actives (group-activenames db group-id)]
+    (check-group actives account group-id)
     (when (empty? actives)
-      (add-admin db groupname account "clojars"))))
+      (add-admin db group-id account "clojars"))))
 
 (defn add-jar [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]
   (check-and-add-group db account group)
   (serialize-task :add-jar
-                  (sql/add-jar! {:groupname   group
+                  (sql/add-jar! {:group_id    group
                                  :jarname     name
                                  :version     version
                                  :user        account
@@ -336,7 +336,7 @@
                                                                :jar_name   :dep_jarname
                                                                :version    :dep_version
                                                                :scope      :dep_scope})
-                                             (assoc :groupname group
+                                             (assoc :group_id  group
                                                     :jarname   name
                                                     :version   version))
                                          {:connection db}))))
