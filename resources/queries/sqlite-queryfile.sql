@@ -65,7 +65,7 @@ WHERE (
 SELECT user, admin
 FROM groups
 WHERE (
-      name = :groupname
+      name = :group_id
       AND
       inactive IS NOT 1
 );

@@ -67,13 +67,13 @@
                          {:connection db
                           :row-fn :user}))
 
-(defn group-allnames [db groupname]
-  (sql/group-actives {:groupname groupname}
+(defn group-allnames [db group-id]
+  (sql/group-actives {:group_id group-id}
                      {:connection db
                       :row-fn :user}))
 
-(defn group-actives [db groupname]
-  (sql/group-actives {:groupname groupname}
+(defn group-actives [db group-id]
+  (sql/group-actives {:group_id group-id}
                      {:connection db}))
 
 (defn jars-by-username [db username]
