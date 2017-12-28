@@ -45,11 +45,11 @@
     (when (.exists md-file)
       (read-string (slurp md-file)))))
 
-(defn write-metadata [dir group-name group-path artifact version timestamp-version]
+(defn write-metadata [dir group-id group-path artifact version timestamp-version]
   (spit (io/file dir metadata-edn)
     (pr-str (merge-with #(if %2 %2 %1)
               (read-metadata dir)
-              {:group group-name
+              {:group group-id
                :group-path group-path
                :name artifact
                :version version
@@ -90,19 +90,19 @@
       (ex-data e))
     (.getCause e)))
 
-(defn- check-group [db account group]
+(defn- check-group [db account group-id]
   (try
-    (db/check-group (db/group-activenames db group) account group)
+    (db/check-group (db/group-activenames db group-id) account group-id)
     (catch Exception e
       (rethrow-forbidden e
         {:account account
-         :group group}))))
+         :group group-id}))))
 
-(defn upload-request [db groupname artifact version timestamp-version session f]
+(defn upload-request [db group-id artifact version timestamp-version session f]
   (with-account
     (fn [account]
-      (check-group db account groupname) ;; will throw if there are any issues
-      (let [upload-dir (find-upload-dir groupname artifact version timestamp-version session)]
+      (check-group db account group-id) ;; will throw if there are any issues
+      (let [upload-dir (find-upload-dir group-id artifact version timestamp-version session)]
         (f account upload-dir)
         ;; should we only do 201 if the file didn't already exist?
         {:status 201
@@ -150,8 +150,8 @@
         (name key) (key pom-data) (name key) value)
       {:pom pom-data})))
 
-(defn- validate-pom [pom group name version]
-  (validate-pom-entry pom :group group)
+(defn- validate-pom [pom group-id name version]
+  (validate-pom-entry pom :group group-id)
   (validate-pom-entry pom :name name)
   (validate-pom-entry pom :version version))
 
@@ -201,7 +201,7 @@
               :when (not (.exists (io/file (str (.getAbsolutePath f) ".asc"))))]
         (throw-invalid (format "%s has no signature" (.getName f)) {:file f})))))
 
-(defn validate-gav [group name version]
+(defn validate-gav [group-id name version]
     ;; We're on purpose *at least* as restrictive as the recommendations on
     ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
     ;; If you want loosen these please include in your proposal the
@@ -211,7 +211,7 @@
       (str "project names must consist solely of lowercase "
         "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
 
-    (validate-regex group #"^[a-z0-9_.-]+$"
+    (validate-regex group-id #"^[a-z0-9_.-]+$"
       (str "group names must consist solely of lowercase "
         "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
 
@@ -289,11 +289,11 @@
     (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
 
 (defn- handle-versioned-upload [storage db reporter body session group artifact version filename]
-  (let [groupname (fu/path->group group)
+  (let [group-id (fu/path->group group)
         timestamp-version (if (maven/snapshot-version? version) (maven/snapshot-timestamp-version filename))]
     (upload-request
       db
-      groupname
+      group-id
       artifact
       version
       timestamp-version
@@ -301,7 +301,7 @@
       (fn [account upload-dir]
         (write-metadata
           upload-dir
-          groupname
+          group-id
           group
           artifact
           version
@@ -312,7 +312,7 @@
             ;; but since this includes the group authorization check,
             ;; we do it here just in case. Will throw if there are any
             ;; issues.
-            (check-group db account groupname)
+            (check-group db account group-id)
             (deploy-post-finalized-file storage reporter upload-dir file)))))))
 
 ;; web handlers
@@ -333,10 +333,10 @@
           (if (re-find #"maven-metadata\.xml$" file)
             ;; ignore metadata sums, since we'll recreate those when
             ;; the deploy is finalizied
-            (let [groupname (fu/path->group group)]
+            (let [group-id (fu/path->group group)]
               (upload-request
                 db
-                groupname
+                group-id
                 artifact
                 nil
                 nil
