@@ -342,4 +342,4 @@
      [:b total]]))
 
 (defn xml-escape [s]
-  (str/escape s {"'" "&apos;" "&" "&amp;" "<" "&lt;" ">" "&gt;"}))
+  (str/escape s {\' "&apos;" \& "&amp;" \< "&lt;" \> "&gt;"}))
