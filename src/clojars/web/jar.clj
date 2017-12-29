@@ -127,7 +127,7 @@
           [:span.string " \""
            (:version jar) "\""] (tag "]")]]
 
-        [:h2 "Clojure CLI"]
+        [:h2 "Clojure CLI/deps.edn"]
         [:div#deps-coordinates.package-config-example
          {:onClick "selectText('deps-coordinates');"}
          [:pre
