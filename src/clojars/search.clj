@@ -159,31 +159,31 @@
            (catch Exception e query)))))
 
 ; http://stackoverflow.com/questions/963781/how-to-achieve-pagination-in-lucene
-  (defn -search [stats index query page]
-    (if (empty? query)
-      []
-      (binding [clucy/*analyzer* analyzer]
-        (with-open [searcher (IndexSearcher. index)]
-          (let [per-page 24
-                offset (* per-page (- page 1))
-                parser (QueryParser. clucy/*version*
-                                     "_content"
-                                     clucy/*analyzer*)
-                query  (.parse parser (replace-time-range query))
-                query  (CustomScoreQuery. query (download-values stats))
-                hits   (.search searcher query (* per-page page))
-                highlighter (#'clucy/make-highlighter query searcher nil)]
-            (doall
-             (let [dhits (take per-page (drop offset (.scoreDocs hits)))]
-               (with-meta (for [hit dhits]
-                            (#'clucy/document->map
-                             (.doc searcher (.doc hit))
-                             (.score hit)
-                             highlighter))
-                 {:total-hits (.totalHits hits)
-                  :max-score (.getMaxScore hits)
-                  :results-per-page per-page
-                  :offset offset}))))))))
+(defn -search [stats index query page]
+  (if (empty? query)
+    []
+    (binding [clucy/*analyzer* analyzer]
+      (with-open [searcher (IndexSearcher. index)]
+        (let [per-page 24
+              offset (* per-page (- page 1))
+              parser (QueryParser. clucy/*version*
+                                   "_content"
+                                   clucy/*analyzer*)
+              query  (.parse parser (replace-time-range query))
+              query  (CustomScoreQuery. query (download-values stats))
+              hits   (.search searcher query (* per-page page))
+              highlighter (#'clucy/make-highlighter query searcher nil)]
+          (doall
+           (let [dhits (take per-page (drop offset (.scoreDocs hits)))]
+             (with-meta (for [hit dhits]
+                          (#'clucy/document->map
+                           (.doc searcher (.doc hit))
+                           (.score hit)
+                           highlighter))
+               {:total-hits (.totalHits hits)
+                :max-score (.getMaxScore hits)
+                :results-per-page per-page
+                :offset offset}))))))))
 
 (defrecord LuceneSearch [stats index-factory index]
   Search
