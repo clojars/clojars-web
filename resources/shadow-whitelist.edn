@@ -1,1 +1,2 @@
-#{net.mikera/clojure-pom}
+#{net.mikera/clojure-pom
+  postgresql/postgresql}
