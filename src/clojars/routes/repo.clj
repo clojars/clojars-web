@@ -288,8 +288,8 @@
   (storage/write-artifact storage
     (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
 
-(defn- handle-versioned-upload [storage db reporter body session group artifact version filename]
-  (let [group-id (fu/path->group group)
+(defn- handle-versioned-upload [storage db reporter body session group-path artifact version filename]
+  (let [group-id (fu/path->group group-path)
         timestamp-version (if (maven/snapshot-version? version) (maven/snapshot-timestamp-version filename))]
     (upload-request
       db
@@ -302,11 +302,11 @@
         (write-metadata
           upload-dir
           group-id
-          group
+          group-path
           artifact
           version
           timestamp-version)
-        (let [file (try-save-to-file (io/file upload-dir group artifact version filename) body)]
+        (let [file (try-save-to-file (io/file upload-dir group-path artifact version filename) body)]
           (when (deploy-finalized? upload-dir)
             ;; a deploy should never get this far with a bad group,
             ;; but since this includes the group authorization check,
@@ -314,6 +314,34 @@
             ;; issues.
             (check-group db account group-id)
             (deploy-post-finalized-file storage reporter upload-dir file)))))))
+
+(defn handle-unversioned-upload [storage db reporter body session group artifact filename search]
+  (let [group-id (fu/path->group group)]
+    (upload-request
+     db
+     group-id
+     artifact
+     nil
+     nil
+     session
+     (fn [account upload-dir]
+       (let [file (io/file upload-dir group artifact filename)
+             existing-sum (if (.exists file) (fu/checksum file :sha1))]
+         (try-save-to-file file body)
+         ;; only finalize if we haven't already or the
+         ;; maven-metadata.xml file doesn't match the one
+         ;; we already have
+         ;; https://github.com/clojars/clojars-web/issues/640
+         (if-not (or (deploy-finalized? upload-dir)
+                     (= (fu/checksum file :sha1) existing-sum))
+           (try
+             (finalize-deploy storage db reporter search
+                              account upload-dir)
+             (catch Exception e
+               (rethrow-forbidden e
+                                  {:account account
+                                   :group group
+                                   :name name})))))))))
 
 ;; web handlers
 (defn routes [storage db reporter search]
@@ -327,38 +355,13 @@
           ;; See: https://github.com/clojars/clojars-web/issues/319
           (let [version artifact
                 group-parts (str/split group #"/")
-                group (str/join "/" (butlast group-parts))
+                group-path  (str/join "/" (butlast group-parts))
                 artifact (last group-parts)]
-            (handle-versioned-upload storage db reporter body session group artifact version file))
+            (handle-versioned-upload storage db reporter body session group-path artifact version file))
           (if (re-find #"maven-metadata\.xml$" file)
             ;; ignore metadata sums, since we'll recreate those when
             ;; the deploy is finalizied
-            (let [group-id (fu/path->group group)]
-              (upload-request
-                db
-                group-id
-                artifact
-                nil
-                nil
-                session
-                (fn [account upload-dir]
-                  (let [file (io/file upload-dir group artifact file)
-                        existing-sum (if (.exists file) (fu/checksum file :sha1))]
-                    (try-save-to-file file body)
-                    ;; only finalize if we haven't already or the
-                    ;; maven-metadata.xml file doesn't match the one
-                    ;; we already have
-                    ;; https://github.com/clojars/clojars-web/issues/640
-                    (if-not (or (deploy-finalized? upload-dir)
-                              (= (fu/checksum file :sha1) existing-sum))
-                      (try
-                        (finalize-deploy storage db reporter search
-                          account upload-dir)
-                        (catch Exception e
-                          (rethrow-forbidden e
-                            {:account account
-                             :group group
-                             :name name}))))))))
+            (handle-unversioned-upload storage db reporter body session group artifact file search)
             {:status 201
              :headers {}
              :body nil})))
