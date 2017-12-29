@@ -110,7 +110,7 @@ ON (
 WHERE j.user = :username
 ORDER BY j.group_name ASC, j.jar_name ASC;
 
---name: jars-by-groupname
+--name: jars-by-group-id
 SELECT j.*
 FROM jars j
 JOIN (

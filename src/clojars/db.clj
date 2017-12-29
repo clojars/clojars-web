@@ -80,8 +80,8 @@
   (sql/jars-by-username {:username username}
                         {:connection db}))
 
-(defn jars-by-groupname [db group-id]
-  (sql/jars-by-groupname {:group_id group-id}
+(defn jars-by-group-id [db group-id]
+  (sql/jars-by-group-id {:group_id group-id}
                          {:connection db}))
 
 (defn recent-versions

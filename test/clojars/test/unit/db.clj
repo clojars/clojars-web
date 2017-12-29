@@ -137,7 +137,7 @@
       (db/add-jar help/*db* "test-user" jarmap)
       (are [x] (submap result x)
         (db/find-jar help/*db* name name)
-        (first (db/jars-by-groupname help/*db* name))
+        (first (db/jars-by-group-id help/*db* name))
         (first (db/jars-by-username help/*db* "test-user"))))))
 
 (deftest added-jars-store-dependencies
@@ -197,11 +197,11 @@
     (db/add-jar help/*db* "test-user"
       (assoc jar
         :group "another"))
-    (is (= 2 (count (db/jars-by-groupname help/*db* group))))
+    (is (= 2 (count (db/jars-by-group-id help/*db* group))))
     (db/delete-jars help/*db* group)
-    (is (empty? (db/jars-by-groupname help/*db* group)))
+    (is (empty? (db/jars-by-group-id help/*db* group)))
     (is (empty? (db/find-dependencies help/*db* group "one" "1.0")))
-    (is (= 1 (count (db/jars-by-groupname help/*db* "another"))))))
+    (is (= 1 (count (db/jars-by-group-id help/*db* "another"))))))
 
 (deftest jars-can-be-deleted-by-group-and-jar-id
   (let [group "foo"
@@ -214,9 +214,9 @@
     (db/add-jar help/*db* "test-user"
       (assoc jar
         :name "two"))
-    (is (= 2 (count (db/jars-by-groupname help/*db* group))))
+    (is (= 2 (count (db/jars-by-group-id help/*db* group))))
     (db/delete-jars help/*db* group "one")
-    (is (= 1 (count (db/jars-by-groupname help/*db* group))))
+    (is (= 1 (count (db/jars-by-group-id help/*db* group))))
     (is (empty? (db/find-dependencies help/*db* group "one" "1.0")))))
 
 (deftest jars-can-be-deleted-by-group-and-jar-id-and-version
@@ -229,15 +229,15 @@
 
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 0)))]
                  (db/add-jar help/*db* "test-user" jar))
-    (db/jars-by-groupname help/*db* group)
+    (db/jars-by-group-id help/*db* group)
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. (long 1)))]
                 (db/add-jar help/*db* "test-user"
                             (assoc jar
                                    :version "2.0")))
-    (db/jars-by-groupname help/*db* group)
-    (is (= "2.0" (-> (db/jars-by-groupname help/*db* group) first :version)))
+    (db/jars-by-group-id help/*db* group)
+    (is (= "2.0" (-> (db/jars-by-group-id help/*db* group) first :version)))
     (db/delete-jars help/*db* group "one" "2.0")
-    (is (= "1.0" (-> (db/jars-by-groupname help/*db* group) first :version)))
+    (is (= "1.0" (-> (db/jars-by-group-id help/*db* group) first :version)))
     (is (empty? (db/find-dependencies help/*db* group "one" "2.0")))))
 
 (deftest jars-by-group-only-returns-most-recent-version
@@ -251,7 +251,7 @@
       (db/add-jar help/*db* "test-user" jarmap)
       (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 1))]
         (db/add-jar help/*db* "test-user" (assoc jarmap :version "2"))))
-    (let [jars (db/jars-by-groupname help/*db* name)]
+    (let [jars (db/jars-by-group-id help/*db* name)]
       (dorun (map #(is (= %1 (select-keys %2 (keys %1)))) [result] jars))
       (is (= 1 (count jars))))))
 
@@ -290,7 +290,7 @@
       (db/add-jar help/*db* "test-user2" (assoc jarmap :name "tester3")))
     (with-redefs [db/get-time (fn [] (java.sql.Timestamp. 3))]
       (db/add-jar help/*db* "test-user2" (assoc jarmap :group "tester-group")))
-    (let [jars (db/jars-by-groupname help/*db* name)]
+    (let [jars (db/jars-by-group-id help/*db* name)]
       (dorun (map #(is (submap %1 %2))
                   [result
                    (assoc result :jar_name "tester2")

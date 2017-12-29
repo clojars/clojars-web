@@ -322,8 +322,8 @@
 (defn user-link [username]
   (link-to (str "/users/" username) username))
 
-(defn group-link [groupname]
-  (link-to (str "/groups/" groupname) groupname))
+(defn group-link [group-id]
+  (link-to (str "/groups/" group-id) group-id))
 
 (defn format-date [s]
   (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
