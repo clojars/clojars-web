@@ -24,7 +24,7 @@ WHERE (
 )
 LIMIT 1;
 
---name: find-groupnames
+--name: find-group-ids
 SELECT name
 FROM groups
 WHERE (

@@ -1,7 +1,7 @@
 (ns clojars.web.dashboard
   (:require [clojars.web.common :refer [html-doc html-doc-with-large-header jar-link group-link tag]]
             [clojars.web.structured-data :as structured-data]
-            [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
+            [clojars.db :refer [jars-by-username find-group-ids recent-jars]]
             [clojars.stats :as stats]
             [hiccup.element :refer [unordered-list link-to]]
             [clojars.web.helpers :as helpers]))
@@ -75,7 +75,7 @@
      [:div.col-xs-12.col-sm-4
       [:div.dash-palette
        [:h2 "Your Groups"]
-       (unordered-list (map group-link (find-groupnames db account)))]]
+       (unordered-list (map group-link (find-group-ids db account)))]]
      [:div.col-xs-12.col-sm-4
       [:div.dash-palette
        [:h2 "FAQ"]

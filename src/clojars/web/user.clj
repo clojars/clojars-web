@@ -1,7 +1,7 @@
 (ns clojars.web.user
   (:require [clojars.db :as db :refer [find-user group-activenames add-user
-                                reserved-names update-user jars-by-username
-                                find-groupnames find-user-by-user-or-email]]
+                                       reserved-names update-user jars-by-username
+                                       find-group-ids find-user-by-user-or-email]]
             [clojars.web.common :refer [html-doc error-list jar-link
                                         flash group-link]]
             [clojars.config :refer [config]]
@@ -134,7 +134,7 @@
               (unordered-list (map jar-link (jars-by-username db (user :user))))]
              [:div.col-xs-12.col-sm-6
               [:h2 "Groups"]
-              (unordered-list (map group-link (find-groupnames db (user :user))))]]))
+              (unordered-list (map group-link (find-group-ids db (user :user))))]]))
 
 (defn forgot-password-form []
   (html-doc "Forgot password or username?" {}

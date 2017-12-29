@@ -47,10 +47,10 @@
                                         {:connection db
                                          :result-set-fn first}))
 
-(defn find-groupnames [db username]
-  (sql/find-groupnames {:username username}
-                       {:connection db
-                        :row-fn :name}))
+(defn find-group-ids [db username]
+  (sql/find-group-ids {:username username}
+                      {:connection db
+                       :row-fn :name}))
 
 (defn group-membernames [db group-id]
   (sql/group-membernames {:group_id group-id}

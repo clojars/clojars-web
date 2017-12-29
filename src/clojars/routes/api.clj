@@ -40,7 +40,7 @@
             (GET ["/artifacts/:group-id/:artifact-id", :group-id #"[^/]+", :artifact-id #"[^/]+"] [group-id artifact-id]
                  (get-artifact db stats group-id artifact-id))
             (GET "/users/:username" [username]
-                 (if-let [groups (seq (db/find-groupnames db username))]
+                 (if-let [groups (seq (db/find-group-ids db username))]
                    (response {:groups groups})
                    (not-found nil)))
             (ANY "*" _

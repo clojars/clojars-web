@@ -89,7 +89,7 @@
     (is (= ["testuser"] (db/group-adminnames help/*db* (str "org.clojars." name))))
     (is (= ["testuser"] (db/group-activenames help/*db* (str "org.clojars." name))))
     (is (= [] (db/group-membernames help/*db* (str "org.clojars." name))))
-    (is (= ["org.clojars.testuser"] (db/find-groupnames help/*db* name)))))
+    (is (= ["org.clojars.testuser"] (db/find-group-ids help/*db* name)))))
 
 (deftest members-can-be-added-to-groups
   (let [email "test@example.com"
@@ -100,7 +100,7 @@
     (is (= ["testuser"] (db/group-activenames help/*db* "test-group")))
     (is (= ["testuser"] (db/group-membernames help/*db* "test-group")))
     (is (= [] (db/group-adminnames help/*db* "test-group")))
-    (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))
+    (is (some #{"test-group"} (db/find-group-ids help/*db* name)))))
 
 (deftest admins-can-be-added-to-groups
   (let [email "test@example.com"
@@ -111,7 +111,7 @@
     (is (= ["testadmin"] (db/group-activenames help/*db* "test-group")))
     (is (= [] (db/group-membernames help/*db* "test-group")))
     (is (= ["testadmin"] (db/group-adminnames help/*db* "test-group")))
-    (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))
+    (is (some #{"test-group"} (db/find-group-ids help/*db* name)))))
 
 ;;TODO: Tests below should have the users added first.
 ;;Currently user unenforced foreign keys are by name
@@ -357,7 +357,7 @@
       (db/add-jar help/*db* "test-user" jarmap)
       (is (= ["test-user"] (db/group-adminnames help/*db* "group-name")))
       (is (= ["group-name"]
-             (db/find-groupnames help/*db* "test-user")))))
+             (db/find-group-ids help/*db* "test-user")))))
 
 (deftest recent-jars-returns-6-most-recent-jars-only-most-recent-version
   (let [name "tester"
