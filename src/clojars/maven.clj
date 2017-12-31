@@ -1,5 +1,6 @@
 (ns clojars.maven
-  (:require [clojure.java.io :as io]
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [clojars.config :refer [config]]
             [clojure.string :as str]
             [clojars.errors :refer [report-error]]
@@ -207,6 +208,9 @@
       (compare-qualifiers (:qualifier x) (:qualifier y))
       (compare (:build-number x 0) (:build-number y 0)))))
 
+(defn snapshot-version? [version]
+  (.endsWith version "-SNAPSHOT"))
+
 (defn central-metadata
   "Read the metadata from maven central for the given artifact."
   [group name]
@@ -215,11 +219,31 @@
       (format "https://repo1.maven.org/maven2/%s/%s/maven-metadata.xml" (fu/group->path group) name))
     (catch java.io.FileNotFoundException _)))
 
+(defn exists-on-central?*
+  "Checks if any versions of the given artifact exist on central.
+   Makes at least one network call on every invocation."
+  [group-id artifact-id]
+  (loop [attempt 0]
+    (let [ret (try
+                (boolean (central-metadata group-id artifact-id))
+                (catch Exception _ :failure))]
+      (if (and
+            (= ret :failure)
+            (< attempt 9))
+        (do
+          (Thread/sleep (bit-shift-left 1 (inc attempt)))
+          (recur (inc attempt)))
+        ret))))
+
 (def exists-on-central?
-  "Checks if any versions of the given artifact exist on central."
-  (comp boolean central-metadata))
+  "Checks if any versions of the given artifact exist on central.
+   Memoized version of exists-on-central?*."
+  (memoize exists-on-central?*))
 
-(defn snapshot-version? [version]
-  (.endsWith version "-SNAPSHOT"))
+(def shadow-whitelist
+  (delay (-> "shadow-whitelist.edn" io/resource slurp edn/read-string)))
 
+(defn can-shadow-maven? [group-id artifact-id]
+  (contains? @shadow-whitelist
+    (symbol (format "%s/%s" group-id artifact-id))))
 

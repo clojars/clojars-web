@@ -1,16 +1,17 @@
 (ns clojars.web.search
   (:require [clojars.web.common :refer [html-doc jar-link jar-fork?
                                         collection-fork-notice user-link
-                                        format-date page-nav flash xml-escape]]
-            [hiccup.element :refer [link-to]]
-            [ring.util.codec :refer [url-encode]]
-            [clojars.search :as search]
-            [cheshire.core :as json]
-            [clojure.xml :as xml]
+                                        format-date page-nav flash xml-escape
+                                        shadow-notice maven-search-link]]
             [clojars.errors :as errors]
+            [clojars.maven :as maven]
+            [clojars.search :as search]
+            [clojars.web.error-api :as error-api]
+            [cheshire.core :as json]
             [clojure.string :as str]
-            [ring.util.codec :refer [url-encode]]
-            [clojars.web.error-api :as error-api]))
+            [clojure.xml :as xml]
+            [hiccup.element :refer [link-to]]
+            [ring.util.codec :refer [url-encode]]))
 
 (defn- jar->json [jar]
   (let [m {:jar_name (:artifact-id jar)
@@ -106,15 +107,6 @@
       (artifact-id->group-id artifact-id) [(artifact-id->group-id artifact-id) artifact-id]
       :default false)))
 
-(defn maven-search-link
-  ([group-id artifact-id]
-   (cond->> ""
-            group-id (str (format "g:\"%s\" " group-id))
-            artifact-id (str (format "a:\"%s\" " artifact-id))
-            true (str "|ga|1|")
-            true (url-encode)
-            true (str "http://search.maven.org/#search"))))
-
 (defn html-search [search account query page]
   (html-doc (str query " - search - page " page) {:account account :query query :description (format "Clojars search results page %d for '%s'" page query)}
     [:div.light-article.row
@@ -140,17 +132,22 @@
             (if (some jar-fork? results)
               collection-fork-notice)
             [:ul.row
-             (for [jar results]
+             (for [{:keys [group-id artifact-id version created description]} results]
                [:li.search-results.col-xs-12.col-sm-6.col-md-4.col-lg-3
                 [:div.result
-                 (jar-link {:jar_name (:artifact-id jar)
-                            :group_name (:group-id jar)}) " " (:version jar)
+                 (jar-link {:jar_name artifact-id
+                            :group_name group-id}) " " version
                  [:br]
-                 (when (seq (:description jar))
-                   [:span.desc (:description jar)
+                 (if (seq description)
+                   [:span.desc description
                     [:br]])
-                 [:span.details (if-let [created (:created jar)]
-                                  [:td (format-date created)])]]])]
+                 (if (and
+                       (not (maven/can-shadow-maven? group-id artifact-id))
+                       (maven/exists-on-central? group-id artifact-id))
+                   (shadow-notice group-id artifact-id))
+                 [:span.details
+                  (if created
+                    [:td (format-date created)])]]])]
             (page-nav page
               (int (Math/ceil (/ total-hits results-per-page)))
               :base-path (str "/search?q=" (url-encode query) "&page="))]))

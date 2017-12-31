@@ -5,7 +5,8 @@
             [clojars.test.integration.steps :refer :all]
             [clojars.web :as web]
             [clojars.test.test-helper :as help]
-            [net.cgrand.enlive-html :as html]))
+            [net.cgrand.enlive-html :as html]
+            [clojure.java.io :as io]))
 
 (use-fixtures :each
   help/default-fixture
@@ -79,7 +80,6 @@
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
 
-
 (deftest canonical-jars-can-view-dependencies
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.1/fake.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.2/fake.pom")
@@ -87,3 +87,14 @@
       (visit "/fake")
       (within [:ul#dependencies]
                (has (text? "org.clojure/clojure 1.3.0-beta1")))))
+
+(deftest shadow-jars-have-a-message
+  (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar"
+    (help/rewrite-pom (io/file (io/resource "fake-0.0.1/fake.pom"))
+      {:groupId    "org.tcrawley"
+       :artifactId "dynapath"}))
+  (-> (session (help/app))
+      (visit "/org.tcrawley/dynapath")
+      (within [:div#jar-title :div#notice]
+              (has (some-text? "may shadow a release")))))
+

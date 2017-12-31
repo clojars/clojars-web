@@ -7,7 +7,6 @@
              [maven :as maven]
              [search :as search]
              [storage :as storage]]
-            [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [cemerick.pomegranate.aether :as aether]
@@ -162,29 +161,14 @@
             (str/join "/" [(fu/group->path group-id) artifact-id version])))
     (throw-invalid "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
 
-(defn exists-on-central?  [group-id artifact-id]
-  (try
-    (maven/exists-on-central? group-id artifact-id)
-    (catch Exception _
-      ::failure)))
-
-(def shadow-whitelist
-  (delay (-> "shadow-whitelist.edn" io/resource slurp edn/read-string)))
-
 (defn assert-non-central-shadow [group-id artifact-id]
-  (when-not (contains? @shadow-whitelist (symbol (format "%s/%s" group-id artifact-id)))
-    (when-let [ret (loop [attempt 0]
-                     (let [ret (exists-on-central? group-id artifact-id)]
-                       (if (and (= ret ::failure) (< attempt 9))
-                         (do
-                           (Thread/sleep (bit-shift-left 1 (inc attempt)))
-                           (recur (inc attempt)))
-                         ret)))]
+  (when-not (maven/can-shadow-maven? group-id artifact-id)
+    (when-let [ret (maven/exists-on-central?* group-id artifact-id)]
       (let [meta {:group-id group-id
                   :artifact-id artifact-id
                   ;; report both failures to reach central and shadow attempts to sentry
                   :report? true}] 
-        (if (= ret ::failure)
+        (if (= ret :failure)
           (throw-invalid "failed to contact Maven Central to verify project name (see https://git.io/vMUHN)"
             (assoc meta :status 503))
           (throw-invalid "shadowing Maven Central artifacts is not allowed (see https://git.io/vMUHN)"

@@ -429,18 +429,22 @@ footer a {
   margin-bottom: 20px;
 }
 
-#flash {
+#notice {
   font-weight: bold;
   padding: 10px;
   margin: 10px 0;
   border-radius: 10px;
 }
 
-#flash.info {
+#notice.info {
   background-color: #ffb33b;
 }
 
-#flash.error {
+#notice.info a {
+    color: #00f;
+}
+
+#notice.error {
   background-color: #ff2929;
   color: #393536;
 }
