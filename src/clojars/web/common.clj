@@ -2,19 +2,19 @@
   (:require [hiccup.core :refer [html]]
             [hiccup.page :refer [include-css include-js]]
             [hiccup.element :refer [link-to unordered-list image]]
-            [clojars.web.safe-hiccup :refer [html5 raw form-to]]
             [clojars.web.helpers :as helpers]
+            [clojars.web.safe-hiccup :refer [html5 raw form-to]]
+            [clojars.web.structured-data :as structured-data]
             [clojure.string :refer [join]]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojars.web.structured-data :as structured-data]))
+            [ring.util.codec :refer [url-encode]]))
 
 (defn when-ie [& contents]
   (str
    "<!--[if lt IE 9]>"
    (html contents)
    "<![endif]-->"))
-
 
 (defn footer
   "We normally want to include links in the footer, except on pages which contain sensitive URL's like password reset.
@@ -237,11 +237,11 @@
 
 (defn flash [& msg]
   (when (some some? msg)
-    (into [:div#flash.info] msg)))
+    (into [:div#notice.info] msg)))
 
 (defn error-list [errors]
   (when errors
-    [:div#flash.error
+    [:div#notice.error
      [:strong "Blistering barnacles!"]
      "  Something's not shipshape:"
      (unordered-list errors)]))
@@ -281,6 +281,22 @@
    "Note: artifacts in italics are non-canonical forks. See "
    (link-to "https://github.com/clojars/clojars-web/wiki/Groups" "the wiki")
    " for more details."])
+
+(defn maven-search-link
+  ([group-id artifact-id]
+   (cond->> ""
+     group-id    (str (format "g:\"%s\" " group-id))
+     artifact-id (str (format "a:\"%s\" " artifact-id))
+     true        (str "|ga|1|")
+     true        (url-encode)
+     true        (str "http://search.maven.org/#search"))))
+
+(defn shadow-notice [group-id artifact-id]
+  [:div#notice.info
+   "This artifact may shadow a release on Maven Central. You should "
+   (link-to (maven-search-link group-id artifact-id)
+     "search there")
+   " for a canonical release."])
 
 (defn jar-link [jar]
   (link-to {:class (when (jar-fork? jar) "fork")}

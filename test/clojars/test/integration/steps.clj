@@ -33,8 +33,10 @@
   (str (.toURI (File. path))))
 
 (defn inject-artifacts-into-repo! [db user jar pom]
-  (let [pom-file (io/resource pom)
-        jarmap (maven/pom-to-map pom-file)]
+  (let [pom-file (if (instance? java.io.File pom)
+                   pom
+                   (io/resource pom))
+        jarmap   (maven/pom-to-map pom-file)]
     (db/add-jar db user jarmap)
     (aether/deploy :coordinates [(keyword (:group jarmap)
                                           (:name jarmap))

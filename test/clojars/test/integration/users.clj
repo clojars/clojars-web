@@ -90,7 +90,7 @@
       (fill-in "Confirm new password" "password2")
       (press "Update")
       (follow-redirect)
-      (within [:div#flash]
+      (within [:div#notice]
               (has (text? "Profile updated.")))
       (follow "logout")
       (follow-redirect)
