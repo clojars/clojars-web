@@ -315,8 +315,8 @@
             (check-group db account group-id)
             (deploy-post-finalized-file storage reporter upload-dir file)))))))
 
-(defn handle-unversioned-upload [storage db reporter body session group artifact filename search]
-  (let [group-id (fu/path->group group)]
+(defn handle-unversioned-upload [storage db reporter body session group-path artifact filename search]
+  (let [group-id (fu/path->group group-path)]
     (upload-request
      db
      group-id
@@ -325,7 +325,7 @@
      nil
      session
      (fn [account upload-dir]
-       (let [file (io/file upload-dir group artifact filename)
+       (let [file (io/file upload-dir group-path artifact filename)
              existing-sum (if (.exists file) (fu/checksum file :sha1))]
          (try-save-to-file file body)
          ;; only finalize if we haven't already or the
@@ -340,36 +340,36 @@
              (catch Exception e
                (rethrow-forbidden e
                                   {:account account
-                                   :group group
+                                   :group group-path
                                    :name name})))))))))
 
 ;; web handlers
 (defn routes [storage db reporter search]
   (compojure/routes
-   (PUT ["/:group/:artifact/:file"
-         :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
-        {body :body session :session {:keys [group artifact file]} :params}
+   (PUT ["/:group-path/:artifact/:file"
+         :group-path #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
+        {body :body session :session {:keys [group-path artifact file]} :params}
         (if (maven/snapshot-version? artifact)
           ;; SNAPSHOT metadata will hit this route, but should be
           ;; treated as a versioned file upload.
           ;; See: https://github.com/clojars/clojars-web/issues/319
-          (let [version artifact
-                group-parts (str/split group #"/")
+          (let [version     artifact
+                group-parts (str/split group-path #"/")
                 group-path  (str/join "/" (butlast group-parts))
-                artifact (last group-parts)]
+                artifact    (last group-parts)]
             (handle-versioned-upload storage db reporter body session group-path artifact version file))
           (if (re-find #"maven-metadata\.xml$" file)
             ;; ignore metadata sums, since we'll recreate those when
             ;; the deploy is finalizied
-            (handle-unversioned-upload storage db reporter body session group artifact file search)
+            (handle-unversioned-upload storage db reporter body session group-path artifact file search)
             {:status 201
              :headers {}
              :body nil})))
-   (PUT ["/:group/:artifact/:version/:filename"
-         :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
+   (PUT ["/:group-path/:artifact/:version/:filename"
+         :group-path #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
          :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
-        {body :body session :session {:keys [group artifact version filename]} :params}
-        (handle-versioned-upload storage db reporter body session group artifact version filename))
+        {body :body session :session {:keys [group-path artifact version filename]} :params}
+        (handle-versioned-upload storage db reporter body session group-path artifact version filename))
    (PUT "*" _ {:status 400 :headers {}})
    (not-found "Page not found")))
 
