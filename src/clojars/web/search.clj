@@ -2,7 +2,7 @@
   (:require [clojars.web.common :refer [html-doc jar-link jar-fork?
                                         collection-fork-notice user-link
                                         format-date page-nav flash xml-escape
-                                        shadow-notice maven-search-link]]
+                                        jar-notice maven-search-link]]
             [clojars.errors :as errors]
             [clojars.maven :as maven]
             [clojars.search :as search]
@@ -141,10 +141,7 @@
                  (if (seq description)
                    [:span.desc description
                     [:br]])
-                 (if (and
-                       (not (maven/can-shadow-maven? group-id artifact-id))
-                       (maven/exists-on-central? group-id artifact-id))
-                   (shadow-notice group-id artifact-id))
+                 (jar-notice group-id artifact-id)
                  [:span.details
                   (if created
                     [:td (format-date created)])]]])]

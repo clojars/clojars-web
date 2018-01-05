@@ -8,7 +8,9 @@
             [clojure.string :refer [join]]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [ring.util.codec :refer [url-encode]]))
+            [ring.util.codec :refer [url-encode]]
+            [clojars.maven :as maven]
+            [clojure.edn :as edn]))
 
 (defn when-ie [& contents]
   (str
@@ -297,6 +299,20 @@
    (link-to (maven-search-link group-id artifact-id)
      "search there")
    " for a canonical release."])
+
+(def jar-notices
+  (delay (-> "jar-notices.edn" io/resource slurp edn/read-string)))
+
+(defn jar-notice-for [group-id artifact-id]
+  (@jar-notices (symbol (format "%s/%s" group-id artifact-id))))
+
+(defn jar-notice [group-id artifact-id]
+  (if-let [notice (jar-notice-for group-id artifact-id)]
+    [:div#notice.info (raw notice)]
+    (if (and
+          (not (maven/can-shadow-maven? group-id artifact-id))
+          (maven/exists-on-central? group-id artifact-id))
+      (shadow-notice group-id artifact-id))))
 
 (defn jar-link [jar]
   (link-to {:class (when (jar-fork? jar) "fork")}
