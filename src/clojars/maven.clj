@@ -3,7 +3,6 @@
             [clojure.java.io :as io]
             [clojars.config :refer [config]]
             [clojure.string :as str]
-            [clojars.errors :refer [report-error]]
             [clojars.file-utils :as fu])
   (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
@@ -78,36 +77,9 @@
   (with-open [writer (io/writer file)]
     (.write (MetadataXpp3Writer.) writer metadata)))
 
-(defn snapshot-version
-  "Get snapshot version from maven-metadata.xml used in pom filename"
-  [file]
-  (let [versioning (-> (read-metadata file) .getVersioning .getSnapshot)]
-    (str (.getTimestamp versioning) "-" (.getBuildNumber versioning))))
-
 (defn snapshot-timestamp-version
   [filename]
   (second (re-find #"-(\d{8}\.\d{6}-\d+)\." filename)))
-
-(defn directory-for
-  "Directory for a jar under repo"
-  [{:keys [group_name jar_name version]}]
-  (apply io/file (concat [(@config :repo)] (str/split group_name #"\.") [jar_name version])))
-
-(defn snapshot-pom-file [{:keys [jar_name version] :as jar}]
-  (let [metadata-file (io/file (directory-for jar) "maven-metadata.xml")
-        snapshot (snapshot-version metadata-file)
-        filename (format "%s-%s-%s.pom" jar_name (re-find #"\S+(?=-SNAPSHOT$)" version) snapshot)]
-    (io/file (directory-for jar) filename)))
-
-(defn jar-to-pom-map [reporter {:keys [jar_name version] :as jar}]
-  (try
-    (let [pom-file (if (re-find #"SNAPSHOT$" version)
-                     (snapshot-pom-file jar)
-                     (io/file (directory-for jar) (format "%s-%s.%s" jar_name version "pom")))]
-      (pom-to-map (str pom-file)))
-    (catch IOException e
-      (report-error reporter (ex-info "Failed to create pom map" jar e))
-      nil)))
 
 (defn parse-int [^String s]
   (when s
