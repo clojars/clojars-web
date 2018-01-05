@@ -1,7 +1,7 @@
 (ns clojars.web.jar
   (:require [clojars.web.common :refer [html-doc jar-link group-link
                                         tag jar-url jar-name group-is-name? user-link
-                                        jar-fork? shadow-notice single-fork-notice
+                                        jar-fork? jar-notice single-fork-notice
                                         simple-date]]
             hiccup.core
             [hiccup.element :refer [link-to image]]
@@ -16,8 +16,7 @@
             [clojars.web.helpers :as helpers]
             [clojars.web.structured-data :as structured-data]
             [clojars.db :as db]
-            [clojure.set :as set]
-            [clojars.maven :as maven]))
+            [clojure.set :as set]))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
@@ -238,10 +237,7 @@
          [:li.col-xs-12.col-sm-4
           downloads-this-version
           " This Version"]]
-        (if (and
-              (not (maven/can-shadow-maven? group_name jar_name))
-              (maven/exists-on-central? group_name jar_name))
-          (shadow-notice group_name jar_name))
+        (jar-notice group_name jar_name)
         (coordinates jar)
         (fork-notice jar)]
        [:ul#jar-sidebar.col-xs-12.col-sm-3
