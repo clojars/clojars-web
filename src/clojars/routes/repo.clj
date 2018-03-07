@@ -358,7 +358,7 @@
                           (rethrow-forbidden e
                             {:account account
                              :group group
-                             :name name}))))))))
+                             :artifact artifact}))))))))
             {:status 201
              :headers {}
              :body nil})))
