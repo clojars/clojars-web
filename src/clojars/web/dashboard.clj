@@ -47,7 +47,7 @@
         (tag "$") " boot build-jar push-snapshot\n"
         (tag "$") " boot build-jar push-release\n"]]]
      [:div.push-information.col-xs-12.col-sm-4
-      [:h3.push-header "Maven Repository"]
+      [:h3.push-header "Maven Repository (running a " [:a {:href "https://github.com/clojars/clojars-web/wiki/Mirrors"} "mirror"] "?)"]
       [:div#maven.push-example {:onClick "selectText('maven');"}
        [:pre
         (tag "<repository>\n")
