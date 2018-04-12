@@ -57,6 +57,9 @@
        [:table
         [:tr
          [:td.sponsor
+          (link-to "https://www.deps.co"
+                   (image "/images/deps-logo.png" "Deps"))]
+         [:td.sponsor
           (link-to "https://www.rackspace.com"
                    (image "/images/rackspace-logo.svg" "Rackspace"))]
          [:td.sponsor
