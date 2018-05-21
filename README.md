@@ -8,8 +8,8 @@ This is the source code for the [Clojars](https://clojars.org/) jar
 repository webapp.
 
 If you're looking for user documentation, try
-the [wiki](http://github.com/ato/clojars-web/wiki/_pages). There is a
-also a [FAQ](https://github.com/ato/clojars-web/wiki/About).
+the [wiki](http://github.com/clojars/clojars-web/wiki/_pages). There is a
+also a [FAQ](https://github.com/clojars/clojars-web/wiki/About).
 
 See [release announcements on the mailing list](https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann) for recent user-facing changes.
 
@@ -17,7 +17,7 @@ Contributing
 ------------
 
 Please report bugs or problems with the repository on the
-[bug tracker](https://github.com/ato/clojars-web/issues).
+[bug tracker](https://github.com/clojars/clojars-web/issues).
 
 Design discussions occur on the
 [clojars-maintainers list](http://groups.google.com/group/clojars-maintainers)
@@ -28,7 +28,7 @@ for a topic branch.  Feel free to open a pull request early with a
 "not ready for merging" note or ask on the mailing list or IRC to get
 feedback from other contributors. If you are looking for a task to
 work on, take a look at issues labeled
-[ready](https://github.com/ato/clojars-web/labels/ready).
+[ready](https://github.com/clojars/clojars-web/labels/ready).
 
 We try to make releases fairly soon after merging contributions,
 but post to the mailing list if it's been a week or two and you'd like
@@ -96,7 +96,7 @@ cp -r ~/.m2/repository data/dev_repo
 lein run -m clojars.tools.setup-dev
 ```
 If you want to use the actual repo from clojars.org, you can grab it
-via [rsync](http://github.com/ato/clojars-web/wiki/Data).
+via [rsync](http://github.com/clojars/clojars-web/wiki/Data).
 
 Note that this setup task isn't perfect - SNAPSHOTS won't have
 version-specific metadata (which won't matter for the operation of
@@ -155,6 +155,6 @@ License
 
 Copyright © 2009-2017 Alex Osborne, Phil Hagelberg, Nelson Morris,
 Toby Crawley, Daniel Compton and
-[contributors](https://github.com/ato/clojars-web/graphs/contributors).
+[contributors](https://github.com/clojars/clojars-web/graphs/contributors).
 
 Distributed under the Eclipse Public License, the same as Clojure. See the file COPYING.
