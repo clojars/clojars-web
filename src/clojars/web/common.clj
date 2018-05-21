@@ -99,9 +99,8 @@
             :title "Clojars"
             :href "/opensearch.xml"
             :rel "search"}]
-    [:link {:type "image/png"
-            :href "/favicon.png"
-            :rel "icon"}]
+    [:link {:href "/favicon.ico"
+            :rel "shortcut icon"}]
     (structured-data/meta-tags (assoc ctx :title (if title
                                                    title
                                                    "Clojars"))) ;; TODO: talk about whether we should refactor signature of html-doc
