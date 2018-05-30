@@ -29,8 +29,12 @@
                             "Access-Control-Allow-Origin" "*"}}]
     (try
       (assoc response
-        :body (let [results (search/search search query page)]
+        :body (let [results (search/search search query page)
+                    {:keys [total-hits results-per-page offset]} (meta results)]
                 (json/generate-string {:count (count results)
+                                       :total-hits total-hits
+                                       :results-per-page results-per-page
+                                       :offset offset
                                        :results (map jar->json results)})))
       (catch Exception _
         (error-api/error-api-response
@@ -55,10 +59,14 @@
                             "Access-Control-Allow-Origin" "*"}}]
     (try
       (assoc response
-             :body (let [results (search/search search query page)]
+             :body (let [results (search/search search query page)
+                         {:keys [total-hits results-per-page offset]} (meta results)]
                      (with-out-str
                        (xml/emit {:tag :results
-                                  :attrs {:count (count results)}
+                                  :attrs {:count (count results)
+                                          :total-hits total-hits
+                                          :results-per-page results-per-page
+                                          :offset offset}
                                   :content (map jar->xml results)}))))
       (catch Exception _
         (error-api/error-api-response
