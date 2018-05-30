@@ -23,13 +23,13 @@
       (assoc m :created created)
       m)))
 
-(defn json-search [search query]
+(defn json-search [search query page]
   (let [response {:status 200
                   :headers {"Content-Type" "application/json; charset=UTF-8"
                             "Access-Control-Allow-Origin" "*"}}]
     (try
       (assoc response
-        :body (let [results (search/search search query 1)]
+        :body (let [results (search/search search query page)]
                 (json/generate-string {:count (count results)
                                        :results (map jar->json results)})))
       (catch Exception _
@@ -49,13 +49,13 @@
                            (assoc attrs :created created)
                            attrs)}))
 
-(defn xml-search [search query]
+(defn xml-search [search query page]
   (let [response {:status 200
                   :headers {"Content-Type" "text/xml; charset=UTF-8"
                             "Access-Control-Allow-Origin" "*"}}]
     (try
       (assoc response
-             :body (let [results (search/search search query 1)]
+             :body (let [results (search/search search query page)]
                      (with-out-str
                        (xml/emit {:tag :results
                                   :attrs {:count (count results)}
@@ -155,6 +155,6 @@
   (let [q (params :q)
         page (or (params :page) 1)]
     (case (params :format)
-      "json" (json-search search q)
-      "xml"  (xml-search search q)
+      "json" (json-search search q page)
+      "xml"  (xml-search search q page)
       (html-search search account q page))))
