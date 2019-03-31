@@ -221,7 +221,7 @@
        " and then"]
       [:span.col-md-12
        " check out the "
-       (link-to "http://wiki.github.com/clojars/clojars-web/tutorial" "tutorial")
+       (link-to "https://github.com/clojars/clojars-web/wiki/Tutorial" "tutorial")
        ". Alternatively, "
        (link-to "/projects" "browse the repository")
        "."]]]

@@ -70,7 +70,7 @@
          (if (seq jars)
            (unordered-list (map jar-link jars))
            [:p "You don't have any projects, would you like to "
-            (link-to "http://wiki.github.com/clojars/clojars-web/pushing" "add one")
+            (link-to "https://github.com/clojars/clojars-web/wiki/Pushing" "add one")
             "?"]))]]
      [:div.col-xs-12.col-sm-4
       [:div.dash-palette
@@ -81,7 +81,7 @@
        [:h2 "FAQ"]
        [:ul
         [:li (link-to "https://github.com/clojars/clojars-web/wiki/Tutorial" "How I create a new project?")]
-        [:li (link-to "http://wiki.github.com/clojars/clojars-web/pushing" "How do I deploy to clojars?")]
+        [:li (link-to "https://github.com/clojars/clojars-web/wiki/Pushing" "How do I deploy to clojars?")]
         [:li (link-to "https://github.com/clojars/clojars-web/wiki/Data" "How can I access clojars data programatically?")]
         [:li (link-to "https://github.com/clojars/clojars-web/wiki/Groups" "What are groups?")]
         [:li (link-to "https://github.com/clojars/clojars-web/wiki/POM" "What does my POM need to look like?")]]]]]))
