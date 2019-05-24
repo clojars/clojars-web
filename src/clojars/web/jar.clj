@@ -87,14 +87,21 @@
      (helpers/retinized-image "/images/github-mark.png" "GitHub")
      "N/A"]))
 
+(defn cljdoc-uri
+  "Returns the URI that this JAR would have on cljdoc.org. Doesn't validate that
+  there is actually a currently published version on cljdoc.org."
+  [jar]
+  (URI.
+    "https"
+    "cljdoc.org"
+    (format "/d/%s/%s/%s"
+            (:group_name jar)
+            (:jar_name jar)
+            (:version jar))
+    nil))
+
 (defn cljdoc-link [jar]
-  (link-to (URI.
-             "https"
-             "cljdoc.org"
-             (format "/d/%s/%s/%s"
-                     (:group_name jar)
-                     (:jar_name jar)
-                     (:version jar)))
+  (link-to (cljdoc-uri jar)
            [:img {:src "/images/cljdoc-icon.svg" :alt "cljdoc documentation" :height "16"}]
            "cljdoc"))
 

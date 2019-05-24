@@ -44,3 +44,13 @@
                                  :jar_name "test"}
                                 ["1"])]
     (is (re-find #"/test/foo/test" html))))
+
+(deftest cljdoc-uri-test
+  (is (= (str (jar/cljdoc-uri {:version    "1"
+                               :group_name "test.foo"
+                               :jar_name   "test"}))
+         "https://cljdoc.org/d/test.foo/test/1"))
+  (is (= (str (jar/cljdoc-uri {:version    "<script>alert('hi')</script>"
+                               :group_name "test.foo"
+                               :jar_name   "test"}))
+         "https://cljdoc.org/d/test.foo/test/%3Cscript%3Ealert('hi')%3C/script%3E")))
