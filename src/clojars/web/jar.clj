@@ -16,7 +16,8 @@
             [clojars.web.helpers :as helpers]
             [clojars.web.structured-data :as structured-data]
             [clojars.db :as db]
-            [clojure.set :as set]))
+            [clojure.set :as set])
+  (:import (java.net URI)))
 
 (defn url-for [jar]
   (str (jar-url jar) "/versions/" (:version jar)))
@@ -74,7 +75,7 @@
       [{:url  (str "https://clojars.org/groups/" group_name)
         :name group_name}
        ;; TODO: Not sure if this is a dirty hack or a stroke of brilliance
-       {:url  (str "https://clojars.org/" (jar-name jar)) 
+       {:url  (str "https://clojars.org/" (jar-name jar))
         :name jar_name}])))
 
 (defn github-link [jar]
@@ -85,6 +86,17 @@
     [:p.github
      (helpers/retinized-image "/images/github-mark.png" "GitHub")
      "N/A"]))
+
+(defn cljdoc-link [jar]
+  (link-to (URI.
+             "https"
+             "cljdoc.org"
+             (format "/d/%s/%s/%s"
+                     (:group_name jar)
+                     (:jar_name jar)
+                     (:version jar)))
+           [:img {:src "/images/cljdoc-icon.svg" :alt "cljdoc documentation" :height "16"}]
+           "cljdoc"))
 
 (defn leiningen-coordinates [jar]
   (list
@@ -230,11 +242,12 @@
         [:h1 (jar-link jar)]
         [:p.description (:description jar)]
         [:ul#jar-info-bar.row
-         [:li.col-xs-12.col-sm-4 (github-link jar)]
-         [:li.col-xs-12.col-sm-4
+         [:li.col-xs-12.col-sm-3 (github-link jar)]
+         [:li.col-xs-12.col-sm-3 (cljdoc-link jar)]
+         [:li.col-xs-12.col-sm-3
           total-downloads
           " Downloads"]
-         [:li.col-xs-12.col-sm-4
+         [:li.col-xs-12.col-sm-3
           downloads-this-version
           " This Version"]]
         (jar-notice group_name jar_name)
