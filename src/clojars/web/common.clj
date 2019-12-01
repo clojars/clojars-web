@@ -35,40 +35,36 @@
      (link-to "/dmca" "DMCA")
      (link-to "https://github.com/clojars/clojars-web/wiki/" "help")
      [:div.sponsors
-      [:div.row
+      [:div.sponsors-title
        "sponsored by"
        (link-to "https://www.bountysource.com/teams/clojars/backers" "individual contributors")
        "with in-kind sponsorship from:"]
-      [:div.row
-       [:table
-        [:tr
-         [:td.sponsor
-          (link-to "https://dnsimple.link/resolving-clojars"
-                   [:span "resolving with" [:br]]
-                   [:span
-                    (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]
-         [:td.sponsor
-          (link-to "http://fastly.com/"
-                   (image "/images/fastly-logo.png" "Fastly"))]
-         [:td.sponsor
-          (link-to "https://pingometer.com/"
-                   (image "/images/pingometer-logo.svg" "Pingometer"))]]]]
-      [:div.row
-       [:table
-        [:tr
-         [:td.sponsor
-          (link-to "https://www.deps.co"
-                   (image "/images/deps-logo.png" "Deps"))]
-         [:td.sponsor
-          (link-to "https://www.rackspace.com"
-                   (image "/images/rackspace-logo.svg" "Rackspace"))]
-         [:td.sponsor
-          (link-to "http://sentry.io/"
-                   (image "/images/sentry-logo.png" "Sentry"))]
-         [:td.sponsor
-          (link-to "https://www.statuspage.io"
-                   (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]]]]]
-     [:div.row.sponsors
+      [:div.sponsors-group
+       [:div.sponsor
+        (link-to "https://dnsimple.link/resolving-clojars"
+                 [:span "resolving with" [:br]]
+                 [:span
+                  (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]
+       [:div.sponsor
+        (link-to "http://fastly.com/"
+                 (image "/images/fastly-logo.png" "Fastly"))]
+       [:div.sponsor
+        (link-to "https://pingometer.com/"
+                 (image "/images/pingometer-logo.svg" "Pingometer"))]]
+      [:div.sponsors-group
+       [:div.sponsor
+        (link-to "https://www.deps.co"
+                 (image "/images/deps-logo.png" "Deps"))]
+       [:div.sponsor
+        (link-to "https://www.rackspace.com"
+                 (image "/images/rackspace-logo.svg" "Rackspace"))]
+       [:div.sponsor
+        (link-to "http://sentry.io/"
+                 (image "/images/sentry-logo.png" "Sentry"))]
+       [:div.sponsor
+        (link-to "https://www.statuspage.io"
+                 (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]]]
+     [:div.sponsors
       "remixed by"
       (link-to "http://www.bendyworks.com/"
                [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])
