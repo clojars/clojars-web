@@ -548,14 +548,15 @@ footer a {
   color: #999;
 }
 
-.sponsors table {
-    margin: auto;
-    margin-top: 10px;
+.sponsors-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
 }
 
-.sponsors td {
-    vertical-align: middle;
-    padding: 0 3px;
+.sponsor {
+    padding: 1em;
 }
 
 .sponsor img {
@@ -589,6 +590,7 @@ ul#blockers li {
 }
 
 pre.error-id {
+    white-space: pre-wrap;
     background: #e2e4e3;
     text-align: center;
     margin-top: 10px;
