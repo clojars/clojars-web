@@ -1,21 +1,21 @@
 (ns clojars.test.integration.uploads
-  (:require [cemerick.pomegranate.aether :as aether]
-            [clojars
-             [cloudfiles :as cf]
-             [config :refer [config]]
-             [file-utils :as fu]
-             [web :as web :refer [clojars-app]]]
-            [clojars.test.integration.steps :refer :all]
-            [clojars.test.test-helper :as help]
-            [clojure.data.codec.base64 :as base64]
-            [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clojure.test :refer :all]
-            [clj-http.client :as client]
-            [kerodon
-             [core :refer :all]
-             [test :refer :all]]
-            [net.cgrand.enlive-html :as enlive]))
+  (:require
+   [cemerick.pomegranate.aether :as aether]
+   [clj-http.client :as client]
+   [clojars
+    [cloudfiles :as cf]
+    [config :refer [config]]
+    [file-utils :as fu]]
+   [clojars.test.integration.steps :refer [register-as]]
+   [clojars.test.test-helper :as help]
+   [clojure.data.codec.base64 :as base64]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [clojure.test :refer [are deftest is use-fixtures]]
+   [kerodon
+    [core :refer :all]
+    [test :refer :all]]
+   [net.cgrand.enlive-html :as enlive]))
 
 (use-fixtures :each
   help/default-fixture
@@ -48,9 +48,6 @@
                         :username "dantheman"
                         :password "password"}}
    :local-repo help/local-repo)
-
-  ;; give the async cloudfiles upload time to finish
-  (Thread/sleep 100)
 
   (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
         base-path "org/clojars/dantheman/test/"
@@ -125,9 +122,6 @@
                         (.getName f))
             {:body f
              :basic-auth ["dantheman" "password"]})))
-
-    ;; give the async cloudfiles upload time to finish
-    (Thread/sleep 100)
 
     (let [base-path "org/clojars/dantheman/test/"
           cloudfiles (:cloudfiles help/system)
@@ -506,22 +500,22 @@
          :repository {"test" {:url (repo-url)
                               :username "dantheman"
                               :password "password"}}
-         :local-repo help/local-repo)))
+         :local-repo help/local-repo))))
 
-  (deftest deploy-requires-lowercase-project
-    (-> (session (help/app-from-system))
+(deftest deploy-requires-lowercase-project
+  (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
-    (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-          #"Forbidden - project names must consist solely of lowercase"
-          (aether/deploy
-            :coordinates '[fake/teST "0.0.1"]
-            :jar-file (io/file (io/resource "test.jar"))
-            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                        {:artifactId "teST"})
-            :repository {"test" {:url (repo-url)
-                                 :username "dantheman"
-                                 :password "password"}}
-            :local-repo help/local-repo)))))
+  (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+                        #"Forbidden - project names must consist solely of lowercase"
+                        (aether/deploy
+                          :coordinates '[fake/teST "0.0.1"]
+                          :jar-file (io/file (io/resource "test.jar"))
+                          :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                                      {:artifactId "teST"})
+                          :repository {"test" {:url (repo-url)
+                                               :username "dantheman"
+                                               :password "password"}}
+                          :local-repo help/local-repo))))
 
 (deftest deploy-requires-ascii-version
   (-> (session (help/app-from-system))

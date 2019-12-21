@@ -1,7 +1,7 @@
 (ns clojars.tools.upload-repo
-  (:require [clojure.java.io :as io]
-            [clojars.cloudfiles :as cf]
-            [clojars.file-utils :as fu])
+  (:require [clojars.cloudfiles :as cf]
+            [clojars.file-utils :as fu]
+            [clojure.java.io :as io])
   (:gen-class))
 
 (defn upload-file [conn path file existing]

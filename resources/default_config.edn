@@ -16,7 +16,6 @@
         :ssl false}
  :nrepl-port 7991
  :port 8080
- :queue-storage-dir "data/durable-queue-slabs"
  :repo "data/dev_repo"
  :sentry-dsn "NOTSET"
  :stats-dir "data/stats"}

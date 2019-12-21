@@ -2,7 +2,6 @@
   (:require [clojars
              [email :refer [simple-mailer]]
              [ring-servlet-patch :as patch]
-             [queue :refer [queue-component]]
              [search :refer [lucene-component]]
              [stats :refer [file-stats]]
              [storage :as storage]
@@ -35,7 +34,7 @@
            :http {:port port :host bind}
            :db {:uri (jdbc-url db)})))
 
-(defrecord StorageComponent [delegate on-disk-repo cloudfiles queue cdn-token cdn-url]
+(defrecord StorageComponent [delegate on-disk-repo cloudfiles cdn-token cdn-url]
   storage/Storage
   (-write-artifact [_ path file force-overwrite?]
     (storage/write-artifact delegate path file force-overwrite?))
@@ -53,7 +52,7 @@
     (if delegate
       t
       (assoc t
-        :delegate (storage/full-storage on-disk-repo cloudfiles queue cdn-token cdn-url))))
+        :delegate (storage/full-storage on-disk-repo cloudfiles cdn-token cdn-url))))
   (stop [t]
     (assoc t :delegate nil)))
 
@@ -73,14 +72,12 @@
          :index-factory #(clucy/disk-index (:index-path config))
          :search        (lucene-component)
          :mailer        (simple-mailer (:mail config))
-         :queue         (queue-component (:queue-storage-dir config))
          :storage       (storage-component (:repo config) (:cdn-token config) (:cdn-url config))
          :clojars-app   (endpoint-component web/handler-optioned))
         (component/system-using
          {:http [:app]
           :app  [:clojars-app]
-          :queue [:error-reporter]
           :stats [:fs-factory]
           :search [:index-factory :stats]
-          :storage [:cloudfiles :queue]
+          :storage [:cloudfiles]
           :clojars-app [:storage :db :error-reporter :stats :search :mailer]}))))

@@ -10,13 +10,13 @@
              [system :as system]
              [web :as web]]
             [clojars.db.migrate :as migrate]
+            [clojars.storage :as storage]
             [clojure.java
              [io :as io]
              [jdbc :as jdbc]]
             [clojure.string :as str]
             [clucy.core :as clucy]
-            [com.stuartsierra.component :as component]
-            [clojars.storage :as storage])
+            [com.stuartsierra.component :as component])
   (:import java.io.File))
 
 (def tmp-dir (io/file (System/getProperty "java.io.tmpdir")))
@@ -27,7 +27,6 @@
                   :db {:classname "org.sqlite.JDBC"
                        :subprotocol "sqlite"
                        :subname ":memory:"}
-                  :queue-storage-dir "data/test/queue-slabs"
                   :repo "data/test/repo"
                   :deletion-backup-dir "data/test/repo-backup"})
 
@@ -50,7 +49,7 @@
   (using-test-config
     (let [cleanup (fn [] (run!
                           #(delete-file-recursively (io/file (@config %)))
-                          [:deletion-backup-dir :queue-storage-dir :repo]))]
+                          [:deletion-backup-dir :repo]))]
       (fn []
         (cleanup)
         (f)

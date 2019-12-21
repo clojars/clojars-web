@@ -19,8 +19,6 @@
                                cheshire
                                com.fasterxml.jackson.core/jackson-core
                                com.fasterxml.jackson.dataformat/jackson-dataformat-smile]]
-                 [factual/durable-queue "0.1.5"
-                  :exclusions [clj-tuple]]
                  [org.xerial/sqlite-jdbc "3.8.11.2"]
                  [org.apache.jclouds/jclouds-all "1.9.2"]
                  [org.clojure/tools.logging "0.3.1"] ;; required by jclouds

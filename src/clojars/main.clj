@@ -52,9 +52,8 @@
     (let [system (component/start (prod-system @config (error-reporter @config)))]
       (info "starting jetty on" (str "http://" (:bind @config) ":" (:port @config)))
       (admin/init (get-in system [:db :spec])
-        (:queue system)
-        (:search system)
-        (:storage system)))
+                  (:search system)
+                  (:storage system)))
     (catch Throwable t
       (binding [*out* *err*]
         (println "Error during app startup:"))

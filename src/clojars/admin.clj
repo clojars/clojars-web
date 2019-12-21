@@ -3,7 +3,6 @@
              [config :refer [config]]
              [db :as db]
              [file-utils :as fu]
-             [queue :as queue]
              [search :as search]
              [storage :as storage]]            
             [clojure.java.io :as io]
@@ -16,7 +15,6 @@
   (.format (SimpleDateFormat. "yyyyMMdd") (db/get-time)))
 
 (def ^:dynamic *db*)
-(def ^:dynamic *queue*)
 (def ^:dynamic *search*)
 (def ^:dynamic *storage*)
 
@@ -96,12 +94,11 @@
       {:clojure.tools.nrepl.middleware/descriptor {:requires #{"clone"}
                                                    :expects #{"eval"}}})))
 
-(defn init [db queue search storage]
+(defn init [db search storage]
   (when-let [port (:nrepl-port @config)]
     (printf "clojars-web: starting nrepl on localhost:%s\n" port)
     (nrepl/start-server :port port
                         :bind "127.0.0.1"
                         :handler (handler {#'*db*      db
-                                           #'*queue*   queue
                                            #'*search*  search
                                            #'*storage* storage}))))
