@@ -25,8 +25,9 @@
     (if (.startsWith db-config "jdbc:")
       db-config
       (str "jdbc:" db-config))
-    (let [{:keys [subprotocol subname]} db-config]
-      (format "jdbc:%s:%s" subprotocol subname))))
+    (let [{:keys [dbtype dbname host port user password]} db-config]
+      (format "jdbc:%s://%s:%s/%s?user=%s&password=%s"
+              dbtype host port dbname user password))))
 
 (defn translate [config]
   (let [{:keys [port bind db]} config]

@@ -1,16 +1,15 @@
 (ns clojars.db
-  (:require [clojure.string :as str]
-            [clj-time.core :as time]
+  (:require [cemerick.friend.credentials :as creds]
             [clj-time.coerce :as time.coerce]
+            [clj-time.core :as time]
             [clojars.config :refer [config]]
             [clojars.db.sql :as sql]
             [clojars.maven :as mvn]
-            [cemerick.friend.credentials :as creds]
             [clojure.edn :as edn]
-            [clojure.set :as set])
-  (:import java.util.Date
-           java.security.SecureRandom
-           java.util.concurrent.Executors))
+            [clojure.set :as set]
+            [clojure.string :as str])
+  (:import java.security.SecureRandom
+           (java.sql Timestamp)))
 
 (def reserved-names
   #{"clojure" "clojars" "clojar" "register" "login"
@@ -25,7 +24,7 @@
     "index" "files" "releases" "snapshots"})
 
 (defn get-time []
-  (Date.))
+  (Timestamp. (System/currentTimeMillis)))
 
 (defn bcrypt [s]
   (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor @config)))
@@ -43,7 +42,7 @@
 (defn find-user-by-password-reset-code [db reset-code]
   (sql/find-user-by-password-reset-code {:reset_code reset-code
                                          :reset_code_created_at
-                                         (-> 1 time/days time/ago time.coerce/to-long)}
+                                         (-> 1 time/days time/ago time.coerce/to-sql-date)}
                                         {:connection db
                                          :result-set-fn first}))
 
@@ -88,12 +87,14 @@
   ([db groupname jarname]
    (sql/recent-versions {:groupname groupname
                          :jarname jarname}
-                        {:connection db}))
+                        {:connection db
+                         :row-fn #(select-keys % [:version])}))
   ([db groupname jarname num]
    (sql/recent-versions-limit {:groupname groupname
                                :jarname jarname
                                :num num}
-                              {:connection db})))
+                              {:connection db
+                               :row-fn #(select-keys % [:version])})))
 
 (defn count-versions [db groupname jarname]
   (sql/count-versions {:groupname groupname
@@ -110,7 +111,7 @@
                    :jarname jarname}
                   {:connection db
                    :result-set-fn first
-                   :row-fn #(= (:exist %) 1)}))
+                   :row-fn :exist}))
 
 (let [read-field (fn [m field] (update m field (fnil edn/read-string "nil")))
       read-edn-fields #(when %
@@ -167,72 +168,38 @@
      (* (dec current-page) per-page)
      per-page))))
 
-(def write-executor (memoize #(Executors/newSingleThreadExecutor)))
-
-(def ^:private ^:dynamic *in-executor* nil)
-
-(defn serialize-task* [task-name task]
-  (if *in-executor*
-    (task)
-    (binding [*in-executor* true]
-      (let [bound-f (bound-fn []
-                      (try
-                        (task)
-                        (catch Throwable e
-                          e)))
-            response (deref
-                      (.submit (write-executor) bound-f)
-                      10000 ::timeout)]
-        (cond
-          (= response ::timeout) (throw
-                                  (ex-info
-                                   "Timed out waiting for serialized task to run"
-                                   {:name task-name}))
-          (instance? Throwable response) (throw
-                                          (ex-info "Serialized task failed"
-                                                   {:name task-name}
-                                                   response))
-          :default response)))))
-
-(defmacro serialize-task [name & body]
-  `(serialize-task* ~name
-                    (fn [] ~@body)))
-
 (defn add-user [db email username password]
   (let [record {:email email, :username username, :password (bcrypt password),
                 :created (get-time)}
         groupname (str "org.clojars." username)]
-    (serialize-task :add-user
-                    (sql/insert-user! record
-                                      {:connection db})
-                    (sql/add-member! {:groupname groupname
-                                      :username username
-                                      :admin 1
-                                      :added_by "clojars"}
-                                     {:connection db}))
+    (sql/insert-user! record
+                      {:connection db})
+    (sql/add-member! {:groupname groupname
+                      :username username
+                      :admin true
+                      :added_by "clojars"}
+                     {:connection db})
     record))
 
 (defn update-user [db account email username password]
   (let [fields {:email email
                 :username username
                 :account account}]
-    (serialize-task :update-user
-                    (if (empty? password)
-                      (sql/update-user! fields {:connection db})
-                      (sql/update-user-with-password!
-                        (assoc fields :password
-                                      (bcrypt password))
-                        {:connection db})))
+    (if (empty? password)
+      (sql/update-user! fields {:connection db})
+      (sql/update-user-with-password!
+        (assoc fields :password
+               (bcrypt password))
+        {:connection db}))
     fields))
 
 (defn reset-user-password [db username reset-code password]
   (assert (not (str/blank? reset-code)))
   (assert (some? username))
-  (serialize-task :reset-user-password
-                    (sql/reset-user-password! {:password (bcrypt password)
-                                               :reset_code reset-code
-                                               :username username}
-                                               {:connection db})))
+  (sql/reset-user-password! {:password (bcrypt password)
+                             :reset_code reset-code
+                             :username username}
+                            {:connection db}))
 
   ;; Password resets
   ;; Reference:
@@ -252,43 +219,39 @@
 
 (defn set-password-reset-code! [db username]
   (let [reset-code (hexadecimalize (generate-secure-token 20))]
-    (serialize-task :set-password-reset-code
-                    (sql/set-password-reset-code! {:reset_code reset-code
-                                                   :reset_code_created_at (get-time)
-                                                   :username username}
-                                                  {:connection db}))
+    (sql/set-password-reset-code! {:reset_code reset-code
+                                   :reset_code_created_at (get-time)
+                                   :username username}
+                                  {:connection db})
     reset-code))
 
 (defn add-member [db groupname username added-by]
-  (serialize-task :add-member
-                  (sql/inactivate-member! {:groupname groupname
-                                           :username username
-                                           :inactivated_by added-by}
-                                          {:connection db})
-                  (sql/add-member! {:groupname groupname
-                                    :username username
-                                    :admin 0
-                                    :added_by added-by}
-                                   {:connection db})))
+  (sql/inactivate-member! {:groupname groupname
+                           :username username
+                           :inactivated_by added-by}
+                          {:connection db})
+  (sql/add-member! {:groupname groupname
+                    :username username
+                    :admin false
+                    :added_by added-by}
+                   {:connection db}))
 
 (defn add-admin [db groupname username added-by]
-  (serialize-task :add-admin
-                  (sql/inactivate-member! {:groupname groupname
-                                           :username username
-                                           :inactivated_by added-by}
-                                          {:connection db})
-                  (sql/add-member! {:groupname groupname
-                                    :username username
-                                    :admin 1
-                                    :added_by added-by}
-                                   {:connection db})))
+  (sql/inactivate-member! {:groupname groupname
+                           :username username
+                           :inactivated_by added-by}
+                          {:connection db})
+  (sql/add-member! {:groupname groupname
+                    :username username
+                    :admin true
+                    :added_by added-by}
+                   {:connection db}))
 
 (defn inactivate-member [db groupname username inactivated-by]
-  (serialize-task :inactivate-member
-                  (sql/inactivate-member! {:groupname groupname
-                                           :username username
-                                           :inactivated_by inactivated-by}
-                                          {:connection db})))
+  (sql/inactivate-member! {:groupname groupname
+                           :username username
+                           :inactivated_by inactivated-by}
+                          {:connection db}))
 
 (defn check-group
   "Throws if the group is invalid or not accessible to the account"
@@ -310,64 +273,61 @@
 
 (defn add-jar [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]
   (check-and-add-group db account group)
-  (serialize-task :add-jar
-                  (sql/add-jar! {:groupname   group
-                                 :jarname     name
-                                 :version     version
-                                 :user        account
-                                 :created     (get-time)
-                                 :description description
-                                 :homepage    homepage
-                                 :packaging   (when packaging (clojure.core/name packaging))
-                                 :licenses    (when licenses (pr-str licenses))
-                                 :scm         (when scm (pr-str scm))
-                                 :authors     (str/join ", " (map #(.replace % "," "")
-                                                                  authors))}
-                                {:connection db})
-                  (when (mvn/snapshot-version? version)
-                    (sql/delete-dependencies-version!
-                      {:group_id group
-                       :jar_id name
-                       :version version}
-                      {:connection db}))
-                  (doseq [dep dependencies]
-                    (sql/add-dependency! (-> dep
-                                             (set/rename-keys {:group_name :dep_groupname
-                                                               :jar_name   :dep_jarname
-                                                               :version    :dep_version
-                                                               :scope      :dep_scope})
-                                             (assoc :groupname group
-                                                    :jarname   name
-                                                    :version   version))
-                                         {:connection db}))))
+  (sql/add-jar! {:groupname   group
+                 :jarname     name
+                 :version     version
+                 :user        account
+                 :created     (get-time)
+                 :description description
+                 :homepage    homepage
+                 :packaging   (when packaging (clojure.core/name packaging))
+                 :licenses    (when licenses (pr-str licenses))
+                 :scm         (when scm (pr-str scm))
+                 :authors     (str/join ", " (map #(.replace % "," "")
+                                                  authors))}
+                {:connection db})
+  (when (mvn/snapshot-version? version)
+    (sql/delete-dependencies-version!
+      {:group_id group
+       :jar_id name
+       :version version}
+      {:connection db}))
+  (doseq [dep dependencies]
+    (sql/add-dependency! (-> dep
+                             (set/rename-keys {:group_name :dep_groupname
+                                               :jar_name   :dep_jarname
+                                               :version    :dep_version
+                                               :scope      :dep_scope})
+                             (assoc :groupname group
+                                    :jarname   name
+                                    :version   version))
+                         {:connection db})))
 
 (defn delete-jars [db group-id & [jar-id version]]
-  (serialize-task :delete-jars
-                  (let [coords {:group_id group-id}]
-                    (if jar-id
-                      (let [coords (assoc coords :jar_id jar-id)]
-                        (if version
-                          (let [coords' (assoc coords :version version)]
-                            (sql/delete-jar-version! coords'
-                                                     {:connection db})
-                            (sql/delete-dependencies-version! coords'
-                                                              {:connection db}))
-                          (do
-                            (sql/delete-jars! coords
-                                              {:connection db})
-                            (sql/delete-dependencies! coords
-                                                      {:connection db}))))
-                      (do
-                        (sql/delete-groups-jars! coords
-                                                 {:connection db})
-                        (sql/delete-groups-dependencies! coords
-                                                         {:connection db}))))))
+  (let [coords {:group_id group-id}]
+    (if jar-id
+      (let [coords (assoc coords :jar_id jar-id)]
+        (if version
+          (let [coords' (assoc coords :version version)]
+            (sql/delete-jar-version! coords'
+                                     {:connection db})
+            (sql/delete-dependencies-version! coords'
+                                              {:connection db}))
+          (do
+            (sql/delete-jars! coords
+                              {:connection db})
+            (sql/delete-dependencies! coords
+                                      {:connection db}))))
+      (do
+        (sql/delete-groups-jars! coords
+                                 {:connection db})
+        (sql/delete-groups-dependencies! coords
+                                         {:connection db})))))
 
 ;; does not delete jars in the group. should it?
 (defn delete-groups [db group-id]
-  (serialize-task :delete-groups
-                  (sql/delete-group! {:group_id group-id}
-                                     {:connection db})))
+  (sql/delete-group! {:group_id group-id}
+                     {:connection db}))
 
 (defn find-jars-information
   ([db group-id]

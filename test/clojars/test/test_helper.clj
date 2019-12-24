@@ -2,9 +2,7 @@
   (:require [clojars
              [cloudfiles :as cf]
              [config :refer [config]]
-             [db :as db]
-             [email :as email]
-             [errors :refer [ErrorReporter] :as errors]
+             [errors :as errors]
              [stats :as stats]
              [search :as search]
              [system :as system]
@@ -24,9 +22,12 @@
 (def local-repo2 (io/file tmp-dir "clojars" "test" "local-repo2"))
 
 (def test-config {:port 0
-                  :db {:classname "org.sqlite.JDBC"
-                       :subprotocol "sqlite"
-                       :subname ":memory:"}
+                  :db {:dbtype "postgresql"
+                       :dbname "clojars"
+                       :host "localhost"
+                       :port 55432
+                       :user "clojars"
+                       :password "clojars"}
                   :repo "data/test/repo"
                   :deletion-backup-dir "data/test/repo-backup"})
 
@@ -62,9 +63,17 @@
 
 (declare ^:dynamic *db*)
 
+(defn clear-database [db]
+  (jdbc/db-do-commands db
+                       "delete from deps"
+                       "delete from groups"
+                       "delete from jars"
+                       "delete from users"))
+
 (defn with-clean-database [f]
   (binding [*db* {:connection (jdbc/get-connection (:db test-config))}]
     (try
+      (clear-database *db*)
       (with-out-str
         (migrate/migrate *db*))
       (f)
@@ -107,20 +116,19 @@
 
 (defn run-test-app
   ([f]
-   (binding [system (try (component/start (assoc (system/new-system test-config)
+   (binding [system (component/start (assoc (system/new-system test-config)
                                             :cloudfiles (transient-cloudfiles)
                                             :error-reporter (quiet-reporter)
                                             :index-factory #(clucy/memory-index)
-                                            :stats (no-stats)))
-                         (catch Exception e
-                           (println e)
-                           (pr (ex-data e))))]
+                                            :stats (no-stats)))]
      (let [server (get-in system [:http :server])
-           port (-> server .getConnectors first .getLocalPort)]
+           port (-> server .getConnectors first .getLocalPort)
+           db (get-in system [:db :spec])]
        (binding [test-port port]
          (try
+           (clear-database db)
            (with-out-str
-             (migrate/migrate (get-in system [:db :spec])))
+             (migrate/migrate db))
            (f)
            (finally
              (component/stop system))))))))

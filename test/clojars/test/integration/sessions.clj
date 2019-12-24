@@ -1,14 +1,13 @@
 (ns clojars.test.integration.sessions
   (:require [clojars.db :as db]
             [clojars.test.integration.steps :refer :all]
-            [clojars.db :as db]
-            [clojars.web :as web]
             [clojars.test.test-helper :as help]
+            [clojars.web :as web]
+            [clojure.java.jdbc :as jdbc]
             [clojure.test :refer :all]
             [kerodon
              [core :refer :all]
              [test :refer :all]]
-            [clojure.java.jdbc :as jdbc]
             [net.cgrand.enlive-html :as enlive]))
 
 (use-fixtures :each
@@ -45,7 +44,7 @@
     (-> (session app)
         (register-as "fixture" "fixture@example.org" "password"))
     (jdbc/db-do-commands help/*db*
-                         "update users set password='' where user = 'fixture'")
+                         "update users set password='' where \"user\" = 'fixture'")
     (-> (session app)
         (login-as "fixture" "password")
         (follow-redirect)

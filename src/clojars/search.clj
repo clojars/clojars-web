@@ -3,20 +3,20 @@
   (:require [clojars
              [config :refer [config]]
              [stats :as stats]]
+            [clojars.db :as db]
             [clojure
              [set :as set]
              [string :as string]]
             [clojure.java.io :as io]
+            [clojure.string :as str]
             [clucy.core :as clucy]
-            [com.stuartsierra.component :as component]
-            [clojars.db :as db]
-            [clojure.string :as str])
+            [com.stuartsierra.component :as component])
   (:import [org.apache.lucene.analysis KeywordAnalyzer PerFieldAnalyzerWrapper]
            org.apache.lucene.analysis.standard.StandardAnalyzer
            org.apache.lucene.index.IndexNotFoundException
            org.apache.lucene.queryParser.QueryParser
-           [org.apache.lucene.search.function CustomScoreQuery DocValues FieldCacheSource ValueSourceQuery]
-           org.apache.lucene.search.IndexSearcher))
+           org.apache.lucene.search.IndexSearcher
+           [org.apache.lucene.search.function CustomScoreQuery DocValues FieldCacheSource ValueSourceQuery]))
 
 (defprotocol Search
   (index! [t pom])
@@ -59,7 +59,8 @@
 (defn index-jar [index jar]
   (let [jar' (-> jar
                 (set/rename-keys renames)
-                (update-in [:licenses] #(mapv :name %)))
+                (update :licenses #(mapv :name %))
+                (update :at (memfn getTime)))
         ;; TODO: clucy forces its own :_content on you
         content (string/join " " ((apply juxt content-fields) jar'))
         doc (assoc (dissoc jar' :dependencies :scm)

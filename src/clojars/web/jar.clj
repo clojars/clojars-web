@@ -1,22 +1,22 @@
 (ns clojars.web.jar
-  (:require [clojars.web.common :refer [html-doc jar-link group-link
+  (:require [cheshire.core :as json]
+            [clojars.config :refer [config]]
+            [clojars.db :refer [find-jar jar-exists]]
+            [clojars.db :as db]
+            [clojars.file-utils :as fu]
+            [clojars.stats :as stats]
+            [clojars.web.common :refer [html-doc jar-link group-link
                                         tag jar-url jar-name group-is-name? user-link
                                         jar-fork? jar-notice single-fork-notice
                                         simple-date]]
+            [clojars.web.helpers :as helpers]
+            [clojars.web.safe-hiccup :refer [form-to raw]]
+            [clojars.web.structured-data :as structured-data]
+            [clojure.set :as set]
             hiccup.core
             [hiccup.element :refer [link-to image]]
             [hiccup.form :refer [submit-button]]
-            [clojars.web.safe-hiccup :refer [form-to raw]]
-            [clojars.db :refer [find-jar jar-exists]]
-            [clojars.stats :as stats]
-            [clojars.config :refer [config]]
-            [clojars.file-utils :as fu]
-            [ring.util.codec :refer [url-encode]]
-            [cheshire.core :as json]
-            [clojars.web.helpers :as helpers]
-            [clojars.web.structured-data :as structured-data]
-            [clojars.db :as db]
-            [clojure.set :as set])
+            [ring.util.codec :refer [url-encode]])
   (:import (java.net URI)))
 
 (defn url-for [jar]
@@ -161,7 +161,7 @@
   (list
     [:h4 "Pushed by"]
     (user-link (:user jar)) " on "
-    [:span {:title (str (java.util.Date. (:created jar)))} (simple-date (:created jar))]
+    [:span {:title (str (:created jar))} (simple-date (:created jar))]
     (if-let [url (commit-url jar)]
       [:span.commit-url " with " (link-to url "this commit")])))
 

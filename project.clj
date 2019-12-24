@@ -19,7 +19,6 @@
                                cheshire
                                com.fasterxml.jackson.core/jackson-core
                                com.fasterxml.jackson.dataformat/jackson-dataformat-smile]]
-                 [org.xerial/sqlite-jdbc "3.8.11.2"]
                  [org.apache.jclouds/jclouds-all "1.9.2"]
                  [org.clojure/tools.logging "0.3.1"] ;; required by jclouds
                  [org.apache.commons/commons-email "1.2"]
@@ -43,6 +42,7 @@
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.11"]
                  [yesql "0.5.1"]
+                 [org.postgresql/postgresql "42.2.9"]
                  [duct/hikaricp-component "0.1.0"
                   :exclusions [com.stuartsierra/component
                                org.slf4j/slf4j-api]]

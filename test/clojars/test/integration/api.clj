@@ -1,13 +1,11 @@
 (ns clojars.test.integration.api
-  (:require [clj-http.client :as client]
+  (:require [cheshire.core :as json]
+            [clj-http.client :as client]
             [clojars.test.integration.steps :refer [register-as inject-artifacts-into-repo!]]
             [clojars.test.test-helper :as help]
-            [clojars.web :as web]
             [clojure.string :as str]
-            [clojure.test :refer :all]
-            [kerodon.core :refer [session]]
-            [clojure.string :as string]
-            [cheshire.core :as json]))
+            [clojure.test :refer [deftest is testing use-fixtures]]
+            [kerodon.core :refer [session]]))
 
 (use-fixtures :each
               help/default-fixture
