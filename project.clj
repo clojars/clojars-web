@@ -67,10 +67,10 @@
                   ["vcs" "commit"]
                   ["vcs" "push"]]
   :aliases {"migrate" ["run" "-m" "clojars.tools.migrate-db"]
-            "test" ["run" "-m" "circleci.test/dir" :project/test-paths]
-            "tests" ["run" "-m" "circleci.test"]
-            "retest" ["run" "-m" "circleci.test.retest"]}
-  :pedantic? :abort
+            "ci-test" ["run" "-m" "circleci.test/dir" :project/test-paths]
+            "ci-tests" ["run" "-m" "circleci.test"]
+            "ci-retest" ["run" "-m" "circleci.test.retest"]}
+  :pedantic? :warn
   :profiles
   {:dev  [:project/dev  :profiles/dev]
    :repl {:pedantic? false}
