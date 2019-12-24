@@ -1,0 +1,12 @@
+version: '3'
+services:
+  db:
+    image: postgres:12.1
+    ports:
+      - "55432:5432"
+    environment:
+      - POSTGRES_USER=clojars
+      - POSTGRES_PASSWORD=clojars
+      - POSTGRES_DB=clojars
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
