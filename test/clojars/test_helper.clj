@@ -25,7 +25,7 @@
                   :db {:dbtype "postgresql"
                        :dbname "clojars"
                        :host "localhost"
-                       :port 55432
+                       :port 55433
                        :user "clojars"
                        :password "clojars"}
                   :repo "data/test/repo"
@@ -64,11 +64,13 @@
 (declare ^:dynamic *db*)
 
 (defn clear-database [db]
-  (jdbc/db-do-commands db
-                       "delete from deps"
-                       "delete from groups"
-                       "delete from jars"
-                       "delete from users"))
+  (try
+    (jdbc/db-do-commands db
+                         "delete from deps"
+                         "delete from groups"
+                         "delete from jars"
+                         "delete from users")
+    (catch Exception _)))
 
 (defn with-clean-database [f]
   (binding [*db* {:connection (jdbc/get-connection (:db test-config))}]
