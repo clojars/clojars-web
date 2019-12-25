@@ -30,12 +30,10 @@
   [#'initial-schema])
 
 (defn migrate [db]
-  (try (sql/db-do-commands db
-                           (sql/create-table-ddl "migrations"
-                                                 [:name :varchar "NOT NULL"]
-                                                 [:created_at :timestamp
-                                                  "NOT NULL"  "DEFAULT CURRENT_TIMESTAMP"]))
-       (catch Exception _))
+  (sql/db-do-commands db
+                      (str "create table if not exists migrations "
+                           "(name varchar not null, "
+                           "created_at timestamp not null default current_timestamp)"))
   (sql/with-db-transaction [trans db]
     (let [has-run? (sql/query trans ["SELECT name FROM migrations"]
                               :row-fn :name
