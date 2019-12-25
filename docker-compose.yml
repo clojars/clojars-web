@@ -1,6 +1,6 @@
 version: '3'
 services:
-  db:
+  dev-db:
     image: postgres:12.1
     ports:
       - "55432:5432"
@@ -9,4 +9,14 @@ services:
       - POSTGRES_PASSWORD=clojars
       - POSTGRES_DB=clojars
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - ./data/dev-postgres:/var/lib/postgresql/data
+  test-db:
+    image: postgres:12.1
+    ports:
+      - "55433:5432"
+    environment:
+      - POSTGRES_USER=clojars
+      - POSTGRES_PASSWORD=clojars
+      - POSTGRES_DB=clojars
+    volumes:
+      - ./data/test-postgres:/var/lib/postgresql/data
