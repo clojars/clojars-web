@@ -1,18 +1,18 @@
 (ns clojars.web.user
-  (:require [clojars.db :as db :refer [find-user group-activenames add-user
+  (:require [cemerick.friend.credentials :as creds]
+            [clojars.config :refer [config]]
+            [clojars.db :as db :refer [find-user group-activenames add-user
                                 reserved-names update-user jars-by-username
                                 find-groupnames find-user-by-user-or-email]]
             [clojars.web.common :refer [html-doc error-list jar-link
                                         flash group-link]]
-            [clojars.config :refer [config]]
+            [clojars.web.safe-hiccup :refer [form-to]]
             [clojure.string :refer [blank?]]
             [hiccup.element :refer [link-to unordered-list]]
             [hiccup.form :refer [label text-field
                                  password-field text-area
                                  submit-button
                                  email-field]]
-            [clojars.web.safe-hiccup :refer [form-to]]
-            [cemerick.friend.credentials :as creds]
             [ring.util.response :refer [response redirect]]
             [valip.core :refer [validate]]
             [valip.predicates :as pred]))
@@ -151,7 +151,7 @@
 (defn forgot-password [db mailer {:keys [email-or-username]}]
   (when-let [user (find-user-by-user-or-email db email-or-username)]
     (let [reset-code (db/set-password-reset-code! db (:user user))
-          base-url (:base-url @config)
+          base-url (:base-url (config))
           reset-password-url (str base-url "/password-resets/" reset-code)]
       (mailer (:email user)
         "Password reset for Clojars"

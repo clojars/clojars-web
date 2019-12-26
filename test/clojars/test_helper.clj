@@ -21,10 +21,6 @@
 (def local-repo (io/file tmp-dir "clojars" "test" "local-repo"))
 (def local-repo2 (io/file tmp-dir "clojars" "test" "local-repo2"))
 
-(def load-config
-  (delay
-    (config/load-config :test)))
-
 (defn delete-file-recursively
   "Delete file f. If it's a directory, recursively delete all its contents."
   [f]
@@ -36,14 +32,14 @@
       (io/delete-file f))))
 
 (defn default-fixture [f]
-  @load-config
-  (let [cleanup (fn [] (run!
-                        #(delete-file-recursively (io/file (@config/config %)))
-                        [:deletion-backup-dir :repo]))]
-    (fn []
-      (cleanup)
-      (f)
-      (cleanup))))
+  (binding [config/*profile* "test"]
+    (let [cleanup (fn [] (run!
+                          #(delete-file-recursively (io/file ((config/config) %)))
+                          [:deletion-backup-dir :repo]))]
+      (fn []
+        (cleanup)
+        (f)
+        (cleanup)))))
 
 (defn quiet-reporter []
   (reify errors/ErrorReporter
@@ -62,14 +58,16 @@
     (catch Exception _)))
 
 (defn with-clean-database [f]
-  @load-config
-  (binding [*db* {:connection (jdbc/get-connection (:db @config/config))}]
-    (try
-      (clear-database *db*)
-      (with-out-str
-        (migrate/migrate *db*))
-      (f)
-      (finally (.close (:connection *db*))))))
+  (binding [config/*profile* "test"]
+    ;; double binding since ^ needs to be bound for config to load
+    ;; properly
+    (binding [*db* {:connection (jdbc/get-connection (:db (config/config)))}]
+      (try
+        (clear-database *db*)
+        (with-out-str
+          (migrate/migrate *db*))
+        (f)
+        (finally (.close (:connection *db*)))))))
 
 (defn no-stats []
   (stats/->MapStats {}))
@@ -92,7 +90,7 @@
   ([] (app {}))
   ([{:keys [storage db error-reporter stats search mailer]
      :or {db *db*
-          storage (storage/fs-storage (:repo @config/config))
+          storage (storage/fs-storage (:repo (config/config)))
           error-reporter (quiet-reporter)
           stats (no-stats)
           search (no-search)
@@ -108,23 +106,25 @@
 
 (defn run-test-app
   ([f]
-   @load-config
-   (binding [system (component/start (assoc (system/new-system @config/config)
+   (binding [config/*profile* "test"]
+     ;; double binding since ^ needs to be bound for config to load
+     ;; properly
+     (binding [system (component/start (assoc (system/new-system (config/config))
                                             :cloudfiles (transient-cloudfiles)
                                             :error-reporter (quiet-reporter)
                                             :index-factory #(clucy/memory-index)
                                             :stats (no-stats)))]
-     (let [server (get-in system [:http :server])
-           port (-> server .getConnectors first .getLocalPort)
-           db (get-in system [:db :spec])]
-       (binding [test-port port]
-         (try
-           (clear-database db)
-           (with-out-str
-             (migrate/migrate db))
-           (f)
-           (finally
-             (component/stop system))))))))
+       (let [server (get-in system [:http :server])
+             port (-> server .getConnectors first .getLocalPort)
+             db (get-in system [:db :spec])]
+         (binding [test-port port]
+           (try
+             (clear-database db)
+             (with-out-str
+               (migrate/migrate db))
+             (f)
+             (finally
+               (component/stop system)))))))))
 
 (defn get-content-type [resp]
   (some-> resp :headers (get "content-type") (str/split #";") first))

@@ -16,13 +16,12 @@
   {:app {:middleware []}})
 
 (defn migrate []
-  (migrate/migrate (:db @config/config)))
+  (migrate/migrate (:db (config/config))))
 
 (defn new-system []
   (refresh)
-  (config/load-config :development)
   (migrate)
-  (assoc (system/new-system (meta-merge @config/config dev-env))
+  (assoc (system/new-system (meta-merge (config/config) dev-env))
     :error-reporter (errors/stdout-reporter)
     :cloudfiles     (cf/connect "" "" "dev" "transient")))
 
@@ -38,8 +37,9 @@
   (let [tests (if (empty? tests)
                   (eftest/find-tests "test")
                   tests)]
-        (eftest/run-tests tests {:report eftest.report.pretty/report
-                                 :multithread? false})))
+    (binding [config/*profile* "test"]
+      (eftest/run-tests tests {:report eftest.report.pretty/report
+                               :multithread? false}))))
 
 (when (io/resource "local.clj")
   (load "local"))

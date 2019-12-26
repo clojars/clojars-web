@@ -2,9 +2,13 @@
   (:require [clojars
              [search :as search]
              [stats :as stats]]
-            [clojure.test :refer [deftest is]]
+            [clojars.test-helper :as help]
+            [clojure.test :refer [deftest is use-fixtures]]
             [clucy.core :as clucy]
             [com.stuartsierra.component :as component]))
+
+(use-fixtures :once
+  help/default-fixture)
 
 (deftest weight-by-downloads
   (let [lc (component/start (assoc (search/lucene-component)

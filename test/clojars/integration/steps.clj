@@ -44,4 +44,4 @@
                    :jar-file (io/resource jar)
                    :pom-file pom-file
                    :local-repo help/local-repo
-                   :repository {"local" (file-repo (:repo @config))})))
+                   :repository {"local" (file-repo (:repo (config)))})))

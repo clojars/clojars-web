@@ -52,7 +52,7 @@
   (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
         base-path "org/clojars/dantheman/test/"
         cloudfiles (:cloudfiles help/system)
-        repo (:repo @config)]
+        repo (:repo (config))]
     (is (.exists (io/file repo base-path "maven-metadata.xml")))
     (is (cf/artifact-exists? cloudfiles (str base-path "maven-metadata.xml")))
     (is (= 6 (count (.list (io/file repo base-path "0.0.1")))))
@@ -125,7 +125,7 @@
 
     (let [base-path "org/clojars/dantheman/test/"
           cloudfiles (:cloudfiles help/system)
-          repo (:repo @config)]
+          repo (:repo (config))]
       (doseq [[f no-version?] files]
         (let [fname (.getName f)
               base-path' (if no-version? base-path (str base-path "0.0.1/"))]
@@ -324,7 +324,7 @@
                            (when (.endsWith name ".jar")
                              (reset! timestamped-jar name))))
     (is @timestamped-jar)
-    (is (.exists (io/file (:repo @config) @timestamped-jar)))))
+    (is (.exists (io/file (:repo (config)) @timestamped-jar)))))
 
 (deftest deploys-sharing-the-same-session-work
   (-> (session (help/app-from-system))
@@ -377,7 +377,7 @@
                          :username "dantheman"
                          :password "password"}}
     :local-repo help/local-repo)
-  (are [ext] (.exists (io/file (:repo @config) "fake" "test" "0.0.1"
+  (are [ext] (.exists (io/file (:repo (config)) "fake" "test" "0.0.1"
                         (format "test-0.0.1%s" ext)))
        ".pom" ".jar" "-test.jar"))
 
@@ -394,7 +394,7 @@
                          :password "password"}}
     :local-repo help/local-repo)
   ;; we can't look for files directly since the version will be timestamped
-  (is (= 3 (->> (file-seq (io/file (:repo @config) "fake" "test" "0.0.3-SNAPSHOT"))
+  (is (= 3 (->> (file-seq (io/file (:repo (config)) "fake" "test" "0.0.3-SNAPSHOT"))
              (filter (memfn isFile))
              (filter #(re-find #"(pom|jar|-test\.jar)$" (.getName %)))
              count))))
@@ -610,4 +610,4 @@
                                                                   "UTF-8"))
                                                       "UTF-8"))})
         (has (status? 403))))
-  (is (not (.exists (io/file (:repo @config) "group3/artifact3/1.0.0/test.jar")))))
+  (is (not (.exists (io/file (:repo (config)) "group3/artifact3/1.0.0/test.jar")))))

@@ -34,7 +34,7 @@
 (def snapshot "20120806.052549-1")
 
 (defn expected-file [& [d1 d2 d3 file]]
-  (io/file (@config :repo) d1 d2 d3 (str file "-" snapshot ".pom")))
+  (io/file ((config) :repo) d1 d2 d3 (str file "-" snapshot ".pom")))
 
 ;; this might be a good candidate for test.check
 (deftest comparing-versions

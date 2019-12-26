@@ -4,6 +4,6 @@
   (:gen-class))
 
 (defn -main [& _]
-  (let [db (:db @config)]
+  (let [db (:db (config))]
     (println "=> Migrating" db)
     (migrate db)))

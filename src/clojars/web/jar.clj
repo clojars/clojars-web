@@ -23,7 +23,7 @@
   (str (jar-url jar) "/versions/" (:version jar)))
 
 (defn repo-url [jar]
-  (str (:cdn-url @config) "/" (-> jar :group_name fu/group->path) "/" (:jar_name jar) "/"))
+  (str (:cdn-url (config)) "/" (-> jar :group_name fu/group->path) "/" (:jar_name jar) "/"))
 
 (defn maven-jar-url [jar]
   (str "http://search.maven.org/#"

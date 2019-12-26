@@ -2,7 +2,7 @@
   (:require [clojars
              [admin :as admin]
              [cloudfiles :as cf]
-             [config :refer [config load-config]]
+             [config :as config]
              [errors :as err]
              [system :as system]]
             [com.stuartsierra.component :as component]
@@ -46,11 +46,12 @@
           (warn "no :sentry-dsn set in config, errors won't be logged to Sentry")
           (err/null-reporter)))))
 
-(defn -main [& args]
+(defn -main [& _args]
   (try
-    (load-config :production)
-    (let [system (component/start (prod-system @config (error-reporter @config)))]
-      (info "starting jetty on" (str "http://" (:bind @config) ":" (:port @config)))
+    (alter-var-root #'config/*profile* (constantly "production"))
+    (let [config (config/config)
+          system (component/start (prod-system config (error-reporter config)))]
+      (info "starting jetty on" (str "http://" (:bind config) ":" (:port config)))
       (admin/init (get-in system [:db :spec])
                   (:search system)
                   (:storage system)))

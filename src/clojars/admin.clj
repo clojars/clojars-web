@@ -58,7 +58,7 @@
       (fn []
         (println "Deleting" group-id)
         (let [path (segments->path [group-id])]
-          (path->backup path *storage* (:deletion-backup-dir @config))
+          (path->backup path *storage* (:deletion-backup-dir (config)))
           (storage/remove-path *storage* path))
         (db/delete-jars *db* group-id)
         (db/delete-groups *db* group-id)
@@ -78,7 +78,7 @@
         (fn []
           (println "Deleting" pretty-coords)
           (let [path (segments->path [group-id jar-id version])]
-            (path->backup path *storage* (:deletion-backup-dir @config))
+            (path->backup path *storage* (:deletion-backup-dir (config)))
             (storage/remove-path *storage* path))
           (apply db/delete-jars *db* group-id jar-id (if version [version] []))
           (when-not version (search/delete! *search* group-id jar-id))))
@@ -95,7 +95,7 @@
                                                    :expects #{"eval"}}})))
 
 (defn init [db search storage]
-  (when-let [port (:nrepl-port @config)]
+  (when-let [port (:nrepl-port (config))]
     (printf "clojars-web: starting nrepl on localhost:%s\n" port)
     (nrepl/start-server :port port
                         :bind "127.0.0.1"
