@@ -1,4 +1,5 @@
 (ns user
+  (:refer-clojure :exclude [test])
   (:require [clojars
              [cloudfiles :as cf]
              [config :as config]
@@ -14,9 +15,13 @@
 (def dev-env
   {:app {:middleware []}})
 
+(defn migrate []
+  (migrate/migrate (:db @config/config)))
 
 (defn new-system []
   (refresh)
+  (config/load-config :development)
+  (migrate)
   (assoc (system/new-system (meta-merge @config/config dev-env))
     :error-reporter (errors/stdout-reporter)
     :cloudfiles     (cf/connect "" "" "dev" "transient")))
@@ -38,9 +43,6 @@
 
 (when (io/resource "local.clj")
   (load "local"))
-
-(defn migrate []
-  (migrate/migrate (:db @config/config)))
 
 ;; TODO: function to setup fake data (from clojars.dev.setup?)
 

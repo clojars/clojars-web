@@ -20,21 +20,6 @@
   {:app {:middleware []}
    :http {:configurator patch/use-status-message-header}})
 
-(defn jdbc-url [db-config]
-  (if (string? db-config)
-    (if (.startsWith db-config "jdbc:")
-      db-config
-      (str "jdbc:" db-config))
-    (let [{:keys [dbtype dbname host port user password]} db-config]
-      (format "jdbc:%s://%s:%s/%s?user=%s&password=%s"
-              dbtype host port dbname user password))))
-
-(defn translate [config]
-  (let [{:keys [port bind db]} config]
-    (assoc config
-           :http {:port port :host bind}
-           :db {:uri (jdbc-url db)})))
-
 (defrecord StorageComponent [delegate on-disk-repo cloudfiles cdn-token cdn-url]
   storage/Storage
   (-write-artifact [_ path file force-overwrite?]
@@ -63,7 +48,7 @@
                           :cdn-url cdn-url}))
 
 (defn new-system [config]
-  (let [config (meta-merge base-env (translate config))]
+  (let [config (meta-merge base-env config)]
     (-> (component/system-map
          :app           (handler-component (:app config))
          :http          (jetty-server (:http config))

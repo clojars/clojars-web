@@ -1,7 +1,6 @@
 (defproject clojars-web "78-SNAPSHOT"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/tools.cli "0.2.1"]
                  [org.clojure/core.memoize "0.5.8"]
                  [raven-clj "1.4.3"]
                  [org.apache.maven/maven-model "3.0.4"
@@ -55,7 +54,7 @@
                  [digest "1.4.4"]
                  [clj-http "3.3.0"
                   :exclusions [commons-io]]
-                 [aero "1.0.1"]]
+                 [aero "1.1.3"]]
   :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"

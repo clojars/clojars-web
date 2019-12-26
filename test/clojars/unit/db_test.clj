@@ -7,7 +7,6 @@
    (java.sql Timestamp)))
 
 (use-fixtures :each
-  help/using-test-config
   help/with-clean-database)
 
 (defmacro with-time

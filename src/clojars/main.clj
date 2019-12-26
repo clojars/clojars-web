@@ -2,7 +2,7 @@
   (:require [clojars
              [admin :as admin]
              [cloudfiles :as cf]
-             [config :refer [config configure]]
+             [config :refer [config load-config]]
              [errors :as err]
              [system :as system]]
             [com.stuartsierra.component :as component]
@@ -48,7 +48,7 @@
 
 (defn -main [& args]
   (try
-    (configure args)
+    (load-config :production)
     (let [system (component/start (prod-system @config (error-reporter @config)))]
       (info "starting jetty on" (str "http://" (:bind @config) ":" (:port @config)))
       (admin/init (get-in system [:db :spec])

@@ -1,7 +1,6 @@
 (ns clojars.config
-  (:require [clojure.tools.cli :refer [cli]]
+  (:require [aero.core :as aero]
             [clojure.java.io :as io]
-            [aero.core :as aero]
             [clojure.string :as str]))
 
 (defn url-decode [s]
@@ -32,40 +31,37 @@
     (parse-mail-uri x)
     x))
 
-(def default-config
-  (delay
-    (if-let [cfg (io/resource "default_config.edn")]
-      (aero/read-config cfg)
-      (println "WARNING: failed to find default_config.edn"))))
 
 ;; we attempt to read a file defined on clojars.config.file property at load time
 ;; this is handy for interactive development and unit tests
-(def config
-  (delay
-    (-> @default-config
+(defn merge-extra-config
+  [default-config]
+  (-> default-config
       (merge (when-let [extra-config (System/getProperty "clojars.config.file")]
                (aero/read-config extra-config)))
-      (update :mail parse-mail))))
+      (update :mail parse-mail)))
 
-(defn parse-args [args]
-  (cli args
-       ["-h" "--help" "Show this help text and exit" :flag true]))
+(defonce config (atom {}))
 
-(defn remove-nil-vals [m]
-  (into {} (remove #(nil? (val %)) m)))
+(defn jdbc-url [db-config]
+  (if (string? db-config)
+    (if (.startsWith db-config "jdbc:")
+      db-config
+      (str "jdbc:" db-config))
+    (let [{:keys [dbtype dbname host port user password]} db-config]
+      (format "jdbc:%s://%s:%s/%s?user=%s&password=%s"
+              dbtype host port dbname user password))))
 
-(defn parse-config [args]
-  (let [[arg-opts args banner] (parse-args args)
-        arg-opts (remove-nil-vals arg-opts)]
-    [arg-opts args banner]))
+(defn translate [config]
+  (let [{:keys [port bind db]} config]
+    (-> config
+        (assoc :http {:port port :host bind})
+        (assoc-in [:db :uri]  (jdbc-url db)))))
 
-(defn configure [args]
-  (let [[options args banner] (parse-config args)]
-    (when (:help options)
-      (println "clojars-web: a jar repository webapp written in Clojure")
-      (println "             https://github.com/clojars/clojars-web")
-      (println)
-      (println banner)
-      (println "The config file must be a Clojure map: {:port 8080 :repo \"/var/repo\"}")
-      (println "The :db and :mail options can be maps instead of URLs.")
-      (System/exit 0))))
+(defn load-config
+  [profile]
+  (let [cfg (-> (io/resource "default_config.edn")
+                (aero/read-config {:profile profile})
+                (merge-extra-config)
+                (translate))]
+    (reset! config cfg)))

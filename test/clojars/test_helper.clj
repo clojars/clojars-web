@@ -1,7 +1,7 @@
 (ns clojars.test-helper
   (:require [clojars
              [cloudfiles :as cf]
-             [config :refer [config]]
+             [config :as config]
              [errors :as errors]
              [stats :as stats]
              [search :as search]
@@ -21,20 +21,9 @@
 (def local-repo (io/file tmp-dir "clojars" "test" "local-repo"))
 (def local-repo2 (io/file tmp-dir "clojars" "test" "local-repo2"))
 
-(def test-config {:port 0
-                  :db {:dbtype "postgresql"
-                       :dbname "clojars"
-                       :host "localhost"
-                       :port 55433
-                       :user "clojars"
-                       :password "clojars"}
-                  :repo "data/test/repo"
-                  :deletion-backup-dir "data/test/repo-backup"})
-
-(defn using-test-config [f]
-  (let [orig-config @config]
-    (with-redefs [config (delay (merge orig-config test-config))]
-      (f))))
+(def load-config
+  (delay
+    (config/load-config :test)))
 
 (defn delete-file-recursively
   "Delete file f. If it's a directory, recursively delete all its contents."
@@ -47,14 +36,14 @@
       (io/delete-file f))))
 
 (defn default-fixture [f]
-  (using-test-config
-    (let [cleanup (fn [] (run!
-                          #(delete-file-recursively (io/file (@config %)))
-                          [:deletion-backup-dir :repo]))]
-      (fn []
-        (cleanup)
-        (f)
-        (cleanup)))))
+  @load-config
+  (let [cleanup (fn [] (run!
+                        #(delete-file-recursively (io/file (@config/config %)))
+                        [:deletion-backup-dir :repo]))]
+    (fn []
+      (cleanup)
+      (f)
+      (cleanup))))
 
 (defn quiet-reporter []
   (reify errors/ErrorReporter
@@ -73,7 +62,8 @@
     (catch Exception _)))
 
 (defn with-clean-database [f]
-  (binding [*db* {:connection (jdbc/get-connection (:db test-config))}]
+  @load-config
+  (binding [*db* {:connection (jdbc/get-connection (:db @config/config))}]
     (try
       (clear-database *db*)
       (with-out-str
@@ -102,7 +92,7 @@
   ([] (app {}))
   ([{:keys [storage db error-reporter stats search mailer]
      :or {db *db*
-          storage (storage/fs-storage (:repo test-config))
+          storage (storage/fs-storage (:repo @config/config))
           error-reporter (quiet-reporter)
           stats (no-stats)
           search (no-search)
@@ -118,7 +108,8 @@
 
 (defn run-test-app
   ([f]
-   (binding [system (component/start (assoc (system/new-system test-config)
+   @load-config
+   (binding [system (component/start (assoc (system/new-system @config/config)
                                             :cloudfiles (transient-cloudfiles)
                                             :error-reporter (quiet-reporter)
                                             :index-factory #(clucy/memory-index)

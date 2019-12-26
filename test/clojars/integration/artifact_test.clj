@@ -5,10 +5,9 @@
             [clojure.test :refer [deftest is testing use-fixtures]]))
 
 (use-fixtures :each
-              help/using-test-config
-              help/default-fixture
-              help/with-clean-database
-              help/run-test-app)
+  help/default-fixture
+  help/with-clean-database
+  help/run-test-app)
 
 (defn get-artifact [parts & [opts]]
   (-> (str "http://localhost:" help/test-port "/"

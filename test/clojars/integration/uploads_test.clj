@@ -324,7 +324,7 @@
                            (when (.endsWith name ".jar")
                              (reset! timestamped-jar name))))
     (is @timestamped-jar)
-    (is (.exists (io/file (:repo help/test-config) @timestamped-jar)))))
+    (is (.exists (io/file (:repo @config) @timestamped-jar)))))
 
 (deftest deploys-sharing-the-same-session-work
   (-> (session (help/app-from-system))
@@ -377,7 +377,7 @@
                          :username "dantheman"
                          :password "password"}}
     :local-repo help/local-repo)
-  (are [ext] (.exists (io/file (:repo help/test-config) "fake" "test" "0.0.1"
+  (are [ext] (.exists (io/file (:repo @config) "fake" "test" "0.0.1"
                         (format "test-0.0.1%s" ext)))
        ".pom" ".jar" "-test.jar"))
 
@@ -394,7 +394,7 @@
                          :password "password"}}
     :local-repo help/local-repo)
   ;; we can't look for files directly since the version will be timestamped
-  (is (= 3 (->> (file-seq (io/file (:repo help/test-config) "fake" "test" "0.0.3-SNAPSHOT"))
+  (is (= 3 (->> (file-seq (io/file (:repo @config) "fake" "test" "0.0.3-SNAPSHOT"))
              (filter (memfn isFile))
              (filter #(re-find #"(pom|jar|-test\.jar)$" (.getName %)))
              count))))

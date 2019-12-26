@@ -6,16 +6,28 @@
  :cloudfiles-container "NOTSET"
  :cloudfiles-token "NOTSET"
  :cloudfiles-user "NOTSET"
- :db {:classname "org.sqlite.JDBC"
-      :subname "data/db"
-      :subprotocol "sqlite"}
- :deletion-backup-dir "NOTSET"
+ :db {:dbtype "postgresql"
+      :dbname "clojars"
+      :host "localhost"
+      :port #profile {:default 55432
+                      :test 55433
+                      :production 5432}
+      :user #profile {:default "clojars"
+                      :production "NOTSET"}
+      :password #profile {:default "clojars"
+                          :production "NOTSET"}}
+ :deletion-backup-dir #profile {:default "NOTSET"
+                                :test "data/test/repo-backup"}
  :index-path "data/index"
  :mail {:from "noreply@clojars.org"
         :hostname "127.0.0.1"
         :ssl false}
  :nrepl-port 7991
- :port 8080
- :repo "data/dev_repo"
+ :port #profile {:default 8080
+                 :test 0
+                 :production 8001}
+ :repo #profile {:default "data/dev_repo"
+                 :test "data/test/repo"
+                 :production "NOTSET"}
  :sentry-dsn "NOTSET"
  :stats-dir "data/stats"}
