@@ -3,6 +3,14 @@ jobs:
   build:
     docker:
       - image: clojure:lein-2.8.1
+        environment:
+          - DB_PORT: 5432
+          - CLOJARS_ENVIRONMENT: test
+      - image: postgres:12.1
+        environment:
+          - POSTGRES_USER=clojars
+          - POSTGRES_PASSWORD=clojars
+          - POSTGRES_DB=clojars
     working_directory: ~/clojars
     steps:
       - checkout

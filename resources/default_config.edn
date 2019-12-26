@@ -10,7 +10,7 @@
       :dbname "clojars"
       :host "localhost"
       :port #profile {:default 55432
-                      :test 55433
+                      :test #or [#env DB_PORT 55433]
                       :production 5432}
       :user #profile {:default "clojars"
                       :production "NOTSET"}
