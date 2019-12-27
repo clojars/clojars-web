@@ -2,10 +2,7 @@ create table users
        (id serial not null PRIMARY KEY,
         "user" TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        salt TEXT NOT NULL,
         email TEXT NOT NULL,
-        ssh_key TEXT NOT NULL,
-        pgp_key TEXT,
         password_reset_code TEXT,
         password_reset_code_created_at TIMESTAMP,
         created TIMESTAMP NOT NULL);
@@ -17,7 +14,6 @@ create table jars
         version TEXT NOT NULL,
         "user" TEXT NOT NULL,
         created TIMESTAMP NOT NULL,
-        promoted_at TIMESTAMP,
         description TEXT,
         homepage TEXT,
         scm TEXT,

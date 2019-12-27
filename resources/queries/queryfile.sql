@@ -249,17 +249,17 @@ FROM (
 WHERE group_name || '/' || jar_name < :s;
 
 --name: insert-user!
-INSERT INTO users (email, "user", password, pgp_key, created, ssh_key, salt)
-VALUES (:email, :username, :password, '', :created, '', '');
+INSERT INTO users (email, "user", password, created)
+VALUES (:email, :username, :password,:created);
 
 --name: update-user!
 UPDATE users
-SET email = :email, "user" = :username, pgp_key = '', password_reset_code = NULL, password_reset_code_created_at = NULL
+SET email = :email, "user" = :username, password_reset_code = NULL, password_reset_code_created_at = NULL
 WHERE "user" = :account;
 
 --name: update-user-with-password!
 UPDATE users
-SET email = :email, "user" = :username, pgp_key = '', password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
+SET email = :email, "user" = :username, password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
 WHERE "user" = :account;
 
 --name: reset-user-password!
