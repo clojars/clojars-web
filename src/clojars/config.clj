@@ -1,14 +1,16 @@
 (ns clojars.config
   (:require [aero.core :as aero]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [meta-merge.core :refer [meta-merge]]))
 
 ;; we attempt to read a file defined on clojars.config.file property at load time
 ;; this is handy for interactive development and unit tests
 (defn merge-extra-config
   [default-config]
-  (-> default-config
-      (merge (when-let [extra-config (System/getProperty "clojars.config.file")]
-               (aero/read-config extra-config)))))
+  (meta-merge
+    default-config
+    (when-let [extra-config (System/getProperty "clojars.config.file")]
+      (aero/read-config extra-config))))
 
 (defn jdbc-url [db-config]
   (if (string? db-config)
@@ -23,7 +25,7 @@
   (let [{:keys [port bind db]} config]
     (-> config
         (assoc :http {:port port :host bind})
-        (assoc-in [:db :uri]  (jdbc-url db)))))
+        (assoc-in [:db :uri] (jdbc-url db)))))
 
 (defn- load-config
   [profile]
