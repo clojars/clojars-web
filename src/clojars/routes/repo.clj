@@ -1,5 +1,6 @@
 (ns clojars.routes.repo
-  (:require [clojars
+  (:require [cemerick.pomegranate.aether :as aether]
+            [clojars
              [auth :refer [with-account]]
              [db :as db]
              [errors :refer [report-error]]
@@ -9,16 +10,15 @@
              [storage :as storage]]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [cemerick.pomegranate.aether :as aether]
             [compojure
              [core :as compojure :refer [PUT defroutes]]
              [route :refer [not-found]]]
             [ring.util
              [codec :as codec]
              [response :as response]])
-  (:import java.util.UUID
-           org.apache.commons.io.FileUtils
-           (java.io FileFilter IOException FileNotFoundException File)))
+  (:import (java.io FileFilter IOException FileNotFoundException File)
+           (java.util Date UUID)
+           org.apache.commons.io.FileUtils))
 
 (defn save-to-file [dest input]
   (-> dest
@@ -277,7 +277,7 @@
 
       (db/add-jar db account pom)
       (search/index! search (assoc pom
-                              :at (.lastModified pom-file)))
+                                   :at (Date. (.lastModified pom-file))))
       (spit (io/file dir ".finalized") ""))
     (throw-invalid "no pom file was uploaded")))
 
