@@ -1,7 +1,6 @@
 (defproject clojars-web "78-SNAPSHOT"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/tools.cli "0.2.1"]
                  [org.clojure/core.memoize "0.5.8"]
                  [raven-clj "1.4.3"]
                  [org.apache.maven/maven-model "3.0.4"
@@ -19,7 +18,6 @@
                                cheshire
                                com.fasterxml.jackson.core/jackson-core
                                com.fasterxml.jackson.dataformat/jackson-dataformat-smile]]
-                 [org.xerial/sqlite-jdbc "3.8.11.2"]
                  [org.apache.jclouds/jclouds-all "1.9.2"]
                  [org.clojure/tools.logging "0.3.1"] ;; required by jclouds
                  [org.apache.commons/commons-email "1.2"]
@@ -43,6 +41,7 @@
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.11"]
                  [yesql "0.5.1"]
+                 [org.postgresql/postgresql "42.2.9"]
                  [duct/hikaricp-component "0.1.0"
                   :exclusions [com.stuartsierra/component
                                org.slf4j/slf4j-api]]
@@ -55,7 +54,7 @@
                  [digest "1.4.4"]
                  [clj-http "3.3.0"
                   :exclusions [commons-io]]
-                 [aero "1.0.1"]]
+                 [aero "1.1.3"]]
   :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"
@@ -67,10 +66,10 @@
                   ["vcs" "commit"]
                   ["vcs" "push"]]
   :aliases {"migrate" ["run" "-m" "clojars.tools.migrate-db"]
-            "test" ["run" "-m" "circleci.test/dir" :project/test-paths]
-            "tests" ["run" "-m" "circleci.test"]
-            "retest" ["run" "-m" "circleci.test.retest"]}
-  :pedantic? :abort
+            "ci-test" ["run" "-m" "circleci.test/dir" :project/test-paths]
+            "ci-tests" ["run" "-m" "circleci.test"]
+            "ci-retest" ["run" "-m" "circleci.test.retest"]}
+  :pedantic? :warn
   :profiles
   {:dev  [:project/dev  :profiles/dev]
    :repl {:pedantic? false}

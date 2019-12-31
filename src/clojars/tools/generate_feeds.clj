@@ -1,13 +1,13 @@
 (ns clojars.tools.generate-feeds
-  (:require [clojure.java.io :as io]
-            [clojars.maven :as maven]
+  (:require [clojars.cloudfiles :as cf]
             [clojars.config :refer [config]]
-            [clojure.set :as set]
             [clojars.db :as db]
-            [clojars.cloudfiles :as cf]
-            [clojars.file-utils :as fu])
-  (:import java.util.zip.GZIPOutputStream
-           (java.io FileOutputStream PrintWriter))
+            [clojars.file-utils :as fu]
+            [clojars.maven :as maven]
+            [clojure.java.io :as io]
+            [clojure.set :as set])
+  (:import (java.io FileOutputStream PrintWriter)
+           java.util.zip.GZIPOutputStream)
   (:gen-class))
 
 (defn full-feed [db]
@@ -99,5 +99,5 @@
   (if (not= 3 (count args))
     (println "args: cf-user cf-key dest-dir")
     (let [[cf-user cf-key dest-dir] args]
-      (generate-feeds dest-dir (:db @config) (cf/connect cf-user cf-key "repo")))))
+      (generate-feeds dest-dir (:db (config)) (cf/connect cf-user cf-key "repo")))))
 

@@ -1,8 +1,6 @@
 (ns clojars.tools.setup-dev
-  (:require [clojars.dev.setup :refer [setup-dev-environment]]
-            [clojars.config :refer [configure]])
+  (:require [clojars.dev.setup :refer [setup-dev-environment]])
   (:gen-class))
 
 (defn -main [& _]
-  (configure nil)
   (setup-dev-environment))

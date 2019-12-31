@@ -47,6 +47,13 @@ To begin developing, start with a REPL.
 lein repl
 ```
 
+You'll need postgres running as well. That's managed via
+docker-compose:
+
+```sh
+docker-compose up
+```
+
 Run `migrate` to initialize the database to the latest migration.
 
 ```clojure
@@ -92,7 +99,7 @@ maven repository (your local `~/.m2/repository/` works well), and
 setup a search index:
 
 ```sh
-cp -r ~/.m2/repository data/dev_repo
+cp -r ~/.m2/repository/* data/dev_repo
 lein run -m clojars.tools.setup-dev
 ```
 If you want to use the actual repo from clojars.org, you can grab it

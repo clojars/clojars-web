@@ -2,11 +2,11 @@
   "Tools to setup a dev db."
   (:require [clojars.config :refer [config]]
             [clojars.db :as db]
+            [clojars.db.sql :as sql]
             [clojars.file-utils :as fu]
             [clojars.search :as search]
             [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clojars.db.sql :as sql])
+            [clojure.string :as str])
   (:import [org.apache.maven.artifact.repository.metadata Metadata Versioning]
            [org.apache.maven.artifact.repository.metadata.io.xpp3
             MetadataXpp3Reader
@@ -101,7 +101,7 @@
     (println "Wrote download stats to" (.getAbsolutePath stats-file))))
 
 (defn setup-dev-environment []
-  (let [{:keys [repo stats-dir db]} @config]
+  (let [{:keys [repo stats-dir db]} (config)]
     (println "NOTE: this will clear the contents of" db
       "and import all of the projects in" repo "into the db.\n")
     (print "Are you sure you want to continue? [y/N] ")
@@ -116,5 +116,4 @@
       (println "==> Importing" repo "into the db...")
       (import-repo db repo stats-dir test-users))
     (println "==> Indexing...")
-    (search/generate-index db))
-  (.shutdown (db/write-executor)))
+    (search/generate-index db)))

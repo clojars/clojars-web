@@ -3,6 +3,14 @@ jobs:
   build:
     docker:
       - image: clojure:lein-2.8.1
+        environment:
+          - DB_PORT: 5432
+          - CLOJARS_ENVIRONMENT: test
+      - image: postgres:12.1
+        environment:
+          - POSTGRES_USER=clojars
+          - POSTGRES_PASSWORD=clojars
+          - POSTGRES_DB=clojars
     working_directory: ~/clojars
     steps:
       - checkout
@@ -15,7 +23,7 @@ jobs:
             - $HOME/.m2
             - $HOME/.lein
           key: clojars-{{ checksum "project.clj" }}
-      - run: lein do run -m user/migrate, test, uberjar
+      - run: lein do run -m user/migrate, ci-test, uberjar
       - store_test_results:
           path: target/test-results
       - run: mv target/uberjar/clojars-web-*-standalone.jar clojars-uberjar.jar
