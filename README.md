@@ -152,7 +152,7 @@ Configuration
 The default configuration is loaded from
 `resources/default_config.edn`. To override values from the default
 config, place them in map in an edn file, and specify the path to that
-file via the `clojars.config.file` system property.
+file via the `CLOJARS_EXTRA_CONFIG` environment variable.
 
 When running automated tests at the repl, or with `lein test`, a test environment
 is used to provide isolation. It can be found in `test/clojars/test/test_helper.clj`.

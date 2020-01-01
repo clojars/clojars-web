@@ -6,8 +6,8 @@
   (let [base {:db {:username "a" :password "b"}}
         extra {:db {:password "c" :ham "biscuit"}}]
     (spit "/tmp/extra.edn" (pr-str extra))
-    (System/setProperty "clojars.config.file" "/tmp/extra.edn")
-    (let [merged (config/merge-extra-config base)]
-      (is (= {:db {:username "a"
-                   :password "c"
-                   :ham "biscuit"}} merged)))))
+    (with-redefs [config/get-extra-config-path (constantly "/tmp/extra.edn")]
+      (let [merged (config/merge-extra-config base)]
+        (is (= {:db {:username "a"
+                     :password "c"
+                     :ham "biscuit"}} merged))))))

@@ -3,13 +3,17 @@
             [clojure.java.io :as io]
             [meta-merge.core :refer [meta-merge]]))
 
-;; we attempt to read a file defined on clojars.config.file property at load time
-;; this is handy for interactive development and unit tests
+(defn get-extra-config-path
+  []
+  (System/getenv "CLOJARS_EXTRA_CONFIG"))
+
+;; We attempt to read a file defined by the CLOJARS_EXTRA_CONFIG env
+;; var at load time. This is used to load production configuration.
 (defn merge-extra-config
   [default-config]
   (meta-merge
     default-config
-    (when-let [extra-config (System/getProperty "clojars.config.file")]
+    (when-let [extra-config (get-extra-config-path)]
       (aero/read-config extra-config))))
 
 (defn jdbc-url [db-config]
