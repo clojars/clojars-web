@@ -1,10 +1,24 @@
 (ns clojars.web.dashboard
-  (:require [clojars.web.common :refer [html-doc html-doc-with-large-header jar-link group-link tag]]
-            [clojars.web.structured-data :as structured-data]
-            [clojars.db :refer [jars-by-username find-groupnames recent-jars]]
+  (:require [clojars.db :as db]
             [clojars.stats :as stats]
-            [hiccup.element :refer [unordered-list link-to]]
-            [clojars.web.helpers :as helpers]))
+            [clojars.web.common :refer [html-doc html-doc-with-large-header jar-link group-link tag]]
+            [clojars.web.helpers :as helpers]
+            [clojars.web.structured-data :as structured-data]
+            [hiccup.element :refer [unordered-list link-to]]))
+
+(def recent-jars-cache
+  (atom nil))
+
+(defn recent-jars
+  "Caches recent jars in memory under the max jar id, and uses that
+  cached value until a new jar is added."
+  [db]
+  (let [max-id (db/max-jars-id db)]
+    (if-let [jars (get @recent-jars-cache max-id)]
+      jars
+      (let [jars (db/recent-jars db)]
+        (reset! recent-jars-cache {max-id jars})
+        jars))))
 
 (defn recent-jar [stats jar-map]
   (let [description (:description jar-map)
@@ -21,7 +35,6 @@
                                                                        (:group_name jar-map)
                                                                        (:jar_name jar-map))
                                                  (stats/format-stats))]]]))
-
 
 (defn index-page [db stats account]
   (html-doc-with-large-header nil {:account account
@@ -66,7 +79,7 @@
      [:div.col-xs-12.col-sm-4
       [:div.dash-palette
        [:h2 "Your Projects"]
-       (let [jars (jars-by-username db account)]
+       (let [jars (db/jars-by-username db account)]
          (if (seq jars)
            (unordered-list (map jar-link jars))
            [:p "You don't have any projects, would you like to "
@@ -75,7 +88,7 @@
      [:div.col-xs-12.col-sm-4
       [:div.dash-palette
        [:h2 "Your Groups"]
-       (unordered-list (map group-link (find-groupnames db account)))]]
+       (unordered-list (map group-link (db/find-groupnames db account)))]]
      [:div.col-xs-12.col-sm-4
       [:div.dash-palette
        [:h2 "FAQ"]

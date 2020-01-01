@@ -103,6 +103,12 @@
                        :result-set-fn first
                        :row-fn :count}))
 
+(defn max-jars-id
+  [db]
+  (sql/max-jars-id {} {:connection db
+                       :row-fn :max_id
+                       :result-set-fn first}))
+
 (defn recent-jars [db]
   (sql/recent-jars {} {:connection db}))
 

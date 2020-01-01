@@ -216,6 +216,9 @@ WHERE (
 ORDER BY created DESC
 LIMIT 1;
 
+--name: max-jars-id
+SELECT max(id) AS max_id FROM jars;
+
 --name: find-dependencies
 SELECT *
 FROM deps
