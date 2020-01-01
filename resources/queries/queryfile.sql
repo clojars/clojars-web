@@ -98,6 +98,7 @@ FROM jars j
 JOIN (
   SELECT group_name, jar_name, MAX(created) AS created
   FROM jars
+  WHERE "user" = :username
   GROUP BY group_name, jar_name
 ) l
 ON (
@@ -107,7 +108,6 @@ ON (
    AND
    j.created = l.created
 )
-WHERE j."user" = :username
 ORDER BY j.group_name ASC, j.jar_name ASC;
 
 --name: jars-by-groupname
@@ -116,6 +116,7 @@ FROM jars j
 JOIN (
   SELECT  jar_name, MAX(created) AS created
   FROM jars
+  WHERE group_name = :groupname
   GROUP BY group_name, jar_name
 ) l
 ON (
@@ -123,7 +124,6 @@ ON (
    AND
    j.created = l.created
 )
-WHERE j.group_name = :groupname
 ORDER BY j.group_name ASC, j.jar_name ASC;
 
 --name: recent-versions
@@ -165,6 +165,8 @@ JOIN (
   SELECT group_name, jar_name, MAX(created) AS created
   FROM jars
   GROUP BY group_name, jar_name
+  ORDER BY created DESC
+  LIMIT 6
 ) l
 ON (
   j.group_name = l.group_name
