@@ -37,15 +37,14 @@
              [multipart-params :refer [wrap-multipart-params]]
              [not-modified :refer [wrap-not-modified]]
              [params :refer [wrap-params]]
-             [resource :refer [wrap-resource]]
-             [session :refer [wrap-session]]]))
+             [resource :refer [wrap-resource]]]))
 
 (defn try-parse-page
   "Will throw a targeted error if maybe-page doesn't parse as an integer."
   [maybe-page]
   (try
     (Integer/parseInt maybe-page)
-    (catch NumberFormatException nfe
+    (catch NumberFormatException _nfe
       (throw (ex-info
                 "page must be an integer"
                 {:report? false
@@ -109,7 +108,7 @@
 (defn clojars-app [storage db reporter stats search mailer]
   (routes
     (-> (context "/repo" _
-          (-> (repo/routes storage db reporter search)
+          (-> (repo/routes storage db search)
             (friend/authenticate
               {:credential-fn (credential-fn db)
                :workflows [(workflows/http-basic :realm "clojars")]

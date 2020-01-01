@@ -1,6 +1,5 @@
 (ns clojars.routes.repo
-  (:require [cemerick.pomegranate.aether :as aether]
-            [clojars
+  (:require [clojars
              [auth :refer [with-account]]
              [db :as db]
              [errors :refer [report-error]]
@@ -11,12 +10,12 @@
             [clojure.java.io :as io]
             [clojure.string :as str]
             [compojure
-             [core :as compojure :refer [PUT defroutes]]
+             [core :as compojure :refer [PUT]]
              [route :refer [not-found]]]
             [ring.util
              [codec :as codec]
              [response :as response]])
-  (:import (java.io FileFilter IOException FileNotFoundException File)
+  (:import (java.io IOException File)
            (java.util Date UUID)
            org.apache.commons.io.FileUtils))
 
@@ -60,10 +59,10 @@
                        (let [dir (io/file dir)
                              metadata (read-metadata dir)
                              if= #(if (and %1 %2) (= %1 %2) true)]
-                         (if (and dir (.exists dir)
-                               (= [group artifact] ((juxt :group :name) metadata))
-                               (if= (:version metadata) version)
-                               (if= (:timestamp-version metadata) timestamp-version))
+                         (when (and dir (.exists dir)
+                                    (= [group artifact] ((juxt :group :name) metadata))
+                                    (if= (:version metadata) version)
+                                    (if= (:timestamp-version metadata) timestamp-version))
                            dir)))
                  upload-dirs)]
     dir
@@ -240,7 +239,7 @@
      ~@body
      (prn (assoc ~meta :time (- (System/currentTimeMillis) start#)))))
 
-(defn finalize-deploy [storage db reporter search account ^File dir]
+(defn finalize-deploy [storage db search account ^File dir]
   (if-let [pom-file (find-pom dir)]
     (let [pom (try
                 (maven/pom-to-map pom-file)
@@ -284,13 +283,13 @@
 (defn- deploy-finalized? [dir]
   (.exists (io/file dir ".finalized")))
 
-(defn- deploy-post-finalized-file [storage reporter tmp-repo file]
+(defn- deploy-post-finalized-file [storage tmp-repo file]
   (storage/write-artifact storage
     (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
 
-(defn- handle-versioned-upload [storage db reporter body session group artifact version filename]
+(defn- handle-versioned-upload [storage db body session group artifact version filename]
   (let [groupname (fu/path->group group)
-        timestamp-version (if (maven/snapshot-version? version) (maven/snapshot-timestamp-version filename))]
+        timestamp-version (when (maven/snapshot-version? version) (maven/snapshot-timestamp-version filename))]
     (upload-request
       db
       groupname
@@ -313,10 +312,10 @@
             ;; we do it here just in case. Will throw if there are any
             ;; issues.
             (check-group db account groupname)
-            (deploy-post-finalized-file storage reporter upload-dir file)))))))
+            (deploy-post-finalized-file storage upload-dir file)))))))
 
 ;; web handlers
-(defn routes [storage db reporter search]
+(defn routes [storage db search]
   (compojure/routes
    (PUT ["/:group/:artifact/:file"
          :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
@@ -329,7 +328,7 @@
                 group-parts (str/split group #"/")
                 group (str/join "/" (butlast group-parts))
                 artifact (last group-parts)]
-            (handle-versioned-upload storage db reporter body session group artifact version file))
+            (handle-versioned-upload storage db body session group artifact version file))
           (if (re-find #"maven-metadata\.xml$" file)
             ;; ignore metadata sums, since we'll recreate those when
             ;; the deploy is finalizied
@@ -343,7 +342,7 @@
                 session
                 (fn [account upload-dir]
                   (let [file (io/file upload-dir group artifact file)
-                        existing-sum (if (.exists file) (fu/checksum file :sha1))]
+                        existing-sum (when (.exists file) (fu/checksum file :sha1))]
                     (try-save-to-file file body)
                     ;; only finalize if we haven't already or the
                     ;; maven-metadata.xml file doesn't match the one
@@ -352,7 +351,7 @@
                     (if-not (or (deploy-finalized? upload-dir)
                               (= (fu/checksum file :sha1) existing-sum))
                       (try
-                        (finalize-deploy storage db reporter search
+                        (finalize-deploy storage db search
                           account upload-dir)
                         (catch Exception e
                           (rethrow-forbidden e
@@ -366,7 +365,7 @@
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
          :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
         {body :body session :session {:keys [group artifact version filename]} :params}
-        (handle-versioned-upload storage db reporter body session group artifact version filename))
+        (handle-versioned-upload storage db body session group artifact version filename))
    (PUT "*" _ {:status 400 :headers {}})
    (not-found "Page not found")))
 
