@@ -1,9 +1,9 @@
 (ns clojars.stats
-  (:require [clojure.core.memoize :as memo]
-            [com.stuartsierra.component :as component])
+  (:require [clojars.s3 :as s3]
+            [clojure.core.memoize :as memo]
+            [clojure.edn :as edn]
+            [clojure.java.io :as io])
   (:import java.io.PushbackReader
-           java.nio.file.Files
-           java.nio.file.LinkOption
            (java.text DecimalFormat)))
 
 (defprotocol Stats
@@ -12,56 +12,36 @@
     [t group-id artifact-id version])
   (total-downloads [t]))
 
-(defrecord MapStats [s]
+(defn- download-all-stats
+  "Pulls the all.edn stats file from s3 and returns them as a map."
+  [s3 bucket-name]
+  (with-open [rdr (-> (s3/get-object-stream s3 bucket-name "all.edn")
+                      (io/reader)
+                      (PushbackReader.))]
+    (edn/read rdr)))
+
+(def all (memo/ttl download-all-stats :ttl/threshold (* 60 60 1000))) ;; 1 hour
+
+(defrecord ArtifactStats [s3 bucket-name]
   Stats
   (download-count [_ group-id artifact-id]
-     (->> (s [group-id artifact-id])
-          vals
-          (apply +)))
+    (->> (get (all s3 bucket-name) [group-id artifact-id])
+         (vals)
+          (reduce +)))
   (download-count [_ group-id artifact-id version]
-    (get-in s [[group-id artifact-id] version] 0))
+    (get-in (all s3 bucket-name) [[group-id artifact-id] version] 0))
   (total-downloads [_]
-    (apply + (mapcat vals (vals s)))))
+    (->> (all s3 bucket-name)
+         (vals)
+         (mapcat vals)
+         (reduce +))))
 
-(defn all* [path]
-  (->MapStats (if (Files/exists path (make-array LinkOption 0))
-                (read (PushbackReader. (Files/newBufferedReader path)))
-                {})))
-
-(def all (memo/ttl all* :ttl/threshold (* 60 60 1000))) ;; 1 hour
-
-(defrecord FileStats [fs-factory path-factory fs path]
-  Stats
-  (download-count [_ group-id artifact-id]
-    (download-count (all path) group-id artifact-id))
-  (download-count [_ group-id artifact-id version-id]
-    (download-count (all path) group-id artifact-id version-id))
-  (total-downloads [_]
-    (total-downloads (all path)))
-  component/Lifecycle
-  (start [t]
-    (if fs
-      t
-      (let [fs (fs-factory)]
-        (assoc t
-               :fs fs
-               :path (path-factory fs)))))
-  (stop [t]
-    (when fs
-      (try
-        (.close fs)
-        (catch UnsupportedOperationException _
-          ;; java says we should close these, but then defines
-          ;; closing the default one to be an error :/
-          )))
-    (assoc t
-           :fs nil
-           :path nil)))
-
-(defn file-stats [stats-dir]
-  (map->FileStats {:path-factory #(.getPath %
-                                            (str stats-dir "/all.edn")
-                                            (make-array String 0))}))
+(defn artifact-stats
+  "Returns a stats implementation for artifact stats.
+  Does not have an an s3 client assoc'ed, that should be done via
+  component/using or system/using."
+  [bucket-name]
+  (map->ArtifactStats {:bucket-name bucket-name}))
 
 (defn format-stats [num]
   (.format (DecimalFormat. "#,##0") num))

@@ -1,7 +1,7 @@
 (defproject clojars-web "82-SNAPSHOT"
   :min-lein-version "2.0.0"
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/core.memoize "0.5.8"]
+  :dependencies [[org.clojure/clojure "1.10.1"]
+                 [org.clojure/core.memoize "0.8.2"]
                  [raven-clj "1.4.3"]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
@@ -13,13 +13,13 @@
                    org.codehaus.plexus/plexus-utils]]
                  ;; pomegranate transitively depends on two versions, so we explicitly bring in one
                  [org.codehaus.plexus/plexus-utils "3.0"]
-                 [ring-middleware-format "0.7.0"
+                 [ring-middleware-format "0.7.4"
                   :exclusions [ring/ring-core
                                cheshire
                                com.fasterxml.jackson.core/jackson-core
                                com.fasterxml.jackson.dataformat/jackson-dataformat-smile]]
                  [org.apache.jclouds/jclouds-all "1.9.2"]
-                 [org.clojure/tools.logging "0.3.1"] ;; required by jclouds
+                 [org.clojure/tools.logging "0.5.0"] ;; required by jclouds
                  [org.apache.commons/commons-email "1.2"]
                  [net.cgrand/regex "1.0.1"
                   :exclusions [org.clojure/clojure]]
@@ -49,12 +49,22 @@
                  [org.slf4j/slf4j-api "1.7.7"]
                  [duct "0.8.0"
                   :exclusions [org.clojure/tools.reader]]
+                 [ring/ring-core "1.8.0"]
+                 [ring/ring-jetty-adapter "1.8.0"]
                  [ring-jetty-component "0.3.1"
-                  :exclusions [org.clojure/tools.reader]]
+                  :exclusions [org.clojure/tools.reader
+                               ring/ring-core]]
                  [digest "1.4.4"]
-                 [clj-http "3.3.0"
-                  :exclusions [commons-io]]
-                 [aero "1.1.3"]]
+                 [clj-http "3.10.0"
+                  :exclusions [commons-codec
+                               commons-io]]
+                 [aero "1.1.3"]
+
+                 ;; AWS
+                 [com.cognitect.aws/api "0.8.408"
+                  :exclusions [org.eclipse.jetty/jetty-util]]
+                 [com.cognitect.aws/endpoints "1.1.11.705"]
+                 [com.cognitect.aws/s3 "784.2.593.0"]]
   :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"
@@ -83,10 +93,12 @@
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [eftest "0.1.0"]
                                   [circleci/circleci.test "0.3.1"]
+                                  [clj-time "0.11.0"]
                                   [kerodon "0.7.0"
-                                   :exclusions [org.apache.httpcomponents/httpcore
+                                   :exclusions [clj-time
+                                                org.apache.httpcomponents/httpcore
+                                                org.flatland/ordered
                                                 ring/ring-codec]]
-                                  [com.google.jimfs/jimfs "1.0"]
                                   [net.polyc0l0r/bote "0.1.0"
                                    :exclusions [commons-codec
                                                 javax.mail/mail

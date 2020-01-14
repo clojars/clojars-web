@@ -69,8 +69,14 @@
         (f)
         (finally (.close (:connection *db*)))))))
 
+(defrecord NoStats []
+  stats/Stats
+  (download-count [t group-id artifact-id] 0)
+  (download-count [t group-id artifact-id version] 0)
+  (total-downloads [t] 0))
+
 (defn no-stats []
-  (stats/->MapStats {}))
+  (->NoStats))
 
 (defn no-search []
   (reify search/Search))
