@@ -58,6 +58,7 @@
     "search"
     "settings"
     "snapshots"
+    "stats"
     "status"
     "terms"
     "test"
