@@ -23,7 +23,7 @@ jobs:
             - $HOME/.m2
             - $HOME/.lein
           key: clojars-{{ checksum "project.clj" }}
-      - run: lein do run -m user/migrate, ci-test, uberjar
+      - run: lein do run -m user/migrate, test, uberjar
       - store_test_results:
           path: target/test-results
       - run: mv target/uberjar/clojars-web-*-standalone.jar clojars-uberjar.jar
