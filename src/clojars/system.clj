@@ -3,9 +3,10 @@
              [email :refer [simple-mailer]]
              [ring-servlet-patch :as patch]
              [search :refer [lucene-component]]
-             [stats :refer [file-stats]]
+             [stats :refer [artifact-stats]]
              [storage :as storage]
              [web :as web]]
+            [clojars.s3 :as s3]
             [clucy.core :as clucy]
             [com.stuartsierra.component :as component]
             [duct.component
@@ -13,8 +14,7 @@
              [handler :refer [handler-component]]
              [hikaricp :refer [hikaricp]]]
             [meta-merge.core :refer [meta-merge]]
-            [ring.component.jetty :refer [jetty-server]])
-  (:import java.nio.file.FileSystems))
+            [ring.component.jetty :refer [jetty-server]]))
 
 (def base-env
   {:app {:middleware []}
@@ -47,14 +47,17 @@
                           :cdn-token cdn-token
                           :cdn-url cdn-url}))
 
+(defn s3-client [{:keys [access-key-id secret-access-key region]}]
+  (s3/s3-client access-key-id secret-access-key region))
+
 (defn new-system [config]
   (let [config (meta-merge base-env config)]
     (-> (component/system-map
          :app           (handler-component (:app config))
          :http          (jetty-server (:http config))
          :db            (hikaricp (:db config))
-         :fs-factory    #(FileSystems/getDefault)
-         :stats         (file-stats (:stats-dir config))
+         :s3            (s3-client (:s3 config))
+         :stats         (artifact-stats (get-in config [:s3 :stats-bucket]))
          :index-factory #(clucy/disk-index (:index-path config))
          :search        (lucene-component)
          :mailer        (simple-mailer (:mail config))
@@ -63,7 +66,7 @@
         (component/system-using
          {:http [:app]
           :app  [:clojars-app]
-          :stats [:fs-factory]
+          :stats [:s3]
           :search [:index-factory :stats]
           :storage [:cloudfiles]
           :clojars-app [:storage :db :error-reporter :stats :search :mailer]}))))

@@ -28,5 +28,9 @@
  :repo #profile {:default "data/dev_repo"
                  :test "data/test/repo"
                  :production "NOTSET"}
+ :s3 {:access-key-id "NOTSET"
+      :secret-access-key "NOTSET"
+      :region "us-east-2"
+      :stats-bucket "NOTSET"}
  :sentry-dsn "NOTSET"
  :stats-dir "data/stats"}
