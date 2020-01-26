@@ -34,6 +34,7 @@
                                ring/ring-core
                                slingshot]]
                  [clj-stacktrace "0.2.8"]
+                 [clj-time "0.11.0"]
                  [ring/ring-anti-forgery "1.0.1"
                   :exclusions [commons-codec]]
                  [valip "0.2.0"
@@ -93,7 +94,6 @@
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [eftest "0.1.0"]
                                   [circleci/circleci.test "0.3.1"]
-                                  [clj-time "0.11.0"]
                                   [kerodon "0.7.0"
                                    :exclusions [clj-time
                                                 org.apache.httpcomponents/httpcore
