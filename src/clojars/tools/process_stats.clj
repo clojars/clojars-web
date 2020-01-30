@@ -1,12 +1,11 @@
 (ns clojars.tools.process-stats
   "generate usage statistics from web log"
-  (:require [clojars.file-utils :as fu]
+  (:require [clj-time.format :as timef]
+            [clojars.file-utils :as fu]
             [clojure.java.io :as io]
-            [clojure.string :as str]
-            [net.cgrand.regex :as re]
-            [clj-time.format :as timef])
-  (:import java.util.regex.Pattern
-           java.io.BufferedReader)
+            [net.cgrand.regex :as re])
+  (:import java.io.BufferedReader
+           java.util.regex.Pattern)
   (:gen-class))
 
 (def time-clf (timef/formatter "dd/MMM/YYYY:HH:mm:ss Z"))
@@ -21,33 +20,35 @@
   re/RegexFragment
   (static? [_ _] true))
 
-(def re-clf ; common log format (apache, nginx etc)
-  (let [field #"\S+"
-        nonbracket #"[^\]]+"
-        nonquote #"[^\" ]+"
-        reqline (list [nonquote :as :method] \space
-                      [nonquote :as :path] \space
-                      [nonquote :as :protocol])]
-    (re/regex [field :as :host] \space
-              [field :as :ident] \space
-              [field :as :authuser] \space
-              \[ [nonbracket :as :time] \] #"\s+"
-              \" reqline \" \space
-              [field :as :status] \space
-              [field :as :size]
-              #".*")))
-
-(def re-cdn ; log format from our fastly cdn
+(def re-legacy-cdn
+  "Log format used when we logged from fastly to rackspace cloudfiles"
   (let [field #"\S+"
         nonquote #"[^\" ]+"
         reqline (list [nonquote :as :method] \space
                       [nonquote :as :path])]
     (re/regex \< #"\d+" \>
+              [field :as :time] \space
+              [field :as :cache-host] \space
+              [field :as :endpoint] \: \space
+              [field :as :host] \space
+              \" [field :as :ident] \" \space
+              \" reqline \" \space
+              [field :as :status] \space
+              [field :as :size]
+              #".*")))
+
+(def re-cdn
+  "Log format used when logging from fastly to s3"
+  (let [field #"\S+"
+        nonquote #"[^\" ]+"
+        reqline (list [nonquote :as :method] \space
+                      [nonquote :as :path] \space
+                      [nonquote :as :http-version])]
+    (re/regex \< #"\d+" \>
       [field :as :time] \space
       [field :as :cache-host] \space
       [field :as :endpoint] \: \space
       [field :as :host] \space
-      \" [field :as :ident] \" \space
       \" reqline \" \space
       [field :as :status] \space
       [field :as :size]
@@ -63,8 +64,8 @@
               segment \.
               [#"\w+" :as :ext])))
 
-(defn is-cdn? [line]
-  (.startsWith line "<"))
+(defn is-legacy? [line]
+  (.contains line " \"-\" "))
 
 (defn parse-path [s]
   (when s
@@ -77,18 +78,18 @@
 (defn parse-long [s]
   (when-not (#{nil "" "-"} s)
     (try (Long/parseLong s)
-         (catch NumberFormatException e))))
+         (catch NumberFormatException _))))
 
 (defn parse-line [line]
-  (let [cdn? (is-cdn? line)
-        m (re/exec (if cdn? re-cdn re-clf) line)]
+  (let [legacy? (is-legacy? line)
+        m (re/exec (if legacy? re-legacy-cdn re-cdn) line)]
     (merge
      (parse-path (:path m))
      {:status (parse-long (:status m))
       :method (:method m)
       :size (parse-long (:size m))
-      :time (when (:time m) (try (timef/parse (if cdn? time-cdn time-clf) (:time m))
-                                 (catch IllegalArgumentException e)))})))
+      :time (when (:time m) (try (timef/parse time-cdn (:time m))
+                                 (catch IllegalArgumentException _)))})))
 
 (defn valid-download? [m]
   (and m
