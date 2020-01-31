@@ -1,16 +1,16 @@
 (ns clojars.web.common
-  (:require [hiccup.core :refer [html]]
-            [hiccup.page :refer [include-css include-js]]
-            [hiccup.element :refer [link-to unordered-list image]]
+  (:require [clojars.maven :as maven]
             [clojars.web.helpers :as helpers]
             [clojars.web.safe-hiccup :refer [html5 raw form-to]]
             [clojars.web.structured-data :as structured-data]
-            [clojure.string :refer [join]]
+            [clojure.edn :as edn]
             [clojure.java.io :as io]
+            [clojure.string :refer [join]]
             [clojure.string :as str]
-            [ring.util.codec :refer [url-encode]]
-            [clojars.maven :as maven]
-            [clojure.edn :as edn]))
+            [hiccup.core :refer [html]]
+            [hiccup.element :refer [link-to unordered-list image]]
+            [hiccup.page :refer [include-css include-js]]
+            [ring.util.codec :refer [url-encode]]))
 
 (defn when-ie [& contents]
   (str
@@ -41,23 +41,23 @@
        "with in-kind sponsorship from:"]
       [:div.sponsors-group
        [:div.sponsor
+        (link-to "https://aws.amazon.com/blogs/opensource/aws-promotional-credits-open-source-projects/"
+                 (image "/images/aws-logo.png" "AWS Open Source"))]
+       [:div.sponsor
+        (link-to "https://www.deps.co"
+                 (image "/images/deps-logo.png" "Deps"))]
+       [:div.sponsor
         (link-to "https://dnsimple.link/resolving-clojars"
                  [:span "resolving with" [:br]]
                  [:span
-                  (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]
+                  (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]
+      [:div.sponsors-group
        [:div.sponsor
         (link-to "http://fastly.com/"
                  (image "/images/fastly-logo.png" "Fastly"))]
        [:div.sponsor
         (link-to "https://pingometer.com/"
-                 (image "/images/pingometer-logo.svg" "Pingometer"))]]
-      [:div.sponsors-group
-       [:div.sponsor
-        (link-to "https://www.deps.co"
-                 (image "/images/deps-logo.png" "Deps"))]
-       [:div.sponsor
-        (link-to "https://www.rackspace.com"
-                 (image "/images/rackspace-logo.svg" "Rackspace"))]
+                 (image "/images/pingometer-logo.svg" "Pingometer"))]
        [:div.sponsor
         (link-to "http://sentry.io/"
                  (image "/images/sentry-logo.png" "Sentry"))]
