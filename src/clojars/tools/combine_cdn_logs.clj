@@ -1,12 +1,12 @@
 (ns clojars.tools.combine-cdn-logs
   (:require [clojars.cloudfiles :as cf]
+            [clojars.s3 :as s3]
             [clojure.java.io :as io])
   (:import java.io.FileOutputStream)
   (:gen-class))
 
-;; downloads and combines cdn log files for the given date, then
-;; uploads the combined file to another container, then removes the
-;; source logs from the first container
+;; downloads and combines cdn log files from cloudfiles and s3 for the
+;; given date, then uploads the combined file to s3 container
 
 (defn connect [username key container-name]
   (cf/connect username key container-name))
@@ -14,25 +14,32 @@
 (def domap (comp dorun map))
 
 (defn -main [& args]
-  (if (not= 6 (count args))
-    (println "Usage: raw-log-container combined-log-container user key date output-file")
-    (let [[raw-container-name combined-container-name username key date output-file] args
-          dest-file  (io/file output-file)
-          name-regex (re-pattern (str "^" date))
-          down-conn  (connect username key raw-container-name)
-          up-conn    (connect username key combined-container-name)
-          log-files  (eduction
-                       (map :name)
-                       (filter #(re-find name-regex %))
-                       (cf/metadata-seq down-conn))]
+  (if (not= 9 (count args))
+    (println "Usage: raw-log-container cf-user cf-key s3-log-bucket aws-region aws-key aws-secret date output-file")
+    (let [[raw-container-name cf-user cf-key
+           s3-bucket aws-region aws-key aws-secret
+           date output-file] args
+          dest-file          (io/file output-file)
+          name-regex         (re-pattern (str "^" date))
+          down-conn          (connect cf-user cf-key raw-container-name)
+          s3                 (s3/s3-client aws-key aws-secret aws-region)
+          cf-log-files       (eduction
+                               (map :name)
+                               (filter #(re-find name-regex %))
+                               (cf/metadata-seq down-conn))
+          s3-log-files       (s3/list-objects s3 s3-bucket date)]
       (with-open [fos (FileOutputStream. dest-file)]
-        ;; download and combine
+        ;; download and combine cloudfiles logs
         (domap #(with-open [in (cf/artifact-stream down-conn %)]
                   (io/copy in fos))
-          log-files)
+               cf-log-files)
+        ;; then s3 logs
+        (domap #(with-open [in (s3/get-object-stream s3 s3-bucket %)]
+                  (io/copy in fos))
+               s3-log-files)
+        
         (when (> (.length dest-file) 0)
           ;; upload combined file
-          (cf/put-file up-conn (format "combined-%s.log" date) dest-file :if-changed))
-        ;; delete raw files
-        (domap (partial cf/remove-artifact down-conn) log-files)))))
+          (with-open [fis (io/input-stream dest-file)]
+            (s3/put-object s3 s3-bucket (format "combined-%s.log" date) fis)))))))
 
