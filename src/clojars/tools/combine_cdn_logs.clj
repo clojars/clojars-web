@@ -29,7 +29,7 @@
                                (map :name)
                                (filter #(re-find name-regex %))
                                (cf/metadata-seq down-conn))
-          s3-log-files       (s3/list-objects s3 s3-bucket date)]
+          s3-log-files       (s3/list-object-keys s3 s3-bucket date)]
       (with-open [fos (FileOutputStream. dest-file)]
         ;; download and combine cloudfiles logs
         (domap #(with-open [in (cf/artifact-stream down-conn %)]
@@ -42,6 +42,5 @@
         
       (when (> (.length dest-file) 0)
         ;; upload combined file
-        (with-open [fis (io/input-stream dest-file)]
-          (s3/put-object s3 s3-bucket (format "combined-%s.log" date) fis))))))
+        (s3/put-file s3 s3-bucket (format "combined-%s.log" date) dest-file)))))
 
