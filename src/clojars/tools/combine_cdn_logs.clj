@@ -19,6 +19,8 @@
     (let [[raw-container-name cf-user cf-key
            s3-bucket aws-region aws-key aws-secret
            date output-file] args
+          date               (apply format "%s-%s-%s"
+                                    (rest (re-find #"(\d{4})(\d{2})(\d{2})" date)))
           dest-file          (io/file output-file)
           name-regex         (re-pattern (str "^" date))
           down-conn          (connect cf-user cf-key raw-container-name)
