@@ -38,10 +38,10 @@
         ;; then s3 logs
         (domap #(with-open [in (s3/get-object-stream s3 s3-bucket %)]
                   (io/copy in fos))
-               s3-log-files)
+               s3-log-files))
         
-        (when (> (.length dest-file) 0)
-          ;; upload combined file
-          (with-open [fis (io/input-stream dest-file)]
-            (s3/put-object s3 s3-bucket (format "combined-%s.log" date) fis)))))))
+      (when (> (.length dest-file) 0)
+        ;; upload combined file
+        (with-open [fis (io/input-stream dest-file)]
+          (s3/put-object s3 s3-bucket (format "combined-%s.log" date) fis))))))
 
