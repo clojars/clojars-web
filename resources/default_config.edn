@@ -31,6 +31,9 @@
  :s3 {:access-key-id "NOTSET"
       :secret-access-key "NOTSET"
       :region "us-east-2"
-      :stats-bucket "NOTSET"}
+      :repo-bucket #profile {:default "clojars-repo-development"
+                             :production "clojars-repo-production"}
+      :stats-bucket #profile {:default "clojars-stats-development"
+                              :production "clojars-stats-production"}}
  :sentry-dsn "NOTSET"
  :stats-dir "data/stats"}

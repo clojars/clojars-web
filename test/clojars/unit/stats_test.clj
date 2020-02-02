@@ -17,12 +17,10 @@
         (.getBytes)
         (io/input-stream))))
 
-(def bucket-name "a-bucket-name")
-
 (defn s3-stats []
   (let [s3 (s3/mock-s3-client)
-        stats (assoc (stats/artifact-stats bucket-name) :s3 s3)]
-    (s3/put-object s3 bucket-name "all.edn" (as-stream download-counts))
+        stats (assoc (stats/artifact-stats) :stats-bucket s3)]
+    (s3/put-object s3 "all.edn" (as-stream download-counts))
     [stats s3]))
 
 (deftest stats-computes-group-downloads
@@ -47,7 +45,7 @@
 (deftest stats-memoize-s3-reading
   (let [[stats s3] (s3-stats)]
     (is (= 5 (stats/download-count stats "c" "z")))
-    (s3/put-object s3 bucket-name "all.edn" (as-stream {["c" "z"] {"1" 722}}))
+    (s3/put-object s3 "all.edn" (as-stream {["c" "z"] {"1" 722}}))
     (is (= 5 (stats/download-count stats "c" "z")))))
 
 (deftest format-stats-with-commas

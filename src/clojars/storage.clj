@@ -2,6 +2,7 @@
   (:require [clojars.cdn :as cdn]
             [clojars.cloudfiles :as cf]
             [clojars.file-utils :as fu]
+            [clojars.s3 :as s3]
             [clojure.java.io :as io])
   (:import org.apache.commons.io.FileUtils))
 
@@ -90,6 +91,30 @@
   ([cf]
    (->CloudfileStorage cf)))
 
+(defrecord S3Storage [client]
+  Storage
+  (-write-artifact [_ path file _force-overwrite?]
+    (s3/put-file client path file))
+  (remove-path [_ path]
+    (if (.endsWith path "/")
+      (run! (partial s3/delete-object client)
+            (s3/list-object-keys client path))
+      (s3/delete-object client path)))
+  (path-exists? [_ path]
+    (if (.endsWith path "/")
+      (boolean (seq (s3/list-objects client path)))
+      (s3/object-exists? client path)))
+  (path-seq [_ path]
+    (s3/list-object-keys client path))
+  (artifact-url [_ path]
+    (throw (ex-info "Not implemented" {}))))
+
+(defn s3-storage
+  ([key token region bucket-name]
+   (s3-storage (s3/s3-client key token region bucket-name)))
+  ([client]
+   (->S3Storage client)))
+
 ;; we only care about removals for purging
 (defrecord CDNStorage [cdn-token cdn-url]
   Storage
@@ -110,8 +135,9 @@
 (defn cdn-storage [cdn-token cdn-url]
   (->CDNStorage cdn-token cdn-url))
 
-(defn full-storage [on-disk-repo cloudfiles cdn-token cdn-url]
+(defn full-storage [on-disk-repo repo-bucket cloudfiles cdn-token cdn-url]
   (multi-storage
     (fs-storage on-disk-repo)
     (cloudfiles-storage cloudfiles)
+    (s3-storage repo-bucket)
     (cdn-storage cdn-token cdn-url)))

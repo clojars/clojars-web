@@ -6,7 +6,7 @@
   (:gen-class))
 
 (defn maybe-upload-file
-  [s3-client bucket existing repo stats f]
+  [s3-client existing repo stats f]
   (let [path (fu/subpath
                (.getAbsolutePath repo)
                (.getAbsolutePath f))]
@@ -16,26 +16,26 @@
       (update stats :skipped inc)
       (let [reason (if (existing path) :changed :new)]
         (printf "=> Uploading (%s): %s\n" (name reason) path)
-        (s3/put-file s3-client bucket path f {:ACL "public-read"})
+        (s3/put-file s3-client path f {:ACL "public-read"})
         (update stats reason inc)))))
 
-(defn get-existing [s3-client s3-bucket subpath]
+(defn get-existing [s3-client subpath]
   (printf "Retrieving current artifact list [subpath: %s] (this may take a while)\n" subpath)
   (into {}
     (map (juxt :Key :ETag))
-    (s3/list-objects s3-client s3-bucket subpath)))
+    (s3/list-objects s3-client subpath)))
 
 (defn local-files [repo subpath]
   (let [local-dir (if subpath (io/file repo subpath) (io/file repo))]
     (filter (memfn isFile) (file-seq local-dir))))
 
-(defn upload-repo [s3-client s3-bucket repo subpath]
-  (let [existing (get-existing s3-client s3-bucket subpath)
+(defn upload-repo [s3-client repo subpath]
+  (let [existing (get-existing s3-client subpath)
         local-files (local-files repo subpath)]
     (printf "Local files: %s; Remote files: %s\n" (count local-files) (count existing))
     (let [{:keys [skipped changed new]}
           (reduce
-            (partial maybe-upload-file s3-client s3-bucket existing repo)
+            (partial maybe-upload-file s3-client existing repo)
             {:skipped 0
              :changed 0
              :new 0}
@@ -50,7 +50,6 @@
   (if (< (count args) 5)
     (println "Usage: repo-path bucket-name region key secret [subpath]")
     (let [[repo bucket region key secret subpath] args]
-      (upload-repo (s3/s3-client key secret region)
-                   bucket
+      (upload-repo (s3/s3-client key secret region bucket)
                    (io/file repo)
                    subpath))))

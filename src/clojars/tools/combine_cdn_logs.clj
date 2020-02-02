@@ -24,23 +24,23 @@
           dest-file          (io/file output-file)
           name-regex         (re-pattern (str "^" date))
           down-conn          (connect cf-user cf-key raw-container-name)
-          s3                 (s3/s3-client aws-key aws-secret aws-region)
+          s3                 (s3/s3-client aws-key aws-secret aws-region s3-bucket)
           cf-log-files       (eduction
                                (map :name)
                                (filter #(re-find name-regex %))
                                (cf/metadata-seq down-conn))
-          s3-log-files       (s3/list-object-keys s3 s3-bucket date)]
+          s3-log-files       (s3/list-object-keys s3 date)]
       (with-open [fos (FileOutputStream. dest-file)]
         ;; download and combine cloudfiles logs
         (domap #(with-open [in (cf/artifact-stream down-conn %)]
                   (io/copy in fos))
                cf-log-files)
         ;; then s3 logs
-        (domap #(with-open [in (s3/get-object-stream s3 s3-bucket %)]
+        (domap #(with-open [in (s3/get-object-stream s3 %)]
                   (io/copy in fos))
                s3-log-files))
         
       (when (> (.length dest-file) 0)
         ;; upload combined file
-        (s3/put-file s3 s3-bucket (format "combined-%s.log" date) dest-file)))))
+        (s3/put-file s3 (format "combined-%s.log" date) dest-file)))))
 

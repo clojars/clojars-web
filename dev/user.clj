@@ -6,11 +6,14 @@
              [errors :as errors]
              [system :as system]]
             [clojars.db.migrate :as migrate]
+            [clojars.s3 :as s3]
             [clojure.java.io :as io]
             [clojure.tools.namespace.repl :refer [refresh]]
             [eftest.runner :as eftest]
             [meta-merge.core :refer [meta-merge]]
-            [reloaded.repl :refer [system init stop go clear]]))
+            [reloaded.repl :refer [system init stop go clear]])
+  (:import
+   (java.io ByteArrayInputStream)))
 
 (def dev-env
   {:app {:middleware []}})
@@ -21,9 +24,13 @@
 (defn new-system []
   (refresh)
   (migrate)
-  (assoc (system/new-system (meta-merge (config/config) dev-env))
-    :error-reporter (errors/stdout-reporter)
-    :cloudfiles     (cf/connect "" "" "dev" "transient")))
+  (let [stats-bucket (s3/mock-s3-client)]
+    (s3/put-object stats-bucket "all.edn" (ByteArrayInputStream. (.getBytes "{}")))
+    (assoc (system/new-system (meta-merge (config/config) dev-env))
+           :error-reporter (errors/stdout-reporter)
+           :cloudfiles     (cf/connect "" "" "dev" "transient")
+           :repo-bucket    (s3/mock-s3-client)
+           :stats-bucket   stats-bucket)))
 
 (ns-unmap *ns* 'test)
 

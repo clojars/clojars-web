@@ -20,7 +20,7 @@
   {:app {:middleware []}
    :http {:configurator patch/use-status-message-header}})
 
-(defrecord StorageComponent [delegate on-disk-repo cloudfiles cdn-token cdn-url]
+(defrecord StorageComponent [delegate on-disk-repo repo-bucket cloudfiles cdn-token cdn-url]
   storage/Storage
   (-write-artifact [_ path file force-overwrite?]
     (storage/write-artifact delegate path file force-overwrite?))
@@ -38,7 +38,8 @@
     (if delegate
       t
       (assoc t
-        :delegate (storage/full-storage on-disk-repo cloudfiles cdn-token cdn-url))))
+             :delegate (storage/full-storage on-disk-repo repo-bucket
+                                             cloudfiles cdn-token cdn-url))))
   (stop [t]
     (assoc t :delegate nil)))
 
@@ -47,8 +48,9 @@
                           :cdn-token cdn-token
                           :cdn-url cdn-url}))
 
-(defn s3-client [{:keys [access-key-id secret-access-key region]}]
-  (s3/s3-client access-key-id secret-access-key region))
+(defn s3-bucket
+  [{:keys [access-key-id secret-access-key region] :as cfg} bucket-key]
+  (s3/s3-client access-key-id secret-access-key region (get bucket-key cfg)))
 
 (defn new-system [config]
   (let [config (meta-merge base-env config)]
@@ -56,17 +58,18 @@
          :app           (handler-component (:app config))
          :http          (jetty-server (:http config))
          :db            (hikaricp (:db config))
-         :s3            (s3-client (:s3 config))
-         :stats         (artifact-stats (get-in config [:s3 :stats-bucket]))
+         :stats-bucket  (s3-bucket (:s3 config) :stats-bucket)
+         :repo-bucket   (s3-bucket (:s3 config) :repo-bucket)
+         :stats         (artifact-stats)
          :index-factory #(clucy/disk-index (:index-path config))
          :search        (lucene-component)
          :mailer        (simple-mailer (:mail config))
          :storage       (storage-component (:repo config) (:cdn-token config) (:cdn-url config))
          :clojars-app   (endpoint-component web/handler-optioned))
         (component/system-using
-         {:http [:app]
-          :app  [:clojars-app]
-          :stats [:s3]
-          :search [:index-factory :stats]
-          :storage [:cloudfiles]
-          :clojars-app [:storage :db :error-reporter :stats :search :mailer]}))))
+          {:http        [:app]
+           :app         [:clojars-app]
+           :stats       [:stats-bucket]
+           :search      [:index-factory :stats]
+           :storage     [:cloudfiles :repo-bucket]
+           :clojars-app [:storage :db :error-reporter :stats :search :mailer]}))))
