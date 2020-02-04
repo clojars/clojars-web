@@ -94,7 +94,7 @@
 (defrecord S3Storage [client]
   Storage
   (-write-artifact [_ path file _force-overwrite?]
-    (s3/put-file client path file))
+    (s3/put-file client path file {:ACL "public-read"}))
   (remove-path [_ path]
     (if (.endsWith path "/")
       (run! (partial s3/delete-object client)
