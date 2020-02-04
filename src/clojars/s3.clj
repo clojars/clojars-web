@@ -78,6 +78,7 @@
 
 (defn s3-client
   [access-key-id secret-access-key region bucket]
+  {:pre [(not (str/blank? bucket))]}
   (let [client
         (doto
             (aws/client

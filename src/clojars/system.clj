@@ -50,7 +50,7 @@
 
 (defn s3-bucket
   [{:keys [access-key-id secret-access-key region] :as cfg} bucket-key]
-  (s3/s3-client access-key-id secret-access-key region (get bucket-key cfg)))
+  (s3/s3-client access-key-id secret-access-key region (get cfg bucket-key)))
 
 (defn new-system [config]
   (let [config (meta-merge base-env config)]
