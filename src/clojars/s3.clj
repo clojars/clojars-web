@@ -144,9 +144,36 @@
   ([s3 key stream opts]
    (-put-object s3 key stream opts)))
 
+(let [content-types
+      {:asc            :txt
+       :bundle         :xml
+       :clj            :txt
+       :eclipse-plugin :zip
+       :gz             "application/gzip"
+       :jar            "application/x-java-archive"
+       :md5            :txt
+       :pom            :xml
+       :properties     :txt
+       :sha1           :txt
+       :txt            "text/plain"
+       :xml            "application/xml"
+       :zip            "application/zip"
+       :unknown        "application/unknown"}]
+
+  (defn content-type* [suffix]
+    (let [ct (content-types (keyword suffix) :unknown)]
+      (if (keyword? ct)
+        (content-type* ct)
+        ct))))
+
+(defn content-type [key]
+  (content-type* (last (str/split key #"\."))))
+
 (defn put-file
   ([s3 key f]
    (put-file s3 key f nil))
   ([s3 key f opts]
    (with-open [fis (io/input-stream f)]
-     (put-object s3 key fis opts))))
+     (put-object s3 key fis
+                 (assoc opts
+                        :ContentType (content-type key))))))
