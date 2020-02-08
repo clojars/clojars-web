@@ -15,7 +15,10 @@
             [clojure.string :as str]
             [clucy.core :as clucy]
             [com.stuartsierra.component :as component])
-  (:import java.io.File))
+  (:import
+   (java.io File)
+   (java.time ZonedDateTime)
+   (java.util Date)))
 
 (def tmp-dir (io/file (System/getProperty "java.io.tmpdir")))
 (def local-repo (io/file tmp-dir "clojars" "test" "local-repo"))
@@ -31,15 +34,20 @@
           (delete-file-recursively child)))
       (io/delete-file f))))
 
+(defn with-local-repos
+  [f]
+  (delete-file-recursively local-repo)
+  (delete-file-recursively local-repo2)
+  (f))
+
 (defn default-fixture [f]
   (binding [config/*profile* "test"]
     (let [cleanup (fn [] (run!
                           #(delete-file-recursively (io/file ((config/config) %)))
                           [:deletion-backup-dir :repo]))]
-      (fn []
-        (cleanup)
-        (f)
-        (cleanup)))))
+      (cleanup)
+      (f)
+      (cleanup))))
 
 (defn quiet-reporter []
   (reify errors/ErrorReporter
@@ -152,3 +160,18 @@
                 m))
       (->> (spit new-pom)))
     new-pom))
+
+(defn date-from-iso-8601-str
+  [iso-8601-date-string]
+  (-> (ZonedDateTime/parse iso-8601-date-string)
+      .toInstant
+      (Date/from)))
+
+(defn at-as-time-str
+  "Adjusts the :at (or :created) Date to a millis-since-epoch string to
+  match the search results."
+  [data]
+  (let [date->time-str #(str (.getTime %))]
+    (cond-> data
+      (:at data)      (update :at date->time-str)
+      (:created data) (update :created date->time-str))))

@@ -7,8 +7,6 @@
             [clojure
              [set :as set]
              [string :as string]]
-            [clojure.java.io :as io]
-            [clojure.string :as str]
             [clucy.core :as clucy]
             [com.stuartsierra.component :as component])
   (:import [org.apache.lucene.analysis KeywordAnalyzer PerFieldAnalyzerWrapper]
@@ -27,7 +25,7 @@
 
 
 (def content-fields [:artifact-id :group-id :version :description
-                     :url #(->> % :authors (str/join " "))])
+                     :url #(->> % :authors (string/join " "))])
 
 (def field-settings {:artifact-id {:analyzed false}
                      :group-id {:analyzed false}
@@ -56,11 +54,17 @@
                              (cond-> (str "group-id:" group-id)
                                      artifact-id (str " AND artifact-id:" artifact-id)))))
 
+(defn update-if-exists
+  [m k f & args]
+  (if (contains? m k)
+    (apply update m k f args)
+    m))
+
 (defn index-jar [index jar]
   (let [jar' (-> jar
                 (set/rename-keys renames)
                 (update :licenses #(mapv :name %))
-                (update :at (memfn getTime)))
+                (update-if-exists :at (memfn getTime)))
         ;; TODO: clucy forces its own :_content on you
         content (string/join " " ((apply juxt content-fields) jar'))
         doc (assoc (dissoc jar' :dependencies :scm)
@@ -157,7 +161,7 @@
       query
       (try (->> (lucene-time-syntax (nth matches 1) (nth matches 2))
                 (string/replace query (nth matches 0)))
-           (catch Exception e query)))))
+           (catch Exception _ query)))))
 
 ; http://stackoverflow.com/questions/963781/how-to-achieve-pagination-in-lucene
 (defn -search [stats index query page]
