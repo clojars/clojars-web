@@ -1,9 +1,9 @@
 (ns clojars.tools.generate-feeds
-  (:require [clojars.cloudfiles :as cf]
-            [clojars.config :refer [config]]
+  (:require [clojars.config :refer [config]]
             [clojars.db :as db]
             [clojars.file-utils :as fu]
             [clojars.maven :as maven]
+            [clojars.s3 :as s3]
             [clojure.java.io :as io]
             [clojure.set :as set])
   (:import (java.io FileOutputStream PrintWriter)
@@ -38,14 +38,13 @@
          (out-fn form))))
    file))
 
-(defn pom-list [cloudfiles]
+(defn pom-list [s3-bucket]
   (sort
     (into []
-          (comp (map :name)
-                (filter #(.endsWith % ".pom"))
+          (comp (filter #(.endsWith % ".pom"))
                 ;; to match historical list format
                 (map (partial str "./")))
-          (cf/metadata-seq cloudfiles))))
+          (s3/list-object-keys s3-bucket))))
 
 (defn jar-list [db]
   (->> (db/all-jars db)
@@ -61,23 +60,23 @@
   [(fu/create-checksum-file f :md5)
    (fu/create-checksum-file f :sha1)])
 
-(defn put-files [cloudfiles & files]
+(defn put-files [s3-bucket & files]
   (run! #(let [f (io/file %)]
-          (cf/put-file cloudfiles (.getName f) f :if-changed))
+          (s3/put-file s3-bucket (.getName f) f))
         files))
 
-(defn generate-feeds [dest db cloudfiles]
+(defn generate-feeds [dest db s3-bucket]
   (let [feed-file (str dest "/feed.clj.gz")]
     (apply put-files
-           cloudfiles
+           s3-bucket
            (write-to-file (full-feed db) feed-file :gzip)
            (write-sums feed-file)))
 
-  (let [poms (pom-list cloudfiles)
+  (let [poms (pom-list s3-bucket)
         pom-file (str dest "/all-poms.txt")
         gz-file (str pom-file ".gz")]
     (apply put-files
-           cloudfiles
+           s3-bucket
            (write-to-file poms pom-file nil println)
            (write-to-file poms gz-file :gzip println)
            (concat
@@ -88,7 +87,7 @@
         jar-file (str dest "/all-jars.clj")
         gz-file (str jar-file ".gz")]
     (apply put-files
-           cloudfiles
+           s3-bucket
            (write-to-file jars jar-file nil)
            (write-to-file jars gz-file :gzip)
            (concat
@@ -96,8 +95,13 @@
              (write-sums gz-file)))))
 
 (defn -main [& args]
-  (if (not= 3 (count args))
-    (println "args: cf-user cf-key dest-dir")
-    (let [[cf-user cf-key dest-dir] args]
-      (generate-feeds dest-dir (:db (config)) (cf/connect cf-user cf-key "repo")))))
+  (if (not= 2 (count args))
+    (println "args: aws-key aws-secret")
+    (let [[key secret] args
+          {:keys [db s3]} (config)]
+      (generate-feeds "/tmp"
+                      db
+                      (s3/s3-client key secret
+                                    (:region s3)
+                                    (:repo-bucket s3))))))
 

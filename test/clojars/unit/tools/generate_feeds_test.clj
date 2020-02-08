@@ -1,8 +1,8 @@
 (ns clojars.unit.tools.generate-feeds-test
-  (:require [clojars.cloudfiles :as cf]
-            [clojars.db :as db]
+  (:require [clojars.db :as db]
             [clojars.file-utils :as fu]
             [clojars.maven :as maven]
+            [clojars.s3 :as s3]
             [clojars.test-helper :as help]
             [clojars.tools.generate-feeds :as feeds]
             [clojure.java.io :as io]
@@ -17,19 +17,19 @@
     (db/add-jar help/*db* "testuser" pom-data))
   (f))
 
-(defn setup-cloudfiles [f]
+(defn setup-s3 [f]
   (let [file (io/file (io/resource "fake-0.0.1/fake.pom"))]    ;; just need some content
-    (cf/put-file help/*cloudfiles* "test/test/0.0.1/test.pom" file)
-    (cf/put-file help/*cloudfiles* "fake/test/0.0.2/test.pom" file)
-    (cf/put-file help/*cloudfiles* "fake/test/0.0.1/test.pom" file))
+    (s3/put-file help/*s3-repo-bucket* "test/test/0.0.1/test.pom" file)
+    (s3/put-file help/*s3-repo-bucket* "fake/test/0.0.2/test.pom" file)
+    (s3/put-file help/*s3-repo-bucket* "fake/test/0.0.1/test.pom" file))
   (f))
 
 (use-fixtures :each
-              help/default-fixture
-              help/with-clean-database
-              help/with-cloudfiles
-              setup-db
-              setup-cloudfiles)
+  help/default-fixture
+  help/with-clean-database
+  help/with-s3-repo-bucket
+  setup-db
+  setup-s3)
 
 (def expected-feed [{:description "FAKE"
                      :group-id    "fake"
@@ -65,24 +65,24 @@
   (is (= expected-jar-list (feeds/jar-list help/*db*))))
 
 (deftest all-poms-generation-should-work
-  (is (= expected-pom-list (feeds/pom-list help/*cloudfiles*))))
+  (is (= expected-pom-list (feeds/pom-list help/*s3-repo-bucket*))))
 
 (defn verify-file-and-sums [file]
   (is (.exists file))
   (is (fu/valid-checksum-file? file :md5 :fail-if-missing))
   (is (fu/valid-checksum-file? file :sha1 :fail-if-missing)))
 
-(defn verify-cloudfiles [cf file]
+(defn verify-s3 [cf file]
   (let [name (.getName file)]
-    (is (cf/artifact-exists? cf name))
-    (is (cf/artifact-exists? cf (str name ".md5")))
-    (is (cf/artifact-exists? cf (str name ".sha1")))))
+    (is (s3/object-exists? cf name))
+    (is (s3/object-exists? cf (str name ".md5")))
+    (is (s3/object-exists? cf (str name ".sha1")))))
 
 (deftest the-whole-enchilada
-  (feeds/generate-feeds "/tmp" help/*db* help/*cloudfiles*)
+  (feeds/generate-feeds "/tmp" help/*db* help/*s3-repo-bucket*)
   (let [feed-file (io/file "/tmp" "feed.clj.gz")]
     (verify-file-and-sums feed-file)
-    (verify-cloudfiles help/*cloudfiles* feed-file)
+    (verify-s3 help/*s3-repo-bucket* feed-file)
     (let [read-feed (->> feed-file
                          (io/input-stream)
                          (GZIPInputStream.)
@@ -93,25 +93,25 @@
 
   (let [pom-file (io/file "/tmp" "all-poms.txt")]
     (verify-file-and-sums pom-file)
-    (verify-cloudfiles help/*cloudfiles* pom-file)
+    (verify-s3 help/*s3-repo-bucket* pom-file)
     (let [read-poms (slurp pom-file)]
       (is (= (str/join "\n" expected-pom-list) (str/trim read-poms)))))
 
   (let [pom-file (io/file "/tmp" "all-poms.txt.gz")]
     (verify-file-and-sums pom-file)
-    (verify-cloudfiles help/*cloudfiles* pom-file)
+    (verify-s3 help/*s3-repo-bucket* pom-file)
     (let [read-poms (-> pom-file (io/input-stream) (GZIPInputStream.) (slurp))]
       (is (= (str/join "\n" expected-pom-list) (str/trim read-poms)))))
 
   (let [jar-file (io/file "/tmp" "all-jars.clj")]
     (verify-file-and-sums jar-file)
-    (verify-cloudfiles help/*cloudfiles* jar-file)
+    (verify-s3 help/*s3-repo-bucket* jar-file)
     (let [read-jars (->> jar-file (slurp) (format "[%s]") (read-string))]
       (is (= expected-jar-list read-jars))))
 
   (let [jar-file (io/file "/tmp" "all-jars.clj.gz")]
     (verify-file-and-sums jar-file)
-    (verify-cloudfiles help/*cloudfiles* jar-file)
+    (verify-s3 help/*s3-repo-bucket* jar-file)
     (let [read-jars (->> jar-file
                          (io/input-stream)
                          (GZIPInputStream.)

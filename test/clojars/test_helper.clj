@@ -8,6 +8,7 @@
              [system :as system]
              [web :as web]]
             [clojars.db.migrate :as migrate]
+            [clojars.s3 :as s3]
             [clojars.storage :as storage]
             [clojure.java
              [io :as io]
@@ -96,6 +97,12 @@
 
 (defn with-cloudfiles [f]
   (binding [*cloudfiles* (transient-cloudfiles)]
+    (f)))
+
+(declare ^:dynamic *s3-repo-bucket*)
+
+(defn with-s3-repo-bucket [f]
+  (binding [*s3-repo-bucket* (s3/mock-s3-client)]
     (f)))
 
 (declare ^:dynamic test-port)
