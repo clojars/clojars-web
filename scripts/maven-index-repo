@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage:
-# CLOUDFILES_USER=foo CLOUDFILES_TOKEN=bar CLOUDFILES_CONTAINER=baz maven-index-repo releases/clojars-web-current.jar indexer/indexer-core-4.1.2-cli.jar indexer/index-4.1.2 repo
+# AWS_ACCESS_KEY_ID=foo AWS_SECRET_ACCESS_KEY=bar AWS_REGION=baz S3_REPO_BUCKET=clojars-repo-production maven-index-repo releases/clojars-web-current.jar indexer/indexer-core-4.1.2-cli.jar indexer/index-4.1.2 repo
 
 set -e
 
@@ -23,9 +23,13 @@ for sum in @(*.gz.md5|*.gz.sha1); do
 done
 popd
 
-# upload new shards and sums to cloudfiles
-java -cp $clojars_jar clojure.main -m clojars.tools.upload-repo $repo $CLOUDFILES_CONTAINER $CLOUDFILES_USER $CLOUDFILES_TOKEN .index 2> /dev/null
+# upload new shards and sums to s3
+java -cp $clojars_jar clojure.main -m clojars.tools.upload-repo-s3 $repo \
+     $S3_REPO_BUCKET $AWS_REGION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY \
+     .index 2> /dev/null
 
-# remove old shards and sums from cloudfiles
-java -cp $clojars_jar clojure.main -m clojars.tools.remove-deletions $repo $CLOUDFILES_CONTAINER $CLOUDFILES_USER $CLOUDFILES_TOKEN .index 2> /dev/null
+# remove old shards and sums from s3
+java -cp $clojars_jar clojure.main -m clojars.tools.remove-deletions $repo \
+     $S3_REPO_BUCKET $AWS_REGION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY \
+     .index 2> /dev/null
 
