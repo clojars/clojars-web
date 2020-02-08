@@ -100,8 +100,10 @@
   (-get-object-stream [_ key]
     (when-let [data (get @state key)]
       (ByteArrayInputStream. data)))
-  (-list-objects [_ _prefix]
-    (map (fn [[k _] ] {:Key k}) (keys @state)))
+  (-list-objects [_ prefix]
+    (->> (keys @state)
+         (filter (fn [k] (if prefix (.startsWith k prefix) true)))
+         (map (fn [k] {:Key k}))))
   (-put-object [_ key stream _opts]
     (swap! state assoc key (IOUtils/toByteArray stream))))
 
