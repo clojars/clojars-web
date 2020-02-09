@@ -29,15 +29,5 @@ cat "$cdn_logfile" | java -cp "$clojars_jar" clojure.main -m clojars.tools.proce
 java -cp "$clojars_jar" clojure.main -m clojars.tools.merge-stats "$downloads_all_old" "$downloads_date" > "$downloads_all_new"
 
 # upload the new stats to the s3 bucket
-aws s3 cp --acl public-read "$downloads_date" "s3://${S3_STATS_BUCKET}/"
-aws s3 cp --acl public-read "$downloads_all_new" "s3://${S3_STATS_BUCKET}/all.edn"
-
-# build index file
-index="/tmp/index.html"
-echo "<html><head><title>/</title></head><body><pre>" > $index
-aws s3 ls "s3://${S3_STATS_BUCKET}/" | sed 's/\([a-z0-9-]*\.edn\)/<a href="\1">\1<\/a>/g' >> $index
-echo >> $index
-echo "</pre></body></html>" >> $index
-
-# upload index to bucket
-aws s3 cp --acl public-read "$index" "s3://${S3_STATS_BUCKET}/"
+aws s3 cp --content-type 'application/edn' --acl public-read "$downloads_date" "s3://${S3_STATS_BUCKET}/"
+aws s3 cp --content-type 'application/edn' --acl public-read "$downloads_all_new" "s3://${S3_STATS_BUCKET}/all.edn"
