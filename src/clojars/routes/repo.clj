@@ -275,8 +275,9 @@
           (remove #(some #{(.getName %)} [metadata-edn]))))
 
       (db/add-jar db account pom)
-      (search/index! search (assoc pom
-                                   :at (Date. (.lastModified pom-file))))
+      (future
+        (search/index! search (assoc pom
+                                     :at (Date. (.lastModified pom-file)))))
       (spit (io/file dir ".finalized") ""))
     (throw-invalid "no pom file was uploaded")))
 
