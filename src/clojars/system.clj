@@ -20,7 +20,7 @@
   {:app {:middleware []}
    :http {:configurator patch/use-status-message-header}})
 
-(defrecord StorageComponent [delegate on-disk-repo repo-bucket cloudfiles cdn-token cdn-url]
+(defrecord StorageComponent [delegate on-disk-repo repo-bucket cdn-token cdn-url]
   storage/Storage
   (-write-artifact [_ path file force-overwrite?]
     (storage/write-artifact delegate path file force-overwrite?))
@@ -39,7 +39,7 @@
       t
       (assoc t
              :delegate (storage/full-storage on-disk-repo repo-bucket
-                                             cloudfiles cdn-token cdn-url))))
+                                             cdn-token cdn-url))))
   (stop [t]
     (assoc t :delegate nil)))
 
@@ -71,5 +71,5 @@
            :app         [:clojars-app]
            :stats       [:stats-bucket]
            :search      [:index-factory :stats]
-           :storage     [:cloudfiles :repo-bucket]
+           :storage     [:repo-bucket]
            :clojars-app [:storage :db :error-reporter :stats :search :mailer]}))))

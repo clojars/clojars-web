@@ -2,19 +2,17 @@
   (:require
    [cemerick.pomegranate.aether :as aether]
    [clj-http.client :as client]
-   [clojars
-    [cloudfiles :as cf]
-    [config :refer [config]]
-    [file-utils :as fu]]
+   [clojars.config :refer [config]]
+   [clojars.file-utils :as fu]
    [clojars.integration.steps :refer [register-as]]
+   [clojars.s3 :as s3]
    [clojars.test-helper :as help]
    [clojure.data.codec.base64 :as base64]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.test :refer [are deftest is use-fixtures]]
-   [kerodon
-    [core :refer [fill-in follow press session visit within]]
-    [test :refer [has status? text?]]]
+   [kerodon.core :refer [fill-in follow press session visit within]]
+   [kerodon.test :refer [has status? text?]]
    [net.cgrand.enlive-html :as enlive]))
 
 (use-fixtures :each
@@ -50,14 +48,14 @@
 
   (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
         base-path "org/clojars/dantheman/test/"
-        cloudfiles (:cloudfiles help/system)
+        repo-bucket (:repo-bucket help/system)
         repo (:repo (config))]
     (is (.exists (io/file repo base-path "maven-metadata.xml")))
-    (is (cf/artifact-exists? cloudfiles (str base-path "maven-metadata.xml")))
+    (is (s3/object-exists? repo-bucket (str base-path "maven-metadata.xml")))
     (is (= 6 (count (.list (io/file repo base-path "0.0.1")))))
     (doseq [suffix suffixes]
       (is (.exists (io/file repo base-path "0.0.1" (str "test-0.0.1." suffix))))
-      (is (cf/artifact-exists? cloudfiles (str base-path "0.0.1/test-0.0.1." suffix)))))
+      (is (s3/object-exists? repo-bucket (str base-path "0.0.1/test-0.0.1." suffix)))))
 
   (-> (session (help/app-from-system))
       (visit "/groups/org.clojars.dantheman")
@@ -115,13 +113,13 @@
                      :basic-auth ["dantheman" "password"]})))
 
     (let [base-path "org/clojars/dantheman/test/"
-          cloudfiles (:cloudfiles help/system)
+          repo-bucket (:repo-bucket help/system)
           repo (:repo (config))]
       (doseq [[f no-version?] files]
         (let [fname (.getName f)
               base-path' (if no-version? base-path (str base-path "0.0.1/"))]
           (is (.exists (io/file repo base-path' fname)))
-          (is (cf/artifact-exists? cloudfiles (str base-path' fname))))))))
+          (is (s3/object-exists? repo-bucket (str base-path' fname))))))))
 
 (deftest user-can-deploy-to-new-group
   (-> (session (help/app-from-system))

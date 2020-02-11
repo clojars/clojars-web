@@ -1,6 +1,5 @@
 (ns clojars.storage
   (:require [clojars.cdn :as cdn]
-            [clojars.cloudfiles :as cf]
             [clojars.file-utils :as fu]
             [clojars.s3 :as s3]
             [clojure.java.io :as io])
@@ -66,31 +65,6 @@
 (defn fs-storage [base-dir]
   (->FileSystemStorage (io/file base-dir)))
 
-(defrecord CloudfileStorage [conn]
-  Storage
-  (-write-artifact [_ path file force-overwrite?]
-    (cf/put-file conn path file (not force-overwrite?)))
-  (remove-path [_ path]
-    (if (.endsWith path "/")
-      (run! #(->> % :name (cf/remove-artifact conn))
-        (cf/metadata-seq conn {:in-directory path}))
-      (cf/remove-artifact conn path)))
-  (path-exists? [_ path]
-    (if (.endsWith path "/")
-      (boolean (seq (cf/metadata-seq conn {:in-directory path})))
-      (cf/artifact-exists? conn path)))
-  (path-seq [_ path]
-    (map :name (cf/metadata-seq conn {:in-directory path})))
-  (artifact-url [_ path]
-    (when-let [uri (->> path (cf/artifact-metadata conn) :uri)]
-      (.toURL uri))))
-
-(defn cloudfiles-storage
-  ([user token container]
-   (cloudfiles-storage (cf/connect user token container)))
-  ([cf]
-   (->CloudfileStorage cf)))
-
 (defrecord S3Storage [client]
   Storage
   (-write-artifact [_ path file _force-overwrite?]
@@ -135,9 +109,8 @@
 (defn cdn-storage [cdn-token cdn-url]
   (->CDNStorage cdn-token cdn-url))
 
-(defn full-storage [on-disk-repo repo-bucket cloudfiles cdn-token cdn-url]
+(defn full-storage [on-disk-repo repo-bucket cdn-token cdn-url]
   (multi-storage
     (fs-storage on-disk-repo)
-    (cloudfiles-storage cloudfiles)
     (s3-storage repo-bucket)
     (cdn-storage cdn-token cdn-url)))

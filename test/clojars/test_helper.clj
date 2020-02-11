@@ -1,21 +1,19 @@
 (ns clojars.test-helper
-  (:require [clojars
-             [cloudfiles :as cf]
-             [config :as config]
-             [errors :as errors]
-             [stats :as stats]
-             [search :as search]
-             [system :as system]
-             [web :as web]]
-            [clojars.db.migrate :as migrate]
-            [clojars.s3 :as s3]
-            [clojars.storage :as storage]
-            [clojure.java
-             [io :as io]
-             [jdbc :as jdbc]]
-            [clojure.string :as str]
-            [clucy.core :as clucy]
-            [com.stuartsierra.component :as component])
+  (:require
+   [clojars.config :as config]
+   [clojars.db.migrate :as migrate]
+   [clojars.errors :as errors]
+   [clojars.s3 :as s3]
+   [clojars.search :as search]
+   [clojars.stats :as stats]
+   [clojars.storage :as storage]
+   [clojars.system :as system]
+   [clojars.web :as web]
+   [clojure.java.io :as io]
+   [clojure.java.jdbc :as jdbc]
+   [clojure.string :as str]
+   [clucy.core :as clucy]
+   [com.stuartsierra.component :as component])
   (:import
    (java.io File)
    (java.time ZonedDateTime)
@@ -90,15 +88,6 @@
 (defn no-search []
   (reify search/Search))
 
-(defn transient-cloudfiles []
-  (cf/connect "" "" "test-repo" "transient"))
-
-(declare ^:dynamic *cloudfiles*)
-
-(defn with-cloudfiles [f]
-  (binding [*cloudfiles* (transient-cloudfiles)]
-    (f)))
-
 (declare ^:dynamic *s3-repo-bucket*)
 
 (defn with-s3-repo-bucket [f]
@@ -131,10 +120,10 @@
      ;; double binding since ^ needs to be bound for config to load
      ;; properly
      (binding [system (component/start (assoc (system/new-system (config/config))
-                                            :cloudfiles (transient-cloudfiles)
-                                            :error-reporter (quiet-reporter)
-                                            :index-factory #(clucy/memory-index)
-                                            :stats (no-stats)))]
+                                              :repo-bucket (s3/mock-s3-client)
+                                              :error-reporter (quiet-reporter)
+                                              :index-factory #(clucy/memory-index)
+                                              :stats (no-stats)))]
        (let [server (get-in system [:http :server])
              port (-> server .getConnectors first .getLocalPort)
              db (get-in system [:db :spec])]
