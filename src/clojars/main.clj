@@ -1,7 +1,6 @@
 (ns clojars.main
   (:require [clojars
              [admin :as admin]
-             [cloudfiles :as cf]
              [config :as config]
              [errors :as err]
              [system :as system]]
@@ -19,21 +18,13 @@
 (defn warn [& msg]
   (apply println "clojars-web: WARNING -" msg))
 
-(defn cloudfiles-connection [{:keys [cloudfiles-user cloudfiles-token cloudfiles-container]}]
-  (if (and cloudfiles-user (not= cloudfiles-user "NOTSET"))
-    (cf/connect cloudfiles-user cloudfiles-token cloudfiles-container)
-    (do
-      (warn "cloudfiles not configured, no files will be stored in remote cloudfiles instance")
-      (cf/connect "" "" "dev" "transient"))))
-
 (defn prod-system [config prod-reporter]
   (-> (meta-merge config prod-env)
       system/new-system
       (assoc
         :error-reporter (err/multiple-reporters
                           (err/stdout-reporter)
-                          prod-reporter)
-        :cloudfiles     (cloudfiles-connection config))))
+                          prod-reporter))))
 
 (defn error-reporter [config]
     (let [dsn (:sentry-dsn config)]
