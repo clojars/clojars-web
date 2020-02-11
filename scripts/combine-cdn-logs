@@ -12,6 +12,5 @@ if [ -z "$DATE" ]; then
 fi
 
 java -cp $clojars_jar clojure.main -m clojars.tools.combine-cdn-logs \
-     $CDN_LOG_CONTAINER $CLOUDFILES_USER $CLOUDFILES_TOKEN \
      $S3_LOG_BUCKET $AWS_REGION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY \
      $DATE $output_file
