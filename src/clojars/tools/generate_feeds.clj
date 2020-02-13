@@ -62,7 +62,7 @@
 
 (defn put-files [s3-bucket & files]
   (run! #(let [f (io/file %)]
-          (s3/put-file s3-bucket (.getName f) f))
+          (s3/put-file s3-bucket (.getName f) f {:ACL "public-read"}))
         files))
 
 (defn generate-feeds [dest db s3-bucket]
