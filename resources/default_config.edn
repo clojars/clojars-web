@@ -8,7 +8,8 @@
  :cloudfiles-user "NOTSET"
  :db {:dbtype "postgresql"
       :dbname "clojars"
-      :host "localhost"
+      :host #profile {:default "localhost"
+                      :production "NOTSET"}
       :port #profile {:default 55432
                       :test #or [#env DB_PORT 55433]
                       :production 5432}
