@@ -11,6 +11,12 @@ if [ -z "$DATE" ]; then
     DATE=$(date --date='1 day ago' +%Y%m%d)
 fi
 
-java -cp $clojars_jar clojure.main -m clojars.tools.combine-cdn-logs \
-     $S3_LOG_BUCKET $AWS_REGION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY \
-     $DATE $output_file
+java -cp "$clojars_jar" clojure.main -m clojars.tools.combine-cdn-logs \
+     "$S3_LOG_BUCKET" "$AWS_REGION" "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" \
+     "$DATE" "$output_file"
+
+if [ -s "$output_file" ]; then
+  gzipped_file="combined-${DATE}.log.gz"
+  gzip --best --stdout "$output_file" > "$gzipped_file"
+  aws s3 cp --content-type 'application/gzip' "$gzipped_file" "s3://${S3_LOG_BUCKET}/"
+fi

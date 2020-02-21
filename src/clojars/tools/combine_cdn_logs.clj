@@ -23,9 +23,5 @@
         ;; download and combine s3 logs
         (domap #(with-open [in (s3/get-object-stream s3 %)]
                   (io/copy in fos))
-               s3-log-files))
-        
-      (when (> (.length dest-file) 0)
-        ;; upload combined file
-        (s3/put-file s3 (format "combined-%s.log" date) dest-file)))))
+               s3-log-files)))))
 
