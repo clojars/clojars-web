@@ -15,14 +15,21 @@
   (-list-objects [client prefix])
   (-put-object [client key stream opts]))
 
+(defn- throw-on-error
+  [v]
+  (if (some? (:cognitect.anomalies/category v))
+    (throw (ex-info "S3 request failed" v))
+    v))
+
 (defn- list-objects-chunk
   [client bucket-name prefix marker]
   (let [request (cond-> {:Bucket bucket-name}
                   prefix (assoc :Prefix prefix)
                   marker (assoc :Marker marker))]
-    (aws/invoke client
-                {:op :ListObjects
-                 :request request})))
+    (throw-on-error
+      (aws/invoke client
+                  {:op :ListObjects
+                   :request request}))))
 
 (defn- list-objects-seq
   "Generates a lazy seq of objects, chunked by the API's paging."
@@ -50,31 +57,41 @@
 (defrecord S3Client [s3 bucket-name]
   S3Bucket
   (-delete-object [_ key]
-    (aws/invoke s3 {:op :DeleteObject
-                    :request {:Bucket bucket-name
-                              :Key key}}))
+    (->> {:op :DeleteObject
+          :request {:Bucket bucket-name
+                    :Key key}}
+         (aws/invoke s3)
+         (throw-on-error)))
+
   (-get-object-details [_ key]
-    (-> {:op :HeadObject
-         :request {:Bucket bucket-name
-                   :Key key}}
-        (as-> % (aws/invoke s3 %))
-        (not-found->nil)
-        (strip-etag)))
+    (->> {:op :HeadObject
+          :request {:Bucket bucket-name
+                    :Key key}}
+         (aws/invoke s3)
+         (not-found->nil)
+         (throw-on-error)
+         (strip-etag)))
+
   (-get-object-stream [_ key]
-    (-> {:op :GetObject
-         :request {:Bucket bucket-name
-                   :Key key}}
-        (as-> % (aws/invoke s3 %))
-        (not-found->nil)
-        :Body))
+    (->> {:op :GetObject
+          :request {:Bucket bucket-name
+                    :Key key}}
+         (aws/invoke s3)
+         (not-found->nil)
+         (throw-on-error)
+         :Body))
+
   (-list-objects [_ prefix]
     (map strip-etag (list-objects-seq s3 bucket-name prefix nil)))
+
   (-put-object [_ key stream opts]
-    (aws/invoke s3 {:op :PutObject
-                    :request (merge {:Bucket bucket-name
-                                     :Key key
-                                     :Body stream}
-                                    opts)})))
+    (->> {:op :PutObject
+          :request (merge {:Bucket bucket-name
+                           :Key key
+                           :Body stream}
+                          opts)}
+         (aws/invoke s3)
+         (throw-on-error))))
 
 (defn s3-client
   [access-key-id secret-access-key region bucket]
