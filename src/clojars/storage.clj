@@ -91,11 +91,13 @@
 
 (defn- purge
   [cdn-token cdn-url path]
-    (if (and cdn-token cdn-url)
-      (let [{:keys [status] :as resp} (cdn/purge cdn-token cdn-url path)]
-        (when (not= "ok" status)
-          (throw (ex-info (format "Fastly purge failed for %s" path) resp))))
-      (println "Either no CDN key or host specified, purging skipped")))
+  (if (and cdn-token
+           cdn-url
+           (not= "NOTSET" cdn-token))
+    (let [{:keys [status] :as resp} (cdn/purge cdn-token cdn-url path)]
+      (when (not= "ok" status)
+        (throw (ex-info (format "Fastly purge failed for %s" path) resp))))
+    (println "Either no CDN key or host specified, purging skipped for" path)))
 
 (defrecord CDNStorage [cdn-token cdn-url]
   Storage
