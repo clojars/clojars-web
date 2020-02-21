@@ -89,20 +89,23 @@
   ([client]
    (->S3Storage client)))
 
-;; we only care about removals for purging
-(defrecord CDNStorage [cdn-token cdn-url]
-  Storage
-  (-write-artifact [_ _ _ _])
-  (remove-path [t path]
+(defn- purge
+  [cdn-token cdn-url path]
     (if (and cdn-token cdn-url)
       (let [{:keys [status] :as resp} (cdn/purge cdn-token cdn-url path)]
         (when (not= "ok" status)
-          ;; this should only be triggered from the admin ns in the
-          ;; repl, so a println is fine. If we ever implement removals
-          ;; from the UI, this will need to report elsewhere
-          (println (format "CDN purge failed for %s" path))
-          (prn resp)))
-      (println "Either no CDN key or host specified, purging skipped:" t)))
+          (throw (ex-info (format "Fastly purge failed for %s" path) resp))))
+      (println "Either no CDN key or host specified, purging skipped")))
+
+(defrecord CDNStorage [cdn-token cdn-url]
+  Storage
+  (-write-artifact [_ path _ _]
+    (when (re-find #"/maven-metadata\.xml" path)
+      ;; purge maven-metadata.xml and its sums from fastly, since they
+      ;; are mutable
+      (purge cdn-token cdn-url path)))
+  (remove-path [_ path]
+    (purge cdn-token cdn-url path))
   (path-exists? [_ _])
   (artifact-url [_ _]))
 
