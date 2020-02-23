@@ -16,7 +16,7 @@ java -cp "$clojars_jar" clojure.main -m clojars.tools.combine-cdn-logs \
      "$DATE" "$output_file"
 
 if [ -s "$output_file" ]; then
-  gzipped_file="combined-${DATE}.log.gz"
+  gzipped_file="/tmp/combined-${DATE}.log.gz"
   gzip --best --stdout "$output_file" > "$gzipped_file"
-  aws s3 cp --content-type 'application/gzip' "$gzipped_file" "s3://${S3_LOG_BUCKET}/"
+  aws s3 cp --no-progress --content-type 'application/gzip' "$gzipped_file" "s3://${S3_LOG_BUCKET}/"
 fi
