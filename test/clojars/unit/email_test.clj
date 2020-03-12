@@ -2,8 +2,7 @@
   (:require [bote.core :refer [create-smtp-server]]
             [clojars.email :as email]
             [clojure.test :refer [deftest is]])
-  (:import javax.net.ssl.SSLException
-           org.apache.commons.mail.EmailException
+  (:import org.apache.commons.mail.EmailException
            [org.subethamail.smtp.auth EasyAuthenticationHandlerFactory LoginFailedException UsernamePasswordValidator]))
 
 (deftest simple-mailer-sends-emails
@@ -63,13 +62,12 @@
       ((email/simple-mailer {:host "localhost"
                              :port (.getPort server)
                              :from "example@example.org"
-                             :ssl true})
-            "to@example.org"
-            "the subject"
+                             :tls? true})
+       "to@example.org"
+       "the subject"
        "A message")
-      (is false)
+      (is false "This test should throw")
       (catch EmailException e
-        ;;traverse to the root cause
-        (let [e (.getCause (.getCause e))]
-          (is (instance? SSLException e))))
+        (is (re-find #"STARTTLS is required"
+                     (.getMessage (.getCause e)))))
       (finally (.stop server)))))

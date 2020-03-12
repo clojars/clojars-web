@@ -19,9 +19,9 @@
  :deletion-backup-dir #profile {:default "NOTSET"
                                 :test "data/test/repo-backup"}
  :index-path "data/index"
- :mail {:from "noreply@clojars.org"
+ :mail {:from "contact@clojars.org"
         :hostname "127.0.0.1"
-        :ssl false}
+        :tls? false}
  :nrepl-port 7991
  :port #profile {:default 8080
                  :test 0
