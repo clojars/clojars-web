@@ -98,6 +98,7 @@
 
 (defn generate-index [db]
   (let [index-path ((config) :index-path)]
+    (printf "index-path: %s\n" index-path)
     (with-open [index (clucy/disk-index index-path)]
       ;; searching with an empty index creates an exception
       (clucy/add index {:dummy true})
@@ -117,9 +118,9 @@
               (db/all-jars db))
             seconds (float (/ (- (System/currentTimeMillis) start-time) 1000))]
         (printf "Indexing complete. Indexed %s jars in %f seconds (%f/second)\n"
-                indexed seconds (/ indexed seconds)))
-      (clucy/search-and-delete index "dummy:true"))
-    index-path))
+                indexed seconds (/ indexed seconds))
+        (flush))
+      (clucy/search-and-delete index "dummy:true"))))
 
 
 ;; We multiply this by the fraction of total downloads an item gets to
