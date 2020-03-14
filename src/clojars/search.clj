@@ -97,27 +97,29 @@
         status')))
 
 (defn generate-index [db]
-  (with-open [index (clucy/disk-index ((config) :index-path))]
-    ;; searching with an empty index creates an exception
-    (clucy/add index {:dummy true})
-    (let [{:keys [indexed start-time]}
-          (reduce
-               (fn [status jar]
-                 (try
-                   (index-jar index jar)
-                   (catch Exception e
-                     (printf "Failed to index %s/%s:%s - %s\n" (:group_name jar) (:jar_name jar) (:version jar)
-                             (.getMessage e))
-                     (.printStackTrace e)))
-                 (track-index-status status))
-               {:indexed 0
-                :last-time (System/currentTimeMillis)
-                :start-time (System/currentTimeMillis)}
-               (db/all-jars db))
-          seconds (float (/ (- (System/currentTimeMillis) start-time) 1000))]
-      (printf "Indexing complete. Indexed %s jars in %f seconds (%f/second)\n"
-              indexed seconds (/ indexed seconds)))
-    (clucy/search-and-delete index "dummy:true")))
+  (let [index-path ((config) :index-path)]
+    (with-open [index (clucy/disk-index index-path)]
+      ;; searching with an empty index creates an exception
+      (clucy/add index {:dummy true})
+      (let [{:keys [indexed start-time]}
+            (reduce
+              (fn [status jar]
+                (try
+                  (index-jar index jar)
+                  (catch Exception e
+                    (printf "Failed to index %s/%s:%s - %s\n" (:group_name jar) (:jar_name jar) (:version jar)
+                            (.getMessage e))
+                    (.printStackTrace e)))
+                (track-index-status status))
+              {:indexed 0
+               :last-time (System/currentTimeMillis)
+               :start-time (System/currentTimeMillis)}
+              (db/all-jars db))
+            seconds (float (/ (- (System/currentTimeMillis) start-time) 1000))]
+        (printf "Indexing complete. Indexed %s jars in %f seconds (%f/second)\n"
+                indexed seconds (/ indexed seconds)))
+      (clucy/search-and-delete index "dummy:true"))
+    index-path))
 
 
 ;; We multiply this by the fraction of total downloads an item gets to

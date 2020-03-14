@@ -5,4 +5,4 @@
   (:gen-class))
 
 (defn -main [& [db]]
-  (generate-index (or db (:db (config)))))
+  (println (generate-index (or db (:db (config))))))
