@@ -9,6 +9,14 @@ indexer_jar=$2
 index_dir=$3
 repo=$4
 
+# synchronize the repo bucket locally
+# we only need the existing index, the poms, and maven-metadata.xml files
+aws s3 sync "s3://$S3_REPO_BUCKET/" "$repo" \
+    --exclude "*" \
+    --include "*.pom" \
+    --include "*.xml" \
+    --include ".index/*"
+
 # generate the index shards
 java -jar $indexer_jar -n clojars -i $index_dir -d $repo/.index -r $repo -s -q -t min -l -c -k 50
 
