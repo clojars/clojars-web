@@ -18,8 +18,6 @@
                                cheshire
                                com.fasterxml.jackson.core/jackson-core
                                com.fasterxml.jackson.dataformat/jackson-dataformat-smile]]
-                 [org.apache.jclouds/jclouds-all "1.9.2"]
-                 [org.clojure/tools.logging "0.5.0"] ;; required by jclouds
                  [org.apache.commons/commons-email "1.5"]
                  [net.cgrand/regex "1.0.1"
                   :exclusions [org.clojure/clojure]]
