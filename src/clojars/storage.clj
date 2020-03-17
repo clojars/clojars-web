@@ -91,21 +91,21 @@
 
 (defn- purge
   [cdn-token cdn-url path]
-  (if (and cdn-token
-           cdn-url
-           (not= "NOTSET" cdn-token))
+  (when (and cdn-token
+             cdn-url
+             (not= "NOTSET" cdn-token))
     (let [{:keys [status] :as resp} (cdn/purge cdn-token cdn-url path)]
       (when (not= "ok" status)
-        (throw (ex-info (format "Fastly purge failed for %s" path) resp))))
-    (println "Either no CDN key or host specified, purging skipped for" path)))
+        (throw (ex-info (format "Fastly purge failed for %s" path) resp))))))
 
 (defrecord CDNStorage [cdn-token cdn-url]
   Storage
   (-write-artifact [_ path _ _]
-    (when (re-find #"/maven-metadata\.xml" path)
-      ;; purge maven-metadata.xml and its sums from fastly, since they
-      ;; are mutable
-      (purge cdn-token cdn-url path)))
+    ;; Purge any file in the deploy in case it has been requested in
+    ;; the last 24 hours, since fastly will cache the 404.  Run in a
+    ;; future so we don't have to wait for the request to finish to
+    ;; complete the deploy.
+    (future (purge cdn-token cdn-url path)))
   (remove-path [_ path]
     (purge cdn-token cdn-url path))
   (path-exists? [_ _])
