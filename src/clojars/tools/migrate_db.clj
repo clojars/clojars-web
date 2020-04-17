@@ -5,5 +5,5 @@
 
 (defn -main [& _]
   (let [db (:db (config))]
-    (println "=> Migrating" db)
+    (println "=> Migrating db")
     (migrate db)))
