@@ -139,12 +139,10 @@ configuration. This can be done by `lein run`.
 Deployment
 ----------
 
-Also see [Configuration](#configuration).
+See the [Deployment instructions](https://github.com/clojars/clojars-server-config#deployment) in the 
+[clojars-server-config repo](https://github.com/clojars/clojars-server-config).
 
-1. Compile with: `lein uberjar`
-1. Deploy `target/uberjar/clojars-web-*-standalone.jar` to the server
-1. Run the migrations `java -cp clojars-web-*-standalone.jar clojure.main -m clojars.tools.migrate-db`
-1. Run the production system: `java -jar clojars-web-*-standalone.jar`
+Also see [Configuration](#configuration).
 
 Configuration
 -------------
@@ -160,7 +158,7 @@ is used to provide isolation. It can be found in `test/clojars/test/test_helper.
 License
 -------
 
-Copyright © 2009-2017 Alex Osborne, Phil Hagelberg, Nelson Morris,
+Copyright © 2009-2020 Alex Osborne, Phil Hagelberg, Nelson Morris,
 Toby Crawley, Daniel Compton and
 [contributors](https://github.com/clojars/clojars-web/graphs/contributors).
 
