@@ -41,7 +41,7 @@
                  [org.clojure/tools.nrepl "0.2.11"]
                  [yesql "0.5.1"]
                  [org.postgresql/postgresql "42.2.9"]
-                 [duct/hikaricp-component "0.1.0"
+                 [duct/hikaricp-component "0.1.2"
                   :exclusions [com.stuartsierra/component
                                org.slf4j/slf4j-api]]
                  ;; hikaricp-component transitively depends on two versions, so we explicitly bring in one
