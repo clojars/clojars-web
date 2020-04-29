@@ -92,6 +92,10 @@
                                         {:connection db
                                          :result-set-fn first}))
 
+(defn find-user-tokens-by-username [db username]
+  (sql/find-user-tokens-by-username {:username username}
+    {:connection db}))
+
 (defn find-groupnames [db username]
   (sql/find-groupnames {:username username}
                        {:connection db
@@ -265,8 +269,8 @@
     seed))
 
 (defn hexadecimalize [byte-array]
-                                        ; converts byte array to hex string
-                                        ; http://stackoverflow.com/a/8015558/974795
+  ;; converts byte array to hex string
+  ;; http://stackoverflow.com/a/8015558/974795
   (str/lower-case (apply str (map #(format "%02X" %) byte-array))))
 
 (defn set-password-reset-code! [db username]
@@ -276,6 +280,19 @@
                                    :username username}
                                   {:connection db})
     reset-code))
+
+(defn generate-deploy-token []
+  (str "CLOJARS_" (hexadecimalize (generate-secure-token 30))))
+
+(defn add-deploy-token [db username token-name]
+  (let [user (find-user db username)
+        token (generate-deploy-token)
+        record {:user_id (:id user)
+                :name token-name
+                :token token}]
+    (sql/insert-deploy-token! (update record :token bcrypt) 
+                              {:connection db})
+    record))
 
 (defn add-member [db groupname username added-by]
   (sql/inactivate-member! {:groupname groupname

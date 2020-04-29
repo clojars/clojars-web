@@ -101,16 +101,27 @@
     (when-not (empty? (:password user))
       (rename-keys user {:user :username}))))
 
-(defn credential-fn [db]
-    (fn [auth-map]
-      (creds/bcrypt-credential-fn (partial user-credentials db) auth-map)))
+(defn token-credential-fn [db]
+  (fn [{:keys [username password]}]
+    (when (and password
+            (->> (db/find-user-tokens-by-username db username)
+              (map :token)
+              (some #(creds/bcrypt-verify password %))))
+      {:username username})))
+
+(defn password-credential-fn [db]
+  (fn [auth-map]
+    (creds/bcrypt-credential-fn (partial user-credentials db) auth-map)))
+
+(defn token-or-password-credential-fn [db]
+  (some-fn (token-credential-fn db) (password-credential-fn db)))
 
 (defn clojars-app [storage db reporter stats search mailer]
   (routes
     (-> (context "/repo" _
           (-> (repo/routes storage db search)
             (friend/authenticate
-              {:credential-fn (credential-fn db)
+              {:credential-fn (token-or-password-credential-fn db)
                :workflows [(workflows/http-basic :realm "clojars")]
                :allow-anon? false
                :unauthenticated-handler
@@ -121,7 +132,7 @@
       (wrap-secure-session))
    (-> (main-routes db reporter stats search mailer)
        (friend/authenticate
-        {:credential-fn (credential-fn db)
+        {:credential-fn (password-credential-fn db)
          :workflows [(workflows/interactive-form)
                      (registration/workflow db)]})
        (wrap-exceptions reporter)
