@@ -13,13 +13,14 @@
           (auth/try-account
            #(view/show-group db % groupname actives)))))
    (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username admin]
-     (let [actives (seq (db/group-actives db groupname))
+     (let [make-admin? (= "1" admin)
+           actives (seq (db/group-actives db groupname))
            membernames (->> actives
-                            (filter #(not= 1 (:admin %)))
+                            (filter (complement view/is-admin?))
                             (map :user))
            adminnames (->> actives
-                            (filter #(= 1 (:admin %)))
-                            (map :user))]
+                           (filter view/is-admin?)
+                           (map :user))]
        (when (seq actives)
            (auth/try-account
              (fn [account]
@@ -27,7 +28,7 @@
                  db
                  account
                  groupname
-                 (if (= admin "1")
+                 (if make-admin?
                    #(cond
                       (= account username)
                       (view/show-group db account groupname actives
@@ -40,7 +41,7 @@
                       (db/find-user db username)
                       (do (db/add-admin db groupname username account)
                         (view/show-group db account groupname
-                          (into (remove (fn [active] (= username (:user active))) actives) [{:user username :admin 1}])))
+                          (into (remove (fn [active] (= username (:user active))) actives) [{:user username :admin true}])))
 
                       :else
                       (view/show-group db account groupname actives
@@ -58,7 +59,7 @@
                       (db/find-user db username)
                       (do (db/add-member db groupname username account)
                         (view/show-group db account groupname
-                          (into (remove (fn [active] (= username (:user active))) actives) [{:user username :admin 0}])))
+                          (into (remove (fn [active] (= username (:user active))) actives) [{:user username :admin false}])))
 
                       :else
                       (view/show-group db account groupname actives

@@ -1,15 +1,13 @@
 (ns clojars.web.group
-  (:require [clojars.web.common :refer [html-doc jar-link user-link error-list]]
+  (:require [clojars.auth :refer [authorized-admin? authorized-member?]]
             [clojars.db :refer [jars-by-groupname]]
-            [clojars.auth :refer [authorized-admin? authorized-member?]]
-            [hiccup.element :refer [unordered-list]]
-            [hiccup.form :refer [text-field submit-button hidden-field check-box]]
+            [clojars.web.common :refer [html-doc jar-link user-link error-list]]
             [clojars.web.safe-hiccup :refer [form-to]]
-            [clojars.web.structured-data :as structured-data]))
+            [clojars.web.structured-data :as structured-data]
+            [hiccup.element :refer [unordered-list]]
+            [hiccup.form :refer [text-field submit-button hidden-field]]))
 
-(defn is-admin?
-  [active]
-  (= 1 (:admin active)))
+(def is-admin? :admin)
 
 (defn show-group [db account groupname actives & errors]
   (let [admin? (authorized-admin? db account groupname)
