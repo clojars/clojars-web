@@ -34,6 +34,11 @@ WHERE (
              LIMIT 1)
 );
 
+--name: find-token
+select *
+FROM deploy_tokens
+WHERE id = :id;
+
 --name: find-groupnames
 SELECT name
 FROM groups
@@ -294,6 +299,11 @@ WHERE "user" = :username;
 --name: insert-deploy-token!
 INSERT INTO deploy_tokens (name, user_id, token)
 VALUES (:name, :user_id, :token);
+
+--name: disable-deploy-token!
+UPDATE deploy_tokens
+SET disabled = true, updated = :updated
+WHERE id = :token_id
 
 --name: find-groups-jars-information
 SELECT j.jar_name, j.group_name, homepage, description, "user",

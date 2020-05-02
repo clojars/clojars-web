@@ -17,6 +17,7 @@
              [group :as group]
              [repo :as repo]
              [session :as session]
+             [token :as token]
              [user :as user]]
             [clojars.web
              [browse :refer [browse]]
@@ -85,6 +86,7 @@
    ;; user routes must go after artifact routes
    ;; since they both catch /:identifier
    (user/routes db mailer)
+   (token/routes db)
    (api/routes db stats)
    (GET "/error" _ (throw (Exception. "What!? You really want an error?")))
    (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})

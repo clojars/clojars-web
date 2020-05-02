@@ -63,6 +63,7 @@
     "terms"
     "test"
     "testing"
+    "tokens"
     "upload"
     "user"
     "username"
@@ -95,6 +96,11 @@
 (defn find-user-tokens-by-username [db username]
   (sql/find-user-tokens-by-username {:username username}
     {:connection db}))
+
+(defn find-token [db token-id]
+  (sql/find-token {:id token-id}
+    {:connection db
+     :result-set-fn first}))
 
 (defn find-groupnames [db username]
   (sql/find-groupnames {:username username}
@@ -293,6 +299,12 @@
     (sql/insert-deploy-token! (update record :token bcrypt) 
                               {:connection db})
     record))
+
+(defn disable-deploy-token [db token-id]
+  (sql/disable-deploy-token!
+   {:token_id token-id
+    :updated (get-time)}
+   {:connection db}))
 
 (defn add-member [db groupname username added-by]
   (sql/inactivate-member! {:groupname groupname
