@@ -5,7 +5,8 @@
             [clojars.maven :as maven]
             [clojars.test-helper :as help]
             [clojure.java.io :as io]
-            [kerodon.core :refer [fill-in follow press visit]])
+            [kerodon.core :refer [fill-in follow follow-redirect press visit]]
+            [net.cgrand.enlive-html :as enlive])
   (:import java.io.File))
 
 (defn login-as [state user password]
@@ -28,6 +29,19 @@
          (fill-in "Password" password)
          (fill-in "Confirm password" confirm)
          (press "Register"))))
+
+(defn create-deploy-token
+  [state user password token-name]
+  (-> state
+      (login-as user password)
+      (follow-redirect)
+      (follow "deploy tokens")
+      (fill-in "Token name" token-name)
+      (press "Create Token")
+      :enlive
+      (enlive/select [:div.new-token :> :pre])
+      (first)
+      (enlive/text)))
 
 (defn file-repo [path]
   (str (.toURI (File. path))))

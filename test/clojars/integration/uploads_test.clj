@@ -3,9 +3,8 @@
    [cemerick.pomegranate.aether :as aether]
    [clj-http.client :as client]
    [clojars.config :refer [config]]
-   [clojars.db :as db]
    [clojars.file-utils :as fu]
-   [clojars.integration.steps :refer [register-as]]
+   [clojars.integration.steps :refer [create-deploy-token register-as]]
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
    [clojure.data.codec.base64 :as base64]
@@ -79,11 +78,8 @@
 
 (deftest user-can-register-and-deploy-with-token
   (-> (session (help/app-from-system))
-    (register-as "dantheman" "test@example.org" "password"))
-
-  ;; hack until we expose creating a token via the ui
-  (let [db (:db (config))
-        token (db/add-deploy-token db "dantheman" "testing")]
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (aether/deploy
       :coordinates '[org.clojars.dantheman/test "0.0.1"]
       :jar-file (io/file (io/resource "test.jar"))
@@ -91,7 +87,7 @@
                   {:groupId "org.clojars.dantheman"})
       :repository {"test" {:url (repo-url)
                            :username "dantheman"
-                           :password (:token token)}}
+                           :password token}}
       :local-repo help/local-repo))
 
   (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
@@ -132,23 +128,23 @@
                                          [(tmp-checksum-file f :md5) no-version?]
                                          [(tmp-checksum-file f :sha1) no-version?]]))
         files (add-checksums [[(tmp-file
-                                 (io/file (io/resource "test.jar")) "test-0.0.1.jar")]
+                                (io/file (io/resource "test.jar")) "test-0.0.1.jar")]
                               [(tmp-file
-                                 (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                                   {:groupId "org.clojars.dantheman"})
-                                 "test-0.0.1.pom")]
+                                (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                                  {:groupId "org.clojars.dantheman"})
+                                "test-0.0.1.pom")]
                               [(tmp-file
-                                 (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
-                                 "maven-metadata.xml")
+                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                "maven-metadata.xml")
                                :no-version]
                               ;; maven 3.5 will upload maven-metadata.xml twice when there are classified artifacts
                               ;; see https://github.com/clojars/clojars-web/issues/640
                               [(tmp-file
-                                 (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
-                                 "maven-metadata.xml")
+                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                "maven-metadata.xml")
                                :no-version]
                               [(tmp-file
-                                 (io/file (io/resource "test.jar")) "test-sources-0.0.1.jar")]])]
+                                (io/file (io/resource "test.jar")) "test-sources-0.0.1.jar")]])]
     ;; we use clj-http here instead of aether to have control over the
     ;; order the files are uploaded
     (binding [clj-http.core/*cookie-store* (clj-http.cookies/cookie-store)]

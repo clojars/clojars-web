@@ -1,5 +1,5 @@
 (ns clojars.integration.sessions-test
-  (:require [clojars.integration.steps :refer [login-as register-as]]
+  (:require [clojars.integration.steps :refer [create-deploy-token login-as register-as]]
             [clojars.test-helper :as help]
             [clojure.java.jdbc :as jdbc]
             [clojure.test :refer [deftest use-fixtures]]
@@ -36,6 +36,18 @@
           (has (status? 200))
           (within [:nav [:li enlive/first-child] :a]
                   (has (text? "login")))))))
+
+(deftest user-cant-login-with-deploy-token
+  (let [app (help/app)
+        _ (-> (session app)
+              (register-as "fixture" "fixture@example.org" "password"))
+        token (create-deploy-token (session app) "fixture" "password" "testing")]
+    (-> (session app)
+        (login-as "fixture" token)
+        (follow-redirect)
+        (has (status? 200))
+        (within [:div :p.error]
+                (has (text? "Incorrect username and/or password."))))))
 
 (deftest user-with-password-wipe-gets-message
   (let [app (help/app)]
