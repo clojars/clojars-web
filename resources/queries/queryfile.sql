@@ -305,6 +305,11 @@ UPDATE deploy_tokens
 SET disabled = true, updated = :updated
 WHERE id = :token_id
 
+--name: set-deploy-token-used!
+UPDATE deploy_tokens
+SET last_used = :timestamp
+WHERE id = :token_id
+
 --name: find-groups-jars-information
 SELECT j.jar_name, j.group_name, homepage, description, "user",
 j.version AS latest_version, r2.version AS latest_release

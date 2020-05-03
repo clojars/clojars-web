@@ -34,17 +34,19 @@
         [:th "Token Name"]
         [:th "Created"]
         [:th "Disabled"]
+        [:th "Last Used"]
         [:th "Actions"]]]
       [:tbody
        (for [token (sort-by (juxt :disabled :name :created) tokens)
              :let [disabled? (:disabled token)]]
          [:tr
-          [:td {:class (when disabled?  "token-disabled")} (:name token)]
-          [:td (simple-date (:created token))]
-          [:td (when disabled? (simple-date (:updated token)))]
-          [:td (when-not disabled?
-                 (form-to [:delete (str "/tokens/" (:id token))]
-                          [:input.button {:type "submit" :value "Disable Token"}]))]])]]]
+          [:td.name {:class (when disabled?  "token-disabled")} (:name token)]
+          [:td.created (simple-date (:created token))]
+          [:td.updated (when disabled? (simple-date (:updated token)))]
+          [:td.last-used (simple-date (:last_used token))]
+          [:td.actions (when-not disabled?
+                         (form-to [:delete (str "/tokens/" (:id token))]
+                                  [:input.button {:type "submit" :value "Disable Token"}]))]])]]]
     [:div.add-token.small-section.col-xs-12.col-sm-6
      [:h2 "Create Deploy Token"]
      [:p [:strong "Note:"]

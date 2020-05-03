@@ -37,9 +37,17 @@
                            " created timestamp not null default current_timestamp,"
                            " updated timestamp not null default current_timestamp,"
                            " disabled boolean not null default false)")))
+
+(defn- add-last-used-to-deploy-tokens-table
+  [trans]
+  (sql/db-do-commands trans
+                      (str "alter table deploy_tokens "
+                           "add last_used timestamp default null")))
+
 (def migrations
   [#'initial-schema
-   #'add-deploy-tokens-table])
+   #'add-deploy-tokens-table
+   #'add-last-used-to-deploy-tokens-table])
 
 (defn migrate [db]
   (sql/db-do-commands db

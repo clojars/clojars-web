@@ -306,6 +306,12 @@
     :updated (get-time)}
    {:connection db}))
 
+(defn set-deploy-token-used [db token-id]
+  (sql/set-deploy-token-used!
+   {:token_id token-id
+    :timestamp (get-time)}
+   {:connection db}))
+
 (defn add-member [db groupname username added-by]
   (sql/inactivate-member! {:groupname groupname
                            :username username

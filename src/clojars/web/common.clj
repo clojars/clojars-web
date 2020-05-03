@@ -316,7 +316,8 @@
   (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
 
 (defn simple-date [s]
-  (.format (java.text.SimpleDateFormat. "MMM d, yyyy") s))
+  (when s
+    (.format (java.text.SimpleDateFormat. "MMM d, yyyy") s)))
 
 (defn page-nav [current-page total-pages & {:keys [base-path] :or {base-path "/projects?page="}}]
   (let [previous-text (raw "&#8592; Previous")

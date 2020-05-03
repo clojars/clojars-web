@@ -3,10 +3,12 @@
    [cemerick.pomegranate.aether :as aether]
    [clj-http.client :as client]
    [clojars.config :refer [config]]
+   [clojars.db :as db]
    [clojars.file-utils :as fu]
-   [clojars.integration.steps :refer [create-deploy-token register-as]]
+   [clojars.integration.steps :refer [create-deploy-token login-as register-as]]
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
+   [clojars.web.common :as common]
    [clojure.data.codec.base64 :as base64]
    [clojure.java.io :as io]
    [clojure.string :as str]
@@ -79,46 +81,53 @@
 (deftest user-can-register-and-deploy-with-token
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
-    (aether/deploy
-      :coordinates '[org.clojars.dantheman/test "0.0.1"]
-      :jar-file (io/file (io/resource "test.jar"))
-      :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                  {:groupId "org.clojars.dantheman"})
-      :repository {"test" {:url (repo-url)
-                           :username "dantheman"
-                           :password token}}
-      :local-repo help/local-repo))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+        now (db/get-time)]
+    (with-redefs [db/get-time (constantly now)]
+      (aether/deploy
+       :coordinates '[org.clojars.dantheman/test "0.0.1"]
+       :jar-file (io/file (io/resource "test.jar"))
+       :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                   {:groupId "org.clojars.dantheman"})
+       :repository {"test" {:url (repo-url)
+                            :username "dantheman"
+                            :password token}}
+       :local-repo help/local-repo))
 
-  (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
-        base-path "org/clojars/dantheman/test/"
-        repo-bucket (:repo-bucket help/system)
-        repo (:repo (config))]
-    (is (.exists (io/file repo base-path "maven-metadata.xml")))
-    (is (s3/object-exists? repo-bucket (str base-path "maven-metadata.xml")))
-    (is (= 6 (count (.list (io/file repo base-path "0.0.1")))))
-    (doseq [suffix suffixes]
-      (is (.exists (io/file repo base-path "0.0.1" (str "test-0.0.1." suffix))))
-      (is (s3/object-exists? repo-bucket (str base-path "0.0.1/test-0.0.1." suffix)))))
+    (let [suffixes ["jar" "jar.md5" "jar.sha1" "pom" "pom.md5" "pom.sha1"]
+          base-path "org/clojars/dantheman/test/"
+          repo-bucket (:repo-bucket help/system)
+          repo (:repo (config))]
+      (is (.exists (io/file repo base-path "maven-metadata.xml")))
+      (is (s3/object-exists? repo-bucket (str base-path "maven-metadata.xml")))
+      (is (= 6 (count (.list (io/file repo base-path "0.0.1")))))
+      (doseq [suffix suffixes]
+        (is (.exists (io/file repo base-path "0.0.1" (str "test-0.0.1." suffix))))
+        (is (s3/object-exists? repo-bucket (str base-path "0.0.1/test-0.0.1." suffix)))))
 
-  (-> (session (help/app-from-system))
-      (visit "/groups/org.clojars.dantheman")
-      (has (status? 200))
-      (within [:#content-wrapper
-               [:ul enlive/last-of-type]
-               [:li enlive/only-child]
-               :a]
-              (has (text? "dantheman")))
-      (follow "org.clojars.dantheman/test")
-      (has (status? 200))
-      (within [:#jar-sidebar :li.homepage :a]
-              (has (text? "https://example.org"))))
-  (-> (session (help/app-from-system))
-      (visit "/")
-      (fill-in [:#search] "test")
-      (press [:#search-button])
-      (within [:div.result]
-              (has (text? "org.clojars.dantheman/test 0.0.1")))))
+    (-> (session (help/app-from-system))
+        (visit "/groups/org.clojars.dantheman")
+        (has (status? 200))
+        (within [:#content-wrapper
+                 [:ul enlive/last-of-type]
+                 [:li enlive/only-child]
+                 :a]
+                (has (text? "dantheman")))
+        (follow "org.clojars.dantheman/test")
+        (has (status? 200))
+        (within [:#jar-sidebar :li.homepage :a]
+                (has (text? "https://example.org"))))
+    (-> (session (help/app-from-system))
+        (visit "/")
+        (fill-in [:#search] "test")
+        (press [:#search-button])
+        (within [:div.result]
+                (has (text? "org.clojars.dantheman/test 0.0.1"))))
+    (-> (session (help/app-from-system))
+        (login-as "dantheman" "password")
+        (visit "/tokens")
+        (within [:td.last-used]
+                (has (text? (common/simple-date now)))))))
 
 (deftest user-can-deploy-artifacts-after-maven-metadata
   (-> (session (help/app-from-system))

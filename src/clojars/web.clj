@@ -105,10 +105,10 @@
 
 (defn token-credential-fn [db]
   (fn [{:keys [username password]}]
-    (when (and password
-            (->> (db/find-user-tokens-by-username db username)
-              (map :token)
-              (some #(creds/bcrypt-verify password %))))
+    (when-let [token (and password
+                          (->> (db/find-user-tokens-by-username db username)
+                               (some #(when (creds/bcrypt-verify password (:token %)) %))))]
+      (db/set-deploy-token-used db (:id token))
       {:username username})))
 
 (defn password-credential-fn [db]
