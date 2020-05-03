@@ -63,6 +63,7 @@
     "terms"
     "test"
     "testing"
+    "tokens"
     "upload"
     "user"
     "username"
@@ -91,6 +92,15 @@
                                          (-> 1 time/days time/ago time.coerce/to-sql-date)}
                                         {:connection db
                                          :result-set-fn first}))
+
+(defn find-user-tokens-by-username [db username]
+  (sql/find-user-tokens-by-username {:username username}
+    {:connection db}))
+
+(defn find-token [db token-id]
+  (sql/find-token {:id token-id}
+    {:connection db
+     :result-set-fn first}))
 
 (defn find-groupnames [db username]
   (sql/find-groupnames {:username username}
@@ -265,8 +275,8 @@
     seed))
 
 (defn hexadecimalize [byte-array]
-                                        ; converts byte array to hex string
-                                        ; http://stackoverflow.com/a/8015558/974795
+  ;; converts byte array to hex string
+  ;; http://stackoverflow.com/a/8015558/974795
   (str/lower-case (apply str (map #(format "%02X" %) byte-array))))
 
 (defn set-password-reset-code! [db username]
@@ -276,6 +286,31 @@
                                    :username username}
                                   {:connection db})
     reset-code))
+
+(defn generate-deploy-token []
+  (str "CLOJARS_" (hexadecimalize (generate-secure-token 30))))
+
+(defn add-deploy-token [db username token-name]
+  (let [user (find-user db username)
+        token (generate-deploy-token)
+        record {:user_id (:id user)
+                :name token-name
+                :token token}]
+    (sql/insert-deploy-token! (update record :token bcrypt) 
+                              {:connection db})
+    record))
+
+(defn disable-deploy-token [db token-id]
+  (sql/disable-deploy-token!
+   {:token_id token-id
+    :updated (get-time)}
+   {:connection db}))
+
+(defn set-deploy-token-used [db token-id]
+  (sql/set-deploy-token-used!
+   {:token_id token-id
+    :timestamp (get-time)}
+   {:connection db}))
 
 (defn add-member [db groupname username added-by]
   (sql/inactivate-member! {:groupname groupname

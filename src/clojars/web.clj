@@ -17,6 +17,7 @@
              [group :as group]
              [repo :as repo]
              [session :as session]
+             [token :as token]
              [user :as user]]
             [clojars.web
              [browse :refer [browse]]
@@ -85,6 +86,7 @@
    ;; user routes must go after artifact routes
    ;; since they both catch /:identifier
    (user/routes db mailer)
+   (token/routes db)
    (api/routes db stats)
    (GET "/error" _ (throw (Exception. "What!? You really want an error?")))
    (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
@@ -101,16 +103,28 @@
     (when-not (empty? (:password user))
       (rename-keys user {:user :username}))))
 
-(defn credential-fn [db]
-    (fn [auth-map]
-      (creds/bcrypt-credential-fn (partial user-credentials db) auth-map)))
+(defn token-credential-fn [db]
+  (fn [{:keys [username password]}]
+    (when-let [token (and password
+                          (->> (db/find-user-tokens-by-username db username)
+                               (remove :disabled)
+                               (some #(when (creds/bcrypt-verify password (:token %)) %))))]
+      (db/set-deploy-token-used db (:id token))
+      {:username username})))
+
+(defn password-credential-fn [db]
+  (fn [auth-map]
+    (creds/bcrypt-credential-fn (partial user-credentials db) auth-map)))
+
+(defn token-or-password-credential-fn [db]
+  (some-fn (token-credential-fn db) (password-credential-fn db)))
 
 (defn clojars-app [storage db reporter stats search mailer]
   (routes
     (-> (context "/repo" _
           (-> (repo/routes storage db search)
             (friend/authenticate
-              {:credential-fn (credential-fn db)
+              {:credential-fn (token-or-password-credential-fn db)
                :workflows [(workflows/http-basic :realm "clojars")]
                :allow-anon? false
                :unauthenticated-handler
@@ -121,7 +135,7 @@
       (wrap-secure-session))
    (-> (main-routes db reporter stats search mailer)
        (friend/authenticate
-        {:credential-fn (credential-fn db)
+        {:credential-fn (password-credential-fn db)
          :workflows [(workflows/interactive-form)
                      (registration/workflow db)]})
        (wrap-exceptions reporter)

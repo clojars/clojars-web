@@ -1,0 +1,1 @@
+{:lint-as {clojure.java.jdbc/with-db-transaction clojure.core/let}}

@@ -26,8 +26,28 @@
                [(str (:name (meta migration)))
                 (Timestamp. (System/currentTimeMillis))]))
 
+(defn- add-deploy-tokens-table
+  [trans]
+  (sql/db-do-commands trans
+                      (str "create table deploy_tokens "
+                           "(id serial not null primary key,"
+                           " user_id integer not null references users(id) on delete cascade,"
+                           " name text not null,"
+                           " token text unique not null,"
+                           " created timestamp not null default current_timestamp,"
+                           " updated timestamp not null default current_timestamp,"
+                           " disabled boolean not null default false)")))
+
+(defn- add-last-used-to-deploy-tokens-table
+  [trans]
+  (sql/db-do-commands trans
+                      (str "alter table deploy_tokens "
+                           "add last_used timestamp default null")))
+
 (def migrations
-  [#'initial-schema])
+  [#'initial-schema
+   #'add-deploy-tokens-table
+   #'add-last-used-to-deploy-tokens-table])
 
 (defn migrate [db]
   (sql/db-do-commands db

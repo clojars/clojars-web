@@ -628,6 +628,17 @@ input.red-button {
 }
 
 .group-member-list th,
-.group-member-list td {
+.group-member-list td,
+table.deploy-tokens th,
+table.deploy-tokens td {
     padding: 0 5px;
+}
+
+table.deploy-tokens td.token-disabled {
+    text-decoration: line-through;
+}
+
+.new-token pre {
+    background-color: #e9e9e9;
+    padding: 5px;
 }

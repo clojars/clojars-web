@@ -1,11 +1,10 @@
 (ns clojars.web.common
   (:require [clojars.maven :as maven]
             [clojars.web.helpers :as helpers]
-            [clojars.web.safe-hiccup :refer [html5 raw form-to]]
+            [clojars.web.safe-hiccup :refer [html5 raw]]
             [clojars.web.structured-data :as structured-data]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.string :refer [join]]
             [clojure.string :as str]
             [hiccup.core :refer [html]]
             [hiccup.element :refer [link-to unordered-list image]]
@@ -123,6 +122,7 @@
          (unordered-list
           [(link-to "/" "dashboard")
            (link-to "/profile" "profile")
+           (link-to "/tokens" "deploy tokens")
            (link-to "/logout" "logout")])
          (unordered-list
           [(link-to "/login" "login")
@@ -296,9 +296,9 @@
 (defn jar-notice [group-id artifact-id]
   (if-let [notice (jar-notice-for group-id artifact-id)]
     [:div#notice.info (raw notice)]
-    (if (and
-          (not (maven/can-shadow-maven? group-id artifact-id))
-          (maven/exists-on-central? group-id artifact-id))
+    (when (and
+           (not (maven/can-shadow-maven? group-id artifact-id))
+           (maven/exists-on-central? group-id artifact-id))
       (shadow-notice group-id artifact-id))))
 
 (defn jar-link [jar]
@@ -316,7 +316,8 @@
   (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
 
 (defn simple-date [s]
-  (.format (java.text.SimpleDateFormat. "MMM d, yyyy") s))
+  (when s
+    (.format (java.text.SimpleDateFormat. "MMM d, yyyy") s)))
 
 (defn page-nav [current-page total-pages & {:keys [base-path] :or {base-path "/projects?page="}}]
   (let [previous-text (raw "&#8592; Previous")
