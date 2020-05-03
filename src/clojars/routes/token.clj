@@ -3,11 +3,13 @@
    [clojars.auth :as auth]
    [clojars.db :as db]
    [clojars.web.token :as view]
-   [compojure.core :as compojure :refer [GET POST DELETE]]))
+   [compojure.core :as compojure :refer [GET POST DELETE]]
+   [ring.util.response :refer [redirect]]))
 
-(defn- get-tokens [db]
+(defn- get-tokens [db flash-msg]
   (auth/with-account
-    #(view/show-tokens % (db/find-user-tokens-by-username db %))))
+    #(view/show-tokens % (db/find-user-tokens-by-username db %)
+                       {:message flash-msg})))
 
 (defn- create-token [db token-name]
   (auth/with-account
@@ -31,14 +33,15 @@
                        (= (:user_id token)
                           (:id user)))]
        (db/disable-deploy-token db (:id token))
-       (view/show-tokens account (db/find-user-tokens-by-username db account)
-                         {:message (when found? (format "Token '%s' disabled." (:name token)))
-                          :error (when-not found? "Token not found.")})))))
+       (assoc (redirect "/tokens")
+              :flash (if found?
+                       (format "Token '%s' disabled." (:name token))
+                       "Token not found."))))))
 
 (defn routes [db]
   (compojure/routes
-   (GET ["/tokens"] []
-        (get-tokens db))
+   (GET ["/tokens"] {:keys [flash]}
+        (get-tokens db flash))
    (POST ["/tokens"] [name]
          (create-token db name))
    (DELETE ["/tokens/:id", :id #"[0-9]+"] [id]
