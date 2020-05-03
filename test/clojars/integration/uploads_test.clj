@@ -129,6 +129,25 @@
         (within [:td.last-used]
                 (has (text? (common/simple-date now)))))))
 
+(deftest user-cannot-deploy-with-disabled-token
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+        db (:db (config))
+        db-token (first (db/find-user-tokens-by-username db "dantheman"))]
+    (db/disable-deploy-token db (:id db-token))
+    (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+                          #"401, ReasonPhrase:Unauthorized"
+                          (aether/deploy
+                           :coordinates '[org.clojars.dantheman/test "0.0.1"]
+                           :jar-file (io/file (io/resource "test.jar"))
+                           :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                                       {:groupId "org.clojars.dantheman"})
+                           :repository {"test" {:url (repo-url)
+                                                :username "dantheman"
+                                                :password token}}
+                           :local-repo help/local-repo)))))
+
 (deftest user-can-deploy-artifacts-after-maven-metadata
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))

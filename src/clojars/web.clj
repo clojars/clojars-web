@@ -107,6 +107,7 @@
   (fn [{:keys [username password]}]
     (when-let [token (and password
                           (->> (db/find-user-tokens-by-username db username)
+                               (remove :disabled)
                                (some #(when (creds/bcrypt-verify password (:token %)) %))))]
       (db/set-deploy-token-used db (:id token))
       {:username username})))
