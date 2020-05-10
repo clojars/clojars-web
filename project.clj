@@ -2,7 +2,8 @@
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/core.memoize "0.8.2"]
-                 [raven-clj "1.4.3"]
+                 [raven-clj "1.4.3"
+                  :exclusions [cheshire]]
                  [org.apache.maven/maven-model "3.0.4"
                   :exclusions
                   [org.codehaus.plexus/plexus-utils]]
@@ -31,6 +32,8 @@
                                org.clojure/core.cache
                                ring/ring-core
                                slingshot]]
+                 [buddy/buddy-core "1.6.0"
+                  :exclusions [commons-codec]]
                  [clj-stacktrace "0.2.8"]
                  [clj-time "0.11.0"]
                  [ring/ring-anti-forgery "1.0.1"

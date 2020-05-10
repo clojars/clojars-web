@@ -4,6 +4,12 @@ FROM users
 WHERE "user" = :username
 LIMIT 1;
 
+--name: find-user-by-id
+SELECT *
+FROM users
+WHERE id = :id
+LIMIT 1;
+
 --name: find-user-by-user-or-email
 SELECT *
 FROM users
@@ -38,6 +44,10 @@ WHERE (
 select *
 FROM deploy_tokens
 WHERE id = :id;
+
+--name: all-tokens
+select *
+FROM deploy_tokens;
 
 --name: find-groupnames
 SELECT name

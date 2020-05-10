@@ -5,6 +5,7 @@
             [clojars.config :refer [config]]
             [clojars.db.sql :as sql]
             [clojars.maven :as mvn]
+            [clojars.util :refer [filter-some]]
             [clojure.edn :as edn]
             [clojure.set :as set]
             [clojure.string :as str])
@@ -63,6 +64,7 @@
     "terms"
     "test"
     "testing"
+    "token-breach"
     "tokens"
     "upload"
     "user"
@@ -93,6 +95,11 @@
                                         {:connection db
                                          :result-set-fn first}))
 
+(defn find-user-by-id [db id]
+  (sql/find-user-by-id {:id id}
+                       {:connection db
+                        :result-set-fn first}))
+
 (defn find-user-tokens-by-username [db username]
   (sql/find-user-tokens-by-username {:username username}
     {:connection db}))
@@ -101,6 +108,14 @@
   (sql/find-token {:id token-id}
     {:connection db
      :result-set-fn first}))
+
+(defn find-token-by-value
+  "Finds a token with the matching value. This is somewhat expensive,
+  since it scans all tokens."
+  [db token-value]
+  (sql/all-tokens {}
+                  {:connection db
+                   :result-set-fn (partial filter-some #(creds/bcrypt-verify token-value (:token %)))}))
 
 (defn find-groupnames [db username]
   (sql/find-groupnames {:username username}
