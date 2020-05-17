@@ -12,7 +12,7 @@
    [clojure.data.codec.base64 :as base64]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [clojure.test :refer [are deftest is use-fixtures]]
+   [clojure.test :refer [are deftest is testing use-fixtures]]
    [kerodon.core :refer [fill-in follow press session visit within]]
    [kerodon.test :refer [has status? text?]]
    [net.cgrand.enlive-html :as enlive]))
@@ -129,6 +129,100 @@
         (within [:td.last-used]
                 (has (text? (common/simple-date now)))))))
 
+(deftest deploying-with-a-scoped-token
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+
+  (let [unscoped-token (create-deploy-token
+                        (session (help/app-from-system)) "dantheman" "password" "unscoped")
+        base-path      "org/clojars/dantheman/test/"
+        repo           (:repo (config))]
+
+    ;; setup groups using unscoped token
+    (aether/deploy
+     :coordinates '[org.clojars.dantheman/test "0.0.1"]
+     :jar-file (io/file (io/resource "test.jar"))
+     :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                 {:groupId "org.clojars.dantheman"})
+     :repository {"test" {:url      (repo-url)
+                          :username "dantheman"
+                          :password unscoped-token}}
+     :local-repo help/local-repo)
+
+    (aether/deploy
+     :coordinates '[org.dantheman/test "0.0.1"]
+     :jar-file (io/file (io/resource "test.jar"))
+     :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                 {:groupId "org.dantheman"})
+     :repository {"test" {:url      (repo-url)
+                          :username "dantheman"
+                          :password unscoped-token}}
+     :local-repo help/local-repo)
+
+    (testing "with a group-scoped token"
+      (let [group-scoped-token (create-deploy-token
+                                (session (help/app-from-system)) "dantheman" "password" "group-scoped"
+                                "org.clojars.dantheman")]
+
+        (aether/deploy
+         :coordinates '[org.clojars.dantheman/test "0.0.2"]
+         :jar-file (io/file (io/resource "test.jar"))
+         :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                     {:groupId "org.clojars.dantheman"
+                                      :version "0.0.2"})
+         :repository {"test" {:url      (repo-url)
+                              :username "dantheman"
+                              :password group-scoped-token}}
+         :local-repo help/local-repo)
+
+        (is (= 6 (count (.list (io/file repo base-path "0.0.2")))))
+
+        (is (thrown-with-msg?
+             org.sonatype.aether.deployment.DeploymentException
+             #"ReasonPhrase:Forbidden - The provided token's scope doesn't allow deploying this artifact"
+             (aether/deploy
+              :coordinates '[org.dantheman/test "0.0.2"]
+              :jar-file (io/file (io/resource "test.jar"))
+              :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                          {:groupId "org.dantheman"
+                                           :version "0.0.2"})
+              :repository {"test" {:url      (repo-url)
+                                   :username "dantheman"
+                                   :password group-scoped-token}}
+              :local-repo help/local-repo)))))
+
+    (testing "with an artifact-scoped token"
+      (let [artifact-scoped-token (create-deploy-token
+                                   (session (help/app-from-system)) "dantheman" "password" "artifact-scoped"
+                                   "org.clojars.dantheman/test")]
+
+        (aether/deploy
+         :coordinates '[org.clojars.dantheman/test "0.0.3"]
+         :jar-file (io/file (io/resource "test.jar"))
+         :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                     {:groupId "org.clojars.dantheman"
+                                      :version "0.0.3"})
+         :repository {"test" {:url      (repo-url)
+                              :username "dantheman"
+                              :password artifact-scoped-token}}
+         :local-repo help/local-repo)
+
+        (is (= 6 (count (.list (io/file repo base-path "0.0.3")))))
+
+        (is (thrown-with-msg?
+             org.sonatype.aether.deployment.DeploymentException
+             #"ReasonPhrase:Forbidden - The provided token's scope doesn't allow deploying this artifact"
+             (aether/deploy
+              :coordinates '[org.clojars.dantheman/test2 "0.0.1"]
+              :jar-file (io/file (io/resource "test.jar"))
+              :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                          {:groupId "org.clojars.dantheman"
+                                           :artifactId "test2"})
+              :repository {"test" {:url      (repo-url)
+                                   :username "dantheman"
+                                   :password artifact-scoped-token}}
+              :local-repo help/local-repo)))))))
+
 (deftest user-cannot-deploy-with-disabled-token
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
@@ -136,17 +230,18 @@
         db (:db (config))
         db-token (first (db/find-user-tokens-by-username db "dantheman"))]
     (db/disable-deploy-token db (:id db-token))
-    (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-                          #"401, ReasonPhrase:Unauthorized"
-                          (aether/deploy
-                           :coordinates '[org.clojars.dantheman/test "0.0.1"]
-                           :jar-file (io/file (io/resource "test.jar"))
-                           :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                                       {:groupId "org.clojars.dantheman"})
-                           :repository {"test" {:url (repo-url)
-                                                :username "dantheman"
-                                                :password token}}
-                           :local-repo help/local-repo)))))
+    (is (thrown-with-msg?
+         org.sonatype.aether.deployment.DeploymentException
+         #"401, ReasonPhrase:Unauthorized"
+         (aether/deploy
+          :coordinates '[org.clojars.dantheman/test "0.0.1"]
+          :jar-file (io/file (io/resource "test.jar"))
+          :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                      {:groupId "org.clojars.dantheman"})
+          :repository {"test" {:url (repo-url)
+                               :username "dantheman"
+                               :password token}}
+          :local-repo help/local-repo)))))
 
 (deftest user-can-deploy-artifacts-after-maven-metadata
   (-> (session (help/app-from-system))

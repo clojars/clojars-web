@@ -3,19 +3,30 @@
    [clojars.auth :as auth]
    [clojars.db :as db]
    [clojars.web.token :as view]
+   [clojure.string :as str]
    [compojure.core :as compojure :refer [GET POST DELETE]]
    [ring.util.response :refer [redirect]]))
 
 (defn- get-tokens [db flash-msg]
   (auth/with-account
-    #(view/show-tokens % (db/find-user-tokens-by-username db %)
+    #(view/show-tokens %
+                       (db/find-user-tokens-by-username db %)
+                       (db/jars-by-username db %)
                        {:message flash-msg})))
 
-(defn- create-token [db token-name]
+(defn- parse-scope
+  [scope]
+  (when-not (empty? scope)
+    (str/split scope #"/")))
+
+(defn- create-token [db token-name scope]
   (auth/with-account
     (fn [account]
-      (let [token (db/add-deploy-token db account token-name)]
-        (view/show-tokens account (db/find-user-tokens-by-username db account)
+      (let [[group-name jar-name] (parse-scope scope)
+            token (db/add-deploy-token db account token-name group-name jar-name)]
+        (view/show-tokens account
+                          (db/find-user-tokens-by-username db account)
+                          (db/jars-by-username db account)
                           {:new-token token})))))
 
 (defn- find-token [db token-id]
@@ -42,7 +53,7 @@
   (compojure/routes
    (GET ["/tokens"] {:keys [flash]}
         (get-tokens db flash))
-   (POST ["/tokens"] [name]
-         (create-token db name))
+   (POST ["/tokens"] [name scope]
+         (create-token db name scope))
    (DELETE ["/tokens/:id", :id #"[0-9]+"] [id]
            (disable-token db id))))

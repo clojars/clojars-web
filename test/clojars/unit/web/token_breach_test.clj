@@ -46,7 +46,7 @@
         app (help/app {:mailer (fn [& args] (reset! mailer-args args))})]
     (with-redefs [client/get (constantly {:body github-response})]
       (testing "when token is enabled"
-        (let [token (db/add-deploy-token help/*db* "ham" "a token")
+        (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil)
               res (app (build-breach-request (:token token)))
               db-token (find-token "ham" "a token")
               [to subject message] @mailer-args]
@@ -59,7 +59,7 @@
           (is (re-find #"has been disabled" message))))
 
       (testing "when token is disabled"
-        (let [token (db/add-deploy-token help/*db* "ham" "another token")
+        (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil)
               db-token (find-token "ham" "another token")
               _ (db/disable-deploy-token help/*db* (:id db-token))
               res (app (build-breach-request (:token token)))

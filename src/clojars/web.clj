@@ -110,7 +110,8 @@
                                (remove :disabled)
                                (some #(when (creds/bcrypt-verify password (:token %)) %))))]
       (db/set-deploy-token-used db (:id token))
-      {:username username})))
+      {:username username
+       :token token})))
 
 (defn password-credential-fn [db]
   (fn [auth-map]

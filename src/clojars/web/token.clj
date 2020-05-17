@@ -2,7 +2,7 @@
   (:require
    [clojars.web.common :refer [flash html-doc error-list simple-date]]
    [clojars.web.safe-hiccup :refer [form-to]]
-   [hiccup.form :refer [label text-field submit-button]]))
+   [hiccup.form :refer [drop-down label text-field submit-button]]))
 
 (defn- new-token-message
   [{:keys [name token]}]
@@ -13,10 +13,29 @@
      [:div.new-token
       [:pre token]])))
 
+(defn- scope
+  [{:keys [group_name jar_name]}]
+  (cond
+    jar_name   (format "%s/%s" group_name jar_name)
+    group_name (format "%s/*" group_name)
+    :else      "*"))
+
+(defn- scope-options
+  [jars]
+  (let [jars (group-by :group_name jars)
+        groups (sort (keys jars))]
+    (reduce
+     (fn [acc group]
+       (concat acc
+               [[(scope {:group_name group}) group]]
+               (map scope (sort-by :jar_name (get jars group)))))
+     [["*" ""]]
+     groups)))
+
 (defn show-tokens
-  ([account tokens]
-   (show-tokens account tokens nil))
-  ([account tokens {:keys [error message new-token]}]
+  ([account tokens jars]
+   (show-tokens account tokens jars nil))
+  ([account tokens jars {:keys [error message new-token]}]
    (html-doc
     "Deploy Tokens"
     {:account account :description "Clojars deploy tokens"}
@@ -26,12 +45,19 @@
      (flash message)
      (flash (new-token-message new-token))]
     [:div.col-xs-12.col-sm-12
-     [:p "Deploy tokens are used in place of a password when deploying, and cannot be used to log in."]]
+     [:div.help
+      [:p "A deploy token is used in place of a password when deploying, and cannot be used to log in."
+       "Tokens can be scoped to:"]
+      [:ul
+       [:li "any artifact you have access to ('*')"]
+       [:li "any artifact within a group you have access to ('group-name/*')"]
+       [:li "a particular artifact you have access to ('group-name/artifact-name')"]]]]
     [:div.token-table.col-xs-12.col-sm-12
      [:table.table.deploy-tokens
       [:thead
        [:tr
         [:th "Token Name"]
+        [:th "Scope"]
         [:th "Created"]
         [:th "Disabled"]
         [:th "Last Used"]
@@ -41,6 +67,7 @@
              :let [disabled? (:disabled token)]]
          [:tr
           [:td.name {:class (when disabled?  "token-disabled")} (:name token)]
+          [:td.scope (scope token)]
           [:td.created (simple-date (:created token))]
           [:td.updated (when disabled? (simple-date (:updated token)))]
           [:td.last-used (simple-date (:last_used token))]
@@ -56,4 +83,6 @@
               (text-field {:placeholder "Laptop deploy token"
                            :required true}
                           :name)
+              (label :scope "Token scope")
+              (drop-down :scope (scope-options jars))
               (submit-button "Create Token"))])))

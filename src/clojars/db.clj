@@ -305,12 +305,14 @@
 (defn generate-deploy-token []
   (str "CLOJARS_" (hexadecimalize (generate-secure-token 30))))
 
-(defn add-deploy-token [db username token-name]
+(defn add-deploy-token [db username token-name group-name jar-name]
   (let [user (find-user db username)
         token (generate-deploy-token)
         record {:user_id (:id user)
                 :name token-name
-                :token token}]
+                :token token
+                :group_name group-name
+                :jar_name jar-name}]
     (sql/insert-deploy-token! (update record :token bcrypt) 
                               {:connection db})
     record))
