@@ -307,8 +307,8 @@ SET password_reset_code = :reset_code, password_reset_code_created_at = :reset_c
 WHERE "user" = :username;
 
 --name: insert-deploy-token!
-INSERT INTO deploy_tokens (name, user_id, token)
-VALUES (:name, :user_id, :token);
+INSERT INTO deploy_tokens (name, user_id, token, group_name, jar_name)
+VALUES (:name, :user_id, :token, :group_name, :jar_name);
 
 --name: disable-deploy-token!
 UPDATE deploy_tokens

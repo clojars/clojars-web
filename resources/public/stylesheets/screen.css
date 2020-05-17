@@ -429,7 +429,7 @@ footer a {
   margin-bottom: 20px;
 }
 
-#notice {
+#notice, .help {
   font-weight: bold;
   padding: 10px;
   margin: 10px 0;
@@ -452,6 +452,15 @@ footer a {
 .error ul {
    list-style-type: disc;
    list-style-position: inside;
+}
+
+.help {
+    background-color: #f4f4f4;
+    padding-bottom: 10px;
+}
+
+.help ul {
+    list-style: inside;
 }
 
 #jar-title h1 a {

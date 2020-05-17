@@ -79,21 +79,25 @@
    (throw
      (ex-info message (merge {:report? false} meta) cause))))
 
-(defn- rethrow-forbidden
-  [e meta]
-  (throw-invalid (.getMessage e)
-    (merge
+(defn- throw-forbidden
+  [e-or-message meta]
+  (let [[message cause] (if (instance? Throwable e-or-message)
+                          [(.getMessage e-or-message) (.getCause e-or-message)]
+                          [e-or-message])]
+    (throw-invalid
+     message
+     (merge
       {:status 403
-       :status-message (str "Forbidden - " (.getMessage e))}
+       :status-message (str "Forbidden - " message)}
       meta
-      (ex-data e))
-    (.getCause e)))
+      (ex-data e-or-message))
+     cause)))
 
 (defn- check-group [db account group]
   (try
     (db/check-group (db/group-activenames db group) account group)
     (catch Exception e
-      (rethrow-forbidden e
+      (throw-forbidden e
         {:account account
          :group group}))))
 
@@ -288,6 +292,35 @@
   (storage/write-artifact storage
     (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
 
+(defn- token-session-matches-group-artifact?
+  [{:cemerick.friend/keys [identity]} group artifact]
+  (let [{:keys [authentications current]}       identity
+        {:as token :keys [group_name jar_name]} (get-in authentications [current :token])]
+    (or
+     ;; not a token request
+     (nil? token)
+     
+     ;; token has no scope
+     (and (nil? group_name)
+          (nil? jar_name))
+     
+     ;; token is scoped to this group/artifact
+     (and (= group group_name)
+          (= artifact jar_name))
+
+     ;; token is only group scoped and matches
+     (and (nil? jar_name)
+          (= group group_name)))))
+
+(defn- maybe-assert-token-matches-group+artifact
+  [session group artifact]
+  (when-not (token-session-matches-group-artifact? session group artifact)
+    (throw-forbidden
+      ;; TODO: (toby) add short link to a wiki page      
+     "The provided token's scope doesn't allow deploying this artifact"
+     {:group group
+      :artifact artifact})))
+
 (defn- handle-versioned-upload [storage db body session group artifact version filename]
   (let [groupname (fu/path->group group)
         timestamp-version (when (maven/snapshot-version? version) (maven/snapshot-timestamp-version filename))]
@@ -299,6 +332,7 @@
       timestamp-version
       session
       (fn [account upload-dir]
+        (maybe-assert-token-matches-group+artifact session groupname artifact)
         (write-metadata
           upload-dir
           groupname
@@ -355,7 +389,7 @@
                         (finalize-deploy storage db search
                           account upload-dir)
                         (catch Exception e
-                          (rethrow-forbidden e
+                          (throw-forbidden e
                             {:account account
                              :group group
                              :artifact artifact}))))))))
