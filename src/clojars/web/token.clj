@@ -46,7 +46,7 @@
      (flash (new-token-message new-token))]
     [:div.col-xs-12.col-sm-12
      [:div.help
-      [:p "A deploy token is used in place of a password when deploying, and cannot be used to log in."
+      [:p "A deploy token is used in place of a password when deploying, and cannot be used to log in. "
        "Tokens can be scoped to:"]
       [:ul
        [:li "any artifact you have access to ('*')"]
