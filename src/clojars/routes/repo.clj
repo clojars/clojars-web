@@ -316,8 +316,7 @@
   [session group artifact]
   (when-not (token-session-matches-group-artifact? session group artifact)
     (throw-forbidden
-      ;; TODO: (toby) add short link to a wiki page      
-     "The provided token's scope doesn't allow deploying this artifact"
+     "The provided token's scope doesn't allow deploying this artifact (see https://git.io/JfwjM)"
      {:group group
       :artifact artifact})))
 
