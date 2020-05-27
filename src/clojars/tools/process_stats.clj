@@ -2,6 +2,7 @@
   "generate usage statistics from web log"
   (:require [clj-time.format :as timef]
             [clojars.file-utils :as fu]
+            [clojars.util :as util]
             [clojure.java.io :as io]
             [net.cgrand.regex :as re])
   (:import java.io.BufferedReader
@@ -75,19 +76,14 @@
        :version (:version m)
        :ext (:ext m)})))
 
-(defn parse-long [s]
-  (when-not (#{nil "" "-"} s)
-    (try (Long/parseLong s)
-         (catch NumberFormatException _))))
-
 (defn parse-line [line]
   (let [legacy? (is-legacy? line)
         m (re/exec (if legacy? re-legacy-cdn re-cdn) line)]
     (merge
      (parse-path (:path m))
-     {:status (parse-long (:status m))
+     {:status (util/parse-long (:status m))
       :method (:method m)
-      :size (parse-long (:size m))
+      :size (util/parse-long (:size m))
       :time (when (:time m) (try (timef/parse time-cdn (:time m))
                                  (catch IllegalArgumentException _)))})))
 

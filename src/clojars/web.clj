@@ -1,44 +1,42 @@
 (ns clojars.web
-  (:require [cemerick.friend :as friend]
-            [cemerick.friend
-             [credentials :as creds]
-             [workflows :as workflows]]
-            [clojars
-             [auth :refer [try-account]]
-             [config :refer [config]]
-             [db :as db]
-             [errors :refer [wrap-exceptions]]
-             [http-utils :refer [wrap-x-frame-options wrap-secure-session]]
-             [middleware :refer [wrap-ignore-trailing-slash]]]
-            [clojars.friend.registration :as registration]
-            [clojars.routes.api :as api]
-            [clojars.routes.artifact :as artifact]
-            [clojars.routes.group :as group]
-            [clojars.routes.repo :as repo]
-            [clojars.routes.session :as session]
-            [clojars.routes.token :as token]
-            [clojars.routes.token-breach :as token-breach]
-            [clojars.routes.user :as user]
-            [clojars.web
-             [browse :refer [browse]]
-             [common :refer [html-doc]]
-             [dashboard :refer [dashboard index-page]]
-             [safe-hiccup :refer [raw]]
-             [search :refer [search]]]
-            [clojure.java.io :as io]
-            [clojure.set :refer [rename-keys]]
-            [compojure
-             [core :refer [ANY context GET PUT routes]]
-             [route :refer [not-found]]]
-            [ring.middleware
-             [anti-forgery :refer [wrap-anti-forgery]]
-             [content-type :refer [wrap-content-type]]
-             [flash :refer [wrap-flash]]
-             [keyword-params :refer [wrap-keyword-params]]
-             [multipart-params :refer [wrap-multipart-params]]
-             [not-modified :refer [wrap-not-modified]]
-             [params :refer [wrap-params]]
-             [resource :refer [wrap-resource]]]))
+  (:require
+   [cemerick.friend :as friend]
+   [cemerick.friend
+    [workflows :as workflows]]
+   [clojars
+    [auth :as auth :refer [try-account]]
+    [config :refer [config]]
+    [errors :refer [wrap-exceptions]]
+    [http-utils :refer [wrap-x-frame-options wrap-secure-session]]
+    [middleware :refer [wrap-ignore-trailing-slash]]]
+   [clojars.friend.registration :as registration]
+   [clojars.routes.api :as api]
+   [clojars.routes.artifact :as artifact]
+   [clojars.routes.group :as group]
+   [clojars.routes.repo :as repo]
+   [clojars.routes.session :as session]
+   [clojars.routes.token :as token]
+   [clojars.routes.token-breach :as token-breach]
+   [clojars.routes.user :as user]
+   [clojars.web
+    [browse :refer [browse]]
+    [common :refer [html-doc]]
+    [dashboard :refer [dashboard index-page]]
+    [safe-hiccup :refer [raw]]
+    [search :refer [search]]]
+   [clojure.java.io :as io]
+   [compojure
+    [core :refer [ANY context GET PUT routes]]
+    [route :refer [not-found]]]
+   [ring.middleware
+    [anti-forgery :refer [wrap-anti-forgery]]
+    [content-type :refer [wrap-content-type]]
+    [flash :refer [wrap-flash]]
+    [keyword-params :refer [wrap-keyword-params]]
+    [multipart-params :refer [wrap-multipart-params]]
+    [not-modified :refer [wrap-not-modified]]
+    [params :refer [wrap-params]]
+    [resource :refer [wrap-resource]]]))
 
 (defn try-parse-page
   "Will throw a targeted error if maybe-page doesn't parse as an integer."
@@ -98,34 +96,12 @@
                [:h1 "Page not found"]
                [:p "Thundering typhoons!  I think we lost it.  Sorry!"]]))))))
 
-(defn user-credentials [db username]
-  (when-let [user (db/find-user db username)]
-    (when-not (empty? (:password user))
-      (rename-keys user {:user :username}))))
-
-(defn token-credential-fn [db]
-  (fn [{:keys [username password]}]
-    (when-let [token (and password
-                          (->> (db/find-user-tokens-by-username db username)
-                               (remove :disabled)
-                               (some #(when (creds/bcrypt-verify password (:token %)) %))))]
-      (db/set-deploy-token-used db (:id token))
-      {:username username
-       :token token})))
-
-(defn password-credential-fn [db]
-  (fn [auth-map]
-    (creds/bcrypt-credential-fn (partial user-credentials db) auth-map)))
-
-(defn token-or-password-credential-fn [db]
-  (some-fn (token-credential-fn db) (password-credential-fn db)))
-
 (defn clojars-app [storage db reporter stats search mailer]
   (routes
     (-> (context "/repo" _
           (-> (repo/routes storage db search)
             (friend/authenticate
-              {:credential-fn (token-or-password-credential-fn db)
+              {:credential-fn (auth/token-or-password-credential-fn db)
                :workflows [(workflows/http-basic :realm "clojars")]
                :allow-anon? false
                :unauthenticated-handler
@@ -138,8 +114,8 @@
         (wrap-exceptions reporter))
    (-> (main-routes db reporter stats search mailer)
        (friend/authenticate
-        {:credential-fn (password-credential-fn db)
-         :workflows [(workflows/interactive-form)
+        {:credential-fn (auth/password-credential-fn db)
+         :workflows [(auth/interactive-form-with-mfa-workflow)
                      (registration/workflow db)]})
        (wrap-exceptions reporter)
        (wrap-anti-forgery)

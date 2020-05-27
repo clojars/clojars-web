@@ -1,6 +1,14 @@
 (ns clojars.auth
-  (:require [cemerick.friend :as friend]
-            [clojars.db :as db]))
+  (:require
+   [cemerick.friend :as friend]
+   [cemerick.friend.credentials :as creds]
+   [cemerick.friend.util :as friend.util]
+   [cemerick.friend.workflows :as workflows]
+   [clojars.db :as db]
+   [clojars.util :as util]
+   [clojure.string :as str]
+   [one-time.core :as ot]
+   [ring.util.request :as req]))
 
 (defn try-account [f]
   (f (:username (friend/current-authentication))))
@@ -23,3 +31,73 @@
     (f)
     (friend/throw-unauthorized friend/*identity*
       {:cemerick.friend/required-roles group})))
+
+(defn- get-param
+  [key form-params params]
+  (or (get form-params (name key)) (get params key "")))
+
+;; copied from cemerick.friend/workflows and modified to support MFA
+(defn interactive-form-with-mfa-workflow
+  [& {:keys [redirect-on-auth?] :as form-config
+      :or {redirect-on-auth? true}}]
+  (fn [{:keys [request-method params form-params] :as request}]
+    (when (and (= (friend.util/gets :login-uri
+                                    form-config
+                                    (::friend/auth-config request))
+                  (req/path-info request))
+               (= :post request-method))
+      (let [creds {:username (get-param :username form-params params)
+                   :password (get-param :password form-params params)
+                   :otp (get-param :otp form-params params)}
+            {:keys [username password]} creds]
+        (if-let [user-record (and username password
+                                  ((friend.util/gets :credential-fn
+                                                     form-config
+                                                     (::friend/auth-config request))
+                                   (with-meta creds {::friend/workflow :interactive-form})))]
+          (workflows/make-auth user-record
+                               {::friend/workflow :interactive-form
+                                ::friend/redirect-on-auth? redirect-on-auth?})
+          ((or (friend.util/gets :login-failure-handler
+                                 form-config
+                                 (::friend/auth-config request))
+               #'workflows/interactive-login-redirect)
+           (update-in request [::friend/auth-config] merge form-config)))))))
+
+(defn token-credential-fn [db]
+  (fn [{:keys [username password]}]
+    (when-let [token (and password
+                          (->> (db/find-user-tokens-by-username db username)
+                               (remove :disabled)
+                               (some #(when (creds/bcrypt-verify password (:token %)) %))))]
+      (db/set-deploy-token-used db (:id token))
+      {:username username
+       :token token})))
+
+(defn valid-totp-token?
+  [otp {:as _user :keys [otp_secret_key]}]
+  (when-let [otp-n (-> otp
+                       (str/replace #"\s+" "")
+                       (util/parse-long))]
+    (ot/is-valid-totp-token? otp-n otp_secret_key)))
+
+(defn validate-otp
+  [db {:as user :keys [otp_recovery_code]} otp]
+  (if (creds/bcrypt-verify otp otp_recovery_code)
+    (do
+      (db/disable-otp! db (:user user))
+      true)
+    (valid-totp-token? otp user)))
+
+(defn password-credential-fn [db]
+  (fn [{:keys [username password otp]}]
+    (when (not (str/blank? password))
+      (let [{:as user :keys [otp_active]} (db/find-user db username)]
+        (when (and (not (str/blank? (:password user)))
+                   (creds/bcrypt-verify password (:password user))
+                   (or (not otp_active)
+                       (validate-otp db user otp)))
+          {:username username})))))
+
+(defn token-or-password-credential-fn [db]
+  (some-fn (token-credential-fn db) (password-credential-fn db)))

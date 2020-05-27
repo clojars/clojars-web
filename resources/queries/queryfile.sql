@@ -306,6 +306,21 @@ UPDATE users
 SET password_reset_code = :reset_code, password_reset_code_created_at = :reset_code_created_at
 WHERE "user" = :username;
 
+--name: set-otp-secret-key!
+UPDATE users
+SET otp_secret_key = :otp_secret_key
+WHERE "user" = :username;
+
+--name: enable-otp!
+UPDATE users
+SET otp_recovery_code = :otp_recovery_code, otp_active = true
+WHERE "user" = :username;
+
+--name: disable-otp!
+UPDATE users
+SET otp_secret_key = null, otp_recovery_code = null, otp_active = false
+WHERE "user" = :username;
+
 --name: insert-deploy-token!
 INSERT INTO deploy_tokens (name, user_id, token, group_name, jar_name)
 VALUES (:name, :user_id, :token, :group_name, :jar_name);
