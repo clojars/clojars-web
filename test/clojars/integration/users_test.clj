@@ -1,7 +1,8 @@
 (ns clojars.integration.users-test
-  (:require [clojars.integration.steps :refer [login-as register-as]]
-            [clojars.test-helper :as help]
-            [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojars.email :as email]
+            [clojars.integration.steps :refer [disable-mfa enable-mfa login-as register-as]]
+            [clojars.test-helper :as help :refer [with-test-system]]
+            [clojure.test :refer [deftest is testing use-fixtures]]
             [kerodon.core :refer [fill-in follow follow-redirect
                                   press session visit within]]
             [kerodon.test :refer [has status? text? value?]]
@@ -223,3 +224,46 @@
       (visit "/users/dantheman")
       (within [:div.light-article :> :h1]
               (has (text? "dantheman")))))
+
+(deftest user-is-emailed-when-activating-and-deactivating-mfa
+  (with-test-system
+    (-> (session (help/app-from-system))
+        (register-as "fixture" "fixture@example.org" "password"))
+    (let [email-sent? (atom (promise))
+          reset-email (fn []
+                        (reset! email/mock-emails [])
+                        (reset! email-sent? (promise)))
+          _ (add-watch email/mock-emails nil
+                       (fn [_ _ _ new-val]
+                         (when (seq new-val)
+                           (deliver @email-sent? true))))
+          [otp-secret] (enable-mfa (session (help/app-from-system)) "fixture" "password")
+          _ (is (true? (deref @email-sent? 100 ::timeout)))
+          [address title body] (first @email/mock-emails)]
+      (is (= "fixture@example.org" address))
+      (is (= "MFA was enabled on your Clojars account" title))
+      (is (re-find #"'fixture'" body))
+
+      (testing "when manually disabled"
+        (reset-email)
+        (disable-mfa (session (help/app-from-system)) "fixture" "password" otp-secret)
+        (is (true? (deref @email-sent? 100 ::timeout)))
+        (let [[address title body] (first @email/mock-emails)]
+          (is (= "fixture@example.org" address))
+          (is (= "MFA was disabled on your Clojars account" title))
+          (is (re-find #"'fixture'" body))
+          (is (re-find #"manually disabled" body))))
+
+      (testing "when recovery code used"
+        (reset-email)
+        (let [[_otp-secret recovery-code] (enable-mfa (session (help/app-from-system)) "fixture" "password")]
+          ;; wait for the enable email to be sent
+          (is (true? (deref @email-sent? 100 ::timeout)))
+          (reset-email)
+          (login-as (session (help/app-from-system)) "fixture" "password" recovery-code)
+          (is (true? (deref @email-sent? 100 ::timeout)))
+          (let [[address title body] (first @email/mock-emails)]
+            (is (= "fixture@example.org" address))
+            (is (= "MFA was disabled on your Clojars account" title))
+            (is (re-find #"'fixture'" body))
+            (is (re-find #"your recovery code" body))))))))

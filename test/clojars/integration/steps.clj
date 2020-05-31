@@ -74,6 +74,15 @@
                           (enlive/text))]
     [otp-secret recovery-code]))
 
+(defn disable-mfa
+  [state user password otp-secret]
+  (-> state
+      (login-as user password (ot/get-totp-token otp-secret))
+      (follow-redirect)
+      (visit "/mfa")
+      (fill-in "Password" password)
+      (press "Disable multi-factor authentication")))
+
 (defn file-repo [path]
   (str (.toURI (File. path))))
 
