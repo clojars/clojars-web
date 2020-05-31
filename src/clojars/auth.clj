@@ -5,6 +5,7 @@
    [cemerick.friend.util :as friend.util]
    [cemerick.friend.workflows :as workflows]
    [clojars.db :as db]
+   [clojars.event :as event]
    [clojars.util :as util]
    [clojure.string :as str]
    [one-time.core :as ot]
@@ -82,10 +83,16 @@
     (ot/is-valid-totp-token? otp-n otp_secret_key)))
 
 (defn validate-otp
-  [db {:as user :keys [otp_recovery_code]} otp]
-  (if (creds/bcrypt-verify otp otp_recovery_code)
+  [db
+   {:as user
+    recovery-code :otp_recovery_code
+    username :user}
+   otp]
+  (if (creds/bcrypt-verify otp recovery-code)
     (do
-      (db/disable-otp! db (:user user))
+      (db/disable-otp! db username)
+      (event/emit :mfa-deactivated {:username username
+                                    :source :recovery-code})
       true)
     (valid-totp-token? otp user)))
 

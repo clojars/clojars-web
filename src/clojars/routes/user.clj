@@ -3,6 +3,7 @@
    [cemerick.friend.credentials :as creds]
    [clojars.auth :as auth]
    [clojars.db :as db]
+   [clojars.event :as event]
    [clojars.web.user :as view]
    [compojure.core :as compojure :refer [DELETE GET POST PUT]]
    [ring.util.response :refer [redirect]]))
@@ -42,6 +43,7 @@
     (auth/valid-totp-token? otp user)
     (let [recovery-code (db/enable-otp! db account)
           user (db/find-user db account)]
+      (event/emit :mfa-activated {:username account})
       (view/mfa account user (view/recovery-code-message recovery-code)))
 
     :else
@@ -59,6 +61,8 @@
     (creds/bcrypt-verify password (:password user))
     (do
       (db/disable-otp! db account)
+      (event/emit :mfa-deactivated {:username account
+                                    :source :user})
       (assoc (redirect "/mfa")
              :flash "Two-factor auth disabled."))
 
