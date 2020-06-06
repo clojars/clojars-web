@@ -214,33 +214,33 @@
   [recovery-code]
   (when recovery-code
     (list
-     [:p "Multi-factor authentication has been enabled. If you don't have access to your MFA device, you can use the following code (along with your password) to log in. This code can only be used once, and using it will disable MFA for your account. The recovery code will only be shown this one time, so be sure to copy it now and put it in a safe place:"]
+     [:p "Two-factor authentication has been enabled. If you don't have access to your two-factor device, you can use the following code (along with your password) to log in. This code can only be used once, and using it will disable two-factor auth for your account. The recovery code will only be shown this one time, so be sure to copy it now and put it in a safe place:"]
      [:div.new-token
       [:pre recovery-code]])))
 
 (defn mfa
   [account {:as _user :keys [otp_active]} flash-msg]
   (html-doc
-   "Multi-Factor Authentication" {:account account}
+   "Two-Factor Authentication" {:account account}
    [:div.small-section
     (flash flash-msg)
-    [:h1 "Multi-Factor Authentication"]
+    [:h1 "Two-Factor Authentication"]
     [:div.help
      [:p
-      "With multi-factor authentication, you can set up a Time-based One Time Password (TOTP) device "
+      "With two-factor authentication, you can set up a Time-based One Time Password (TOTP) device "
       "that will generate tokens you can use in addition to your password to log in."]
      [:p
-      "Note: once you enable multi-factor authentication, you must use a "
+      "Note: once you enable two-factor authentication, you must use a "
       (link-to "/tokens" "deploy token")
       " to deploy artifacts; your password will no longer work for deployment."]]
-    [:p "Multi-factor authentication is currently "
+    [:p "Two-factor authentication is currently "
      [:strong (if otp_active "enabled." "disabled.")]
      (format " To %s it, enter your password." (if otp_active "disable" "enable"))]
     (form-to [(if otp_active :delete :post) "/mfa"]
              (label :password "Password")
              (password-field {:required true}
                              :password)
-             (submit-button (format "%s multi-factor authentication"
+             (submit-button (format "%s two-factor authentication"
                                     (if otp_active "Disable" "Enable"))))]))
 
 (defn setup-mfa
@@ -255,16 +255,16 @@
                        (base64/encode)
                        (String.))]
     (html-doc
-   "Multi-Factor Authentication" {:account account}
+   "Two-Factor Authentication" {:account account}
    [:div.small-section
     (flash flash-msg)
-    [:h1 "Multi-Factor Authentication"]
+    [:h1 "Two-Factor Authentication"]
     [:p "Scan this QR code with your chosen authenticator:"]
     [:img {:src (format "data:image/png;base64,%s" qrcode-b64)}]
-    [:p "Can't scan the QR code? Enter your key manually into your MFA device: "
+    [:p "Can't scan the QR code? Enter your key manually into your two-factor device: "
      [:pre.mfa-key otp_secret_key]]
-    [:p "Once you have your MFA device configured, enter a code it generates below to complete the setup."
-     [:strong "MFA will not be enabled on your account if you don't complete this step."]]
+    [:p "Once you have your two-factor device configured, enter a code it generates below to complete the setup."
+     [:strong "Two-factor auth will not be enabled on your account if you don't complete this step."]]
     (form-to [:put "/mfa"]
              (label :otp "Code")
              (text-field {:required true}

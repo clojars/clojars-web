@@ -19,7 +19,7 @@
        (follow "login")
        (fill-in "Username" user)
        (fill-in "Password" password)
-       (cond-> otp (fill-in "MFA Code" otp))
+       (cond-> otp (fill-in "Two-Factor Code" otp))
        (press "Login"))))
 
 (defn register-as
@@ -58,7 +58,7 @@
                   (follow-redirect)
                   (visit "/mfa")
                   (fill-in "Password" password)
-                  (press "Enable multi-factor authentication"))
+                  (press "Enable two-factor authentication"))
         otp-secret (-> state
                        :enlive
                        (enlive/select [:pre.mfa-key])
@@ -81,7 +81,7 @@
       (follow-redirect)
       (visit "/mfa")
       (fill-in "Password" password)
-      (press "Disable multi-factor authentication")))
+      (press "Disable two-factor authentication")))
 
 (defn file-repo [path]
   (str (.toURI (File. path))))

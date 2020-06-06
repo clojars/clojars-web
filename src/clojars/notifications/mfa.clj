@@ -15,27 +15,27 @@
 (defmethod notification :mfa-activated
   [_type mailer {:as _user username :user email :email} _data]
   (send
-   mailer email "MFA was enabled on your Clojars account"
+   mailer email "Two-factor auth was enabled on your Clojars account"
    [(format
-     "Someone (hopefully you) has enabled multi-factor authenication (MFA) on your '%s' Clojars account."
+     "Someone (hopefully you) has enabled two-factor authenication on your '%s' Clojars account."
      username)
     "If you *didn't* take this action, please reply to this email to let the Clojars admins know that your account has potentially been compromised!"
-    "To manage your MFA settings, visit https://clojars.org/mfa"]))
+    "To manage your two-factor settings, visit https://clojars.org/mfa"]))
 
 (defmethod notification :mfa-deactivated
   [_type mailer
    {:as _user username :user email :email}
    {:as _data :keys [source]}]
   (send
-   mailer email "MFA was disabled on your Clojars account"
+   mailer email "Two-factor auth was disabled on your Clojars account"
    [(format
-     "Someone (hopefully you) has disabled multi-factor authenication (MFA) on your '%s' Clojars account."
+     "Someone (hopefully you) has disabled two-factor authenication on your '%s' Clojars account."
      username)
     (if (= :recovery-code source)
-      "Your MFA was disabled because you used your recovery code."
-      "Your MFA was manually disabled at https://clojars.org/mfa.")
+      "Your two-factor auth was disabled because you used your recovery code."
+      "Your two-factor auth was manually disabled at https://clojars.org/mfa.")
     "If you *didn't* take this action, please reply to this email to let the Clojars admins know that your account has potentially been compromised!"
-    "To manage your MFA settings, visit https://clojars.org/mfa"]))
+    "To manage your two-factor settings, visit https://clojars.org/mfa"]))
 
 (defn handler
   [{:keys [db mailer]} type {:as data :keys [username]}]

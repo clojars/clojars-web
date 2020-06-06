@@ -16,7 +16,7 @@
 
     (when login_failed
       [:div
-       [:p.error "Incorrect username, password, or MFA code."]
+       [:p.error "Incorrect username, password, or two-factor code."]
        (when (some? (str/index-of username \@))
          [:p.error "Make sure that you are using your username, and not your email to log in."])
        [:p.hint "If you have not logged in since April 2012 when "
@@ -33,8 +33,8 @@
              (password-field {:placeholder "keep it secret, keep it safe"
                               :required true}
                              :password)
-             (label :otp "MFA Code")
-             (text-field {:placeholder "leave blank if MFA not enabled"}
+             (label :otp "Two-Factor Code")
+             (text-field {:placeholder "leave blank if two-factor auth not enabled"}
                          :otp)
              (link-to {:class :hint-link} "/forgot-password" "Forgot your username or password?")
              (submit-button "Login"))]))

@@ -20,7 +20,7 @@
       (follow-redirect)
       (has (status? 200))
       (within [:div :p.error]
-              (has (text? "Incorrect username, password, or MFA code.Make sure that you are using your username, and not your email to log in.")))))
+              (has (text? "Incorrect username, password, or two-factor code.Make sure that you are using your username, and not your email to log in.")))))
 
 (deftest user-can-login-and-logout
   (let [app (help/app)]
@@ -49,7 +49,7 @@
         (follow-redirect)
         (has (status? 200))
         (within [:div :p.error]
-                (has (text? "Incorrect username, password, or MFA code."))))))
+                (has (text? "Incorrect username, password, or two-factor code."))))))
 
 (deftest user-with-password-wipe-gets-message
   (let [app (help/app)]
@@ -62,7 +62,7 @@
         (follow-redirect)
         (has (status? 200))
         (within [:div :p.error]
-                (has (text? "Incorrect username, password, or MFA code."))))))
+                (has (text? "Incorrect username, password, or two-factor code."))))))
 
 (deftest login-with-mfa
   (let [app (help/app)]
@@ -82,7 +82,7 @@
             (follow-redirect)
             (has (status? 200))
             (within [:div :p.error]
-                    (has (text? "Incorrect username, password, or MFA code.")))))
+                    (has (text? "Incorrect username, password, or two-factor code.")))))
       (testing "with recovery code"
         (-> (session app)
             (login-as "fixture" "password" recovery-code)

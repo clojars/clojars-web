@@ -241,7 +241,7 @@
           _ (is (true? (deref @email-sent? 100 ::timeout)))
           [address title body] (first @email/mock-emails)]
       (is (= "fixture@example.org" address))
-      (is (= "MFA was enabled on your Clojars account" title))
+      (is (= "Two-factor auth was enabled on your Clojars account" title))
       (is (re-find #"'fixture'" body))
 
       (testing "when manually disabled"
@@ -250,7 +250,7 @@
         (is (true? (deref @email-sent? 100 ::timeout)))
         (let [[address title body] (first @email/mock-emails)]
           (is (= "fixture@example.org" address))
-          (is (= "MFA was disabled on your Clojars account" title))
+          (is (= "Two-factor auth was disabled on your Clojars account" title))
           (is (re-find #"'fixture'" body))
           (is (re-find #"manually disabled" body))))
 
@@ -264,6 +264,6 @@
           (is (true? (deref @email-sent? 100 ::timeout)))
           (let [[address title body] (first @email/mock-emails)]
             (is (= "fixture@example.org" address))
-            (is (= "MFA was disabled on your Clojars account" title))
+            (is (= "Two-factor auth was disabled on your Clojars account" title))
             (is (re-find #"'fixture'" body))
             (is (re-find #"your recovery code" body))))))))
