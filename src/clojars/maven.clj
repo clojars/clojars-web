@@ -1,15 +1,15 @@
 (ns clojars.maven
-  (:require [clojure.edn :as edn]
+  (:require [clojars.config :refer [config]]
+            [clojars.file-utils :as fu]
+            [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojars.config :refer [config]]
-            [clojure.string :as str]
-            [clojars.file-utils :as fu])
-  (:import org.apache.maven.model.io.xpp3.MavenXpp3Reader
-           org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
-           java.io.IOException
-           (org.apache.maven.model Scm Model License)
+            [clojure.string :as str])
+  (:import java.io.IOException
            (org.apache.maven.artifact.repository.metadata Metadata)
-           (org.apache.maven.artifact.repository.metadata.io.xpp3 MetadataXpp3Writer)))
+           (org.apache.maven.artifact.repository.metadata.io.xpp3 MetadataXpp3Writer)
+           org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
+           (org.apache.maven.model Scm Model License)
+           org.apache.maven.model.io.xpp3.MavenXpp3Reader))
 
 (defn without-nil-values
   "Prunes a map of pairs that have nil values."
@@ -212,10 +212,10 @@
    Memoized version of exists-on-central?*."
   (memoize exists-on-central?*))
 
-(def shadow-whitelist
-  (delay (-> "shadow-whitelist.edn" io/resource slurp edn/read-string)))
+(def shadow-allowlist
+  (delay (-> "shadow-allowlist.edn" io/resource slurp edn/read-string)))
 
 (defn can-shadow-maven? [group-id artifact-id]
-  (contains? @shadow-whitelist
+  (contains? @shadow-allowlist
     (symbol (format "%s/%s" group-id artifact-id))))
 

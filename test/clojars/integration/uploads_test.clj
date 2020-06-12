@@ -402,7 +402,7 @@
                                :password "password"}}
           :local-repo help/local-repo))))
 
-(deftest deploy-cannot-shadow-central-unless-whitelisted
+(deftest deploy-cannot-shadow-central-unless-allowlisted
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (aether/deploy
