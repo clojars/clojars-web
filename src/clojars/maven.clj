@@ -1,11 +1,8 @@
 (ns clojars.maven
-  (:require [clojars.config :refer [config]]
-            [clojars.file-utils :as fu]
+  (:require [clojars.file-utils :as fu]
             [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.string :as str])
-  (:import java.io.IOException
-           (org.apache.maven.artifact.repository.metadata Metadata)
+            [clojure.java.io :as io])
+  (:import (org.apache.maven.artifact.repository.metadata Metadata)
            (org.apache.maven.artifact.repository.metadata.io.xpp3 MetadataXpp3Writer)
            org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
            (org.apache.maven.model Scm Model License)
@@ -144,7 +141,7 @@
       (and y-value (not x-value))  1 ; y is known, but x isn't. y wins
       (< -1 x-value y-value)      -1 ; both fractions are common, x has a lower sort order
       (< -1 y-value x-value)       1 ; both fractions are common, y has a lower sort order
-      :default                     0)))
+      :else                        0)))
 
 (defn compare-qualifiers [qx qy]
   (let [[qx-prefix qx-counter qx-suffix] (split-qualifier qx)
@@ -160,7 +157,7 @@
           (cond
             (and (> (count qx) (count qy)) (.startsWith qx qy)) -1 ; x is longer, it's older
             (and (< (count qx) (count qy)) (.startsWith qy qx))  1 ; y is longer, it's older
-            :default (compare qx qy)))                              ; same length, so string compare           
+            :else (compare qx qy)))                                ; same length, so string compare
         -1)                       ; y has no qualifier, it's younger
       (if qy
         1                         ; x has no qualifier, it's younger
