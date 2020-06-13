@@ -4,11 +4,12 @@
    [clojars.test-helper :as help]
    [clojure.java.jdbc :as jdbc]
    [clojure.test :refer [deftest testing use-fixtures]]
-   [kerodon
-    [core :refer [follow follow-redirect session within]]
-    [test :refer [has status? text?]]]
+   [kerodon.core :refer [follow follow-redirect session within]]
+   [kerodon.test :refer [has status? text?]]
    [net.cgrand.enlive-html :as enlive]
-   [one-time.core :as ot]))
+   [one-time.core :as ot])
+  (:import
+    (java.util Date)))
 
 (use-fixtures :each
   help/default-fixture
@@ -76,6 +77,22 @@
             (has (status? 200))
             (within [:.light-article :> :h1]
                     (has (text? "Dashboard (fixture)")))))
+      (testing "with a token that is too old"
+        (let [the-past (Date. (- (System/currentTimeMillis) 31000))]
+          (-> (session app)
+              (login-as "fixture" "password" (ot/get-totp-token otp-secret {:date the-past}))
+              (follow-redirect)
+              (has (status? 200))
+              (within [:div :p.error]
+                      (has (text? "Incorrect username, password, or two-factor code."))))))
+      (testing "with a token that is in the future"
+        (let [the-future (Date. (+ (System/currentTimeMillis) 31000))]
+          (-> (session app)
+              (login-as "fixture" "password" (ot/get-totp-token otp-secret {:date the-future}))
+              (follow-redirect)
+              (has (status? 200))
+              (within [:div :p.error]
+                      (has (text? "Incorrect username, password, or two-factor code."))))))
       (testing "with invalid token"
         (-> (session app)
             (login-as "fixture" "password" "1")
