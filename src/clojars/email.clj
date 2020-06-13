@@ -17,3 +17,10 @@
       (when (and username password)
         (.setAuthentication mail username password))
       (.send mail))))
+
+(def mock-emails (atom []))
+
+(defn mock-mailer []
+  (reset! mock-emails [])
+  (fn [to subject message]
+    (swap! mock-emails conj [to subject message])))

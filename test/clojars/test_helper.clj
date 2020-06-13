@@ -2,6 +2,7 @@
   (:require
    [clojars.config :as config]
    [clojars.db.migrate :as migrate]
+   [clojars.email :as email]
    [clojars.errors :as errors]
    [clojars.s3 :as s3]
    [clojars.search :as search]
@@ -114,27 +115,37 @@
   ;; usage of this to move things into unit tests
   (web/handler-optioned system))
 
+(defn with-test-system*
+  [f]
+  (binding [config/*profile* "test"]
+    ;; double binding since ^ needs to be bound for config to load
+    ;; properly
+    (binding [system (component/start (assoc (system/new-system (config/config))
+                                             :repo-bucket (s3/mock-s3-client)
+                                             :error-reporter (quiet-reporter)
+                                             :index-factory #(clucy/memory-index)
+                                             :mailer (email/mock-mailer)
+                                             :stats (no-stats)))]
+      (let [db (get-in system [:db :spec])]
+        (try
+          (clear-database db)
+          (with-out-str
+            (migrate/migrate db))
+          (f)
+          (finally
+            (component/stop system)))))))
+
+(defmacro with-test-system
+  [& body]
+  `(with-test-system* #(do ~@body)))
+
 (defn run-test-app
-  ([f]
-   (binding [config/*profile* "test"]
-     ;; double binding since ^ needs to be bound for config to load
-     ;; properly
-     (binding [system (component/start (assoc (system/new-system (config/config))
-                                              :repo-bucket (s3/mock-s3-client)
-                                              :error-reporter (quiet-reporter)
-                                              :index-factory #(clucy/memory-index)
-                                              :stats (no-stats)))]
-       (let [server (get-in system [:http :server])
-             port (-> server .getConnectors first .getLocalPort)
-             db (get-in system [:db :spec])]
-         (binding [test-port port]
-           (try
-             (clear-database db)
-             (with-out-str
-               (migrate/migrate db))
-             (f)
-             (finally
-               (component/stop system)))))))))
+  [f]
+  (with-test-system*
+    #(let [server (get-in system [:http :server])
+           port (-> server .getConnectors first .getLocalPort)]
+       (binding [test-port port]
+         (f)))))
 
 (defn get-content-type [resp]
   (some-> resp :headers (get "content-type") (str/split #";") first))

@@ -6,16 +6,21 @@
             [clojars.test-helper :as help]
             [clojure.java.io :as io]
             [kerodon.core :refer [choose fill-in follow follow-redirect press visit]]
-            [net.cgrand.enlive-html :as enlive])
+            [net.cgrand.enlive-html :as enlive]
+            [one-time.core :as ot])
   (:import java.io.File))
 
-(defn login-as [state user password]
-  (-> state
-      (visit "/")
-      (follow "login")
-      (fill-in "Username" user)
-      (fill-in "Password" password)
-      (press "Login")))
+(defn login-as
+  ([state user password]
+   (login-as state user password nil))
+  ([state user password otp]
+   (-> state
+       (visit "/")
+       (follow "login")
+       (fill-in "Username" user)
+       (fill-in "Password" password)
+       (cond-> otp (fill-in "Two-Factor Code" otp))
+       (press "Login"))))
 
 (defn register-as
   ([state user email password]
@@ -45,6 +50,38 @@
        (enlive/select [:div.new-token :> :pre])
        (first)
        (enlive/text))))
+
+(defn enable-mfa
+  [state user password]
+  (let [state (-> state
+                  (login-as user password)
+                  (follow-redirect)
+                  (visit "/mfa")
+                  (fill-in "Password" password)
+                  (press "Enable two-factor authentication"))
+        otp-secret (-> state
+                       :enlive
+                       (enlive/select [:pre.mfa-key])
+                       (first)
+                       (enlive/text))
+        otp (ot/get-totp-token otp-secret)
+        recovery-code (-> state
+                          (fill-in "Code" otp)
+                          (press "Confirm code")
+                          :enlive
+                          (enlive/select [:div.new-token :> :pre])
+                          (first)
+                          (enlive/text))]
+    [otp-secret recovery-code]))
+
+(defn disable-mfa
+  [state user password otp-secret]
+  (-> state
+      (login-as user password (ot/get-totp-token otp-secret))
+      (follow-redirect)
+      (visit "/mfa")
+      (fill-in "Password" password)
+      (press "Disable two-factor authentication")))
 
 (defn file-repo [path]
   (str (.toURI (File. path))))

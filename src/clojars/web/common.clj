@@ -121,6 +121,7 @@
        (if (:account ctx)
          (unordered-list
           [(link-to "/" "dashboard")
+           (link-to "/mfa" "two-factor auth")
            (link-to "/profile" "profile")
            (link-to "/tokens" "deploy tokens")
            (link-to "/logout" "logout")])

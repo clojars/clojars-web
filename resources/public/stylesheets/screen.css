@@ -647,6 +647,10 @@ table.deploy-tokens td.token-disabled {
     text-decoration: line-through;
 }
 
+.new-token {
+    text-align: center;
+}
+
 .new-token pre {
     background-color: #e9e9e9;
     padding: 5px;

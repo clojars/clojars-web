@@ -61,6 +61,8 @@
                   :exclusions [commons-codec
                                commons-io]]
                  [aero "1.1.3"]
+                 [one-time "0.5.0"
+                  :exclusions [commons-codec]]
 
                  ;; AWS
                  [com.cognitect.aws/api "0.8.408"

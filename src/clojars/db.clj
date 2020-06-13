@@ -8,9 +8,11 @@
             [clojars.util :refer [filter-some]]
             [clojure.edn :as edn]
             [clojure.set :as set]
-            [clojure.string :as str])
-  (:import java.security.SecureRandom
-           (java.sql Timestamp)))
+            [clojure.string :as str]
+            [one-time.core :as ot])
+  (:import (java.security SecureRandom)
+           (java.sql Timestamp)
+           (java.util UUID)))
 
 (def reserved-names
   #{"about"
@@ -44,6 +46,7 @@
     "login"
     "logout"
     "maven"
+    "mfa"
     "new"
     "options"
     "pages"
@@ -301,6 +304,23 @@
                                    :username username}
                                   {:connection db})
     reset-code))
+
+(defn set-otp-secret-key! [db username]
+  (let [secret-key (ot/generate-secret-key)]
+    (sql/set-otp-secret-key! {:otp_secret_key secret-key
+                              :username username}
+                             {:connection db})))
+
+(defn enable-otp! [db username]
+  (let [recovery-code (str (UUID/randomUUID))]
+    (sql/enable-otp! {:otp_recovery_code (bcrypt recovery-code)
+                      :username username}
+                     {:connection db})
+    recovery-code))
+
+(defn disable-otp! [db username]
+  (sql/disable-otp! {:username username}
+                    {:connection db}))
 
 (defn generate-deploy-token []
   (str "CLOJARS_" (hexadecimalize (generate-secure-token 30))))

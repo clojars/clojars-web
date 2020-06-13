@@ -50,11 +50,21 @@
                       (str "alter table deploy_tokens "
                            "add group_name text default null,"
                            "add jar_name text default null")))
+
+(defn- add-mfa-fields-to-users-table
+  [trans]
+  (sql/db-do-commands trans
+                      (str "alter table users "
+                           "add otp_secret_key text default null,"
+                           "add otp_recovery_code text default null,"
+                           "add otp_active boolean default false")))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
    #'add-last-used-to-deploy-tokens-table
-   #'add-group-and-jar-to-deploy-tokens-table])
+   #'add-group-and-jar-to-deploy-tokens-table
+   #'add-mfa-fields-to-users-table])
 
 (defn migrate [db]
   (sql/db-do-commands db
