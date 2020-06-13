@@ -68,8 +68,8 @@
       (link-to "http://www.bendyworks.com/"
                [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])
       "member project of"
-      (link-to "https://sfconservancy.org/"
-               [:img {:src "/images/sfconservancy-logo.svg" :alt "Software Freedom Conservancy" :height "40"}])]
+      (link-to "https://clojuriststogether.org/"
+               [:img {:src "/images/clojurists-together-logo.png" :alt "Clojurists Together Foundation" :height "40"}])]
      ]
     [:footer.row]))
 
