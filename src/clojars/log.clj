@@ -1,12 +1,15 @@
 (ns clojars.log
   "Provides redacted edn logging via clojure.tools.logging."
   (:require
-   [clojure.tools.logging.readable :as log]))
+   [clojure.tools.logging.readable :as log])
+  (:import java.util.UUID))
 
 (set! *warn-on-reflection* true)
 
 (def ^:private redacted-keys
-  #{:password})
+  #{:confirm
+    :current-password
+    :password})
 
 (defprotocol Redact
   (redact [v]))
@@ -56,6 +59,10 @@
   [ctx & body]
   `(binding [*context* (merge *context* ~ctx)]
      ~@body))
+
+(defn trace-id
+  []
+  (UUID/randomUUID))
 
 (defmacro error
   "Logs a map of data as edn at the ERROR level."

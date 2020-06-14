@@ -14,7 +14,8 @@
              [route :refer [not-found]]]
             [ring.util
              [codec :as codec]
-             [response :as response]])
+             [response :as response]]
+            [clojars.log :as log])
   (:import (java.io IOException File)
            (java.util Date UUID)
            org.apache.commons.io.FileUtils))
@@ -419,11 +420,13 @@
 
 (defn wrap-exceptions [app reporter]
   (fn [req]
-    (try
-      (app req)
-      (catch Exception e
-        (report-error reporter e)
-        (let [data (ex-data e)]
-          {:status (or (:status data) 403)
-           :headers {"status-message" (:status-message data)}
-           :body (.getMessage e)})))))
+    (let [request-id (log/trace-id)]
+      (try
+        (log/with-context {:trace-id request-id}
+          (app req))
+        (catch Exception e
+          (report-error reporter e nil request-id)
+          (let [data (ex-data e)]
+            {:status (or (:status data) 403)
+             :headers {"status-message" (:status-message data)}
+             :body (.getMessage e)}))))))
