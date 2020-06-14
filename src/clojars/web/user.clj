@@ -18,7 +18,8 @@
    [one-time.qrgen :as qrgen]
    [ring.util.response :refer [redirect]]
    [valip.core :refer [validate]]
-   [valip.predicates :as pred]))
+   [valip.predicates :as pred]
+   [clojars.log :as log]))
 
 (defn register-form [{:keys [errors email username]}]
   (html-doc "Register" {}
@@ -113,19 +114,26 @@
 
 (defn update-profile [db account {:keys [email current-password password confirm] :as params}]
   (let [email (and email (.trim email))]
-    (if-let [errors (apply validate {:email email
-                                     :current-password current-password
-                                     :username account
-                                     :password password}
-                           (concat
-                            (user-validations)
-                            (current-password-validations db account)
-                            (when-not (blank? password)
-                              (password-validations confirm))))]
-      (profile-form account params nil (apply concat (vals errors)))
-      (do (update-user db account email account password)
+    (log/with-context {:tag :update-profile
+                       :username account}
+      (if-let [errors (apply validate {:email email
+                                       :current-password current-password
+                                       :username account
+                                       :password password}
+                             (concat
+                              (user-validations)
+                              (current-password-validations db account)
+                              (when-not (blank? password)
+                                (password-validations confirm))))]
+        (do
+          (log/info {:status :failed
+                     :reason :validation-failed})
+          (profile-form account params nil (apply concat (vals errors))))
+        (do
+          (update-user db account email account password)
+          (log/info {:status :success})
           (assoc (redirect "/profile")
-            :flash "Profile updated.")))))
+                   :flash "Profile updated."))))))
 
 (defn show-user [db account user]
   (html-doc (user :user) {:account account}
@@ -152,20 +160,23 @@
               (submit-button "Email me a password reset link"))]))
 
 (defn forgot-password [db mailer {:keys [email-or-username]}]
-  (when-let [user (find-user-by-user-or-email db email-or-username)]
-    (let [reset-code (db/set-password-reset-code! db (:user user))
-          base-url (:base-url (config))
-          reset-password-url (str base-url "/password-resets/" reset-code)]
-      (mailer (:email user)
-        "Password reset for Clojars"
-        (->> ["Hello,"
-              (format "We received a request from someone, hopefully you, to reset the password of the clojars user: %s." (:user user))
-              "To contine with the reset password process, click on the following link:"
-              reset-password-url
-              "This link is valid for 24 hours, after which you will need to generate a new one."
-              "If you didn't reset your password then you can ignore this email."]
-             (interpose "\n\n")
-             (apply str)))))
+  (log/with-context {:email-or-username email-or-username}
+    (if-let [user (find-user-by-user-or-email db email-or-username)]
+      (let [reset-code (db/set-password-reset-code! db (:user user))
+            base-url (:base-url (config))
+            reset-password-url (str base-url "/password-resets/" reset-code)]
+        (log/info {:tag :password-reset-code-generated})
+        (mailer (:email user)
+                "Password reset for Clojars"
+                (->> ["Hello,"
+                      (format "We received a request from someone, hopefully you, to reset the password of the clojars user: %s." (:user user))
+                      "To contine with the reset password process, click on the following link:"
+                      reset-password-url
+                      "This link is valid for 24 hours, after which you will need to generate a new one."
+                      "If you didn't reset your password then you can ignore this email."]
+                     (interpose "\n\n")
+                     (apply str))))
+      (log/info {:tag :password-reset-user-not-found})))
   (html-doc "Forgot password?" {}
     [:div.small-section [:h1 "Forgot password?"]
      [:p "If your account was found, you should get an email with a link to reset your password soon."]]))
@@ -194,19 +205,29 @@
                                  :required true}
                                 :confirm)
                 (submit-button "Update my password"))])
-    (html-doc "Reset your password" {}
-      [:h1 "Reset your password"]
-      [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"])))
+    (do
+      (log/info {:tag :password-reset-bad-code
+                 :reset-code reset-code})
+      (html-doc "Reset your password" {}
+                [:h1 "Reset your password"]
+                [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"]))))
 
 (defn reset-password [db reset-code {:keys [password confirm]}]
-  (if-let [errors (apply validate {:password password
-                                   :reset-code reset-code}
-                         (reset-password-validations db confirm))]
-    (reset-password-form db reset-code (apply concat (vals errors)))
-    (let [user (db/find-user-by-password-reset-code db reset-code)]
-      (db/reset-user-password db (:user user) reset-code password)
-      (assoc (redirect "/login")
-             :flash "Your password was updated."))))
+  (log/with-context {:tag :reset-password
+                     :reset-code reset-code}
+    (if-let [errors (apply validate {:password password
+                                     :reset-code reset-code}
+                           (reset-password-validations db confirm))]
+      (do
+        (log/info {:status :failed
+                   :reason :validation-failed})
+        (reset-password-form db reset-code (apply concat (vals errors))))
+      (let [user (db/find-user-by-password-reset-code db reset-code)]
+        (db/reset-user-password db (:user user) reset-code password)
+        (log/info {:status :success
+                   :username (:user user)})
+        (assoc (redirect "/login")
+               :flash "Your password was updated.")))))
 
 ;; ---- mfa ----
 

@@ -77,6 +77,8 @@
   ([message meta]
    (throw-invalid message meta nil))
   ([message meta cause]
+   (log/info {:status :failed
+              :message message})
    (throw
      (ex-info message (merge {:report? false} meta) cause))))
 
@@ -105,15 +107,21 @@
 (defn upload-request [db groupname artifact version timestamp-version session f]
   (with-account
     (fn [account]
-      (check-group db account groupname) ;; will throw if there are any issues
-      (let [upload-dir (find-upload-dir groupname artifact version timestamp-version session)]
-        (f account upload-dir)
-        ;; should we only do 201 if the file didn't already exist?
-        {:status 201
-         :headers {}
-         :session (update session
-                    :upload-dirs #(cons (.getAbsolutePath upload-dir) %))
-         :body nil}))))
+      (log/with-context {:tag :upload
+                         :group groupname
+                         :artifact artifact
+                         :version version
+                         :timestamp-version timestamp-version}
+        (check-group db account groupname) ;; will throw if there are any issues
+        (let [upload-dir (find-upload-dir groupname artifact version timestamp-version session)]
+          (f account upload-dir)
+          ;; should we only do 201 if the file didn't already exist?
+          (log/info {:status :success})
+          {:status 201
+           :headers {}
+           :session (update session
+                            :upload-dirs #(cons (.getAbsolutePath upload-dir) %))
+           :body nil})))))
 
 (defn find-pom [dir]
   (->> dir
@@ -280,9 +288,11 @@
           (remove #(some #{(.getName %)} [metadata-edn]))))
 
       (db/add-jar db account pom)
+      (log/info {:tag :deploy-finalized})
       (future
         (search/index! search (assoc pom
-                                     :at (Date. (.lastModified pom-file)))))
+                                     :at (Date. (.lastModified pom-file))))
+        (log/info {:tag :deploy-indexed}))
       (spit (io/file dir ".finalized") ""))
     (throw-invalid "no pom file was uploaded")))
 
