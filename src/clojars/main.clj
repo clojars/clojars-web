@@ -23,8 +23,8 @@
       system/new-system
       (assoc
         :error-reporter (err/multiple-reporters
-                          (err/stdout-reporter)
-                          prod-reporter))))
+                         (err/log-reporter)
+                         prod-reporter))))
 
 (defn error-reporter [config]
     (let [dsn (:sentry-dsn config)]

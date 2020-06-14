@@ -47,8 +47,6 @@
                  [duct/hikaricp-component "0.1.2"
                   :exclusions [com.stuartsierra/component
                                org.slf4j/slf4j-api]]
-                 ;; hikaricp-component transitively depends on two versions, so we explicitly bring in one
-                 [org.slf4j/slf4j-api "1.7.7"]
                  [duct "0.8.0"
                   :exclusions [org.clojure/tools.reader]]
                  [ring/ring-core "1.8.0"]
@@ -64,6 +62,11 @@
                  [one-time "0.5.0"
                   :exclusions [commons-codec]]
 
+                 ;; logging
+                 [org.clojure/tools.logging "1.1.0"]
+                 [ch.qos.logback/logback-classic "1.3.0-alpha5"
+                  :exclusions [com.sun.mail/javax.mail]]
+                 
                  ;; AWS
                  [com.cognitect.aws/api "0.8.408"
                   :exclusions [org.eclipse.jetty/jetty-util]]

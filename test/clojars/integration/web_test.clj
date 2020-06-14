@@ -5,7 +5,8 @@
             [kerodon.core :refer [fill-in follow-redirect follow press
                                   session visit within]]
             [kerodon.test :refer [has text?]]
-            [net.cgrand.enlive-html :as enlive]))
+            [net.cgrand.enlive-html :as enlive]
+            [clojars.log :as log]))
 
 (use-fixtures :each
   help/default-fixture
@@ -18,11 +19,11 @@
                       (has (text? "Oops!"))))))
 
 (deftest error-page-includes-error-id
-  (with-redefs [clojars.errors/error-id (constantly "ERROR")]
+  (with-redefs [log/trace-id (constantly #uuid "8f3788f5-9001-444d-8c57-049ba685cea8")]
     (with-out-str (-> (session (help/app))
                     (visit "/error")
                     (within [:div.small-section :> :pre.error-id]
-                      (has (text? "error-id:\"ERROR\"")))))))
+                            (has (text? "error-id:\"8f3788f5-9001-444d-8c57-049ba685cea8\"")))))))
 
 (deftest server-errors-log-caught-exceptions
   (let [err (atom nil)]

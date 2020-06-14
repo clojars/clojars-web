@@ -9,7 +9,8 @@
    [clojars.util :as util]
    [clojure.string :as str]
    [one-time.core :as ot]
-   [ring.util.request :as req]))
+   [ring.util.request :as req]
+   [clojars.log :as log]))
 
 (defn try-account [f]
   (f (:username (friend/current-authentication))))
@@ -67,13 +68,20 @@
 
 (defn token-credential-fn [db]
   (fn [{:keys [username password]}]
-    (when-let [token (and password
+    (log/with-context {:tag :authentication
+                       :username username
+                       :type :token}
+      (if-let [token (and password
                           (->> (db/find-user-tokens-by-username db username)
                                (remove :disabled)
                                (some #(when (creds/bcrypt-verify password (:token %)) %))))]
-      (db/set-deploy-token-used db (:id token))
-      {:username username
-       :token token})))
+        (do
+          (db/set-deploy-token-used db (:id token))
+          (log/info {:status :success})
+          {:username username
+           :token token})
+        (log/info {:status :failed
+                   :reason :invalid-token})))))
 
 (defn valid-totp-token?
   [otp {:as _user :keys [otp_secret_key]}]
@@ -98,13 +106,23 @@
 
 (defn password-credential-fn [db]
   (fn [{:keys [username password otp]}]
-    (when (not (str/blank? password))
-      (let [{:as user :keys [otp_active]} (db/find-user db username)]
-        (when (and (not (str/blank? (:password user)))
-                   (creds/bcrypt-verify password (:password user))
-                   (or (not otp_active)
-                       (validate-otp db user otp)))
-          {:username username})))))
+    (log/with-context {:tag :authentication
+                       :username username
+                       :type :password
+                       :otp? (boolean otp)}
+      (if (not (str/blank? password))
+        (let [{:as user :keys [otp_active]} (db/find-user db username)]
+          (if (and (not (str/blank? (:password user)))
+                     (creds/bcrypt-verify password (:password user))
+                     (or (not otp_active)
+                         (validate-otp db user otp)))
+            (do
+              (log/info {:status :success})
+              {:username username})
+            (log/info {:status :failed
+                       :reason :password-or-otp-incorrect})))
+        (log/info {:status :failed
+                   :reason :password-blank})))))
 
 (defn token-or-password-credential-fn [db]
   (some-fn (token-credential-fn db) (password-credential-fn db)))

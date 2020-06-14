@@ -1,12 +1,11 @@
 (ns clojars.errors
-  (:require [raven-clj.core :as raven-clj]
-            [raven-clj.interfaces :as interfaces]
-            [clojure.walk :as walk]
-            [clj-stacktrace.repl :refer [pst]]
-            [clojars.web.error-page :as error-page]
-            [clojars.web.error-api :as error-api])
-  (:import java.util.UUID))
-
+  (:require
+   [raven-clj.core :as raven-clj]
+   [raven-clj.interfaces :as interfaces]
+   [clj-stacktrace.repl :refer [pst]]
+   [clojars.log :as log]
+   [clojars.web.error-page :as error-page]
+   [clojars.web.error-api :as error-api]))
 
 (defn raven-extra-data [e extra]
   (-> (ex-data e)
@@ -18,7 +17,7 @@
           message (assoc :message message)
           e (interfaces/stacktrace e ["clojars"])
           (or e extra) (assoc :extra (raven-extra-data e extra))
-          id (assoc-in [:extra :error-id] id)))
+          id (assoc-in [:extra :error-id] (str id))))
 
 (defn raven-error-report
   ([dsn id message e extra]
@@ -44,11 +43,21 @@
    (uncaughtException [this thread throwable]
      (raven-error-report (:dsn raven-config)
                          nil
-                         ("UncaughtExceptionHandler capture")
+                         "UncaughtExceptionHandler capture"
                          throwable)))
  
 (defn raven-error-reporter [raven-config]
   (->RavenErrorReporter raven-config))
+
+(defrecord LogReporter []
+  ErrorReporter
+  (-report-error [_ e _ id]
+    (log/error {:tag ::uncaught-error
+                :trace-id id
+                :error e})))
+
+(defn log-reporter []
+  (->LogReporter))
 
 (defrecord StdOutReporter []
   ErrorReporter
@@ -74,52 +83,31 @@
 (defn multiple-reporters [& reporters]
   (->MultiReporter reporters))
 
-(defn error-id []
-  (str (UUID/randomUUID)))
-
 (defn report-error
   ([reporter e]
-   (report-error reporter e nil))
-  ([reporter e extra]
-   (let [id (error-id)]
-     (when-not (false? (:report? (ex-data e)))
-       (-report-error reporter e extra id))
-     id)))
+   (report-error reporter e nil nil))
+  ([reporter e extra id]
+   (when-not (false? (:report? (ex-data e)))
+     (-report-error reporter e extra id))
+   id))
 
-(defn replace-kv
-  "Walk form looking for map entries with the keyword kw and, if found, replace the entry with replacement"
-  [kw replacement form]
-  (walk/postwalk
-    (fn [original]
-      (if (and (vector? original) (= (count original) 2) (= kw (first original)))
-        replacement
-        original))
-    form))
-
-(defn alter-fn
-  "Function called by raven-clj.interfaces.http to scrub data from the passed http-info map.
-   Returns the scrubbed http-info map.
-   See also: https://docs.sentry.io/clientdev/interfaces/#special-interfaces"
-  [http-event-map]
-  (->> http-event-map
-       (replace-kv :password [:password "SCRUBBED"])
-       (replace-kv :current-password [:current-password "SCRUBBED"])
-       (replace-kv :confirm [:confirm "SCRUBBED"]))) ; TODO: add more? auth tokens?
-
-(defn report-ring-error [reporter e request]
+(defn report-ring-error [reporter e request id]
  (report-error reporter
    e
    (-> {:message "Ring caught an exception"}
-     (interfaces/http request alter-fn))))
+       (interfaces/http request log/redact))
+   id))
 
 (defn wrap-exceptions [app reporter]
   (fn [req]
-    (try
-      (app req)
-      (catch Throwable t
-        (let [params (:params req)
-              err-response-fn (if (= (:format params) "json")
-                                error-api/error-api-response
-                                error-page/error-page-response)]
-          (->> (report-ring-error reporter t req)
-               (err-response-fn (ex-data t))))))))
+    (let [request-id (log/trace-id)]
+      (try
+        (log/with-context {:trace-id request-id}
+          (app req))
+        (catch Throwable t
+          (let [params (:params req)
+                err-response-fn (if (= (:format params) "json")
+                                  error-api/error-api-response
+                                  error-page/error-page-response)]
+            (->> (report-ring-error reporter t req request-id)
+                 (err-response-fn (ex-data t)))))))))

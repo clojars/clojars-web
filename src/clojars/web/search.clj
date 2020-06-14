@@ -1,17 +1,17 @@
 (ns clojars.web.search
-  (:require [clojars.web.common :refer [html-doc jar-link jar-fork?
-                                        collection-fork-notice user-link
-                                        format-date page-nav flash xml-escape
-                                        jar-notice maven-search-link]]
-            [clojars.errors :as errors]
-            [clojars.maven :as maven]
-            [clojars.search :as search]
-            [clojars.web.error-api :as error-api]
-            [cheshire.core :as json]
-            [clojure.string :as str]
-            [clojure.xml :as xml]
-            [hiccup.element :refer [link-to]]
-            [ring.util.codec :refer [url-encode]]))
+  (:require
+   [clojars.web.common :refer [html-doc jar-link jar-fork?
+                               collection-fork-notice
+                               format-date page-nav flash xml-escape
+                               jar-notice maven-search-link]]
+   [clojars.search :as search]
+   [clojars.web.error-api :as error-api]
+   [cheshire.core :as json]
+   [clojure.string :as str]
+   [clojure.xml :as xml]
+   [hiccup.element :refer [link-to]]
+   [ring.util.codec :refer [url-encode]]
+   [clojars.log :as log]))
 
 (defn- jar->json [jar]
   (let [m {:jar_name (:artifact-id jar)
@@ -41,7 +41,7 @@
          {:status 400
           :format :json
           :error-message (format "Invalid search syntax for query `%s`" query)}
-         (errors/error-id))))))
+         (log/trace-id))))))
 
 (defn- jar->xml [jar]
   (let [attrs {:jar_name (:artifact-id jar)
@@ -73,7 +73,7 @@
          {:status 400
           :format :xml
           :error-message (format "Invalid search syntax for query `%s`" query)}
-         (errors/error-id))))))
+         (log/trace-id))))))
 
 (defn split-query
   "Tries to split a query into a group-id and artifact-id tuple"
@@ -113,7 +113,7 @@
     (cond
       (maven-groups group-id) [group-id artifact-id]
       (artifact-id->group-id artifact-id) [(artifact-id->group-id artifact-id) artifact-id]
-      :default false)))
+      :else false)))
 
 (defn html-search [search account query page]
   (html-doc (str query " - search - page " page) {:account account :query query :description (format "Clojars search results page %d for '%s'" page query)}
@@ -137,7 +137,7 @@
            [:div
             [:p (format "Total results: %s, showing %s - %s"
                   total-hits (inc offset) (+ offset (count results)))]
-            (if (some jar-fork? results)
+            (when (some jar-fork? results)
               collection-fork-notice)
             [:ul.row
              (for [{:keys [group-id artifact-id version created description]} results]
@@ -146,12 +146,12 @@
                  (jar-link {:jar_name artifact-id
                             :group_name group-id}) " " version
                  [:br]
-                 (if (seq description)
+                 (when (seq description)
                    [:span.desc description
                     [:br]])
                  (jar-notice group-id artifact-id)
                  [:span.details
-                  (if created
+                  (when created
                     [:td (format-date created)])]]])]
             (page-nav page
               (int (Math/ceil (/ total-hits results-per-page)))

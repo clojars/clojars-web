@@ -3,96 +3,111 @@
    [clojars.auth :as auth]
    [clojars.db :as db]
    [clojars.web.group :as view]
-   [compojure.core :as compojure :refer [GET POST DELETE]]))
+   [compojure.core :as compojure :refer [GET POST DELETE]]
+   [clojars.log :as log]))
 
 (defn- get-members [db groupname]
   (let [actives (seq (db/group-actives db groupname))]
     (when (seq actives)
       (auth/try-account
-        #(view/show-group db % groupname actives)))))
+       #(view/show-group db % groupname actives)))))
 
 (defn- toggle-or-add-member [db groupname username make-admin?]
   (let [actives (seq (db/group-actives db groupname))
         membernames (->> actives
-                      (filter (complement view/is-admin?))
-                      (map :user))
+                         (filter (complement view/is-admin?))
+                         (map :user))
         adminnames (->> actives
-                     (filter view/is-admin?)
-                     (map :user))]
+                        (filter view/is-admin?)
+                        (map :user))
+        handler-fn (fn [account admin? group-users]
+                     #(log/with-context {:tag :toggle-or-add-group-member
+                                         :username account
+                                         :username-to-add username
+                                         :admin? admin?}
+                        (cond
+                          (= account username)
+                          (do
+                            (log/info {:status :failed
+                                       :reason :self-toggle})
+                            (view/show-group db account groupname actives
+                                             "Cannot change your own membership!"))
+
+                          (some #{username} group-users)
+                          (do
+                            (log/info {:status :failed
+                                       :reason :user-already-member})
+                            (view/show-group db account groupname actives
+                                             (format "They're already an %s!" (if admin? "admin" "member"))))
+
+                          (db/find-user db username)
+                          (do
+                            (db/add-admin db groupname username account)
+                            (log/info {:status :success})
+                            (view/show-group db account groupname
+                                             (into (remove (fn [active]
+                                                             (= username (:user active))) actives)
+                                                   [{:user username :admin admin?}])))
+
+                          :else
+                          (do
+                            (log/info {:status :failed
+                                       :reason :user-not-found})
+                            (view/show-group db account groupname actives
+                                             (str "No such user: "
+                                                  username))))))]
     (when (seq actives)
       (auth/try-account
-        (fn [account]
-          (auth/require-admin-authorization
-            db
-            account
-            groupname
-            (if make-admin?
-              #(cond
-                 (= account username)
-                 (view/show-group db account groupname actives
-                   "Cannot change your own membership!")
-
-                 (some #{username} adminnames)
-                 (view/show-group db account groupname actives
-                   "They're already an admin!")
-
-                 (db/find-user db username)
-                 (do (db/add-admin db groupname username account)
-                     (view/show-group db account groupname
-                       (into (remove (fn [active] (= username (:user active))) actives) [{:user username :admin true}])))
-
-                 :else
-                 (view/show-group db account groupname actives
-                   (str "No such user: "
-                     username)))
-              #(cond
-                 (= account username)
-                 (view/show-group db account groupname actives
-                   "Cannot change your own membership!")
-
-                 (some #{username} membernames)
-                 (view/show-group db account groupname actives
-                   "They're already a member!")
-
-                 (db/find-user db username)
-                 (do (db/add-member db groupname username account)
-                     (view/show-group db account groupname
-                       (into (remove (fn [active] (= username (:user active))) actives) [{:user username :admin false}])))
-
-                 :else
-                 (view/show-group db account groupname actives
-                   (str "No such user: "
-                     username))))))))))
+       (fn [account]
+         (auth/require-admin-authorization
+          db
+          account
+          groupname
+          (handler-fn account
+                      make-admin?
+                      (if make-admin? adminnames membernames))))))))
 
 (defn- remove-member [db groupname username]
   (let [actives (seq (db/group-actives db groupname))]
     (when (seq actives)
       (auth/try-account
-        (fn [account]
-          (auth/require-admin-authorization
-            db
-            account
-            groupname
-            #(cond
+       (fn [account]
+         (auth/require-admin-authorization
+          db
+          account
+          groupname
+          #(log/with-context {:tag :remove-group-member
+                              :username account
+                              :group groupname
+                              :username-to-remove username}
+             (cond
                (= account username)
-               (view/show-group db account groupname actives
-                 "Cannot remove yourself!")
+               (do
+                 (log/info {:status :failed
+                            :reason :self-removal})
+                 (view/show-group db account groupname actives
+                                  "Cannot remove yourself!"))
 
                (some #{username} (map :user actives))
-               (do (db/inactivate-member db groupname username account)
-                   (view/show-group db account groupname
-                     (remove (fn [active] (= username (:user active))) actives)))
+               (do
+                 (db/inactivate-member db groupname username account)
+                 (log/info {:status :success})
+                 (view/show-group db account groupname
+                                  (remove (fn [active] (= username (:user active))) actives)))
 
                :else
-               (view/show-group db account groupname actives
-                 (str "No such member: "
-                   username)))))))))
+               (do
+                 (log/info {:status :failed
+                            :reason :member-not-in-group})
+                 (view/show-group db account groupname actives
+                                  (str "No such member: "
+                                       username)))))))))))
 
 (defn routes [db]
   (compojure/routes
-    (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
-      (get-members db groupname))
-    (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username admin]
-      (toggle-or-add-member db groupname username (= "1" admin)))
-    (DELETE ["/groups/:groupname", :groupname #"[^/]+"] [groupname username]
-      (remove-member db groupname username))))
+   (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
+        (get-members db groupname))
+   (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username admin]
+         (toggle-or-add-member db groupname username (= "1" admin)))
+   (DELETE ["/groups/:groupname", :groupname #"[^/]+"] [groupname username]
+           (remove-member db groupname username))))

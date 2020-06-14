@@ -6,7 +6,8 @@
    [clojars.event :as event]
    [clojars.web.user :as view]
    [compojure.core :as compojure :refer [DELETE GET POST PUT]]
-   [ring.util.response :refer [redirect]]))
+   [ring.util.response :refer [redirect]]
+   [clojars.log :as log]))
 
 (defn show [db username]
   (if-let [user (db/find-user db username)]
@@ -17,58 +18,85 @@
                    account
                    {:as user :keys [otp_active]}
                    {:keys [password]}]
-  (cond
-    otp_active
-    (assoc (redirect "/mfa")
-           :flash "Two-factor auth already enabled.")
+  (log/with-context {:tag :mfa-creation
+                     :username account}
+    (cond
+      otp_active
+      (do
+        (log/info {:status :failed
+                   :reason :mfa-already-activated})
+        (assoc (redirect "/mfa")
+               :flash "Two-factor auth already enabled."))
 
-    (creds/bcrypt-verify password (:password user))
-    (do
-      (db/set-otp-secret-key! db account)
-      (view/setup-mfa account (db/find-user db account) nil))
+      (creds/bcrypt-verify password (:password user))
+      (do
+        (db/set-otp-secret-key! db account)
+        (log/info {:status :success})
+        (view/setup-mfa account (db/find-user db account) nil))
 
-    :else
-    (assoc (redirect "/mfa")
-           :flash "Password incorrect.")))
+      :else
+      (do
+        (log/info {:status :failed
+                   :reason :password-incorrect})
+        (assoc (redirect "/mfa")
+               :flash "Password incorrect.")))))
 
 (defn- confirm-mfa [db
                     account
                     {:as user :keys [otp_active]}
                     {:keys [otp]}]
-  (cond
-    otp_active
-    (assoc (redirect "/mfa")
-           :flash "Two-factor auth already enabled.")
+  (log/with-context {:tag :mfa-confirmation
+                     :username account}
+    (cond
+      otp_active
+      (do
+        (log/info {:status :failed
+                   :reason :mfa-already-activated})
+        (assoc (redirect "/mfa")
+               :flash "Two-factor auth already enabled."))
 
-    (auth/valid-totp-token? otp user)
-    (let [recovery-code (db/enable-otp! db account)
-          user (db/find-user db account)]
-      (event/emit :mfa-activated {:username account})
-      (view/mfa account user (view/recovery-code-message recovery-code)))
+      (auth/valid-totp-token? otp user)
+      (let [recovery-code (db/enable-otp! db account)
+            user (db/find-user db account)]
+        (log/info {:status :success})
+        (event/emit :mfa-activated {:username account})
+        (view/mfa account user (view/recovery-code-message recovery-code)))
 
-    :else
-    (view/setup-mfa account user "Two-factor token incorrect.")))
+      :else
+      (do
+        (log/info {:status :failed
+                   :reason :otp-token-incorrect})
+        (view/setup-mfa account user "Two-factor token incorrect.")))))
 
 (defn- disable-mfa [db
                     account
                     {:as user :keys [otp_active]}
                     {:keys [password]}]
-  (cond
-    (not otp_active)
-    (assoc (redirect "/mfa")
-           :flash "Two-factor auth already disabled.")
+  (log/with-context {:tag :mfa-disable
+                     :username account}
+    (cond
+      (not otp_active)
+      (do
+        (log/info {:status :failed
+                   :reason :mfa-already-disabled})
+        (assoc (redirect "/mfa")
+               :flash "Two-factor auth already disabled."))
 
-    (creds/bcrypt-verify password (:password user))
-    (do
-      (db/disable-otp! db account)
-      (event/emit :mfa-deactivated {:username account
-                                    :source :user})
-      (assoc (redirect "/mfa")
-             :flash "Two-factor auth disabled."))
+      (creds/bcrypt-verify password (:password user))
+      (do
+        (db/disable-otp! db account)
+        (log/info {:status :success})
+        (event/emit :mfa-deactivated {:username account
+                                      :source :user})
+        (assoc (redirect "/mfa")
+               :flash "Two-factor auth disabled."))
 
-    :else
-    (assoc (redirect "/mfa")
-           :flash "Password incorrect.")))
+      :else
+      (do
+        (log/info {:status :failed
+                   :reason :password-incorrect})
+        (assoc (redirect "/mfa")
+               :flash "Password incorrect.")))))
 
 (defn routes [db mailer]
   (compojure/routes
