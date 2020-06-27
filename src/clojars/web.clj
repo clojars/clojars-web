@@ -100,15 +100,16 @@
   (routes
     (-> (context "/repo" _
           (-> (repo/routes storage db search)
-            (friend/authenticate
-              {:credential-fn (auth/token-credential-fn db)
-               :workflows [(workflows/http-basic :realm "clojars")]
-               :allow-anon? false
-               :unauthenticated-handler
-               (partial workflows/http-basic-deny "clojars")})
-            (repo/wrap-exceptions reporter)
-            (repo/wrap-file (:repo (config)))
-            (repo/wrap-reject-double-dot)))
+              (friend/authenticate
+               {:credential-fn (auth/token-credential-fn db)
+                :workflows [(workflows/http-basic :realm "clojars")]
+                :allow-anon? false
+                :unauthenticated-handler
+                (partial workflows/http-basic-deny "clojars")})
+              (repo/wrap-reject-non-token)
+              (repo/wrap-exceptions reporter)
+              (repo/wrap-file (:repo (config)))
+              (repo/wrap-reject-double-dot)))
         (wrap-secure-session))
     (-> (token-breach/routes db mailer)
         (wrap-exceptions reporter))

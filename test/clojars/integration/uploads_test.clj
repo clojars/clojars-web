@@ -548,25 +548,28 @@
                             :local-repo help/local-repo)))))
 
 (deftest anonymous-cannot-deploy
-  (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-                        #"Unauthorized"
-                        (aether/deploy
-                          :coordinates '[fake/test "1.0.0"]
-                          :jar-file (io/file (io/resource "test.jar"))
-                          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-                          :repository {"test" {:url (repo-url)}}
-                          :local-repo help/local-repo))))
+  (is (thrown-with-msg?
+       org.sonatype.aether.deployment.DeploymentException
+       #"Unauthorized - a deploy token is required to deploy"
+       (aether/deploy
+        :coordinates '[fake/test "1.0.0"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+        :repository {"test" {:url (repo-url)}}
+        :local-repo help/local-repo))))
 
 (deftest bad-login-cannot-deploy
-  (is (thrown? org.sonatype.aether.deployment.DeploymentException
-               (aether/deploy
-                 :coordinates '[fake/test "1.0.0"]
-                 :jar-file (io/file (io/resource "test.jar"))
-                 :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-                 :repository {"test" {:url (repo-url)
-                                      :username "guest"
-                                      :password "password"}}
-                 :local-repo help/local-repo))))
+  (is (thrown-with-msg?
+       org.sonatype.aether.deployment.DeploymentException
+       #"Unauthorized - a deploy token is required to deploy"
+       (aether/deploy
+        :coordinates '[fake/test "1.0.0"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+        :repository {"test" {:url (repo-url)
+                             :username "guest"
+                             :password "password"}}
+        :local-repo help/local-repo))))
 
 (deftest deploy-requires-path-to-match-pom
   (-> (session (help/app-from-system))

@@ -325,6 +325,11 @@
 (defn generate-deploy-token []
   (str "CLOJARS_" (hexadecimalize (generate-secure-token 30))))
 
+(defn is-deploy-token?
+  "Returns true if the value is token shaped."
+  [v]
+  (boolean (and v (re-find #"^CLOJARS_[0-9a-f]{60}$" v))))
+
 (defn add-deploy-token [db username token-name group-name jar-name]
   (let [user (find-user db username)
         token (generate-deploy-token)

@@ -10,7 +10,8 @@
    [clojure.string :as str]
    [one-time.core :as ot]
    [ring.util.request :as req]
-   [clojars.log :as log]))
+   [clojars.log :as log])
+  (:import org.apache.commons.codec.binary.Base64))
 
 (defn try-account [f]
   (f (:username (friend/current-authentication))))
@@ -65,6 +66,32 @@
                                  (::friend/auth-config request))
                #'workflows/interactive-login-redirect)
            (update-in request [::friend/auth-config] merge form-config)))))))
+
+(defn- parse-authorization-header
+  "Parses a Basic auth header into username and password."
+  [{:as _request :keys [headers]}]
+  (let [authorization (get headers "authorization")]
+    (when (and authorization
+               (re-matches #"\s*Basic\s+(.+)" authorization))
+      (when-let [[_ username password]
+                 (try
+                   (-> (re-matches #"\s*Basic\s+(.+)" authorization)
+                       ^String second
+                       (.getBytes "UTF-8")
+                       Base64/decodeBase64
+                       (String. "UTF-8")
+                       (#(re-find #"([^:]*):(.*)" %)))
+                   (catch Exception _))]
+        {:username username
+         :password password}))))
+
+(defn maybe-token-request?
+  "Returns true if:
+  * there is a Basic authorization header
+  * the password in the header is shaped like a deploy token"
+  [request]
+  (let [{:keys [password]} (parse-authorization-header request)]
+    (db/is-deploy-token? password)))
 
 (defn token-credential-fn [db]
   (fn [{:keys [username password]}]

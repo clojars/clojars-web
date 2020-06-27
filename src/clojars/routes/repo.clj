@@ -1,24 +1,23 @@
 (ns clojars.routes.repo
-  (:require [clojars
-             [auth :refer [with-account]]
-             [db :as db]
-             [errors :refer [report-error]]
-             [file-utils :as fu]
-             [maven :as maven]
-             [search :as search]
-             [storage :as storage]]
-            [clojure.java.io :as io]
-            [clojure.string :as str]
-            [compojure
-             [core :as compojure :refer [PUT]]
-             [route :refer [not-found]]]
-            [ring.util
-             [codec :as codec]
-             [response :as response]]
-            [clojars.log :as log])
-  (:import (java.io IOException File)
-           (java.util Date UUID)
-           org.apache.commons.io.FileUtils))
+  (:require 
+   [clojars.auth :as auth :refer [with-account]]
+   [clojars.db :as db]
+   [clojars.errors :refer [report-error]]
+   [clojars.file-utils :as fu]
+   [clojars.log :as log]
+   [clojars.maven :as maven]
+   [clojars.search :as search]
+   [clojars.storage :as storage]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [compojure.core :as compojure :refer [PUT]]
+   [compojure.route :refer [not-found]]
+   [ring.util.codec :as codec]
+   [ring.util.response :as response])
+  (:import
+   (java.io IOException File)
+   (java.util Date UUID)
+   org.apache.commons.io.FileUtils))
 
 (defn save-to-file [dest input]
   (-> dest
@@ -427,6 +426,13 @@
     (if (re-find #"\.\." (:uri req))
       {:status 400 :headers {}}
       (f req))))
+
+(defn wrap-reject-non-token [f]
+  (fn [req]
+    (if (auth/maybe-token-request? req)
+      (f req)
+      {:status 401
+       :headers {"status-message" "Unauthorized - a deploy token is required to deploy (see https://git.io/JfwjM)"}})))
 
 (defn wrap-exceptions [app reporter]
   (fn [req]
