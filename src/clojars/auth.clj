@@ -123,6 +123,3 @@
                        :reason :password-or-otp-incorrect})))
         (log/info {:status :failed
                    :reason :password-blank})))))
-
-(defn token-or-password-credential-fn [db]
-  (some-fn (token-credential-fn db) (password-credential-fn db)))

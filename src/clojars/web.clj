@@ -101,7 +101,7 @@
     (-> (context "/repo" _
           (-> (repo/routes storage db search)
             (friend/authenticate
-              {:credential-fn (auth/token-or-password-credential-fn db)
+              {:credential-fn (auth/token-credential-fn db)
                :workflows [(workflows/http-basic :realm "clojars")]
                :allow-anon? false
                :unauthenticated-handler
