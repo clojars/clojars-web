@@ -67,7 +67,7 @@
                #'workflows/interactive-login-redirect)
            (update-in request [::friend/auth-config] merge form-config)))))))
 
-(defn- parse-authorization-header
+(defn parse-authorization-header
   "Parses a Basic auth header into username and password."
   [{:as _request :keys [headers]}]
   (let [authorization (get headers "authorization")]

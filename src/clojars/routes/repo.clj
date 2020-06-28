@@ -431,8 +431,11 @@
   (fn [req]
     (if (auth/maybe-token-request? req)
       (f req)
-      {:status 401
-       :headers {"status-message" "Unauthorized - a deploy token is required to deploy (see https://git.io/JfwjM)"}})))
+      (let [{:keys [username]} (auth/parse-authorization-header req)]
+        (log/info {:tag :deploy-password-rejection
+                   :username username})
+        {:status 401
+         :headers {"status-message" "Unauthorized - a deploy token is required to deploy (see https://git.io/JfwjM)"}}))))
 
 (defn wrap-exceptions [app reporter]
   (fn [req]
