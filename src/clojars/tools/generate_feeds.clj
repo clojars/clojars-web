@@ -17,14 +17,18 @@
                                                       :description :scm :homepage])
                                      #(set/rename-keys % {:group_name :group-id
                                                           :jar_name   :artifact-id})))
-                          (group-by (juxt :group-id :artifact-id))
-                          (vals))]
-    (for [jars grouped-jars]
-      (let [jars (sort-by :version #(maven/compare-versions %2 %1) jars)]
-        (-> (first jars)
-            (dissoc :version)
-            (assoc :versions (vec (distinct (map :version jars))))
-            maven/without-nil-values)))))
+                          (group-by (juxt :group-id :artifact-id)))]
+    (->> (for [[[group-id artifact-id] jars] grouped-jars]
+           (try
+             (let [jars (sort-by :version #(maven/compare-versions %2 %1) jars)]
+               (-> (first jars)
+                   (dissoc :version)
+                   (assoc :versions (vec (distinct (map :version jars))))
+                   maven/without-nil-values))
+             (catch Exception e
+               (printf "Got exeption when processing %s:%s, skipping: %s\n"
+                       group-id artifact-id (.getMessage e)))))
+         (keep identity))))
 
 (defn write-to-file
   ([data file gzip?]

@@ -78,9 +78,9 @@
   [filename]
   (second (re-find #"-(\d{8}\.\d{6}-\d+)\." filename)))
 
-(defn parse-int [^String s]
+(defn parse-long [^String s]
   (when s
-    (Integer/parseInt s)))
+    (Long/parseLong s)))
 
 (defn parse-version
   "Parse a Maven-style version number.
@@ -96,10 +96,10 @@
         (re-matches #"(0|[1-9][0-9]*)(?:\.(0|[1-9][0-9]*)(?:\.(0|[1-9][0-9]*))?)?(?:(-|\.)((0|[1-9][0-9]*)|(.*)))?" s)]
     (try
       (without-nil-values
-        {:major        (parse-int major)
-         :minor        (parse-int minor)
-         :incremental  (parse-int incremental)
-         :build-number (parse-int build-number)
+        {:major        (parse-long major)
+         :minor        (parse-long minor)
+         :incremental  (parse-long incremental)
+         :build-number (parse-long build-number)
          :qualifier    (if match qualifier s)})
       (catch NumberFormatException _
         {:qualifier s}))))
@@ -123,7 +123,7 @@
                       suffix
                       prefix))
          (when-not (empty? counter)
-           (parse-int counter))
+           (parse-long counter))
          (when-not (and (empty? prefix)
                      (empty? counter))
            (to-lower suffix))]))))
