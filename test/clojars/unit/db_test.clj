@@ -4,6 +4,7 @@
             [clojars.test-helper :as help]
             [clojure.test :refer [are deftest is use-fixtures]])
   (:import
+   (clojure.lang ExceptionInfo)
    (java.sql Timestamp)))
 
 (use-fixtures :each
@@ -144,6 +145,40 @@
         (db/find-jar help/*db* name name)
         (first (db/jars-by-groupname help/*db* name))
         (first (db/jars-by-username help/*db* "test-user"))))))
+
+(deftest jars-with-edn-values-are-properly-read
+  (let [name "tester"
+        jarmap {:name name :group name :version "1.0"
+                :licenses [{:name "foo" :url "bar"}]
+                :scm {:connection "ham" :url "biscuit"}}
+        _ (db/add-jar help/*db* "test-user" jarmap)
+        jar (db/find-jar help/*db* name name)]
+    (is (= (:licenses jarmap) (:licenses jar)))
+    (is (= (:scm jarmap) (:scm jar)))))
+
+(deftest jars-with-improper-edn-values-cannot-be-written
+  (let [name "tester"
+        jarmap {:name name :group name :version "1.0"
+                :licenses [{:name [:gotcha] :url "bar"}]}]
+    (is (thrown? ExceptionInfo
+                 (db/add-jar help/*db* "test-user" jarmap)))
+    (let [jarmap {:name name :group name :version "1.0"
+                  :scm {:foo :bar}}]
+      (is (thrown? ExceptionInfo
+                 (db/add-jar help/*db* "test-user" jarmap))))))
+
+(deftest jars-with-improper-edn-values-are-properly-read
+  ;; redef to allow us to put invalid data in the db
+  (with-redefs [db/safe-pr-str pr-str]
+    (let [name "tester"
+          jarmap {:name name :group name :version "1.0"
+                  :licenses [{:name [:gotcha] :url "bar"}]
+                  :scm {:connection "ham" :url :boom}}
+          _ (db/add-jar help/*db* "test-user" jarmap)
+          jar (db/find-jar help/*db* name name)]
+      (is (= name (:jar_name jar)))
+      (is (nil? (:licenses jar)))
+      (is (nil? (:scm jar))))))
 
 (deftest added-jars-store-dependencies
   (let [name "tester"
