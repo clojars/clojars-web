@@ -8,6 +8,7 @@
             [clojars.util :refer [filter-some]]
             [clojure.edn :as edn]
             [clojure.set :as set]
+            [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [one-time.core :as ot])
   (:import (java.security SecureRandom)
@@ -193,11 +194,33 @@
                    :result-set-fn first
                    :row-fn :exist}))
 
-(let [read-field (fn [m field] (update m field (fnil edn/read-string "nil")))
-      read-edn-fields #(when %
-                        (-> %
-                            (read-field :licenses)
-                            (read-field :scm)))]
+(def str-map
+  (s/map-of keyword? string?))
+
+(def str-map-vector
+  (s/or :empty? empty?
+        :str-maps (s/coll-of str-map)))
+
+(defn- safe-edn-read
+  "Reads edn data, then assures it matches the given spec, returning nil otherwise.
+  This is used to prevent XSS in case there is some avenue to get
+  hiccup data structures into the :license or :scm fields in the db."
+  [s spec]
+  (let [m (edn/read-string s)]
+    (when (s/valid? spec m)
+      m)))
+
+;; public so we can override in tests
+(defn safe-pr-str
+  "Checks v against the given spec, throwing if it isn't valid. If it is
+  valid, v is passed through pr-str. This is used to prevent XSS as
+  hiccup data structures from getting into the db."
+  [v spec]
+  (pr-str (s/assert* spec v)))
+
+(let [read-edn-fields #(some-> %
+                               (update :licenses safe-edn-read str-map-vector)
+                               (update :scm safe-edn-read str-map))]
   (defn find-jar
     ([db groupname jarname]
      (read-edn-fields
@@ -410,8 +433,8 @@
                  :description description
                  :homepage    homepage
                  :packaging   (when packaging (clojure.core/name packaging))
-                 :licenses    (when licenses (pr-str licenses))
-                 :scm         (when scm (pr-str scm))
+                 :licenses    (when licenses (safe-pr-str licenses str-map-vector))
+                 :scm         (when scm (safe-pr-str scm str-map))
                  :authors     (str/join ", " (map #(.replace % "," "")
                                                   authors))}
                 {:connection db})
