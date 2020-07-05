@@ -105,12 +105,12 @@
 
 (defn find-user-tokens-by-username [db username]
   (sql/find-user-tokens-by-username {:username username}
-    {:connection db}))
+                                    {:connection db}))
 
 (defn find-token [db token-id]
   (sql/find-token {:id token-id}
-    {:connection db
-     :result-set-fn first}))
+                  {:connection db
+                   :result-set-fn first}))
 
 (defn find-token-by-value
   "Finds a token with the matching value. This is somewhat expensive,
@@ -132,8 +132,8 @@
 
 (defn group-adminnames [db groupname]
   (sql/group-adminnames {:groupname groupname}
-                         {:connection db
-                          :row-fn :user}))
+                        {:connection db
+                         :row-fn :user}))
 
 (defn group-activenames [db groupname]
   (sql/group-activenames {:groupname groupname}
@@ -201,17 +201,17 @@
   (defn find-jar
     ([db groupname jarname]
      (read-edn-fields
-       (sql/find-jar {:groupname groupname
-                      :jarname   jarname}
-                     {:connection    db
-                      :result-set-fn first})))
+      (sql/find-jar {:groupname groupname
+                     :jarname   jarname}
+                    {:connection    db
+                     :result-set-fn first})))
     ([db groupname jarname version]
      (read-edn-fields
-       (sql/find-jar-versioned {:groupname groupname
-                                :jarname   jarname
-                                :version   version}
-                               {:connection    db
-                                :result-set-fn first}))))
+      (sql/find-jar-versioned {:groupname groupname
+                               :jarname   jarname
+                               :version   version}
+                              {:connection    db
+                               :result-set-fn first}))))
   (defn all-jars [db]
     (map read-edn-fields
          (sql/all-jars {} {:connection db}))))
@@ -245,8 +245,8 @@
    (map
     #(find-jar db (:group_name %) (:jar_name %))
     (all-projects db
-     (* (dec current-page) per-page)
-     per-page))))
+                  (* (dec current-page) per-page)
+                  per-page))))
 
 (defn add-user [db email username password]
   (let [record {:email email, :username username, :password (bcrypt password),
@@ -268,9 +268,9 @@
     (if (empty? password)
       (sql/update-user! fields {:connection db})
       (sql/update-user-with-password!
-        (assoc fields :password
-               (bcrypt password))
-        {:connection db}))
+       (assoc fields :password
+              (bcrypt password))
+       {:connection db}))
     fields))
 
 (defn reset-user-password [db username reset-code password]
@@ -281,11 +281,11 @@
                              :username username}
                             {:connection db}))
 
-  ;; Password resets
-  ;; Reference:
-  ;; https://github.com/xavi/noir-auth-app/blob/master/src/noir_auth_app/models/user.clj
-  ;; https://github.com/weavejester/crypto-random/blob/master/src/crypto/random.clj
-  ;; https://jira.atlassian.com/browse/CWD-1897?focusedCommentId=196759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-196759
+;; Password resets
+;; Reference:
+;; https://github.com/xavi/noir-auth-app/blob/master/src/noir_auth_app/models/user.clj
+;; https://github.com/weavejester/crypto-random/blob/master/src/crypto/random.clj
+;; https://jira.atlassian.com/browse/CWD-1897?focusedCommentId=196759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-196759
 (defn generate-secure-token [size]
   (let [seed (byte-array size)]
     ;; http://docs.oracle.com/javase/6/docs/api/java/security/SecureRandom.html
@@ -338,7 +338,7 @@
                 :token token
                 :group_name group-name
                 :jar_name jar-name}]
-    (sql/insert-deploy-token! (update record :token bcrypt) 
+    (sql/insert-deploy-token! (update record :token bcrypt)
                               {:connection db})
     record))
 
@@ -391,7 +391,7 @@
     (when (reserved-names groupname)
       (err (format "The group name '%s' is reserved" groupname)))
     (when (and (seq actives)
-            (not (some #{account} actives)))
+               (not (some #{account} actives)))
       (err (format "You don't have access to the '%s' group" groupname)))))
 
 (defn check-and-add-group [db account groupname]
@@ -417,10 +417,10 @@
                 {:connection db})
   (when (mvn/snapshot-version? version)
     (sql/delete-dependencies-version!
-      {:group_id group
-       :jar_id name
-       :version version}
-      {:connection db}))
+     {:group_id group
+      :jar_id name
+      :version version}
+     {:connection db}))
   (doseq [dep dependencies]
     (sql/add-dependency! (-> dep
                              (set/rename-keys {:group_name :dep_groupname
