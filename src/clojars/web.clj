@@ -10,6 +10,7 @@
     [http-utils :refer [wrap-x-frame-options wrap-secure-session]]
     [middleware :refer [wrap-ignore-trailing-slash]]]
    [clojars.friend.registration :as registration]
+   [clojars.log :as log]
    [clojars.routes.api :as api]
    [clojars.routes.artifact :as artifact]
    [clojars.routes.group :as group]
@@ -109,16 +110,19 @@
               (repo/wrap-reject-non-token)
               (repo/wrap-exceptions reporter)
               (repo/wrap-file (:repo (config)))
+              (log/wrap-request-context)
               (repo/wrap-reject-double-dot)))
         (wrap-secure-session))
     (-> (token-breach/routes db mailer)
-        (wrap-exceptions reporter))
+        (wrap-exceptions reporter)
+        (log/wrap-request-context))
    (-> (main-routes db reporter stats search mailer)
        (friend/authenticate
         {:credential-fn (auth/password-credential-fn db)
          :workflows [(auth/interactive-form-with-mfa-workflow)
                      (registration/workflow db)]})
        (wrap-exceptions reporter)
+       (log/wrap-request-context)
        (wrap-anti-forgery)
        (wrap-x-frame-options)
        (wrap-keyword-params)

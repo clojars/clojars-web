@@ -78,3 +78,10 @@
   "Logs a map of data as edn at the WARN level."
   [m]
   `(log/warn (redact (merge *context* ~m))))
+
+(defn wrap-request-context
+  "Ring middleware that adds details about the request to the logging context."
+  [f]
+  (fn [req]
+    (with-context (select-keys req [:request-method :uri])
+      (f req))))
