@@ -83,5 +83,6 @@
   "Ring middleware that adds details about the request to the logging context."
   [f]
   (fn [req]
-    (with-context (select-keys req [:request-method :uri])
+    (with-context (assoc (select-keys req [:request-method :uri])
+                         :headers (keys (:headers req)))
       (f req))))
