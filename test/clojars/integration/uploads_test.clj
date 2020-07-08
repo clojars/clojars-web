@@ -550,7 +550,7 @@
 (deftest anonymous-cannot-deploy
   (is (thrown-with-msg?
        org.sonatype.aether.deployment.DeploymentException
-       #"Unauthorized - a deploy token is required to deploy"
+       #"Unauthorized"
        (aether/deploy
         :coordinates '[fake/test "1.0.0"]
         :jar-file (io/file (io/resource "test.jar"))

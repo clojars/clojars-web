@@ -69,31 +69,34 @@
 
 (defn parse-authorization-header
   "Parses a Basic auth header into username and password."
-  [{:as _request :keys [headers]}]
-  (let [authorization (get headers "authorization")]
-    (when (and authorization
-               (re-matches #"\s*Basic\s+(.+)" authorization))
-      (when-let [[_ username password]
-                 (try
-                   (-> (re-matches #"\s*Basic\s+(.+)" authorization)
-                       ^String second
-                       (.getBytes "UTF-8")
-                       Base64/decodeBase64
-                       (String. "UTF-8")
-                       (#(re-find #"([^:]*):(.*)" %)))
-                   (catch Exception e
-                     (log/error {:tag :failed-parsing-authorization-header
-                                 :error e})))]
-        {:username username
-         :password password}))))
+  [authorization]
+  (when (and authorization
+             (re-matches #"\s*Basic\s+(.+)" authorization))
+    (when-let [[_ username password]
+               (try
+                 (-> (re-matches #"\s*Basic\s+(.+)" authorization)
+                     ^String second
+                     (.getBytes "UTF-8")
+                     Base64/decodeBase64
+                     (String. "UTF-8")
+                     (#(re-find #"([^:]*):(.*)" %)))
+                 (catch Exception e
+                   (log/error {:tag :failed-parsing-authorization-header
+                               :error e})))]
+      {:username username
+       :password password})))
 
-(defn maybe-token-request?
+(defn unauthed-or-token-request?
   "Returns true if:
-  * there is a Basic authorization header
+  * there is no authorization header
+  - or -
+  * there is a authorization header
   * the password in the header is shaped like a deploy token"
-  [request]
-  (let [{:keys [password]} (parse-authorization-header request)]
-    (db/is-deploy-token? password)))
+  [{:as _request :keys [headers]}]
+  (if-let [authorization (get headers "authorization")]
+    (let [{:keys [password]} (parse-authorization-header authorization)]
+      (db/is-deploy-token? password))
+    true))
 
 (defn token-credential-fn [db]
   (fn [{:keys [username password]}]

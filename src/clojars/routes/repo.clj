@@ -429,9 +429,9 @@
 
 (defn wrap-reject-non-token [f]
   (fn [req]
-    (if (auth/maybe-token-request? req)
+    (if (auth/unauthed-or-token-request? req)
       (f req)
-      (let [{:keys [username]} (auth/parse-authorization-header req)]
+      (let [{:keys [username]} (auth/parse-authorization-header (get-in req [:headers "authorization"]))]
         (log/info {:tag :deploy-password-rejection
                    :username username})
         {:status 401
