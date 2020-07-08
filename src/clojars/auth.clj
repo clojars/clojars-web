@@ -81,7 +81,9 @@
                        Base64/decodeBase64
                        (String. "UTF-8")
                        (#(re-find #"([^:]*):(.*)" %)))
-                   (catch Exception _))]
+                   (catch Exception e
+                     (log/error {:tag :failed-parsing-authorization-header
+                                 :error e})))]
         {:username username
          :password password}))))
 
