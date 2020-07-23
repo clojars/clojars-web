@@ -1,12 +1,15 @@
 (ns clojars.integration.users-test
-  (:require [clojars.email :as email]
-            [clojars.integration.steps :refer [disable-mfa enable-mfa login-as register-as]]
-            [clojars.test-helper :as help :refer [with-test-system]]
-            [clojure.test :refer [deftest is testing use-fixtures]]
-            [kerodon.core :refer [fill-in follow follow-redirect
-                                  press session visit within]]
-            [kerodon.test :refer [has status? text? value?]]
-            [net.cgrand.enlive-html :as enlive]))
+  (:require
+   [clojars.email :as email]
+   [clojars.integration.steps :refer [disable-mfa enable-mfa login-as register-as]]
+   ;; for defmethods
+   [clojars.notifications.mfa]
+   [clojars.test-helper :as help :refer [with-test-system]]
+   [clojure.test :refer [deftest is testing use-fixtures]]
+   [kerodon.core :refer [fill-in follow follow-redirect
+                         press session visit within]]
+   [kerodon.test :refer [has status? text? value?]]
+   [net.cgrand.enlive-html :as enlive]))
 
 (use-fixtures :each
   help/default-fixture

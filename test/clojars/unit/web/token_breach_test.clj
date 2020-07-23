@@ -6,6 +6,9 @@
    [cheshire.core :as json]
    [clj-http.client :as client]
    [clojars.db :as db]
+   [clojars.email :as email]
+   ;; for defmethods
+   [clojars.notifications.token]
    [clojars.test-helper :as help]
    [clojars.util :refer [filter-some]]
    [clojure.java.io :as io]
@@ -41,32 +44,45 @@
                (db/find-user-tokens-by-username help/*db* username)))
 
 (deftest test-github-token-breach-reporting-works
-  (let [_user (db/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
-        mailer-args (atom nil)
-        app (help/app {:mailer (fn [& args] (reset! mailer-args args))})]
-    (with-redefs [client/get (constantly {:body github-response})]
-      (testing "when token is enabled"
-        (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil)
-              res (app (build-breach-request (:token token)))
-              db-token (find-token "ham" "a token")
-              [to subject message] @mailer-args]
-          (is (= 200 (:status res)))
-          (is (:disabled db-token))
-          (is (= "ham@biscuit.co" to))
-          (is (= "Deploy token found on GitHub" subject))
-          (is (re-find #"'a token'" message))
-          (is (re-find #"https://github.com/foo/bar" message))
-          (is (re-find #"has been disabled" message))))
+  (help/with-test-system
+    (let [_user (db/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
+          app (help/app-from-system)]
+      (with-redefs [client/get (constantly {:body github-response})]
+        (testing "when token is enabled"
+          (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil)
+                email-sent? (promise)
+                _ (add-watch email/mock-emails nil
+                             (fn [_ _ _ new-val]
+                               (when (seq new-val)
+                                 (deliver email-sent? true))))
+                res (app (build-breach-request (:token token)))
+                db-token (find-token "ham" "a token")
+                _ (is (true? (deref email-sent? 100 ::timeout)))
+                [to subject message] (first @email/mock-emails)]
+            (is (= 200 (:status res)))
+            (is (:disabled db-token))
+            (is (= "ham@biscuit.co" to))
+            (is (= "Deploy token found on GitHub" subject))
+            (is (re-find #"'a token'" message))
+            (is (re-find #"https://github.com/foo/bar" message))
+            (is (re-find #"has been disabled" message))))
 
-      (testing "when token is disabled"
-        (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil)
-              db-token (find-token "ham" "another token")
-              _ (db/disable-deploy-token help/*db* (:id db-token))
-              res (app (build-breach-request (:token token)))
-              [to subject message] @mailer-args]
-          (is (= 200 (:status res)))
-          (is (= "ham@biscuit.co" to))
-          (is (= "Deploy token found on GitHub" subject))
-          (is (re-find #"'another token'" message))
-          (is (re-find #"https://github.com/foo/bar" message))
-          (is (re-find #"was already disabled" message)))))))
+        (testing "when token is disabled"
+          (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil)
+                db-token (find-token "ham" "another token")
+                _ (db/disable-deploy-token help/*db* (:id db-token))
+                email-sent? (promise)
+                _ (reset! email/mock-emails [])
+                _ (add-watch email/mock-emails nil
+                             (fn [_ _ _ new-val]
+                               (when (seq new-val)
+                                 (deliver email-sent? true))))
+                res (app (build-breach-request (:token token)))
+                _ (is (true? (deref email-sent? 100 ::timeout)))
+                [to subject message] (first @email/mock-emails)]
+            (is (= 200 (:status res)))
+            (is (= "ham@biscuit.co" to))
+            (is (= "Deploy token found on GitHub" subject))
+            (is (re-find #"'another token'" message))
+            (is (re-find #"https://github.com/foo/bar" message))
+            (is (re-find #"was already disabled" message))))))))

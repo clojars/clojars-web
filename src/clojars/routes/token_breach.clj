@@ -6,6 +6,7 @@
    [cheshire.core :as json]
    [clj-http.client :as client]
    [clojars.db :as db]
+   [clojars.event :as event]
    [compojure.core :as compojure :refer [POST]]
    [ring.util.response :as response]))
 
@@ -32,24 +33,11 @@
         sig (base64/decode key-sig)]
     (dsa/verify body-str sig {:key key :alg :ecdsa+sha256})))
 
-(defn- send-email
-  [mailer {:as _user :keys [email]} {:as _token :keys [disabled name]} url]
-  (mailer
-   email
-   "Deploy token found on GitHub"
-   (->> ["Hello,"
-         (format
-          "We received a notice from GitHub that your deploy token named '%s' was found by their secret scanning service."
-          name)
-         (format "The commit was found at: %s" url)
-         (if disabled
-           "The token was already disabled, so we took no further action."
-           "This token has been disabled to prevent malicious use.")]
-        (interpose "\n\n")
-        (apply str))))
+;; - make emails async
+;; - add timing logs
 
 (defn- handle-github-token-breach
-  [db mailer {:as _request :keys [headers body]}]
+  [db {:as _request :keys [headers body]}]
   (let [body-str (slurp body)]
     (if (valid-github-request? headers body-str)
       (let [data (json/parse-string body-str true)]
@@ -58,11 +46,14 @@
                      (db/find-token-by-value db token)]
             (when (not disabled)
               (db/disable-deploy-token db id))
-            (send-email mailer (db/find-user-by-id db user_id) db-token url)))
+            (event/emit :token-breached {:user-id user_id
+                                         :token-disabled? disabled
+                                         :token-name (:name db-token)
+                                         :commit-url url})))
         (response/status 200))
       (response/status 422))))
 
-(defn routes [db mailer]
+(defn routes [db]
   (compojure/routes
    (POST "/token-breach/github" request
-         (handle-github-token-breach db mailer request))))
+         (handle-github-token-breach db request))))

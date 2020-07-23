@@ -113,7 +113,7 @@
               (log/wrap-request-context)
               (repo/wrap-reject-double-dot)))
         (wrap-secure-session))
-    (-> (token-breach/routes db mailer)
+    (-> (token-breach/routes db)
         (wrap-exceptions reporter)
         (log/wrap-request-context))
    (-> (main-routes db reporter stats search mailer)

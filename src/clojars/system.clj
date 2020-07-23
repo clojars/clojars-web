@@ -1,7 +1,10 @@
 (ns clojars.system
   (:require
    [clojars.email :refer [simple-mailer]]
-   [clojars.notifications.mfa :as mfa]
+   [clojars.notifications :as notifications]
+   ;; for defmethods
+   [clojars.notifications.mfa]
+   [clojars.notifications.token]
    [clojars.ring-servlet-patch :as patch]
    [clojars.s3 :as s3]
    [clojars.search :refer [lucene-component]]
@@ -64,13 +67,13 @@
          :index-factory     #(clucy/disk-index (:index-path config))
          :search            (lucene-component)
          :mailer            (simple-mailer (:mail config))
-         :mfa-notifications (mfa/notification-component)
+         :notifications     (notifications/notification-component)
          :storage           (storage-component (:repo config) (:cdn-token config) (:cdn-url config))
          :clojars-app       (endpoint-component web/handler-optioned))
         (component/system-using
          {:http              [:app]
           :app               [:clojars-app]
-          :mfa-notifications [:db :mailer]
+          :notifications     [:db :mailer]
           :stats             [:stats-bucket]
           :search            [:index-factory :stats]
           :storage           [:repo-bucket]
