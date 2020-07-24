@@ -83,9 +83,13 @@
 
 (defn- throw-forbidden
   [e-or-message meta]
-  (let [[message cause] (if (instance? Throwable e-or-message)
+  (let [throwable? (instance? Throwable e-or-message)
+        [message cause] (if throwable?
                           [(.getMessage e-or-message) (.getCause e-or-message)]
                           [e-or-message])]
+    (when throwable?
+      (log/error {:tag :upload-exception
+                  :error e-or-message}))
     (throw-invalid
      message
      (merge
@@ -392,8 +396,8 @@
                     ;; maven-metadata.xml file doesn't match the one
                     ;; we already have
                     ;; https://github.com/clojars/clojars-web/issues/640
-                    (if-not (or (deploy-finalized? upload-dir)
-                              (= (fu/checksum file :sha1) existing-sum))
+                    (when-not (or (deploy-finalized? upload-dir)
+                                  (= (fu/checksum file :sha1) existing-sum))
                       (try
                         (finalize-deploy storage db search
                           account upload-dir)
