@@ -103,21 +103,26 @@
     (log/with-context {:tag :authentication
                        :username username
                        :type :token}
-      (if-let [token (and password
-                          (->> (db/find-user-tokens-by-username db username)
-                               (remove :disabled)
-                               (some #(when (creds/bcrypt-verify password (:token %)) %))))]
-        (do
-          (db/set-deploy-token-used db (:id token))
-          (when-not (:token_hash token)
-            ;; set token hashes for tokens that were created before we
-            ;; added the hash to the db
-            (db/set-deploy-token-hash db (:id token) password))
-          (log/info {:status :success})
-          {:username username
-           :token token})
-        (log/info {:status :failed
-                   :reason :invalid-token})))))
+      (let [password-hash (when password
+                            (db/hash-deploy-token password))]
+        (if-let [token (and password
+                            (->> (db/find-user-tokens-by-username db username)
+                                 (remove :disabled)
+                                 (filter #(let [{:keys [token_hash]} %]
+                                            (or (not token_hash) ;; pre-hash token
+                                                (= password-hash token_hash))))
+                                 (some #(when (creds/bcrypt-verify password (:token %)) %))))]
+          (do
+            (db/set-deploy-token-used db (:id token))
+            (when-not (:token_hash token)
+              ;; set token hashes for tokens that were created before we
+              ;; added the hash to the db
+              (db/set-deploy-token-hash db (:id token) password))
+            (log/info {:status :success})
+            {:username username
+             :token token})
+          (log/info {:status :failed
+                     :reason :invalid-token}))))))
 
 (defn valid-totp-token?
   [otp {:as _user :keys [otp_secret_key]}]
