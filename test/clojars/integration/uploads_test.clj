@@ -15,7 +15,8 @@
    [clojure.test :refer [are deftest is testing use-fixtures]]
    [kerodon.core :refer [fill-in follow press session visit within]]
    [kerodon.test :refer [has status? text?]]
-   [net.cgrand.enlive-html :as enlive]))
+   [net.cgrand.enlive-html :as enlive]
+   [clojure.java.jdbc :as sql]))
 
 (use-fixtures :each
   help/default-fixture
@@ -727,3 +728,24 @@
                                                         "UTF-8"))})
           (has (status? 403)))))
   (is (not (.exists (io/file (:repo (config)) "group3/artifact3/1.0.0/test.jar")))))
+
+(deftest deploy-with-unhashed-token-writes-a-hash
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+        db (:db (config))
+        {token-id :id} (db/find-token-by-value db token)
+        _ (sql/update! db :deploy_tokens {:token_hash nil} ["id = ?" token-id])]
+    (aether/deploy
+     :coordinates '[org.clojars.dantheman/test "0.0.1"]
+     :jar-file (io/file (io/resource "test.jar"))
+     :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                 {:groupId "org.clojars.dantheman"})
+     :repository {"test" {:url (repo-url)
+                          :username "dantheman"
+                          :password token}}
+     :local-repo help/local-repo)
+
+    (let [{:keys [token_hash]} (db/find-token-by-value db token)]
+      (is (= (db/hash-deploy-token token)
+             token_hash)))))

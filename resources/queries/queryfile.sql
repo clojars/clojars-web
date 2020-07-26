@@ -45,9 +45,10 @@ select *
 FROM deploy_tokens
 WHERE id = :id;
 
---name: all-tokens
+--name: find-tokens-by-hash
 select *
-FROM deploy_tokens;
+FROM deploy_tokens
+WHERE token_hash = :token_hash;
 
 --name: find-groupnames
 SELECT name
@@ -322,8 +323,8 @@ SET otp_secret_key = null, otp_recovery_code = null, otp_active = false
 WHERE "user" = :username;
 
 --name: insert-deploy-token!
-INSERT INTO deploy_tokens (name, user_id, token, group_name, jar_name)
-VALUES (:name, :user_id, :token, :group_name, :jar_name);
+INSERT INTO deploy_tokens (name, user_id, token, token_hash, group_name, jar_name)
+VALUES (:name, :user_id, :token, :token_hash, :group_name, :jar_name);
 
 --name: disable-deploy-token!
 UPDATE deploy_tokens
@@ -334,6 +335,11 @@ WHERE id = :token_id
 UPDATE deploy_tokens
 SET last_used = :timestamp
 WHERE id = :token_id
+
+--name: set-deploy-token-hash!
+UPDATE deploy_tokens
+SET token_hash = :token_hash
+WHERE id = :token_id AND token_hash IS NULL
 
 --name: find-groups-jars-information
 SELECT j.jar_name, j.group_name, homepage, description, "user",

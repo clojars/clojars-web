@@ -1,8 +1,11 @@
 (ns clojars.unit.db-test
-  (:require [clj-time.core :as time]
-            [clojars.db :as db]
-            [clojars.test-helper :as help]
-            [clojure.test :refer [are deftest is use-fixtures]])
+  (:require
+   [buddy.core.codecs :as buddy.codecs]
+   [buddy.core.hash :as buddy.hash]
+   [clj-time.core :as time]
+   [clojars.db :as db]
+   [clojars.test-helper :as help]
+   [clojure.test :refer [are deftest is use-fixtures]])
   (:import
    (clojure.lang ExceptionInfo)
    (java.sql Timestamp)))
@@ -475,5 +478,19 @@
   (db/add-jar help/*db* "test-user" {:name "rock" :group "tester" :version "0.1"})
   (is (db/jar-exists help/*db* "tester" "rock"))
   (is (not (db/jar-exists help/*db* "tester" "paper"))))
+
+(deftest deploy-token-creation-and-lookup
+  (let [username "test-user"
+        groupname "a-group"
+        jarname "a-jar"
+        tokenname "test-token"
+        _ (db/add-user help/*db* "email@example.com" username "a-password")
+        {:keys [token]} (db/add-deploy-token help/*db*
+                                             username tokenname groupname jarname)
+        {:keys [group_name jar_name token_hash]} (db/find-token-by-value help/*db* token)]
+    (is (= groupname group_name))
+    (is (= jarname jar_name))
+    (is (= (-> token buddy.hash/sha256 buddy.codecs/bytes->hex)
+           token_hash))))
 
 ;; TODO: recent-versions

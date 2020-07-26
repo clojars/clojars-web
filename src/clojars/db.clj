@@ -1,19 +1,23 @@
 (ns clojars.db
-  (:require [cemerick.friend.credentials :as creds]
-            [clj-time.coerce :as time.coerce]
-            [clj-time.core :as time]
-            [clojars.config :refer [config]]
-            [clojars.db.sql :as sql]
-            [clojars.maven :as mvn]
-            [clojars.util :refer [filter-some]]
-            [clojure.edn :as edn]
-            [clojure.set :as set]
-            [clojure.spec.alpha :as s]
-            [clojure.string :as str]
-            [one-time.core :as ot])
-  (:import (java.security SecureRandom)
-           (java.sql Timestamp)
-           (java.util UUID)))
+  (:require
+   [buddy.core.codecs :as buddy.codecs]
+   [buddy.core.hash :as buddy.hash]
+   [cemerick.friend.credentials :as creds]
+   [clj-time.coerce :as time.coerce]
+   [clj-time.core :as time]
+   [clojars.config :refer [config]]
+   [clojars.db.sql :as sql]
+   [clojars.maven :as mvn]
+   [clojars.util :refer [filter-some]]
+   [clojure.edn :as edn]
+   [clojure.set :as set]
+   [clojure.spec.alpha :as s]
+   [clojure.string :as str]
+   [one-time.core :as ot])
+  (:import
+   (java.security SecureRandom)
+   (java.sql Timestamp)
+   (java.util UUID)))
 
 (def reserved-names
   #{"about"
@@ -113,13 +117,18 @@
                   {:connection db
                    :result-set-fn first}))
 
+(def hash-deploy-token
+  (comp buddy.codecs/bytes->hex buddy.hash/sha256))
+
 (defn find-token-by-value
   "Finds a token with the matching value. This is somewhat expensive,
-  since it scans all tokens."
+  since it looks up the token by hash, then brcypt-verifies each result."
   [db token-value]
-  (sql/all-tokens {}
-                  {:connection db
-                   :result-set-fn (partial filter-some #(creds/bcrypt-verify token-value (:token %)))}))
+  (sql/find-tokens-by-hash
+   {:token_hash (hash-deploy-token token-value)}
+   {:connection db
+    :result-set-fn (partial filter-some
+                            #(creds/bcrypt-verify token-value (:token %)))}))
 
 (defn find-groupnames [db username]
   (sql/find-groupnames {:username username}
@@ -359,6 +368,7 @@
         record {:user_id (:id user)
                 :name token-name
                 :token token
+                :token_hash (hash-deploy-token token)
                 :group_name group-name
                 :jar_name jar-name}]
     (sql/insert-deploy-token! (update record :token bcrypt)
@@ -375,6 +385,12 @@
   (sql/set-deploy-token-used!
    {:token_id token-id
     :timestamp (get-time)}
+   {:connection db}))
+
+(defn set-deploy-token-hash [db token-id token-value]
+  (sql/set-deploy-token-hash!
+   {:token_id token-id
+    :token_hash (hash-deploy-token token-value)}
    {:connection db}))
 
 (defn add-member [db groupname username added-by]

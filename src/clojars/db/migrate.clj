@@ -59,12 +59,19 @@
                            "add otp_recovery_code text default null,"
                            "add otp_active boolean default false")))
 
+(defn- add-hash-to-deploy-tokens-table
+  [trans]
+  (sql/db-do-commands trans
+                      (str "alter table deploy_tokens "
+                           "add token_hash text default null")))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
    #'add-last-used-to-deploy-tokens-table
    #'add-group-and-jar-to-deploy-tokens-table
-   #'add-mfa-fields-to-users-table])
+   #'add-mfa-fields-to-users-table
+   #'add-hash-to-deploy-tokens-table])
 
 (defn migrate [db]
   (sql/db-do-commands db

@@ -109,6 +109,10 @@
                                (some #(when (creds/bcrypt-verify password (:token %)) %))))]
         (do
           (db/set-deploy-token-used db (:id token))
+          (when-not (:token_hash token)
+            ;; set token hashes for tokens that were created before we
+            ;; added the hash to the db
+            (db/set-deploy-token-hash db (:id token) password))
           (log/info {:status :success})
           {:username username
            :token token})
