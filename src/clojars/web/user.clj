@@ -21,10 +21,11 @@
    [valip.predicates :as pred]
    [clojars.log :as log]))
 
-(defn register-form [{:keys [errors email username]}]
+(defn register-form [{:keys [errors email username]} message]
   (html-doc "Register" {}
             [:div.small-section
              [:h1 "Register"]
+             (flash message)
              (error-list errors)
              (form-to [:post "/register"]
                       (label :email "Email")

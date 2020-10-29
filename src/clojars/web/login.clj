@@ -1,18 +1,20 @@
 (ns clojars.web.login
   (:require
-   [clojars.web.common :refer [html-doc]]
+   [clojars.web.common :refer [html-doc flash]]
    [clojars.web.safe-hiccup :refer [form-to]]
    [clojure.string :as str]
    [hiccup.element :refer [link-to]]
    [hiccup.form :refer [label text-field
                         password-field submit-button]]))
 
-(defn login-form [login_failed username]
+(defn login-form [login_failed username message]
   (html-doc "Login" {}
    [:div.small-section
     [:h1 "Login"]
     [:p.hint "Don't have an account? "
      (link-to "/register" "Sign up!")]
+
+    (flash message)
 
     (when login_failed
       [:div
@@ -37,4 +39,5 @@
              (text-field {:placeholder "leave blank if two-factor auth not enabled"}
                          :otp)
              (link-to {:class :hint-link} "/forgot-password" "Forgot your username or password?")
+             (link-to {:class :github-button} "/oauth/github/authorize" "Login with GitHub")
              (submit-button "Login"))]))

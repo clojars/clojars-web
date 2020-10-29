@@ -11,6 +11,7 @@
    [clojars.stats :refer [artifact-stats]]
    [clojars.storage :as storage]
    [clojars.web :as web]
+   [clojars.github :as github]
    [clucy.core :as clucy]
    [com.stuartsierra.component :as component]
    [duct.component.endpoint :refer [endpoint-component]]
@@ -69,6 +70,9 @@
          :mailer            (simple-mailer (:mail config))
          :notifications     (notifications/notification-component)
          :storage           (storage-component (:repo config) (:cdn-token config) (:cdn-url config))
+         :github            (github/new-github-service (:github-api-key config)
+                                                       (:github-api-secret config)
+                                                       (:github-callback-uri config))
          :clojars-app       (endpoint-component web/handler-optioned))
         (component/system-using
          {:http              [:app]
@@ -77,4 +81,4 @@
           :stats             [:stats-bucket]
           :search            [:index-factory :stats]
           :storage           [:repo-bucket]
-          :clojars-app       [:storage :db :error-reporter :stats :search :mailer]}))))
+          :clojars-app       [:storage :db :error-reporter :stats :search :mailer :github]}))))

@@ -5,7 +5,8 @@
             [clojars.web.login :as view]))
 
 (defroutes routes
-  (GET "/login" [login_failed username]
-       (view/login-form login_failed username))
+  (GET "/login" {:keys [flash params]}
+       (let [{:keys [login_failed username]} params]
+         (view/login-form login_failed username flash)))
   (friend/logout
    (ANY "/logout" _ (response/redirect "/"))))

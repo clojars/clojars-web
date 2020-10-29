@@ -10,6 +10,7 @@
     [http-utils :refer [wrap-x-frame-options wrap-secure-session]]
     [middleware :refer [wrap-ignore-trailing-slash]]]
    [clojars.friend.registration :as registration]
+   [clojars.friend.github :as github]
    [clojars.log :as log]
    [clojars.routes.api :as api]
    [clojars.routes.artifact :as artifact]
@@ -97,7 +98,7 @@
                [:h1 "Page not found"]
                [:p "Thundering typhoons!  I think we lost it.  Sorry!"]]))))))
 
-(defn clojars-app [storage db reporter stats search mailer]
+(defn clojars-app [storage db reporter stats search mailer github]
   (routes
     (-> (context "/repo" _
           (-> (repo/routes storage db search)
@@ -120,7 +121,8 @@
        (friend/authenticate
         {:credential-fn (auth/password-credential-fn db)
          :workflows [(auth/interactive-form-with-mfa-workflow)
-                     (registration/workflow db)]})
+                     (registration/workflow db)
+                     (github/workflow github db)]})
        (wrap-exceptions reporter)
        (log/wrap-request-context)
        (wrap-anti-forgery)
@@ -135,5 +137,5 @@
        (wrap-not-modified)
        (wrap-ignore-trailing-slash))))
 
-(defn handler-optioned [{:keys [storage db error-reporter stats search mailer]}]
-  (clojars-app storage (:spec db) error-reporter stats search mailer))
+(defn handler-optioned [{:keys [storage db error-reporter stats search mailer github]}]
+  (clojars-app storage (:spec db) error-reporter stats search mailer github))
