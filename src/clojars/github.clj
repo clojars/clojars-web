@@ -14,7 +14,7 @@
   SocialService
 
   (authorization-url [this]
-    (.getAuthorizationUrl service))
+    (.getAuthorizationUrl service {"scope" "user:email"}))
 
   (access-token [this code]
     (.getAccessToken (.getAccessToken service code)))
