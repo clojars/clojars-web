@@ -664,9 +664,13 @@ a.github-button {
   -webkit-appearence: button;
   text-align: center;
 
-  margin-top: 25px;
+  margin-top: 15px;
 }
 
 a.github-button:hover, a.github-button:focus {
   text-decoration: none;
+}
+
+#login-or {
+  text-align: center;
 }

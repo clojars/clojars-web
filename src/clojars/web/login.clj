@@ -39,5 +39,7 @@
              (text-field {:placeholder "leave blank if two-factor auth not enabled"}
                          :otp)
              (link-to {:class :hint-link} "/forgot-password" "Forgot your username or password?")
-             (link-to {:class :github-button} "/oauth/github/authorize" "Login with GitHub")
-             (submit-button "Login"))]))
+
+             (submit-button "Login")
+             [:div#login-or "or"]
+             (link-to {:class :github-button} "/oauth/github/authorize" "Login with GitHub"))]))
