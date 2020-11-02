@@ -73,4 +73,17 @@
           response (handle-with-config req config)]
 
       (is (= (-> response :headers (get "Location")) "/login"))
-      (is (= (:flash response) "No verified e-mail was found")))))
+      (is (= (:flash response) "No verified e-mail was found"))))
+
+  (testing "with an error returned to the callback"
+    (let [req {:uri "/oauth/github/callback"
+               :params {:error "access_denied"
+                        :error_description "The user has denied your application access."
+                        :error_uri "https://docs.github.com/apps/managing-oauth-apps/troubleshooting-authorization-request-errors/#access-denied"}}
+          config {:email [{:email "john.doe@example.org"
+                           :primary true
+                           :verified true}]}
+
+          response (handle-with-config req config)]
+      (is (= (-> response :headers (get "Location")) "/login"))
+      (is (= (:flash response) "You declined access to your account")))))

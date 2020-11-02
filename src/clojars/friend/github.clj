@@ -8,20 +8,26 @@
   (redirect (github/authorization-url service)))
 
 (defn callback [req service db]
-  (let [code (-> req :params :code)
-        token (github/access-token service code)
-        emails (github/get-verified-emails service token)]
-    (if (empty? emails)
+  (if-let [error (-> req :params :error)]
+    (if (= error "access_denied")
       (assoc (redirect "/login")
-             :flash "No verified e-mail was found")
+             :flash "You declined access to your account")
+      (throw (Exception. (str (-> req :params :error_description)))))
 
-      (if-let [user (db/find-user-by-email-in db emails)]
+    (let [code (-> req :params :code)
+          token (github/access-token service code)
+          emails (github/get-verified-emails service token)]
+      (if (empty? emails)
+        (assoc (redirect "/login")
+               :flash "No verified e-mail was found")
 
-        (let [username (:user user)]
-          (workflow/make-auth {:identity username :username username}))
+        (if-let [user (db/find-user-by-email-in db emails)]
 
-        (assoc (redirect "/register")
-               :flash "None of your e-mails are registered")))))
+          (let [username (:user user)]
+            (workflow/make-auth {:identity username :username username}))
+
+          (assoc (redirect "/register")
+                 :flash "None of your e-mails are registered"))))))
 
 (defn workflow [service db]
   (fn [req]
