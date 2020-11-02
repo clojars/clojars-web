@@ -10,18 +10,18 @@
 (defn callback [req service db]
   (let [code (-> req :params :code)
         token (github/access-token service code)
-        email (github/get-primary-email service token)]
-    (if (not (:verified email))
+        emails (github/get-verified-emails service token)]
+    (if (empty? emails)
       (assoc (redirect "/login")
-             :flash "Your primary e-mail is not verified")
+             :flash "No verified e-mail was found")
 
-      (if-let [user (db/find-user-by-user-or-email db (:email email))]
+      (if-let [user (db/find-user-by-email-in db emails)]
 
         (let [username (:user user)]
           (workflow/make-auth {:identity username :username username}))
 
         (assoc (redirect "/register")
-               :flash "Your primary e-mail is not registered")))))
+               :flash "None of your e-mails are registered")))))
 
 (defn workflow [service db]
   (fn [req]

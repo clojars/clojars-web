@@ -20,6 +20,14 @@ WHERE (
 )
 LIMIT 1;
 
+--name: find-user-by-email-in
+SELECT *
+FROM users
+WHERE (
+  email IN (:email)
+)
+LIMIT 1;
+
 --name: find-user-by-password-reset-code
 SELECT *
 FROM users

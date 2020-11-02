@@ -27,34 +27,50 @@
 
     (let [req {:uri "/oauth/github/callback"
                :params {:code "1234567890"}}
-          config {:email {:email "john.doe@example.org"
-                          :primary true
-                          :verified true}}
+          config {:email [{:email "john.doe@example.org"
+                           :primary true
+                           :verified true}]}
 
           response (handle-with-config req config)]
 
       (is (= response {:identity "johndoe" :username "johndoe"}))))
 
+  (testing "with a valid user which the clojars email is not the primary one"
+    (db/add-user help/*db* "jane.dot@example.org" "janedot" "pwd12345")
+
+    (let [req {:uri "/oauth/github/callback"
+               :params {:code "1234567890"}}
+          config {:email [{:email "jane.dot@company.com"
+                           :primary true
+                           :verified true}
+                          {:email "jane.dot@example.org"
+                           :primary false
+                           :verified true}]}
+
+          response (handle-with-config req config)]
+
+      (is (= response {:identity "janedot" :username "janedot"}))))
+
   (testing "with a non existing e-mail"
     (let [req {:uri "/oauth/github/callback"
                :params {:code "1234567890"}}
-          config {:email {:email "foolano@example.org"
-                          :primary true
-                          :verified true}}
+          config {:email [{:email "foolano@example.org"
+                           :primary true
+                           :verified true}]}
 
           response (handle-with-config req config)]
 
       (is (= (-> response :headers (get "Location")) "/register"))
-      (is (= (:flash response) "Your primary e-mail is not registered"))))
+      (is (= (:flash response) "None of your e-mails are registered"))))
 
   (testing "with a non verified e-mail"
     (let [req {:uri "/oauth/github/callback"
                :params {:code "1234567890"}}
-          config {:email {:email "foolano@example.org"
-                          :primary true
-                          :verified false}}
+          config {:email [{:email "foolano@example.org"
+                           :primary true
+                           :verified false}]}
 
           response (handle-with-config req config)]
 
       (is (= (-> response :headers (get "Location")) "/login"))
-      (is (= (:flash response) "Your primary e-mail is not verified")))))
+      (is (= (:flash response) "No verified e-mail was found")))))
