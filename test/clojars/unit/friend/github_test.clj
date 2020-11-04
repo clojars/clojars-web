@@ -32,9 +32,11 @@
                            :primary true
                            :verified true}]}
 
-          response (handle-with-config req config)]
+          response (handle-with-config req config)
 
-      (is (= response {:identity "johndoe" :username "johndoe"}))))
+          {:keys [identity username]} response]
+
+      (is (and (= identity "johndoe") (= username "johndoe")))))
 
   (testing "with a valid user which the clojars email is not the primary one"
     (db/add-user help/*db* "jane.dot@example.org" "janedot" "pwd12345")
@@ -48,9 +50,11 @@
                            :primary false
                            :verified true}]}
 
-          response (handle-with-config req config)]
+          response (handle-with-config req config)
 
-      (is (= response {:identity "janedot" :username "janedot"}))))
+          {:keys [identity username]} response]
+
+      (is (and (= identity "janedot") (= username "janedot")))))
 
   (testing "with a non existing e-mail"
     (let [req {:uri "/oauth/github/callback"
