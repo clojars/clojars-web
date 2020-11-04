@@ -19,7 +19,8 @@
     (let [req {:uri "/oauth/github/authorize"}
           response (handle-with-config req {})]
 
-      (is (some? (-> response :headers (get "Location")))))))
+      (is (some? (re-matches #"https://github.com/login/oauth/authorize.*"
+                             (-> response :headers (get "Location"))))))))
 
 (deftest test-callback
   (testing "with a valid user"

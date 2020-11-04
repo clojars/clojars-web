@@ -47,5 +47,5 @@
     (mapv :email (filter :verified (:email config)))))
 
 (defn new-mock-github-service [config]
-  (map->MockGitHubService {:config (merge {:authorize-uri "http://github.com/oauth/authorize"}
+  (map->MockGitHubService {:config (merge {:authorize-uri "https://github.com/login/oauth/authorize"}
                                           config)}))
