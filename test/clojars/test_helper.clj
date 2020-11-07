@@ -4,6 +4,7 @@
    [clojars.db.migrate :as migrate]
    [clojars.email :as email]
    [clojars.errors :as errors]
+   [clojars.github :as github]
    [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.stats :as stats]
@@ -99,14 +100,14 @@
 
 (defn app
   ([] (app {}))
-  ([{:keys [storage db error-reporter stats search mailer]
+  ([{:keys [storage db error-reporter stats search mailer github]
      :or {db *db*
           storage (storage/fs-storage (:repo (config/config)))
           error-reporter (quiet-reporter)
           stats (no-stats)
           search (no-search)
           mailer nil}}]
-   (web/clojars-app storage db error-reporter stats search mailer)))
+   (web/clojars-app storage db error-reporter stats search mailer github)))
 
 (declare ^:dynamic system)
 
@@ -125,7 +126,8 @@
                                              :error-reporter (quiet-reporter)
                                              :index-factory #(clucy/memory-index)
                                              :mailer (email/mock-mailer)
-                                             :stats (no-stats)))]
+                                             :stats (no-stats)
+                                             :github (github/new-mock-github-service {})))]
       (let [db (get-in system [:db :spec])]
         (try
           (clear-database db)

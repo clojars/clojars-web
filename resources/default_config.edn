@@ -34,4 +34,6 @@
       :stats-bucket #profile {:default "clojars-stats-development"
                               :production "clojars-stats-production"}}
  :sentry-dsn "NOTSET"
- :stats-dir "data/stats"}
+ :stats-dir "data/stats"
+ :github-api-key "NOTSET"
+ :github-api-secret "NOTSET"}

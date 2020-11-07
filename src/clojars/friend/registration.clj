@@ -21,7 +21,8 @@
           (->
            (response (register-form {:errors (apply concat (vals errors))
                                      :email email
-                                     :username username}))
+                                     :username username}
+                                    nil))
            (content-type "text/html")))
         (do
           (add-user db email username password)

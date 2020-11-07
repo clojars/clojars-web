@@ -120,8 +120,8 @@
          (auth/with-account
            #(disable-mfa db % (db/find-user db %) params)))
 
-   (GET "/register" {:keys [params]}
-        (view/register-form params))
+   (GET "/register" {:keys [params flash]}
+        (view/register-form params flash))
 
    (GET "/forgot-password" _
         (view/forgot-password-form))

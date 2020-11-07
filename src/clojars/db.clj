@@ -96,6 +96,11 @@
                                   {:connection db
                                    :result-set-fn first}))
 
+(defn find-user-by-email-in [db emails]
+  (sql/find-user-by-email-in {:email emails}
+                             {:connection db
+                              :result-set-fn first}))
+
 (defn find-user-by-password-reset-code [db reset-code]
   (sql/find-user-by-password-reset-code {:reset_code reset-code
                                          :reset_code_created_at
