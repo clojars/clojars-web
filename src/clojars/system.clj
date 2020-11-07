@@ -70,9 +70,9 @@
          :mailer            (simple-mailer (:mail config))
          :notifications     (notifications/notification-component)
          :storage           (storage-component (:repo config) (:cdn-token config) (:cdn-url config))
-         :github            (github/new-github-service (:github-api-key config)
-                                                       (:github-api-secret config)
-                                                       (:github-callback-uri config))
+         :github            (github/new-github-service (:github-oauth-client-id config)
+                                                       (:github-oauth-client-secret config)
+                                                       (:github-oauth-callback-uri config))
          :clojars-app       (endpoint-component web/handler-optioned))
         (component/system-using
          {:http              [:app]

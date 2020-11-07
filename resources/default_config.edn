@@ -35,5 +35,6 @@
                               :production "clojars-stats-production"}}
  :sentry-dsn "NOTSET"
  :stats-dir "data/stats"
- :github-api-key "NOTSET"
- :github-api-secret "NOTSET"}
+ :github-oauth-client-id "NOTSET"
+ :github-oauth-client-secret "NOTSET"
+ :github-oauth-callback-uri "https://clojars.org/oauth/github/callback"}
