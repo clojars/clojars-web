@@ -3,7 +3,6 @@
             [clojars.friend.github :refer [workflow]]
             [clojars.github :as github]
             [clojars.db :as db]
-
             [clojars.test-helper :as help]))
 
 (use-fixtures :each
@@ -36,7 +35,8 @@
 
           {:keys [identity username]} response]
 
-      (is (and (= identity "johndoe") (= username "johndoe")))))
+      (is (= "johndoe" identity))
+      (is (= "johndoe" username))))
 
   (testing "with a valid user which the clojars email is not the primary one"
     (db/add-user help/*db* "jane.dot@example.org" "janedot" "pwd12345")
@@ -54,7 +54,8 @@
 
           {:keys [identity username]} response]
 
-      (is (and (= identity "janedot") (= username "janedot")))))
+      (is (= "janedot" identity))
+      (is (= "janedot" username))))
 
   (testing "with a non existing e-mail"
     (let [req {:uri "/oauth/github/callback"
