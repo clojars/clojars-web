@@ -116,17 +116,17 @@
       [:span.string " \""
        (:version jar) "\""] (tag "]")]]))
 
-(defn clojure-cli-coordinates [jar]
+(defn clojure-cli-coordinates [{:keys [group_name jar_name version]}]
   (list
     [:h2 "Clojure CLI/deps.edn"]
     [:div#deps-coordinates.package-config-example
      {:onClick "selectText('deps-coordinates');"}
      [:pre
-      (jar-name jar)
+      (str group_name "/" jar_name)
       \space
       (tag "{")
       ":mvn/version "
-      [:span.string \" (:version jar) \"]
+      [:span.string \" version \"]
       (tag "}")]]))
 
 (defn gradle-coordinates [{:keys [group_name jar_name version]}]
