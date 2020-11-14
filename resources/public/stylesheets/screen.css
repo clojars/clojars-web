@@ -667,6 +667,11 @@ a.github-button {
   margin-top: 15px;
 }
 
+a.github-button img {
+  filter: invert(100%);
+  margin: 0 10px 5px 0;
+}
+
 a.github-button:hover, a.github-button:focus {
   text-decoration: none;
 }
