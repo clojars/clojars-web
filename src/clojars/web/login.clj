@@ -2,6 +2,7 @@
   (:require
    [clojars.web.common :refer [html-doc flash]]
    [clojars.web.safe-hiccup :refer [form-to]]
+   [clojars.web.helpers :as helpers]
    [clojure.string :as str]
    [hiccup.element :refer [link-to]]
    [hiccup.form :refer [label text-field
@@ -42,4 +43,6 @@
 
              (submit-button "Login")
              [:div#login-or "or"]
-             (link-to {:class :github-button} "/oauth/github/authorize" "Login with GitHub"))]))
+             (link-to {:class :github-button} "/oauth/github/authorize"
+                      (helpers/retinized-image "/images/github-mark.png" "GitHub")
+                      "Login with GitHub"))]))
