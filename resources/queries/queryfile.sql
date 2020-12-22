@@ -148,9 +148,30 @@ ORDER BY j.group_name ASC, j.jar_name ASC;
 SELECT j.*
 FROM jars j
 JOIN (
-  SELECT  jar_name, MAX(created) AS created
+  SELECT jar_name, MAX(created) AS created
   FROM jars
   WHERE group_name = :groupname
+  GROUP BY group_name, jar_name
+) l
+ON (
+   j.jar_name = l.jar_name
+   AND
+   j.created = l.created
+)
+ORDER BY j.group_name ASC, j.jar_name ASC;
+
+--name: jars-by-groups-for-username
+SELECT j.*
+FROM jars j
+JOIN (
+  SELECT jar_name, MAX(created) AS created
+  FROM jars
+  WHERE group_name in (SELECT name
+                       FROM groups
+                       WHERE (
+                         "user" = :username
+                         AND
+                         inactive IS NOT true))
   GROUP BY group_name, jar_name
 ) l
 ON (

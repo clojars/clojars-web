@@ -172,6 +172,10 @@
   (sql/jars-by-groupname {:groupname groupname}
                          {:connection db}))
 
+(defn jars-by-groups-for-username [db username]
+  (sql/jars-by-groups-for-username {:username username}
+                                   {:connection db}))
+
 (defn recent-versions
   ([db groupname jarname]
    (sql/recent-versions {:groupname groupname

@@ -12,7 +12,7 @@
   (auth/with-account
     #(view/show-tokens %
                        (db/find-user-tokens-by-username db %)
-                       (db/jars-by-username db %)
+                       (db/jars-by-groups-for-username db %)
                        {:message flash-msg})))
 
 (defn- parse-scope
