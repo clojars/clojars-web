@@ -53,7 +53,7 @@
                  :error-message "The page query parameter must be an integer."
                  :status 400})))))
 
-(defn main-routes [db reporter stats search-obj mailer]
+(defn- main-routes [db stats search-obj mailer]
   (routes
    (GET "/" _
      (try-account
@@ -82,7 +82,7 @@
              (raw (slurp (io/resource "dmca.html"))))))
    session/routes
    (group/routes db)
-   (artifact/routes db reporter stats)
+   (artifact/routes db stats)
    ;; user routes must go after artifact routes
    ;; since they both catch /:identifier
    (user/routes db mailer)
@@ -117,7 +117,7 @@
     (-> (token-breach/routes db)
         (wrap-exceptions reporter)
         (log/wrap-request-context))
-   (-> (main-routes db reporter stats search mailer)
+   (-> (main-routes db stats search mailer)
        (friend/authenticate
         {:credential-fn (auth/password-credential-fn db)
          :workflows [(auth/interactive-form-with-mfa-workflow)

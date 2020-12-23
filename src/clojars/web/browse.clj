@@ -1,6 +1,6 @@
 (ns clojars.web.browse
   (:require [clojars.web.common :refer [html-doc jar-link user-link format-date
-                                        page-nav page-description jar-name
+                                        page-nav page-description
                                         collection-fork-notice]]
             [clojars.db :refer [browse-projects count-all-projects
                                 count-projects-before]]
@@ -39,7 +39,7 @@
            [:span.details
             (user-link (:user jar))
             " "
-            (if-let [created (:created jar)]
+            (when-let [created (:created jar)]
               [:td (format-date created)])]]])]
       (page-nav page total-pages)])))
 

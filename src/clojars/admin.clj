@@ -8,8 +8,7 @@
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.nrepl.server :as nrepl])
-  (:import java.text.SimpleDateFormat
-           org.apache.commons.io.FileUtils))
+  (:import java.text.SimpleDateFormat))
 
 (defn current-date-str []
   (.format (SimpleDateFormat. "yyyyMMdd") (db/get-time)))

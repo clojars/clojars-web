@@ -10,7 +10,7 @@
    [clojars.log :as log]))
 
 (defn show [db username]
-  (if-let [user (db/find-user db username)]
+  (when-let [user (db/find-user db username)]
     (auth/try-account
      #(view/show-user db % user))))
 

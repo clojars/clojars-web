@@ -3,9 +3,9 @@
             [clojars.db :as db]
             [clojars.file-utils :as fu]
             [clojars.maven :as maven]
+            [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str]))
+            [clojure.java.jdbc :as jdbc]))
 
 (defn pom-seq [repo known-paths]
   (for [f (file-seq repo)
@@ -46,7 +46,7 @@
 
 (defn read-data [data-file]
   (if (.exists data-file)
-    (clojure.edn/read-string (slurp data-file))
+    (edn/read-string (slurp data-file))
     {}))
 
 (defn write-data [data data-file]
@@ -54,7 +54,7 @@
 
 (defn discover-id
   "Finds the id of the pom from the path, not from the pom data, since that can be a lie"
-  [repo-path {:keys [group name version] :as pom}]
+  [repo-path pom]
   (let [pom-file (-> pom meta :pom-path io/file)]
     [(->> pom-file .getParentFile .getParentFile .getParentFile .getAbsolutePath (fu/subpath repo-path) fu/path->group)
      (->> pom-file .getParentFile .getParentFile .getName)
@@ -67,7 +67,7 @@
     (if-not (seq poms)
       (persistent! data')
       (recur (inc n) (rest poms)
-        (let [{:keys [name group version] :as pom} (first poms)
+        (let [pom (first poms)
               id (discover-id repo pom)]
           (when (= 0 (rem n 1000))
             (println "Prepare: processed" n "poms"))

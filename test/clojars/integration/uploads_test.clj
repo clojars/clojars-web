@@ -2,6 +2,8 @@
   (:require
    [cemerick.pomegranate.aether :as aether]
    [clj-http.client :as client]
+   [clj-http.cookies :as http-cookies]
+   [clj-http.core :as http-core]
    [clojars.config :refer [config]]
    [clojars.db :as db]
    [clojars.file-utils :as fu]
@@ -229,7 +231,7 @@
                                 (io/file (io/resource "test.jar")) "test-sources-0.0.1.jar")]])]
     ;; we use clj-http here instead of aether to have control over the
     ;; order the files are uploaded
-    (binding [clj-http.core/*cookie-store* (clj-http.cookies/cookie-store)]
+    (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
       (doseq [[f no-version?] files]
         (client/put (format "%s/org/clojars/dantheman/test/%s%s"
                             (repo-url)
@@ -458,7 +460,7 @@
         versioned-name #(str/replace (.getName %1) #"%" %2)]
     ;; we use clj-http here instead of aether to have control over the
     ;; cookies
-    (binding [clj-http.core/*cookie-store* (clj-http.cookies/cookie-store)]
+    (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
       (doseq [[f no-version?] files]
         (client/put (format "%s/org/clojars/dantheman/test/%s%s"
                             (repo-url)

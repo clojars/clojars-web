@@ -4,7 +4,7 @@
             [clojars.github :as github]
             [clojars.db :as db]))
 
-(defn authorize [req service]
+(defn- authorize [service]
   (redirect (github/authorization-url service)))
 
 (defn- handle-error [{:keys [params]}]
@@ -34,7 +34,7 @@
   (let [username (:user user)]
     {:identity username :username username}))
 
-(defn callback [req service db]
+(defn- callback [req service db]
   (reduce (fn [acc f]
             (let [res (merge acc (f acc))]
               (cond
@@ -54,6 +54,6 @@
 (defn workflow [service db]
   (fn [req]
     (case (:uri req)
-      "/oauth/github/authorize" (authorize req service)
+      "/oauth/github/authorize" (authorize service)
       "/oauth/github/callback" (callback req service db)
       nil)))

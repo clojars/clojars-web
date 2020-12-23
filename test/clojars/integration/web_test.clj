@@ -1,5 +1,6 @@
 (ns clojars.integration.web-test
   (:require [clojars.db :as db]
+            [clojars.errors :as errors]
             [clojars.test-helper :as help]
             [clojure.test :refer [deftest is use-fixtures]]
             [kerodon.core :refer [fill-in follow-redirect follow press
@@ -27,7 +28,7 @@
 
 (deftest server-errors-log-caught-exceptions
   (let [err (atom nil)]
-    (with-redefs [clojars.errors/report-error (fn [_r e & _] (reset! err e))]
+    (with-redefs [errors/report-error (fn [_r e & _] (reset! err e))]
       (-> (session (help/app))
         (visit "/error"))
       (is (re-find #"You really want an error" (.getMessage @err))))))

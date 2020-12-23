@@ -1,22 +1,20 @@
 (ns clojars.web.jar
-  (:require [cheshire.core :as json]
-            [clojars.config :refer [config]]
-            [clojars.db :refer [find-jar jar-exists]]
-            [clojars.db :as db]
-            [clojars.file-utils :as fu]
-            [clojars.stats :as stats]
-            [clojars.web.common :refer [html-doc jar-link group-link
-                                        tag jar-url jar-name group-is-name? user-link
-                                        jar-fork? jar-notice single-fork-notice
-                                        simple-date]]
-            [clojars.web.helpers :as helpers]
-            [clojars.web.safe-hiccup :refer [form-to raw]]
-            [clojars.web.structured-data :as structured-data]
-            [clojure.set :as set]
-            hiccup.core
-            [hiccup.element :refer [link-to image]]
-            [hiccup.form :refer [submit-button]]
-            [ring.util.codec :refer [url-encode]])
+  (:require
+   [cheshire.core :as json]
+   [clojars.config :refer [config]]
+   [clojars.db :as db :refer [find-jar jar-exists]]
+   [clojars.file-utils :as fu]
+   [clojars.stats :as stats]
+   [clojars.web.common :refer [html-doc jar-link
+                               tag jar-url jar-name group-is-name? user-link
+                               jar-fork? jar-notice single-fork-notice
+                               simple-date]]
+   [clojars.web.helpers :as helpers]
+   [clojars.web.structured-data :as structured-data]
+   [clojure.set :as set]
+   hiccup.core
+   [hiccup.element :refer [link-to]]
+   [ring.util.codec :refer [url-encode]])
   (:import (java.net URI)))
 
 (defn url-for [jar]
@@ -40,7 +38,7 @@
   (defn commit-url [jar]
     (let [{:keys [url tag]} (:scm jar)
           base-url (first (re-find github-re (str url)))]
-      (if (and base-url tag)
+      (when (and base-url tag)
         (str base-url "/commit/" tag)))))
 
 (defn dependency-link [db dep]
@@ -60,13 +58,13 @@
 ;; handles link-to throwing an exception when given a non-url
 (defn safe-link-to [url text]
   (try (link-to url text)
-       (catch Exception e text)))
+       (catch Exception _ text)))
 
 (defn fork-notice [jar]
-  (if (jar-fork? jar)
+  (when (jar-fork? jar)
     (list single-fork-notice)))
 
-(defn breadcrumbs [{:keys [group_name jar_name version] :as jar}]
+(defn breadcrumbs [{:keys [group_name jar_name] :as jar}]
   ;; TODO: this could be made more semantic by attaching the metadata to #jar-title, but we're waiting on https://github.com/clojars/clojars-web/issues/482
   (structured-data/breadcrumbs
     (if (group-is-name? jar)
@@ -162,7 +160,7 @@
     [:h4 "Pushed by"]
     (user-link (:user jar)) " on "
     [:span {:title (str (:created jar))} (simple-date (:created jar))]
-    (if-let [url (commit-url jar)]
+    (when-let [url (commit-url jar)]
       [:span.commit-url " with " (link-to url "this commit")])))
 
 (defn versions [jar recent-versions count]
@@ -175,12 +173,12 @@
               (:version v))])]
     ;; by default, 5 versions are shown. If there are only 5 to
     ;; see, then there's no reason to show the 'all versions' link
-    (if (> count 5)
+    (when (> count 5)
       [:p (link-to (str (jar-url jar) "/versions")
             (str "Show All Versions (" count " total)"))])))
 
 (defn dependency-section [db title id dependencies]
-  (if (seq dependencies)
+  (when (seq dependencies)
     (list
       [:h3 title]
       [(keyword (str "ul#" id))
@@ -199,13 +197,13 @@
           group_name jar_name version)))))
 
 (defn homepage [{:keys [homepage]}]
-  (if homepage
+  (when homepage
     (list
       [:h4 "Homepage"]
       (safe-link-to homepage homepage))))
 
 (defn licenses [jar]
-  (if-let [licenses (seq (:licenses jar))]
+  (when-let [licenses (seq (:licenses jar))]
     (list
       [:h4 "License"]
       [:ul#licenses
@@ -223,7 +221,7 @@
      {:readonly "readonly" :rows 6 :onClick "selectText('version-badge')"}
      (badge-markdown jar)]))
 
-(defn show-jar [db reporter stats account
+(defn show-jar [db stats account
                 {:keys [group_name jar_name version] :as jar}
                 recent-versions count]
   (let [total-downloads        (-> (stats/download-count stats
@@ -263,11 +261,11 @@
        [:ul#jar-sidebar.col-xs-12.col-sm-3
         [:li (pushed-by jar)]
         [:li (versions jar recent-versions count)]
-        (if-let [dependencies (dependencies db jar)]
+        (when-let [dependencies (dependencies db jar)]
           [:li dependencies])
-        (if-let [homepage (homepage jar)]
+        (when-let [homepage (homepage jar)]
           [:li.homepage homepage])
-        (if-let [licenses (licenses jar)]
+        (when-let [licenses (licenses jar)]
           [:li.license licenses])
         [:li (version-badge jar)]]])))
 
@@ -345,7 +343,8 @@
  \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">"
       (svg-template (jar-name jar) (:version jar)))))
 
-(defn make-latest-version-json [db group-id artifact-id]
+(defn make-latest-version-json
   "Return the latest version of a JAR as JSON"
+  [db group-id artifact-id]
   (let [jar (find-jar db group-id artifact-id)]
     (json/generate-string (select-keys jar [:version]))))

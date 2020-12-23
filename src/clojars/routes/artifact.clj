@@ -1,33 +1,30 @@
 (ns clojars.routes.artifact
-  (:require [compojure.core :as compojure :refer [GET POST]]
+  (:require [compojure.core :as compojure :refer [GET]]
             [clojars.db :as db]
             [clojars.auth :as auth]
             [clojars.web.jar :as view]
-            [clojars.web.common :as common]
-            [ring.util.response :as response]
-            [clojure.set :as set]))
+            [ring.util.response :as response]))
 
-(defn show [db reporter stats group-id artifact-id]
-  (if-let [artifact (db/find-jar db group-id artifact-id)]
+(defn show [db stats group-id artifact-id]
+  (when-let [artifact (db/find-jar db group-id artifact-id)]
     (auth/try-account
       #(view/show-jar db
-         reporter
-         stats
-         %
-         artifact
-         (db/recent-versions db group-id artifact-id 5)
-         (db/count-versions db group-id artifact-id)))))
+                      stats
+                      %
+                      artifact
+                      (db/recent-versions db group-id artifact-id 5)
+                      (db/count-versions db group-id artifact-id)))))
 
 (defn list-versions [db group-id artifact-id]
-  (if-let [artifact (db/find-jar db group-id artifact-id)]
+  (when-let [artifact (db/find-jar db group-id artifact-id)]
     (auth/try-account
       #(view/show-versions % artifact
          (db/recent-versions db group-id artifact-id)))))
 
-(defn show-version [db reporter stats group-id artifact-id version]
-  (if-let [artifact (db/find-jar db group-id artifact-id version)]
+(defn- show-version [db stats group-id artifact-id version]
+  (when-let [artifact (db/find-jar db group-id artifact-id version)]
     (auth/try-account
-     #(view/show-jar db reporter stats % artifact
+     #(view/show-jar db stats % artifact
         (db/recent-versions db group-id artifact-id 5)
         (db/count-versions db group-id artifact-id)))))
 
@@ -46,13 +43,13 @@
                               (response/content-type "image/svg+xml")
                               (response/header "Access-Control-Allow-Origin" "*")))))
 
-(defn routes [db reporter stats]
+(defn routes [db stats]
   (compojure/routes
    (GET ["/:artifact-id", :artifact-id #"[^/]+"] [artifact-id]
-        (show db reporter stats artifact-id artifact-id))
+        (show db stats artifact-id artifact-id))
    (GET ["/:group-id/:artifact-id", :group-id #"[^/]+" :artifact-id #"[^/]+"]
         [group-id artifact-id]
-        (show db reporter stats group-id artifact-id))
+        (show db stats group-id artifact-id))
 
    (GET ["/:artifact-id/versions" :artifact-id #"[^/]+"] [artifact-id]
         (list-versions db artifact-id artifact-id))
@@ -64,11 +61,11 @@
    (GET ["/:artifact-id/versions/:version"
          :artifact-id #"[^/]+" :version #"[^/]+"]
         [artifact-id version]
-        (show-version db reporter stats artifact-id artifact-id version))
+        (show-version db stats artifact-id artifact-id version))
    (GET ["/:group-id/:artifact-id/versions/:version"
          :group-id #"[^/]+" :artifact-id #"[^/]+" :version #"[^/]+"]
         [group-id artifact-id version]
-        (show-version db reporter stats group-id artifact-id version))
+        (show-version db stats group-id artifact-id version))
 
    (GET ["/:artifact-id/latest-version.:file-format"
          :artifact-id #"[^/]+"

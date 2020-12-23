@@ -1,9 +1,8 @@
 (ns clojars.web.error-api
-  (:require [ring.util.response :refer [response status content-type]]
-            [clojars.web.common :refer [xml-escape]]
-            [cheshire.core :as json]
-            [clojure.string :as str]
-            [clojure.xml :as xml]))
+  (:require
+   [clojars.web.common :refer [xml-escape]]
+   [cheshire.core :as json]
+   [clojure.xml :as xml]))
 
 (defn error-api-response [error-options error-id]
   (let [defaults {:status 500}

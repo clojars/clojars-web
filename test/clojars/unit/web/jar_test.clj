@@ -9,7 +9,6 @@
 
 (deftest bad-homepage-url-shows-as-text
   (let [html (jar/show-jar help/*db*
-                           (help/quiet-reporter)
                            (help/no-stats)
                            nil
                            {:homepage "something thats not a url"
@@ -23,7 +22,6 @@
 
 (deftest pages-are-escaped
   (let [html (jar/show-jar help/*db*
-                           (help/quiet-reporter)
                            (help/no-stats)
                            nil
                            {:homepage nil
