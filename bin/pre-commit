@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# Make sure I'm not about to introduce more kondo linting errors/warnings
+
+# get just the clj/cljs files from the git changeset
+changed_clj="$(git diff --cached --name-only | grep -E 'cljs?$')"
+
+if [ -n "${changed_clj}" ] ; then
+  # lint all clj(s) files in the changeset to prevent new errors/warnings
+  # and to force cleanup
+  if ! ./bin/clj-kondo --lint $changed_clj; then
+    exit 1
+  fi
+fi

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Self-extracting clj-kondo shim. Sourced releases from GitHub.
+
+set -euo pipefail
+
+CLJ_KONDO_VERSION="2020.09.09"
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
+
+function ensure_clj_kondo() {
+    # Doesn't take args, simply reads variables set above.
+    VERSION=$CLJ_KONDO_VERSION
+    PLATFORM="$(uname -s)"
+
+    if [ "${PLATFORM}" == "Darwin" ]; then
+        ARCHIVE="clj-kondo-${VERSION}-macos-amd64.zip"
+    elif [ "${PLATFORM}" == "Linux" ]; then
+        ARCHIVE="clj-kondo-${VERSION}-linux-amd64.zip"
+    else
+        echo "Platform ${PLATFORM} is currently not supported" >&2 && exit 1
+    fi
+
+    arch="$(uname -m)"
+    if [ "${arch}" != "x86_64" ]; then
+        echo "Unsupported architecture: [${arch}], only [x86_64] is supported for now" >&2 && exit 1
+    fi
+
+    if ! [ -f "$ROOT/bin/.cache/clj-kondo-${VERSION}/BOOTSTRAPPED" ]; then
+        echo "Missing clj-kondo binary for version [${VERSION}] -- will download." >&2
+        PACKAGE_FULL_URL="https://github.com/borkdude/clj-kondo/releases/download/v${VERSION}/${ARCHIVE}"
+        mkdir -p "$ROOT/bin/.cache"
+        pushd "$ROOT/bin/.cache" >/dev/null 2>&1 || exit 1
+        echo "Downloading ${PACKAGE_FULL_URL}..." >&2
+        curl -#L -O "${PACKAGE_FULL_URL}" ||
+            (echo "Failed to download ${PACKAGE_FULL_URL}." && exit 1)
+
+        (rm -rf "clj-kondo-${VERSION}" &&
+            unzip "${ARCHIVE}" -d "clj-kondo-${VERSION}") >&2 ||
+            (echo "Failed to extract ${PACKAGE_FULL_URL}." && exit 1)
+        rm -rf "${ARCHIVE}"
+        touch "clj-kondo-${VERSION}/BOOTSTRAPPED"
+        popd >/dev/null 2>&1 || exit 2
+    fi
+}
+
+ensure_clj_kondo
+exec "${ROOT}/bin/.cache/clj-kondo-${VERSION}/clj-kondo" "$@"
