@@ -170,10 +170,9 @@
   (validate-pom-entry pom :name name)
   (validate-pom-entry pom :version version))
 
-(defn assert-non-redeploy [storage group-id artifact-id version]
+(defn assert-non-redeploy [db group-id artifact-id version]
   (when (and (not (maven/snapshot-version? version))
-          (storage/path-exists? storage
-            (str/join "/" [(fu/group->path group-id) artifact-id version])))
+             (db/find-jar db group-id artifact-id version))
     (throw-invalid "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
 
 (defn assert-non-central-shadow [group-id artifact-id]
@@ -239,10 +238,10 @@
       (str "version strings must consist solely of letters, "
         "numbers, dots, pluses, hyphens and underscores (see https://git.io/v1IA2)")))
 
-(defn validate-deploy [storage dir pom {:keys [group name version]}]
+(defn validate-deploy [db dir pom {:keys [group name version]}]
   (validate-gav group name version)
   (validate-pom pom group name version)
-  (assert-non-redeploy storage group name version)
+  (assert-non-redeploy db group name version)
   (assert-non-central-shadow group name)
 
   (let [artifacts (find-artifacts dir)]
@@ -281,7 +280,7 @@
         (fu/create-checksum-file md-file :md5)
         (fu/create-checksum-file md-file :sha1))
 
-      (validate-deploy storage dir pom posted-metadata)
+      (validate-deploy db dir pom posted-metadata)
       (db/check-and-add-group db account group)
       (run! #(storage/write-artifact
                storage
