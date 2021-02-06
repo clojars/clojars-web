@@ -37,11 +37,14 @@
       [:div.sponsors-title
        "sponsored by"
        (link-to "https://www.bountysource.com/teams/clojars/backers" "individual contributors")
-       "with in-kind sponsorship from:"]
+       "with hosting costs covered by:"]
       [:div.sponsors-group
        [:div.sponsor
-        (link-to "https://aws.amazon.com/blogs/opensource/aws-promotional-credits-open-source-projects/"
-                 (image "/images/aws-logo.png" "AWS Open Source"))]
+        (link-to "https://clubhouse.io/"
+                 (image "/images/clubhouse-logo.png" "Clubhouse Software"))]]
+      [:div.sponsors-title
+       "and in-kind sponsorship from:"]
+      [:div.sponsors-group
        [:div.sponsor
         (link-to "https://www.deps.co"
                  (image "/images/deps-logo.png" "Deps"))]
@@ -49,11 +52,11 @@
         (link-to "https://dnsimple.link/resolving-clojars"
                  [:span "resolving with" [:br]]
                  [:span
-                  (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]]
-      [:div.sponsors-group
+                  (image "https://cdn.dnsimple.com/assets/resolving-with-us/logo-light.png" "DNSimple")])]
        [:div.sponsor
         (link-to "http://fastly.com/"
-                 (image "/images/fastly-logo.png" "Fastly"))]
+                 (image "/images/fastly-logo.png" "Fastly"))]]
+      [:div.sponsors-group
        [:div.sponsor
         (link-to "https://pingometer.com/"
                  (image "/images/pingometer-logo.svg" "Pingometer"))]
@@ -64,13 +67,15 @@
         (link-to "https://www.statuspage.io"
                  (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]]]
      [:div.sponsors
-      "remixed by"
-      (link-to "http://www.bendyworks.com/"
-               [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])
-      "member project of"
-      (link-to "https://clojuriststogether.org/"
-               [:img {:src "/images/clojurists-together-logo.png" :alt "Clojurists Together Foundation" :height "40"}])]
-     ]
+      [:div.sponsors-group
+       [:div.sponsor
+        [:span "remixed by" [:br]]
+        [:span (link-to "http://www.bendyworks.com/"
+                        [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]]
+       [:div.sponsor
+        [:span "member project of" [:br]]
+        [:span (link-to "https://clojuriststogether.org/"
+                        [:img {:src "/images/clojurists-together-logo.png" :alt "Clojurists Together Foundation" :height "40"}])]]]]]
     [:footer.row]))
 
 (defn typekit-js []
