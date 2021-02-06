@@ -199,8 +199,8 @@
       [:h2.hero-text.row
        [:span.col-md-12
         [:span.heavy "Clojars"]
-        " is a "
-        [:span.heavy "dead easy"]
+        " is an "
+        [:span.heavy "easy to use"]
         " community repository for "]
        [:span.col-md-12
         " open source Clojure libraries."]]]

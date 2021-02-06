@@ -38,7 +38,7 @@
 
 (defn index-page [db stats account]
   (html-doc-with-large-header nil {:account account
-                                   :description "Clojars is a dead easy community repository for open source Clojure libraries."}
+                                   :description "Clojars is an easy to use community repository for open source Clojure libraries."}
     structured-data/website
     structured-data/organisation
     [:article.row
