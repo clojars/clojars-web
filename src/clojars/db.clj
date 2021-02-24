@@ -140,10 +140,11 @@
                                {:connection db
                                 :result-set-fn first}))
 
-(defn verify-group! [db group-name username]
-  (sql/verify-group! {:group_name group-name
-                      :verifying_username username}
-                     {:connection db}))
+(defn verify-group! [db username group-name]
+  (when-not (find-group-verification db group-name)
+    (sql/verify-group! {:group_name group-name
+                        :verifying_username username}
+                       {:connection db})))
 
 (defn find-groupnames [db username]
   (sql/find-groupnames {:username username}
@@ -300,16 +301,20 @@
                   per-page))))
 
 (defn add-user [db email username password]
-  (let [record {:email email, :username username, :password (bcrypt password),
-                :created (get-time)}
-        groupname (str "org.clojars." username)]
+  (let [record {:email email
+                :username username
+                :password (bcrypt password)
+                :created (get-time)}]
     (sql/insert-user! record
                       {:connection db})
-    (sql/add-member! {:groupname groupname
-                      :username username
-                      :admin true
-                      :added_by "clojars"}
-                     {:connection db})
+    (doseq [groupname [(str "net.clojars." username)
+                       (str "org.clojars." username)]]
+      (sql/add-member! {:groupname groupname
+                        :username username
+                        :admin true
+                        :added_by "clojars"}
+                       {:connection db})
+      (verify-group! db username groupname))
     record))
 
 (defn update-user [db account email username password]

@@ -86,7 +86,7 @@
   (testing "get user"
     (let [resp (get-api [:users "dantheman"])
           body (json/parse-string (:body resp) true)]
-      (is (= {:groups ["org.clojars.dantheman" "fake"]}
+      (is (= {:groups ["net.clojars.dantheman" "org.clojars.dantheman" "fake"]}
              body))))
 
   (testing "get non-existent user"

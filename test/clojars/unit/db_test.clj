@@ -90,7 +90,7 @@
         (is (= email2 (:email user)))
         (is (= (:password old-user) (:password user)))))))
 
-(deftest added-users-are-added-only-to-their-org-clojars-group-as-admins
+(deftest added-users-are-added-only-to-their-net-and-org-clojars-group-as-admins-and-those-groups-are-verified
   (let [email "test@example.com"
         name "testuser"
         password "password"]
@@ -98,7 +98,11 @@
     (is (= ["testuser"] (db/group-adminnames help/*db* (str "org.clojars." name))))
     (is (= ["testuser"] (db/group-activenames help/*db* (str "org.clojars." name))))
     (is (= [] (db/group-membernames help/*db* (str "org.clojars." name))))
-    (is (= ["org.clojars.testuser"] (db/find-groupnames help/*db* name)))))
+    (is (= ["testuser"] (db/group-adminnames help/*db* (str "net.clojars." name))))
+    (is (= ["testuser"] (db/group-activenames help/*db* (str "net.clojars." name))))
+    (is (= [] (db/group-membernames help/*db* (str "net.clojars." name))))
+    (is (= ["net.clojars.testuser" "org.clojars.testuser"]
+           (db/find-groupnames help/*db* name)))))
 
 (deftest members-can-be-added-to-groups
   (let [email "test@example.com"
