@@ -58,6 +58,15 @@ select *
 FROM deploy_tokens
 WHERE token_hash = :token_hash;
 
+--name: find-group-verification
+SELECT *
+FROM group_verifications
+WHERE group_name = :group_name;
+
+--name: verify-group!
+INSERT INTO group_verifications (group_name, verified_by)
+VALUES (:group_name, :verifying_username);
+
 --name: find-groupnames
 SELECT name
 FROM groups

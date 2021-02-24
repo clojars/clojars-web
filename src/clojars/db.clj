@@ -135,6 +135,16 @@
     :result-set-fn (partial filter-some
                             #(creds/bcrypt-verify token-value (:token %)))}))
 
+(defn find-group-verification [db group-name]
+  (sql/find-group-verification {:group_name group-name}
+                               {:connection db
+                                :result-set-fn first}))
+
+(defn verify-group! [db group-name username]
+  (sql/verify-group! {:group_name group-name
+                      :verifying_username username}
+                     {:connection db}))
+
 (defn find-groupnames [db username]
   (sql/find-groupnames {:username username}
                        {:connection db

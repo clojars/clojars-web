@@ -65,13 +65,23 @@
                       (str "alter table deploy_tokens "
                            "add token_hash text default null")))
 
+(defn- add-group-verifications-table
+  [trans]
+  (sql/db-do-commands trans
+                      (str "create table group_verifications "
+                           "(id serial not null primary key,"
+                           "group_name text unique not null,"
+                           "verified_by text not null,"
+                           "created timestamp not null default current_timestamp)")))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
    #'add-last-used-to-deploy-tokens-table
    #'add-group-and-jar-to-deploy-tokens-table
    #'add-mfa-fields-to-users-table
-   #'add-hash-to-deploy-tokens-table])
+   #'add-hash-to-deploy-tokens-table
+   #'add-group-verifications-table])
 
 (defn migrate [db]
   (sql/db-do-commands db

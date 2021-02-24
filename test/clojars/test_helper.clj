@@ -63,7 +63,8 @@
                          "delete from deps"
                          "delete from groups"
                          "delete from jars"
-                         "delete from users")
+                         "delete from users"
+                         "delete from group_verifications")
     (catch Exception _)))
 
 (defn with-clean-database [f]
