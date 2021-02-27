@@ -1,0 +1,24 @@
+;; -*- mode: clojure; -*-
+;; config for cljstyle (https://github.com/greglook/cljstyle)
+
+{;; don't force lines between top-level forms
+ :insert-padding-lines? false
+
+ ;; don't force the function args to always be on a new line
+ :line-break-functions? false
+
+ ;; mimic the emacs default indent to reduce delta from existing code
+ :list-indent-size 1
+
+ ;; cljstyle's type formatting is a bit aggressive, so disable
+ :reformat-types? false
+
+ :indents
+ {;; treat namespaced def*, with-* the same as their non-namespaced versions
+  #"/def"   [[:inner 0]]
+  #"/with-" [[:inner 0]]
+  #"/fdef"  [[:inner 0]]
+
+  ;; treat deftype, defrecord like proxy
+  defrecord [[:block 2] [:inner 1]]
+  deftype   [[:block 2] [:inner 1]]}}
