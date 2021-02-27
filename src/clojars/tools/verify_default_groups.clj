@@ -22,22 +22,22 @@
             group-prefix ["org.clojars." "net.clojars."]
             :let [group-name (str group-prefix username)]]
       (printf "> %s : %s\n" username group-name)
-      (let [group-admins (db/group-adminnames db group-name)]
+      (let [group-actives (db/group-activenames db group-name)]
         (cond
-          (some #{username} group-admins)
-          (println ">> group exists and user is admin")
+          (some #{username} group-actives)
+          (println ">> group exists and user has access")
 
-          (seq group-admins)
-          (println "!!> group exists but user isn't admin")
+          (seq group-actives)
+          (println "!!> group exists but user doesn't have access")
 
           :else
           (do
             (println "!> adding group")
             (db/check-and-add-group db username group-name)))
 
-        (let [group-admins (db/group-adminnames db group-name)]
-          (if (some #{username} group-admins)
+        (let [group-actives (db/group-activenames db group-name)]
+          (if (some #{username} group-actives)
             (do
               (println ">> verifying group")
               (db/verify-group! db username group-name))
-            (println "!!> user isn't admin for group, skipping verification")))))))
+            (println "!!> user doesn't have access to group, skipping verification")))))))
