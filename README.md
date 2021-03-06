@@ -102,8 +102,6 @@ setup a search index:
 cp -r ~/.m2/repository/* data/dev_repo
 lein run -m clojars.tools.setup-dev
 ```
-If you want to use the actual repo from clojars.org, you can grab it
-via [rsync](http://github.com/clojars/clojars-web/wiki/Data).
 
 Note that this setup task isn't perfect - SNAPSHOTS won't have
 version-specific metadata (which won't matter for the operation of
