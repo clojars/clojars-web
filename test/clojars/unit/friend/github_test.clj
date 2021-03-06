@@ -29,14 +29,40 @@
                :params {:code "1234567890"}}
           config {:email [{:email "john.doe@example.org"
                            :primary true
-                           :verified true}]}
+                           :verified true}]
+                  :login "jd"}
 
           response (handle-with-config req config)
 
-          {:keys [identity username]} response]
+          {:keys [auth-provider identity provider-username username]} response]
 
+      (is (= :github auth-provider))
       (is (= "johndoe" identity))
-      (is (= "johndoe" username))))
+      (is (= "jd" provider-username))
+      (is (= "johndoe" username))
+      (is (db/find-group-verification help/*db* "com.github.jd"))
+      (is (db/find-group-verification help/*db* "io.github.jd"))))
+
+  (testing "with a valid user but group already exists"
+    (db/add-admin help/*db* "com.github.johnd" "someone" "clojars")
+
+    (let [req {:uri "/oauth/github/callback"
+               :params {:code "1234567890"}}
+          config {:email [{:email "john.doe@example.org"
+                           :primary true
+                           :verified true}]
+                  :login "johnd"}
+
+          response (handle-with-config req config)
+
+          {:keys [auth-provider identity provider-username username]} response]
+
+      (is (= :github auth-provider))
+      (is (= "johndoe" identity))
+      (is (= "johnd" provider-username))
+      (is (= "johndoe" username))
+      (is (not (db/find-group-verification help/*db* "com.github.johnd")))
+      (is (db/find-group-verification help/*db* "io.github.johnd"))))
 
   (testing "with a valid user which the clojars email is not the primary one"
     (db/add-user help/*db* "jane.dot@example.org" "janedot" "pwd12345")
@@ -48,13 +74,16 @@
                            :verified true}
                           {:email "jane.dot@example.org"
                            :primary false
-                           :verified true}]}
+                           :verified true}]
+                  :login "jd"}
 
           response (handle-with-config req config)
 
-          {:keys [identity username]} response]
+          {:keys [auth-provider identity provider-username username]} response]
 
+      (is (= :github auth-provider))
       (is (= "janedot" identity))
+      (is (= "jd" provider-username))
       (is (= "janedot" username))))
 
   (testing "with a non existing e-mail"

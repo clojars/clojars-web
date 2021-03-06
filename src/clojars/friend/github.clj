@@ -20,9 +20,13 @@
         token (github/access-token service code)
         emails (github/get-verified-emails service token)]
     (if (seq emails)
-      {::emails emails}
+      {::emails emails
+       ::token token}
       (assoc (redirect "/login")
              :flash "No verified e-mail was found"))))
+
+(defn- get-github-login [{::keys [service token]}]
+  {::login (github/get-login service token)})
 
 (defn- find-user [{::keys [db emails]}]
   (if-let [user (db/find-user-by-email-in db emails)]
@@ -30,26 +34,33 @@
     (assoc (redirect "/register")
            :flash "None of your e-mails are registered")))
 
-(defn- make-auth [{::keys [user]}]
-  (let [username (:user user)]
-    {:identity username :username username}))
+(defn- make-auth [{::keys [login user]}]
+  (when-some [username (:user user)]
+    {:identity username
+     :username username
+     :auth-provider :github
+     :provider-username login}))
 
 (defn- callback [req service db]
-  (reduce (fn [acc f]
-            (let [res (merge acc (f acc))]
-              (cond
-                (:status res)   (reduced res)
-                (:identity res) (workflow/make-auth res)
-                :else           res)))
+  (let [res
+        (reduce (fn [acc f]
+                  (let [res (merge acc (f acc))]
+                    (cond
+                      (:status res)   (reduced res)
+                      (:identity res) (workflow/make-auth res)
+                      :else           res)))
 
-          (assoc req
-                 ::db db
-                 ::service service)
+                (assoc req
+                       ::db db
+                       ::service service)
 
-          [handle-error
-           get-emails
-           find-user
-           make-auth]))
+                [handle-error
+                 get-emails
+                 find-user
+                 get-github-login
+                 make-auth])]
+    (db/maybe-verify-provider-groups db res)
+    res))
 
 (defn workflow [service db]
   (fn [req]
