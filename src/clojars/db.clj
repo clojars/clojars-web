@@ -7,6 +7,7 @@
    [clj-time.core :as time]
    [clojars.config :refer [config]]
    [clojars.db.sql :as sql]
+   [clojars.log :as log]
    [clojars.maven :as mvn]
    [clojars.util :refer [filter-some]]
    [clojure.edn :as edn]
@@ -462,6 +463,40 @@
     (check-group actives account groupname)
     (when (empty? actives)
       (add-admin db groupname account "clojars"))))
+
+(defn- group-names-for-provider
+  [provider provider-username]
+  (case provider
+    :github (mapv #(str % provider-username)
+                  ["com.github."
+                   "io.github."])))
+
+(defn maybe-verify-provider-groups
+  "Will add and verify groups that are provider specific (github,
+  gitlab, etc). Will only add the group if it doesn't already
+  exist. Will only verify the group if it isn't already verified and
+  the user is a member of the group."
+  [db {:keys [auth-provider provider-username username]}]
+  (when (and auth-provider
+             provider-username
+             username)
+    (doseq [group-name (group-names-for-provider auth-provider provider-username)]
+      (when (not (find-group-verification db group-name))
+        (let [actives (group-activenames db group-name)]
+          (cond
+            (empty? actives)
+            (do
+              (add-admin db group-name username "clojars")
+              (verify-group! db username group-name))
+
+            (some #{username} actives)
+            (verify-group! db username group-name)
+
+            :else
+            (log/info {:tag :provider-group-verification-user-not-member
+                       :user username
+                       :group group-name})))))))
+
 
 (defn add-jar [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]
   (check-and-add-group db account group)

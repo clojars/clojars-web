@@ -1,14 +1,18 @@
 (ns clojars.github
-  (:require [clj-http.client :as http]
-            [cheshire.core :as json])
-
-  (:import [com.github.scribejava.core.builder ServiceBuilder]
-           [com.github.scribejava.apis GitHubApi]))
+  (:require
+   [cheshire.core :as json]
+   [clj-http.client :as http])
+  (:import
+   (com.github.scribejava.apis
+    GitHubApi)
+   (com.github.scribejava.core.builder
+    ServiceBuilder)))
 
 (defprotocol SocialService
   (authorization-url [service])
   (access-token [service code])
-  (get-verified-emails [service token]))
+  (get-verified-emails [service token])
+  (get-login [service token]))
 
 (defrecord GitHubService [service]
   SocialService
@@ -23,7 +27,13 @@
     (let [emails (-> (http/get "https://api.github.com/user/emails" {:oauth-token token})
                      :body
                      (json/parse-string true))]
-      (->> emails (filter :verified) (mapv :email)))))
+      (->> emails (filter :verified) (mapv :email))))
+
+  (get-login [this token]
+    (let [body (-> (http/get "https://api.github.com/user" {:oauth-token token})
+                   :body
+                   (json/parse-string true))]
+      (:login body))))
 
 (defn- build-github-service [api-key api-secret callback-uri]
   (-> (ServiceBuilder. api-key)
@@ -44,7 +54,10 @@
     (:access-token config))
 
   (get-verified-emails [this token]
-    (mapv :email (filter :verified (:email config)))))
+    (mapv :email (filter :verified (:email config))))
+
+  (get-login [this token]
+    (:login config)))
 
 (defn new-mock-github-service [config]
   (map->MockGitHubService {:config (merge {:authorize-uri "https://github.com/login/oauth/authorize"}
