@@ -71,5 +71,7 @@
       (follow-redirect)
       (within [[:ul.row enlive/last-of-type]
                [:li (enlive/nth-of-type 4)]
-               [:a (enlive/nth-of-type 2)]]
+               [:div enlive/first-of-type]
+               [:div enlive/first-of-type]
+               [:a enlive/first-of-type]]
               (has (text? "tester/tester123a")))))

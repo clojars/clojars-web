@@ -6,7 +6,9 @@
             [ring.util.response :as response]))
 
 (defn show [db stats group-id artifact-id]
-  (when-let [artifact (db/find-jar db group-id artifact-id)]
+  (when-let [artifact (db/with-verified-group
+                        db
+                        (db/find-jar db group-id artifact-id))]
     (auth/try-account
       #(view/show-jar db
                       stats
@@ -22,7 +24,8 @@
          (db/recent-versions db group-id artifact-id)))))
 
 (defn- show-version [db stats group-id artifact-id version]
-  (when-let [artifact (db/find-jar db group-id artifact-id version)]
+  (when-let [artifact (db/with-verified-group
+                        db (db/find-jar db group-id artifact-id version))]
     (auth/try-account
      #(view/show-jar db stats % artifact
         (db/recent-versions db group-id artifact-id 5)
