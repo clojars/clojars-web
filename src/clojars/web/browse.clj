@@ -1,18 +1,21 @@
 (ns clojars.web.browse
-  (:require [clojars.web.common :refer [html-doc jar-link user-link format-date
-                                        page-nav page-description
-                                        collection-fork-notice]]
-            [clojars.db :refer [browse-projects count-all-projects
-                                count-projects-before]]
-            [hiccup.form :refer [label submit-button text-field submit-button]]
-            [ring.util.response :refer [redirect]]
-            [clojars.web.structured-data :as structured-data]))
+  (:require
+   [clojars.db :refer [browse-projects count-all-projects
+                       count-projects-before]]
+   [clojars.web.common :refer [html-doc jar-link user-link format-date
+                               page-nav page-description
+                               collection-fork-notice
+                               verified-group-badge]]
+   [clojars.web.structured-data :as structured-data]
+   [hiccup.form :refer [label submit-button text-field submit-button]]
+   [ring.util.response :refer [redirect]]))
 
 (defn browse-page [db account page per-page]
   (let [project-count (count-all-projects db)
         total-pages (-> (/ project-count per-page) Math/ceil .intValue)
         projects (browse-projects db page per-page)]
-    (html-doc "All projects" {:account account :description "Browse all of the projects in Clojars"}
+    (html-doc
+     "All projects" {:account account :description "Browse all of the projects in Clojars"}
      [:div.light-article.row
       (structured-data/breadcrumbs [{:name "All projects" :url "https://clojars.org/projects"}])
       [:h1 "All projects"]
@@ -30,7 +33,10 @@
          [:li.col-xs-12.col-sm-6.col-md-4.col-lg-3
           [:div.result
            [:a {:name i}]
-           (jar-link jar) " " (:version jar)
+           [:div
+            [:div (jar-link jar) " " (:version jar)]]
+           (when (:verified-group? jar)
+             [:div verified-group-badge])
            [:br]
            (if (seq (:description jar))
              [:span.desc (:description jar)]

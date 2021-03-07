@@ -81,7 +81,9 @@
         (visit "/")
         (fill-in [:#search] "test")
         (press [:#search-button])
-        (within [:div.result]
+        (within [:div.result
+                 :div
+                 :div]
                 (has (text? "org.clojars.dantheman/test 0.0.1"))))
     (-> (session (help/app-from-system))
         (login-as "dantheman" "password")

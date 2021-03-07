@@ -5,9 +5,11 @@
    [clojars.config :refer [config]]
    [clojars.db :as db :refer [find-user group-activenames
                               reserved-names update-user jars-by-username
-                              find-groupnames find-user-by-user-or-email]]
+                              find-groupnames find-user-by-user-or-email
+                              find-group-verification]]
+   [clojars.log :as log]
    [clojars.web.common :refer [html-doc error-list jar-link
-                               flash group-link]]
+                               flash group-link verified-group-badge-small]]
    [clojars.web.safe-hiccup :refer [form-to]]
    [clojure.string :refer [blank?]]
    [hiccup.element :refer [link-to unordered-list]]
@@ -18,8 +20,7 @@
    [one-time.qrgen :as qrgen]
    [ring.util.response :refer [redirect]]
    [valip.core :refer [validate]]
-   [valip.predicates :as pred]
-   [clojars.log :as log]))
+   [valip.predicates :as pred]))
 
 (defn register-form [{:keys [errors email username]} message]
   (html-doc "Register" {}
@@ -78,9 +79,9 @@
 
 (defn reset-password-validations [db confirm]
   (concat
-    [[:reset-code #(or (blank? %) (db/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]
-     [:reset-code pred/present? "Reset code can't be blank."]]
-    (password-validations confirm)))
+   [[:reset-code #(or (blank? %) (db/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]
+    [:reset-code pred/present? "Reset code can't be blank."]]
+   (password-validations confirm)))
 
 (defn correct-password? [db username current-password]
   (let [user (find-user db username)]
@@ -134,7 +135,7 @@
           (update-user db account email account password)
           (log/info {:status :success})
           (assoc (redirect "/profile")
-                   :flash "Profile updated."))))))
+                 :flash "Profile updated."))))))
 
 (defn show-user [db account user]
   (html-doc (user :user) {:account account}
@@ -146,19 +147,25 @@
               (unordered-list (map jar-link (jars-by-username db (user :user))))]
              [:div.col-xs-12.col-sm-6
               [:h2 "Groups"]
-              (unordered-list (map group-link (find-groupnames db (user :user))))]]))
+              (unordered-list (map (fn [group-name]
+                                     (let [verified-group? (find-group-verification db group-name)]
+                                       [:div
+                                        [:span (group-link group-name)]
+                                        (when verified-group?
+                                          verified-group-badge-small)]))
+                                   (find-groupnames db (user :user))))]]))
 
 (defn forgot-password-form []
   (html-doc "Forgot password or username?" {}
-    [:div.small-section
-     [:h1 "Forgot something?"]
-     [:p "Don't worry, it happens to the best of us. Enter your email or username below, and we'll send you a password reset link along with your username."]
-     (form-to [:post "/forgot-password"]
-              (label :email-or-username "Email or Username")
-              (text-field {:placeholder "bob"
-                           :required true}
-                          :email-or-username)
-              (submit-button "Email me a password reset link"))]))
+            [:div.small-section
+             [:h1 "Forgot something?"]
+             [:p "Don't worry, it happens to the best of us. Enter your email or username below, and we'll send you a password reset link along with your username."]
+             (form-to [:post "/forgot-password"]
+                      (label :email-or-username "Email or Username")
+                      (text-field {:placeholder "bob"
+                                   :required true}
+                                  :email-or-username)
+                      (submit-button "Email me a password reset link"))]))
 
 (defn forgot-password [db mailer {:keys [email-or-username]}]
   (log/with-context {:email-or-username email-or-username}
@@ -179,33 +186,33 @@
                      (apply str))))
       (log/info {:tag :password-reset-user-not-found})))
   (html-doc "Forgot password?" {}
-    [:div.small-section [:h1 "Forgot password?"]
-     [:p "If your account was found, you should get an email with a link to reset your password soon."]]))
+            [:div.small-section [:h1 "Forgot password?"]
+             [:p "If your account was found, you should get an email with a link to reset your password soon."]]))
 
 (defn reset-password-form [db reset-code & [errors]]
   (if-let [user (db/find-user-by-password-reset-code db reset-code)]
     (html-doc "Reset your password" {:footer-links? false}
-      [:div.small-section
-       [:h1 "Reset your password"]
-       (error-list errors)
-       (form-to [:post (str "/password-resets/" reset-code)]
-                (label :username "Your username")
-                (text-field {:value (:user user)
-                             :disabled "disabled"}
-                            :ignored-username)
-                (label :email "Your email")
-                (text-field {:value (:email user)
-                             :disabled "disabled"}
-                            :ignored-email)
-                (label :password "New password")
-                (password-field {:placeholder "keep it secret, keep it safe"
-                                 :required true}
-                                :password)
-                (label :confirm "Confirm new password")
-                (password-field {:placeholder "confirm your password"
-                                 :required true}
-                                :confirm)
-                (submit-button "Update my password"))])
+              [:div.small-section
+               [:h1 "Reset your password"]
+               (error-list errors)
+               (form-to [:post (str "/password-resets/" reset-code)]
+                        (label :username "Your username")
+                        (text-field {:value (:user user)
+                                     :disabled "disabled"}
+                                    :ignored-username)
+                        (label :email "Your email")
+                        (text-field {:value (:email user)
+                                     :disabled "disabled"}
+                                    :ignored-email)
+                        (label :password "New password")
+                        (password-field {:placeholder "keep it secret, keep it safe"
+                                         :required true}
+                                        :password)
+                        (label :confirm "Confirm new password")
+                        (password-field {:placeholder "confirm your password"
+                                         :required true}
+                                        :confirm)
+                        (submit-button "Update my password"))])
     (do
       (log/info {:tag :password-reset-bad-code
                  :reset-code reset-code})
@@ -277,18 +284,18 @@
                        (base64/encode)
                        (String.))]
     (html-doc
-   "Two-Factor Authentication" {:account account}
-   [:div.small-section
-    (flash flash-msg)
-    [:h1 "Two-Factor Authentication"]
-    [:p "Scan this QR code with your chosen authenticator:"]
-    [:img {:src (format "data:image/png;base64,%s" qrcode-b64)}]
-    [:p "Can't scan the QR code? Enter your key manually into your two-factor device: "
-     [:pre.mfa-key otp_secret_key]]
-    [:p "Once you have your two-factor device configured, enter a code it generates below to complete the setup."
-     [:strong "Two-factor auth will not be enabled on your account if you don't complete this step."]]
-    (form-to [:put "/mfa"]
-             (label :otp "Code")
-             (text-field {:required true}
-                         :otp)
-             (submit-button "Confirm code"))])))
+     "Two-Factor Authentication" {:account account}
+     [:div.small-section
+      (flash flash-msg)
+      [:h1 "Two-Factor Authentication"]
+      [:p "Scan this QR code with your chosen authenticator:"]
+      [:img {:src (format "data:image/png;base64,%s" qrcode-b64)}]
+      [:p "Can't scan the QR code? Enter your key manually into your two-factor device: "
+       [:pre.mfa-key otp_secret_key]]
+      [:p "Once you have your two-factor device configured, enter a code it generates below to complete the setup."
+       [:strong "Two-factor auth will not be enabled on your account if you don't complete this step."]]
+      (form-to [:put "/mfa"]
+               (label :otp "Code")
+               (text-field {:required true}
+                           :otp)
+               (submit-button "Confirm code"))])))
