@@ -74,7 +74,8 @@ WHERE (
       "user" = :username
       AND
       inactive IS NOT true
-);
+)
+ORDER BY name;
 
 --name: group-membernames
 SELECT "user"
