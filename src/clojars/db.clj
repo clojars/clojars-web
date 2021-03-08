@@ -483,11 +483,11 @@
   gitlab, etc). Will only add the group if it doesn't already
   exist. Will only verify the group if it isn't already verified and
   the user is a member of the group."
-  [db {:keys [auth-provider provider-username username]}]
+  [db {:keys [auth-provider provider-login username]}]
   (when (and auth-provider
-             provider-username
+             provider-login
              username)
-    (doseq [group-name (group-names-for-provider auth-provider provider-username)]
+    (doseq [group-name (group-names-for-provider auth-provider provider-login)]
       (when (not (find-group-verification db group-name))
         (let [actives (group-activenames db group-name)]
           (cond

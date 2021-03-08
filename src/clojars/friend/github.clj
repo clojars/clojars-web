@@ -1,11 +1,12 @@
 (ns clojars.friend.github
-  (:require [ring.util.response :refer [redirect]]
-            [cemerick.friend.workflows :as workflow]
-            [clojars.github :as github]
-            [clojars.db :as db]))
+  (:require
+   [cemerick.friend.workflows :as workflow]
+   [clojars.db :as db]
+   [clojars.oauth.service :as oauth-service]
+   [ring.util.response :refer [redirect]]))
 
 (defn- authorize [service]
-  (redirect (github/authorization-url service)))
+  (redirect (oauth-service/authorization-url service)))
 
 (defn- handle-error [{:keys [params]}]
   (let [{:keys [error error_description]} params]
@@ -15,18 +16,21 @@
                :flash "You declined access to your account")
         (throw (ex-info error_description {:error error}))))))
 
-(defn- get-emails [{:keys [params] ::keys [service]}]
+(defn- get-emails+login [{:keys [params] ::keys [service]}]
   (let [code (:code params)
-        token (github/access-token service code)
-        emails (github/get-verified-emails service token)]
-    (if (seq emails)
-      {::emails emails
-       ::token token}
+        token (oauth-service/access-token service code)
+        {:keys [emails login]} (oauth-service/get-user-details service token)
+        verified-emails (into []
+                              (comp (filter :verified)
+                                    (map :email))
+                              emails)]
+    (if (seq verified-emails)
+      {::emails verified-emails
+       ::login login
+       ::token token
+       ::provider (oauth-service/provider-name service)}
       (assoc (redirect "/login")
              :flash "No verified e-mail was found"))))
-
-(defn- get-github-login [{::keys [service token]}]
-  {::login (github/get-login service token)})
 
 (defn- find-user [{::keys [db emails]}]
   (if-let [user (db/find-user-by-email-in db emails)]
@@ -34,12 +38,12 @@
     (assoc (redirect "/register")
            :flash "None of your e-mails are registered")))
 
-(defn- make-auth [{::keys [login user]}]
+(defn- make-auth [{::keys [login provider user]}]
   (when-some [username (:user user)]
     {:identity username
      :username username
-     :auth-provider :github
-     :provider-username login}))
+     :auth-provider provider
+     :provider-login login}))
 
 (defn- callback [req service db]
   (let [res
@@ -55,9 +59,8 @@
                        ::service service)
 
                 [handle-error
-                 get-emails
+                 get-emails+login
                  find-user
-                 get-github-login
                  make-auth])]
     (db/maybe-verify-provider-groups db res)
     res))

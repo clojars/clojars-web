@@ -1,17 +1,23 @@
 (ns clojars.unit.friend.github-test
-  (:require [clojure.test :refer [deftest testing is join-fixtures use-fixtures]]
-            [clojars.friend.github :refer [workflow]]
-            [clojars.github :as github]
-            [clojars.db :as db]
-            [clojars.test-helper :as help]))
+  (:require
+   [clojars.db :as db]
+   [clojars.friend.github :refer [workflow]]
+   [clojars.oauth.service :as oauth-service]
+   [clojars.test-helper :as help]
+   [clojure.test :refer [deftest testing is join-fixtures use-fixtures]]))
 
 (use-fixtures :each
   (join-fixtures
-    [help/default-fixture
-     help/with-clean-database]))
+   [help/default-fixture
+    help/with-clean-database]))
 
 (defn handle-with-config [req config]
-  ((workflow (github/new-mock-github-service config) help/*db*) req))
+  ((workflow (oauth-service/new-mock-oauth-service
+              :github
+              (merge {:authorize-uri
+                      "https://github.com/login/oauth/authorize"} config))
+             help/*db*)
+   req))
 
 (deftest test-authorization
   (testing "accessing the authorization url"
@@ -27,18 +33,18 @@
 
     (let [req {:uri "/oauth/github/callback"
                :params {:code "1234567890"}}
-          config {:email [{:email "john.doe@example.org"
-                           :primary true
-                           :verified true}]
+          config {:emails [{:email "john.doe@example.org"
+                            :primary true
+                            :verified true}]
                   :login "jd"}
 
           response (handle-with-config req config)
 
-          {:keys [auth-provider identity provider-username username]} response]
+          {:keys [auth-provider identity provider-login username]} response]
 
       (is (= :github auth-provider))
       (is (= "johndoe" identity))
-      (is (= "jd" provider-username))
+      (is (= "jd" provider-login))
       (is (= "johndoe" username))
       (is (db/find-group-verification help/*db* "com.github.jd"))
       (is (db/find-group-verification help/*db* "io.github.jd"))))
@@ -48,18 +54,18 @@
 
     (let [req {:uri "/oauth/github/callback"
                :params {:code "1234567890"}}
-          config {:email [{:email "john.doe@example.org"
-                           :primary true
-                           :verified true}]
+          config {:emails [{:email "john.doe@example.org"
+                            :primary true
+                            :verified true}]
                   :login "johnd"}
 
           response (handle-with-config req config)
 
-          {:keys [auth-provider identity provider-username username]} response]
+          {:keys [auth-provider identity provider-login username]} response]
 
       (is (= :github auth-provider))
       (is (= "johndoe" identity))
-      (is (= "johnd" provider-username))
+      (is (= "johnd" provider-login))
       (is (= "johndoe" username))
       (is (not (db/find-group-verification help/*db* "com.github.johnd")))
       (is (db/find-group-verification help/*db* "io.github.johnd"))))
@@ -69,29 +75,29 @@
 
     (let [req {:uri "/oauth/github/callback"
                :params {:code "1234567890"}}
-          config {:email [{:email "jane.dot@company.com"
-                           :primary true
-                           :verified true}
-                          {:email "jane.dot@example.org"
-                           :primary false
-                           :verified true}]
+          config {:emails [{:email "jane.dot@company.com"
+                            :primary true
+                            :verified true}
+                           {:email "jane.dot@example.org"
+                            :primary false
+                            :verified true}]
                   :login "jd"}
 
           response (handle-with-config req config)
 
-          {:keys [auth-provider identity provider-username username]} response]
+          {:keys [auth-provider identity provider-login username]} response]
 
       (is (= :github auth-provider))
       (is (= "janedot" identity))
-      (is (= "jd" provider-username))
+      (is (= "jd" provider-login))
       (is (= "janedot" username))))
 
   (testing "with a non existing e-mail"
     (let [req {:uri "/oauth/github/callback"
                :params {:code "1234567890"}}
-          config {:email [{:email "foolano@example.org"
-                           :primary true
-                           :verified true}]}
+          config {:emails [{:email "foolano@example.org"
+                            :primary true
+                            :verified true}]}
 
           response (handle-with-config req config)]
 
@@ -101,9 +107,9 @@
   (testing "with a non verified e-mail"
     (let [req {:uri "/oauth/github/callback"
                :params {:code "1234567890"}}
-          config {:email [{:email "foolano@example.org"
-                           :primary true
-                           :verified false}]}
+          config {:emails [{:email "foolano@example.org"
+                            :primary true
+                            :verified false}]}
 
           response (handle-with-config req config)]
 
@@ -115,9 +121,9 @@
                :params {:error "access_denied"
                         :error_description "The user has denied your application access."
                         :error_uri "https://docs.github.com/apps/managing-oauth-apps/troubleshooting-authorization-request-errors/#access-denied"}}
-          config {:email [{:email "john.doe@example.org"
-                           :primary true
-                           :verified true}]}
+          config {:emails [{:email "john.doe@example.org"
+                            :primary true
+                            :verified true}]}
 
           response (handle-with-config req config)]
       (is (= (-> response :headers (get "Location")) "/login"))
