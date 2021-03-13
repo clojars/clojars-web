@@ -6,6 +6,7 @@
    [clojars.notifications.mfa]
    [clojars.notifications.token]
    [clojars.oauth.github :as github]
+   [clojars.remote-service :as remote-service]
    [clojars.ring-servlet-patch :as patch]
    [clojars.s3 :as s3]
    [clojars.search :refer [lucene-component]]
@@ -66,6 +67,7 @@
                                                        (:github-oauth-client-secret config)
                                                        (:github-oauth-callback-uri config))
          :http              (jetty-server (:http config))
+         :http-client       (remote-service/new-http-remote-service)
          :index-factory     #(clucy/disk-index (:index-path config))
          :mailer            (simple-mailer (:mail config))
          :notifications     (notifications/notification-component)
@@ -73,11 +75,11 @@
          :search            (lucene-component)
          :stats             (artifact-stats)
          :stats-bucket      (s3-bucket (:s3 config) :stats-bucket)
-         :storage           (storage-component (:repo config) (:cdn-token config) (:cdn-url config))
-         )
+         :storage           (storage-component (:repo config) (:cdn-token config) (:cdn-url config)))
         (component/system-using
          {:app               [:clojars-app]
-          :clojars-app       [:storage :db :error-reporter :stats :search :mailer :github]
+          :clojars-app       [:storage :db :error-reporter :http-client
+                              :stats :search :mailer :github]
           :http              [:app]
           :notifications     [:db :mailer]
           :search            [:index-factory :stats]

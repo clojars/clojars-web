@@ -96,6 +96,7 @@
 (defn clojars-app
   [{:keys [db
            error-reporter
+           http-client
            github
            mailer
            search
@@ -126,7 +127,7 @@
           {:credential-fn (auth/password-credential-fn db)
            :workflows [(auth/interactive-form-with-mfa-workflow)
                        (registration/workflow db)
-                       (github/workflow github db)]})
+                       (github/workflow github http-client db)]})
          (wrap-exceptions error-reporter)
          (log/wrap-request-context)
          (wrap-anti-forgery)

@@ -5,6 +5,7 @@
    [clojars.email :as email]
    [clojars.errors :as errors]
    [clojars.oauth.service :as oauth-service]
+   [clojars.remote-service :as remote-service]
    [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.stats :as stats]
@@ -104,16 +105,18 @@
 
 (defn app
   ([] (app {}))
-  ([{:keys [storage db error-reporter stats search mailer github]
+  ([{:keys [storage db error-reporter http-client stats search mailer github]
      :or {db {:spec *db*}
           storage (storage/fs-storage (:repo (config/config)))
           error-reporter (quiet-reporter)
+          http-client (remote-service/new-mock-remote-service)
           stats (no-stats)
           search (no-search)
           mailer nil}}]
    (web/clojars-app
     {:db db
      :error-reporter error-reporter
+     :http-client http-client
      :github github
      :mailer mailer
      :search search

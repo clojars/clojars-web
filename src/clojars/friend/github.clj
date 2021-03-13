@@ -16,10 +16,11 @@
                :flash "You declined access to your account")
         (throw (ex-info error_description {:error error}))))))
 
-(defn- get-emails+login [{:keys [params] ::keys [service]}]
+(defn- get-emails+login [{:keys [params] ::keys [http-service oauth-service]}]
   (let [code (:code params)
-        token (oauth-service/access-token service code)
-        {:keys [emails login]} (oauth-service/get-user-details service token)
+        token (oauth-service/access-token oauth-service code)
+        {:keys [emails login]} (oauth-service/get-user-details
+                                oauth-service http-service token)
         verified-emails (into []
                               (comp (filter :verified)
                                     (map :email))
@@ -28,7 +29,7 @@
       {::emails verified-emails
        ::login login
        ::token token
-       ::provider (oauth-service/provider-name service)}
+       ::provider (oauth-service/provider-name oauth-service)}
       (assoc (redirect "/login")
              :flash "No verified e-mail was found"))))
 
@@ -45,7 +46,7 @@
      :auth-provider provider
      :provider-login login}))
 
-(defn- callback [req service db]
+(defn- callback [req oauth-service http-service db]
   (let [res
         (reduce (fn [acc f]
                   (let [res (merge acc (f acc))]
@@ -56,7 +57,8 @@
 
                 (assoc req
                        ::db db
-                       ::service service)
+                       ::http-service http-service
+                       ::oauth-service oauth-service)
 
                 [handle-error
                  get-emails+login
@@ -65,9 +67,9 @@
     (db/maybe-verify-provider-groups db res)
     res))
 
-(defn workflow [service db]
+(defn workflow [oauth-service http-service db]
   (fn [req]
     (case (:uri req)
-      "/oauth/github/authorize" (authorize service)
-      "/oauth/github/callback" (callback req service db)
+      "/oauth/github/authorize" (authorize oauth-service)
+      "/oauth/github/callback" (callback req oauth-service http-service db)
       nil)))

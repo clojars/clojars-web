@@ -1,20 +1,26 @@
 (ns clojars.oauth.github
   (:require
-   [cheshire.core :as json]
-   [clj-http.client :as http]
-   [clojars.oauth.service :as oauth-service])
+   [clojars.oauth.service :as oauth-service]
+   [clojars.remote-service :as remote-service :refer [defendpoint]])
   (:import
    (com.github.scribejava.apis
     GitHubApi)
    (com.github.scribejava.core.builder
     ServiceBuilder)))
 
-(defn- get+parse-body [token url]
-  (-> (http/get url {:oauth-token token})
-      :body
-      (json/parse-string true)))
+(defendpoint get-emails
+  [_client token]
+  {:method :get
+   :url "https://api.github.com/user/emails"
+   :oauth-token token})
 
-(defrecord GitHubService [service]
+(defendpoint get-user
+  [_client token]
+  {:method :get
+   :url "https://api.github.com/user/user"
+   :oauth-token token})
+
+(defrecord GitHubService [service http-service]
   oauth-service/OauthService
 
   (authorization-url [_]
@@ -23,12 +29,13 @@
   (access-token [_ code]
     (.getAccessToken (.getAccessToken service code)))
 
-  (get-user-details [_ token]
-    {:emails (get+parse-body token "https://api.github.com/user/emails")
-     :login  (:login (get+parse-body token "https://api.github.com/user"))})
-
   (provider-name [_]
     :github))
+
+(defmethod oauth-service/get-user-details :github
+  [_ http-client token]
+  {:emails (get-emails http-client token)
+   :login  (:login (get-user http-client token))})
 
 (defn- build-github-service [api-key api-secret callback-uri]
   (-> (ServiceBuilder. api-key)
