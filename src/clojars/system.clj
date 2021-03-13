@@ -60,7 +60,7 @@
   (let [config (meta-merge base-env config)]
     (-> (component/system-map
          :app               (handler-component (:app config))
-         :clojars-app       (endpoint-component web/handler-optioned)
+         :clojars-app       (endpoint-component web/clojars-app)
          :db                (hikaricp (:db config))
          :github            (github/new-github-service (:github-oauth-client-id config)
                                                        (:github-oauth-client-secret config)

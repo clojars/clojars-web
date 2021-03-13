@@ -105,20 +105,25 @@
 (defn app
   ([] (app {}))
   ([{:keys [storage db error-reporter stats search mailer github]
-     :or {db *db*
+     :or {db {:spec *db*}
           storage (storage/fs-storage (:repo (config/config)))
           error-reporter (quiet-reporter)
           stats (no-stats)
           search (no-search)
           mailer nil}}]
-   (web/clojars-app storage db error-reporter stats search mailer github)))
+   (web/clojars-app
+    {:db db
+     :error-reporter error-reporter
+     :github github
+     :mailer mailer
+     :search search
+     :stats stats
+     :storage storage})))
 
 (declare ^:dynamic system)
 
 (defn app-from-system []
-  ;; TODO once the database is a protocol, review
-  ;; usage of this to move things into unit tests
-  (web/handler-optioned system))
+  (web/clojars-app system))
 
 (defn with-test-system*
   [f]

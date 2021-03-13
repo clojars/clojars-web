@@ -93,45 +93,50 @@
                       [:h1 "Page not found"]
                       [:p "Thundering typhoons!  I think we lost it.  Sorry!"]]))))))
 
-(defn clojars-app [storage db reporter stats search mailer github]
-  (routes
-   (-> (context
-        "/repo" _
-        (-> (repo/routes storage db search)
-            (friend/authenticate
-             {:credential-fn (auth/token-credential-fn db)
-              :workflows [(workflows/http-basic :realm "clojars")]
-              :allow-anon? false
-              :unauthenticated-handler
-              (partial workflows/http-basic-deny "clojars")})
-            (repo/wrap-reject-non-token)
-            (repo/wrap-exceptions reporter)
-            (repo/wrap-file (:repo (config)))
-            (log/wrap-request-context)
-            (repo/wrap-reject-double-dot)))
-       (wrap-secure-session))
-   (-> (token-breach/routes db)
-       (wrap-exceptions reporter)
-       (log/wrap-request-context))
-   (-> (main-routes db stats search mailer)
-       (friend/authenticate
-        {:credential-fn (auth/password-credential-fn db)
-         :workflows [(auth/interactive-form-with-mfa-workflow)
-                     (registration/workflow db)
-                     (github/workflow github db)]})
-       (wrap-exceptions reporter)
-       (log/wrap-request-context)
-       (wrap-anti-forgery)
-       (wrap-x-frame-options)
-       (wrap-keyword-params)
-       (wrap-params)
-       (wrap-multipart-params)
-       (wrap-flash)
-       (wrap-secure-session)
-       (wrap-resource "public")
-       (wrap-content-type)
-       (wrap-not-modified)
-       (wrap-ignore-trailing-slash))))
-
-(defn handler-optioned [{:keys [storage db error-reporter stats search mailer github]}]
-  (clojars-app storage (:spec db) error-reporter stats search mailer github))
+(defn clojars-app
+  [{:keys [db
+           error-reporter
+           github
+           mailer
+           search
+           stats
+           storage]}]
+  (let [db (:spec db)]
+    (routes
+     (-> (context
+          "/repo" _
+          (-> (repo/routes storage db search)
+              (friend/authenticate
+               {:credential-fn (auth/token-credential-fn db)
+                :workflows [(workflows/http-basic :realm "clojars")]
+                :allow-anon? false
+                :unauthenticated-handler
+                (partial workflows/http-basic-deny "clojars")})
+              (repo/wrap-reject-non-token)
+              (repo/wrap-exceptions error-reporter)
+              (repo/wrap-file (:repo (config)))
+              (log/wrap-request-context)
+              (repo/wrap-reject-double-dot)))
+         (wrap-secure-session))
+     (-> (token-breach/routes db)
+         (wrap-exceptions error-reporter)
+         (log/wrap-request-context))
+     (-> (main-routes db stats search mailer)
+         (friend/authenticate
+          {:credential-fn (auth/password-credential-fn db)
+           :workflows [(auth/interactive-form-with-mfa-workflow)
+                       (registration/workflow db)
+                       (github/workflow github db)]})
+         (wrap-exceptions error-reporter)
+         (log/wrap-request-context)
+         (wrap-anti-forgery)
+         (wrap-x-frame-options)
+         (wrap-keyword-params)
+         (wrap-params)
+         (wrap-multipart-params)
+         (wrap-flash)
+         (wrap-secure-session)
+         (wrap-resource "public")
+         (wrap-content-type)
+         (wrap-not-modified)
+         (wrap-ignore-trailing-slash)))))
