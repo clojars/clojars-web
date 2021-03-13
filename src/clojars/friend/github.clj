@@ -20,13 +20,9 @@
   (let [code (:code params)
         token (oauth-service/access-token oauth-service code)
         {:keys [emails login]} (oauth-service/get-user-details
-                                oauth-service http-service token)
-        verified-emails (into []
-                              (comp (filter :verified)
-                                    (map :email))
-                              emails)]
-    (if (seq verified-emails)
-      {::emails verified-emails
+                                oauth-service http-service token)]
+    (if (seq emails)
+      {::emails emails
        ::login login
        ::token token
        ::provider (oauth-service/provider-name oauth-service)}

@@ -34,8 +34,13 @@
 
 (defmethod oauth-service/get-user-details :github
   [_ http-client token]
-  {:emails (get-emails http-client token)
-   :login  (:login (get-user http-client token))})
+  (let [emails (get-emails http-client token)
+        verified-emails (into []
+                              (comp (filter :verified)
+                                    (map :email))
+                              emails)]
+    {:emails verified-emails
+     :login  (:login (get-user http-client token))}))
 
 (defn- build-github-service [api-key api-secret callback-uri]
   (-> (ServiceBuilder. api-key)
