@@ -60,25 +60,26 @@
   (let [config (meta-merge base-env config)]
     (-> (component/system-map
          :app               (handler-component (:app config))
-         :http              (jetty-server (:http config))
+         :clojars-app       (endpoint-component web/handler-optioned)
          :db                (hikaricp (:db config))
-         :stats-bucket      (s3-bucket (:s3 config) :stats-bucket)
-         :repo-bucket       (s3-bucket (:s3 config) :repo-bucket)
-         :stats             (artifact-stats)
-         :index-factory     #(clucy/disk-index (:index-path config))
-         :search            (lucene-component)
-         :mailer            (simple-mailer (:mail config))
-         :notifications     (notifications/notification-component)
-         :storage           (storage-component (:repo config) (:cdn-token config) (:cdn-url config))
          :github            (github/new-github-service (:github-oauth-client-id config)
                                                        (:github-oauth-client-secret config)
                                                        (:github-oauth-callback-uri config))
-         :clojars-app       (endpoint-component web/handler-optioned))
+         :http              (jetty-server (:http config))
+         :index-factory     #(clucy/disk-index (:index-path config))
+         :mailer            (simple-mailer (:mail config))
+         :notifications     (notifications/notification-component)
+         :repo-bucket       (s3-bucket (:s3 config) :repo-bucket)
+         :search            (lucene-component)
+         :stats             (artifact-stats)
+         :stats-bucket      (s3-bucket (:s3 config) :stats-bucket)
+         :storage           (storage-component (:repo config) (:cdn-token config) (:cdn-url config))
+         )
         (component/system-using
-         {:http              [:app]
-          :app               [:clojars-app]
+         {:app               [:clojars-app]
+          :clojars-app       [:storage :db :error-reporter :stats :search :mailer :github]
+          :http              [:app]
           :notifications     [:db :mailer]
-          :stats             [:stats-bucket]
           :search            [:index-factory :stats]
-          :storage           [:repo-bucket]
-          :clojars-app       [:storage :db :error-reporter :stats :search :mailer :github]}))))
+          :stats             [:stats-bucket]
+          :storage           [:repo-bucket]}))))
