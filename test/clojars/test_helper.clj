@@ -4,7 +4,8 @@
    [clojars.db.migrate :as migrate]
    [clojars.email :as email]
    [clojars.errors :as errors]
-   [clojars.github :as github]
+   [clojars.oauth.service :as oauth-service]
+   [clojars.remote-service :as remote-service]
    [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.stats :as stats]
@@ -17,9 +18,12 @@
    [clucy.core :as clucy]
    [com.stuartsierra.component :as component])
   (:import
-   (java.io File)
-   (java.time ZonedDateTime)
-   (java.util Date)))
+   (java.io
+    File)
+   (java.time
+    ZonedDateTime)
+   (java.util
+    Date)))
 
 (def tmp-dir (io/file (System/getProperty "java.io.tmpdir")))
 (def local-repo (io/file tmp-dir "clojars" "test" "local-repo"))
@@ -101,21 +105,28 @@
 
 (defn app
   ([] (app {}))
-  ([{:keys [storage db error-reporter stats search mailer github]
-     :or {db *db*
+  ([{:keys [storage db error-reporter http-client stats search mailer github]
+     :or {db {:spec *db*}
           storage (storage/fs-storage (:repo (config/config)))
           error-reporter (quiet-reporter)
+          http-client (remote-service/new-mock-remote-service)
           stats (no-stats)
           search (no-search)
           mailer nil}}]
-   (web/clojars-app storage db error-reporter stats search mailer github)))
+   (web/clojars-app
+    {:db db
+     :error-reporter error-reporter
+     :http-client http-client
+     :github github
+     :mailer mailer
+     :search search
+     :stats stats
+     :storage storage})))
 
 (declare ^:dynamic system)
 
 (defn app-from-system []
-  ;; TODO once the database is a protocol, review
-  ;; usage of this to move things into unit tests
-  (web/handler-optioned system))
+  (web/clojars-app system))
 
 (defn with-test-system*
   [f]
@@ -128,7 +139,7 @@
                                              :index-factory #(clucy/memory-index)
                                              :mailer (email/mock-mailer)
                                              :stats (no-stats)
-                                             :github (github/new-mock-github-service {})))]
+                                             :github (oauth-service/new-mock-oauth-service "GitHub" {})))]
       (let [db (get-in system [:db :spec])]
         (try
           (clear-database db)
@@ -162,13 +173,13 @@
   (let [new-pom (doto (File/createTempFile (.getName file) ".pom")
                   .deleteOnExit)]
     (-> file
-      slurp
-      (as-> % (reduce (fn [accum [element new-value]]
-                        (str/replace accum (re-pattern (format "<(%s)>.*?<" (name element)))
-                          (format "<$1>%s<" new-value)))
-                %
-                m))
-      (->> (spit new-pom)))
+        slurp
+        (as-> % (reduce (fn [accum [element new-value]]
+                          (str/replace accum (re-pattern (format "<(%s)>.*?<" (name element)))
+                                       (format "<$1>%s<" new-value)))
+                        %
+                        m))
+        (->> (spit new-pom)))
     new-pom))
 
 (defn date-from-iso-8601-str

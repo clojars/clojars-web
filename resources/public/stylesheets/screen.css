@@ -110,7 +110,7 @@ hr {
 }
 
 /* FIXME: add active/hover states? */
-input[type=submit], a.github-button {
+input[type=submit], a.login-button {
   font-size: 1.2em;
   letter-spacing: 1px;
   font-weight: 300;
@@ -687,7 +687,7 @@ table.deploy-tokens td.token-disabled {
     padding: 5px;
 }
 
-a.github-button {
+a.login-button {
   background: #24292e;
   color: #ffffff;
   padding: 5px 10px;
@@ -698,12 +698,15 @@ a.github-button {
   margin-top: 15px;
 }
 
-a.github-button img {
-  filter: invert(100%);
+a.login-button img {
   margin: 0 10px 5px 0;
 }
 
-a.github-button:hover, a.github-button:focus {
+a.github-login-button img {
+  filter: invert(100%);
+}
+
+a.login-button:hover, a.login-button:focus {
   text-decoration: none;
 }
 

@@ -1,1 +1,3 @@
-{:lint-as {clojure.java.jdbc/with-db-transaction clojure.core/let}}
+{:lint-as
+ {clojars.remote-service/defendpoint    clojure.core/defn
+  clojure.java.jdbc/with-db-transaction clojure.core/let}}

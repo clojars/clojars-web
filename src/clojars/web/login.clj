@@ -43,6 +43,12 @@
 
              (submit-button "Login")
              [:div#login-or "or"]
-             (link-to {:class :github-button} "/oauth/github/authorize"
-                      (helpers/retinized-image "/images/github-mark.png" "GitHub")
-                      "Login with GitHub"))]))
+             [:div
+              (link-to {:class "login-button github-login-button"}
+                       "/oauth/github/authorize"
+                       (helpers/retinized-image "/images/github-mark.png" "GitHub")
+                       "Login with GitHub")]
+             [:div
+              (link-to {:class :login-button} "/oauth/gitlab/authorize"
+                       (helpers/retinized-image "/images/gitlab-mark.png" "GitLab")
+                       "Login with GitLab.com")])]))
