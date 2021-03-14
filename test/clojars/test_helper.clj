@@ -139,7 +139,7 @@
                                              :index-factory #(clucy/memory-index)
                                              :mailer (email/mock-mailer)
                                              :stats (no-stats)
-                                             :github (oauth-service/new-mock-oauth-service :github {})))]
+                                             :github (oauth-service/new-mock-oauth-service "GitHub" {})))]
       (let [db (get-in system [:db :spec])]
         (try
           (clear-database db)

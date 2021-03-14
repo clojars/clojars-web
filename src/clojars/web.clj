@@ -5,7 +5,8 @@
    [clojars.auth :as auth :refer [try-account]]
    [clojars.config :refer [config]]
    [clojars.errors :refer [wrap-exceptions]]
-   [clojars.friend.github :as github]
+   [clojars.friend.oauth.github :as github]
+   [clojars.friend.oauth.gitlab :as gitlab]
    [clojars.friend.registration :as registration]
    [clojars.http-utils :refer [wrap-x-frame-options wrap-secure-session]]
    [clojars.log :as log]
@@ -98,6 +99,7 @@
            error-reporter
            http-client
            github
+           gitlab
            mailer
            search
            stats
@@ -127,7 +129,8 @@
           {:credential-fn (auth/password-credential-fn db)
            :workflows [(auth/interactive-form-with-mfa-workflow)
                        (registration/workflow db)
-                       (github/workflow github http-client db)]})
+                       (github/workflow github http-client db)
+                       (gitlab/workflow gitlab http-client db)]})
          (wrap-exceptions error-reporter)
          (log/wrap-request-context)
          (wrap-anti-forgery)

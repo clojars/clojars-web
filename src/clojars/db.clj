@@ -16,9 +16,12 @@
    [clojure.string :as str]
    [one-time.core :as ot])
   (:import
-   (java.security SecureRandom)
-   (java.sql Timestamp)
-   (java.util UUID)))
+   (java.security
+    SecureRandom)
+   (java.sql
+    Timestamp)
+   (java.util
+    UUID)))
 
 (def reserved-names
   #{"about"
@@ -474,9 +477,12 @@
 (defn- group-names-for-provider
   [provider provider-username]
   (case provider
-    :github (mapv #(str % provider-username)
-                  ["com.github."
-                   "io.github."])))
+    "GitHub" (mapv #(str % provider-username)
+                   ["com.github."
+                    "io.github."])
+    "GitLab" (mapv #(str % provider-username)
+                   ["com.gitlab."
+                    "io.gitlab."])))
 
 (defn maybe-verify-provider-groups
   "Will add and verify groups that are provider specific (github,
@@ -573,4 +579,3 @@
                                 {:connection db})
      (sql/find-groups-jars-information {:group_id group-id}
                                        {:connection db}))))
-

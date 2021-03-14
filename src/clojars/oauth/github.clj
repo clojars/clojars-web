@@ -4,9 +4,7 @@
    [clojars.remote-service :as remote-service :refer [defendpoint]])
   (:import
    (com.github.scribejava.apis
-    GitHubApi)
-   (com.github.scribejava.core.builder
-    ServiceBuilder)))
+    GitHubApi)))
 
 (defendpoint get-emails
   [_client token]
@@ -20,7 +18,7 @@
    :url "https://api.github.com/user/user"
    :oauth-token token})
 
-(defrecord GitHubService [service http-service]
+(defrecord GitHubService [service]
   oauth-service/OauthService
 
   (authorization-url [_]
@@ -30,9 +28,9 @@
     (.getAccessToken (.getAccessToken service code)))
 
   (provider-name [_]
-    :github))
+    "GitHub"))
 
-(defmethod oauth-service/get-user-details :github
+(defmethod oauth-service/get-user-details "GitHub"
   [_ http-client token]
   (let [emails (get-emails http-client token)
         verified-emails (into []
@@ -43,10 +41,11 @@
      :login  (:login (get-user http-client token))}))
 
 (defn- build-github-service [api-key api-secret callback-uri]
-  (-> (ServiceBuilder. api-key)
-      (.apiSecret api-secret)
-      (.callback callback-uri)
-      (.build (GitHubApi/instance))))
+  (oauth-service/build-oauth-service
+   api-key
+   api-secret
+   callback-uri
+   (GitHubApi/instance)))
 
 (defn new-github-service [api-key api-secret callback-uri]
-  (map->GitHubService {:service (build-github-service api-key api-secret callback-uri)}))
+  (->GitHubService (build-github-service api-key api-secret callback-uri)))

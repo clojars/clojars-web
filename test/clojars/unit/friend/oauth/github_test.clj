@@ -1,7 +1,7 @@
-(ns clojars.unit.friend.github-test
+(ns clojars.unit.friend.oauth.github-test
   (:require
    [clojars.db :as db]
-   [clojars.friend.github :refer [workflow]]
+   [clojars.friend.oauth.github :refer [workflow]]
    ;; for mulitmethods
    [clojars.oauth.github]
    [clojars.oauth.service :as oauth-service]
@@ -16,7 +16,7 @@
 
 (defn handle-workflow [req]
   ((workflow (oauth-service/new-mock-oauth-service
-              :github
+              "GitHub"
               {:authorize-uri
                "https://github.com/login/oauth/authorize"})
              (remote-service/new-mock-remote-service)
@@ -56,7 +56,7 @@
 
             {:keys [auth-provider identity provider-login username]} response]
 
-        (is (= :github auth-provider))
+        (is (= "GitHub" auth-provider))
         (is (= "johndoe" identity))
         (is (= "jd" provider-login))
         (is (= "johndoe" username))
@@ -76,7 +76,7 @@
             response (handle-workflow req)
             {:keys [auth-provider identity provider-login username]} response]
 
-        (is (= :github auth-provider))
+        (is (= "GitHub" auth-provider))
         (is (= "johndoe" identity))
         (is (= "johnd" provider-login))
         (is (= "johndoe" username))
@@ -99,7 +99,7 @@
             response (handle-workflow req)
             {:keys [auth-provider identity provider-login username]} response]
 
-        (is (= :github auth-provider))
+        (is (= "GitHub" auth-provider))
         (is (= "janedot" identity))
         (is (= "jd" provider-login))
         (is (= "janedot" username))))
@@ -115,7 +115,7 @@
             response (handle-workflow req)]
 
         (is (= (-> response :headers (get "Location")) "/register"))
-        (is (= (:flash response) "None of your e-mails are registered"))))
+        (is (= (:flash response) "No account emails match the verified emails we got from GitHub"))))
 
     (testing "with a non verified e-mail"
       (set-mock-responses
@@ -128,7 +128,7 @@
             response (handle-workflow req)]
 
         (is (= (-> response :headers (get "Location")) "/login"))
-        (is (= (:flash response) "No verified e-mail was found"))))
+        (is (= (:flash response) "No verified emails were found in your GitHub account"))))
 
     (testing "with an error returned to the callback"
       (let [req {:uri "/oauth/github/callback"
@@ -138,4 +138,4 @@
             response (handle-workflow req)]
 
         (is (= (-> response :headers (get "Location")) "/login"))
-        (is (= (:flash response) "You declined access to your account"))))))
+        (is (= (:flash response) "You declined access to your GitHub account"))))))

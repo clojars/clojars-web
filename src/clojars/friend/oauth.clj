@@ -1,39 +1,45 @@
-(ns clojars.friend.github
+(ns clojars.friend.oauth
   (:require
    [cemerick.friend.workflows :as workflow]
    [clojars.db :as db]
    [clojars.oauth.service :as oauth-service]
    [ring.util.response :refer [redirect]]))
 
-(defn- authorize [service]
-  (redirect (oauth-service/authorization-url service)))
-
-(defn- handle-error [{:keys [params]}]
+(defn- handle-error [{:keys [params] ::keys [oauth-service]}]
   (let [{:keys [error error_description]} params]
     (when error
       (if (= error "access_denied")
         (assoc (redirect "/login")
-               :flash "You declined access to your account")
+               :flash (format "You declined access to your %s account"
+                              (oauth-service/provider-name oauth-service)))
         (throw (ex-info error_description {:error error}))))))
 
 (defn- get-emails+login [{:keys [params] ::keys [http-service oauth-service]}]
   (let [code (:code params)
         token (oauth-service/access-token oauth-service code)
         {:keys [emails login]} (oauth-service/get-user-details
-                                oauth-service http-service token)]
+                                oauth-service http-service token)
+        provider-name (oauth-service/provider-name oauth-service)]
     (if (seq emails)
       {::emails emails
        ::login login
        ::token token
-       ::provider (oauth-service/provider-name oauth-service)}
+       ::provider provider-name}
       (assoc (redirect "/login")
-             :flash "No verified e-mail was found"))))
+             :flash (format "No verified emails were found in your %s account"
+                            provider-name)))))
 
-(defn- find-user [{::keys [db emails]}]
+(defn- find-user [{::keys [db emails oauth-service]}]
   (if-let [user (db/find-user-by-email-in db emails)]
     {::user user}
-    (assoc (redirect "/register")
-           :flash "None of your e-mails are registered")))
+    (let [provider-name (oauth-service/provider-name oauth-service)
+          message (format "No account emails match the verified emails we got from %s"
+                          provider-name)
+          message (if (= "GitLab" provider-name)
+                    (str message ". Note: your Clojars email must be your primary email in GitLab, since the GitLab API does't provide a way to get verified secondary emails.")
+                    message)]
+      (assoc (redirect "/register")
+             :flash message))))
 
 (defn- make-auth [{::keys [login provider user]}]
   (when-some [username (:user user)]
@@ -42,7 +48,10 @@
      :auth-provider provider
      :provider-login login}))
 
-(defn- callback [req oauth-service http-service db]
+(defn authorize [service]
+  (redirect (oauth-service/authorization-url service)))
+
+(defn callback [req oauth-service http-service db]
   (let [res
         (reduce (fn [acc f]
                   (let [res (merge acc (f acc))]
@@ -62,10 +71,3 @@
                  make-auth])]
     (db/maybe-verify-provider-groups db res)
     res))
-
-(defn workflow [oauth-service http-service db]
-  (fn [req]
-    (case (:uri req)
-      "/oauth/github/authorize" (authorize oauth-service)
-      "/oauth/github/callback" (callback req oauth-service http-service db)
-      nil)))

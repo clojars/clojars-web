@@ -1,4 +1,7 @@
-(ns clojars.oauth.service)
+(ns clojars.oauth.service
+  (:import
+   (com.github.scribejava.core.builder
+    ServiceBuilder)))
 
 (defprotocol OauthService
   (authorization-url [service])
@@ -19,6 +22,16 @@
 
 (defn new-mock-oauth-service [provider config]
   (->MockOauthService provider config))
+
+(defn build-oauth-service
+  [api-key api-secret callback-uri api-instance]
+  (-> (ServiceBuilder. api-key)
+      (.apiSecret api-secret)
+      (.callback callback-uri)
+      ;; GitLab's CloudFlare setup will reject requests w/o a
+      ;; user-agent, so we just set it for all providers
+      (.userAgent "Clojars.org OAuth")
+      (.build api-instance)))
 
 (defn- get-user-details-dispatch
   [service _http-client _token]
