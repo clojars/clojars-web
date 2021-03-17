@@ -15,7 +15,7 @@
 (defendpoint get-user
   [_client token]
   {:method :get
-   :url "https://api.github.com/user/user"
+   :url "https://api.github.com/user"
    :oauth-token token})
 
 (defrecord GitHubService [service]
