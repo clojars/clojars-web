@@ -2,6 +2,7 @@
   (:require
    [cemerick.friend.workflows :as workflow]
    [clojars.db :as db]
+   [clojars.log :as log]
    [clojars.oauth.service :as oauth-service]
    [ring.util.response :refer [redirect]]))
 
@@ -69,5 +70,6 @@
                  get-emails+login
                  find-user
                  make-auth])]
-    (db/maybe-verify-provider-groups db res)
+    (doseq [result (db/maybe-verify-provider-groups db res)]
+      (log/info result))
     res))
