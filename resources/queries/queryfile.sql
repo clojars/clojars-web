@@ -464,6 +464,35 @@ VALUES (:groupname, :jarname, :version, :user, :created, :description, :homepage
 INSERT INTO deps (group_name, jar_name, version, dep_group_name, dep_jar_name, dep_version, dep_scope)
 VALUES (:groupname, :jarname, :version, :dep_groupname, :dep_jarname, :dep_version, :dep_scope);
 
+--name: add-audit!
+INSERT INTO audit (tag, "user", group_name, jar_name, version, message)
+VALUES (:tag, :user, :groupname, :jarname, :version, :message);
+
+--name: find-audit-for-user
+SELECT * FROM audit
+WHERE "user" = :user
+ORDER BY created DESC;
+
+--name: find-audit-for-group
+SELECT * FROM audit
+WHERE group_name = :groupname
+ORDER BY created DESC;
+
+--name: find-audit-for-jar
+SELECT * FROM audit
+WHERE (
+  group_name = :groupname AND
+  jar_name = :jarname
+)
+ORDER BY created DESC;
+
+--name: find-audit-for-version
+SELECT * FROM audit WHERE
+  group_name = :groupname AND
+  jar_name = :jarname AND
+  version = :version
+  ORDER BY created DESC;
+
 --name: delete-groups-jars!
 DELETE FROM jars
 WHERE group_name = :group_id;
@@ -522,3 +551,4 @@ DELETE FROM jars;
 
 --name: clear-users!
 DELETE FROM users;
+

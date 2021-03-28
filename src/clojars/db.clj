@@ -427,6 +427,32 @@
     :token_hash (hash-deploy-token token-value)}
    {:connection db}))
 
+(defn add-audit [db tag username group-name jar-name version message]
+  (sql/add-audit!
+   {:tag tag
+    :user username
+    :groupname group-name
+    :jarname jar-name
+    :version version
+    :message message}
+   {:connection db}))
+
+(defn find-audit
+  [db {:as args :keys [username group-name jar-name version]}]
+  (when-some [f (cond
+                  version    sql/find-audit-for-version
+                  jar-name   sql/find-audit-for-jar
+                  group-name sql/find-audit-for-group
+                  username   sql/find-audit-for-user
+                  :else      nil)]
+    (f (set/rename-keys
+        args
+        ;; I wish we were consistent with naming :(
+        {:username   :user
+         :group-name :groupname
+         :jar-name   :jarname})
+       {:connection db})))
+
 (defn add-member [db groupname username added-by]
   (sql/inactivate-member! {:groupname groupname
                            :username username

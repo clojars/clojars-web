@@ -74,6 +74,18 @@
                            "verified_by text not null,"
                            "created timestamp not null default current_timestamp)")))
 
+(defn- add-audit-table
+  [trans]
+  (sql/db-do-commands trans
+                      (str "create table audit "
+                           "(\"user\" text,"
+                           "group_name text,"
+                           "jar_name text,"
+                           "version text,"
+                           "message text,"
+                           "tag text not null,"
+                           "created timestamp not null default current_timestamp)")))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -81,7 +93,8 @@
    #'add-group-and-jar-to-deploy-tokens-table
    #'add-mfa-fields-to-users-table
    #'add-hash-to-deploy-tokens-table
-   #'add-group-verifications-table])
+   #'add-group-verifications-table
+   #'add-audit-table])
 
 (defn migrate [db]
   (sql/db-do-commands db
