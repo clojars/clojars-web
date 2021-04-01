@@ -121,8 +121,11 @@
             (log/info {:status :success})
             {:username username
              :token token})
-          (log/info {:status :failed
-                     :reason :invalid-token}))))))
+          (do
+            (log/audit db {:tag :invalid-token
+                           :message "The given token either doesn't exist, isn't yours, or is disabled"})
+            (log/info {:status :failed
+                       :reason :invalid-token})))))))
 
 (defn valid-totp-token?
   [otp {:as _user :keys [otp_secret_key]}]
