@@ -218,7 +218,7 @@
    [:p
     "Want to display the "
     (link-to (version-badge-url jar) "latest version")
-    " of your project on Github? Use the markdown code below!"]
+    " of your project on GitHub? Use the markdown code below!"]
    [:textarea#version-badge
     {:readonly "readonly" :rows 6 :onClick "selectText('version-badge')"}
     (badge-markdown jar)]))
