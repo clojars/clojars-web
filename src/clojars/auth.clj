@@ -29,6 +29,10 @@
   (when account
     (some #{account} (db/group-membernames db group))))
 
+(defn authorized-group-access? [db account group]
+  (when account
+    (some #{account} (db/group-allnames db group))))
+
 (defn require-admin-authorization [db account group f]
   (if (authorized-admin? db account group)
     (f)

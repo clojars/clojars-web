@@ -1,13 +1,14 @@
 (ns clojars.web.jar
   (:require
    [cheshire.core :as json]
+   [clojars.auth :as auth]
    [clojars.config :refer [config]]
    [clojars.db :as db :refer [find-jar jar-exists]]
    [clojars.file-utils :as fu]
    [clojars.stats :as stats]
-   [clojars.web.common :refer [html-doc jar-link
-                               tag jar-url jar-name group-is-name? user-link
-                               jar-fork? jar-notice single-fork-notice
+   [clojars.web.common :refer [audit-table html-doc jar-link
+                               tag jar-url jar-name jar-versioned-url group-is-name?
+                               user-link jar-fork? jar-notice single-fork-notice
                                simple-date verified-group-badge]]
    [clojars.web.helpers :as helpers]
    [clojars.web.structured-data :as structured-data]
@@ -18,9 +19,6 @@
   (:import
    (java.net
     URI)))
-
-(defn url-for [jar]
-  (str (jar-url jar) "/versions/" (:version jar)))
 
 (defn repo-url [jar]
   (str (:cdn-url (config)) "/" (-> jar :group_name fu/group->path) "/" (:jar_name jar) "/"))
@@ -170,8 +168,8 @@
    [:h4 "Recent Versions"]
    [:ul#versions
     (for [v recent-versions]
-      [:li (link-to (url-for (assoc jar
-                                    :version (:version v)))
+      [:li (link-to (jar-versioned-url (assoc jar
+                                              :version (:version v)))
                     (:version v))])]
     ;; by default, 5 versions are shown. If there are only 5 to
     ;; see, then there's no reason to show the 'all versions' link
@@ -262,7 +260,12 @@
          " This Version"]]
        (jar-notice group_name jar_name)
        (coordinates jar)
-       (fork-notice jar)]
+       (fork-notice jar)
+       (when (auth/authorized-group-access? db account group_name)
+         (audit-table db (format "%s/%s %s" group_name jar_name version)
+                      {:group-name group_name
+                       :jar-name jar_name
+                       :version version}))]
       [:ul#jar-sidebar.col-xs-12.col-sm-3
        [:li (pushed-by jar)]
        [:li (versions jar recent-versions count)]
@@ -291,7 +294,7 @@
               [:ul
                (for [v versions]
                  [:li.col-xs-12.col-sm-6.col-md-4.col-lg-3
-                  (link-to (url-for (assoc jar :version (:version v)))
+                  (link-to (jar-versioned-url (assoc jar :version (:version v)))
                            (:version v))])]]]
             [:div.light-article
              (repo-note jar)]))

@@ -4,6 +4,7 @@
    [clojars.web.helpers :as helpers]
    [clojars.web.safe-hiccup :refer [html5 raw]]
    [clojars.web.structured-data :as structured-data]
+   [clojars.db :as db]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.string :as str]
@@ -250,6 +251,9 @@
     (str "/" (:jar_name jar))
     (str "/" (:group_name jar) "/" (:jar_name jar))))
 
+(defn jar-versioned-url [jar]
+  (str (jar-url jar) "/versions/" (:version jar)))
+
 (defn group-is-name?
   "Is the group of the artifact the same as its name?"
   [jar]
@@ -378,3 +382,35 @@
 (def verified-group-badge-small
   [:span.verified-group.small
    (link-to "https://github.com/clojars/clojars-web/wiki/Verified-Group-Names" "verified")])
+
+(defn- linkify
+  [s]
+  (when s
+    (raw (str/replace s #"(https://[^ )]+)" "<a href='$1'>$1</a>"))))
+
+(defn- link-project
+  [{:as audit :keys [group_name jar_name version]}]
+  (when audit
+    (cond
+      version (link-to (jar-versioned-url audit) (format "%s/%s %s" group_name jar_name version))
+      jar_name (jar-link audit)
+      :else (group-link group_name))))
+
+(defn audit-table
+  [db subject lookup]
+  [:div
+   [:h2 (format "Audit Log for %s (for last 30 days)" subject)]
+    [:table.audit
+     [:tr
+      [:th "Tag"]
+      [:th "User"]
+      [:th "Artifact"]
+      [:th "Message"]
+      [:th "Timestamp"]]
+     (for [audit (db/find-audit db lookup)]
+       [:tr
+        [:td [:pre (:tag audit)]]
+        [:td (when (:user audit) (user-link (:user audit)))]
+        [:td (link-project audit)]
+        [:td (linkify (:message audit))]
+        [:td (:created audit)]])]])
