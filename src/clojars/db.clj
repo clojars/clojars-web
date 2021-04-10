@@ -7,7 +7,6 @@
    [clj-time.core :as time]
    [clojars.config :refer [config]]
    [clojars.db.sql :as sql]
-   [clojars.log :as log]
    [clojars.maven :as mvn]
    [clojars.util :refer [filter-some]]
    [clojure.edn :as edn]
@@ -428,6 +427,32 @@
     :token_hash (hash-deploy-token token-value)}
    {:connection db}))
 
+(defn add-audit [db tag username group-name jar-name version message]
+  (sql/add-audit!
+   {:tag tag
+    :user username
+    :groupname group-name
+    :jarname jar-name
+    :version version
+    :message message}
+   {:connection db}))
+
+(defn find-audit
+  [db {:as args :keys [username group-name jar-name version]}]
+  (when-some [f (cond
+                  version    sql/find-audit-for-version
+                  jar-name   sql/find-audit-for-jar
+                  group-name sql/find-audit-for-group
+                  username   sql/find-audit-for-user
+                  :else      nil)]
+    (f (set/rename-keys
+        args
+        ;; I wish we were consistent with naming :(
+        {:username   :user
+         :group-name :groupname
+         :jar-name   :jarname})
+       {:connection db})))
+
 (defn add-member [db groupname username added-by]
   (sql/inactivate-member! {:groupname groupname
                            :username username
@@ -493,22 +518,31 @@
   (when (and auth-provider
              provider-login
              username)
-    (doseq [group-name (group-names-for-provider auth-provider provider-login)]
-      (when (not (find-group-verification db group-name))
-        (let [actives (group-activenames db group-name)]
-          (cond
-            (empty? actives)
-            (do
-              (add-admin db group-name username "clojars")
-              (verify-group! db username group-name))
+    (let [results
+          (for [group-name (group-names-for-provider auth-provider provider-login)]
+            (when (not (find-group-verification db group-name))
+              (let [actives (group-activenames db group-name)]
+                (cond
+                  (empty? actives)
+                  (do
+                    (add-admin db group-name username "clojars")
+                    (verify-group! db username group-name)
+                    nil)
 
-            (some #{username} actives)
-            (verify-group! db username group-name)
+                  (some #{username} actives)
+                  (do
+                    (verify-group! db username group-name)
+                    nil)
 
-            :else
-            (log/info {:tag :provider-group-verification-user-not-member
-                       :user username
-                       :group group-name})))))))
+                  :else
+                  group-name))))]
+      (into []
+            (comp (remove nil?)
+                  (map (fn [group-name]
+                         {:tag :provider-group-verification-user-not-member
+                          :user username
+                          :group group-name})))
+            results))))
 
 
 (defn add-jar [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]

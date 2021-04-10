@@ -105,6 +105,7 @@
                                   [net.polyc0l0r/bote "0.1.0"
                                    :exclusions [commons-codec
                                                 javax.mail/mail
-                                                org.clojars.kjw/slf4j-simple]]]
+                                                org.clojars.kjw/slf4j-simple]]
+                                  [nubank/matcher-combinators "3.1.4"]]
                    :resource-paths ["local-resources"]}
    :project/test  {}})

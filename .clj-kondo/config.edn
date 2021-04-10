@@ -1,3 +1,7 @@
 {:lint-as
  {clojars.remote-service/defendpoint    clojure.core/defn
-  clojure.java.jdbc/with-db-transaction clojure.core/let}}
+  clojure.java.jdbc/with-db-transaction clojure.core/let}
+
+ :linters
+ {:unresolved-symbol
+  {:exclude [(clojure.test/is [match?])]}}}

@@ -29,6 +29,10 @@
   (when account
     (some #{account} (db/group-membernames db group))))
 
+(defn authorized-group-access? [db account group]
+  (when account
+    (some #{account} (db/group-allnames db group))))
+
 (defn require-admin-authorization [db account group f]
   (if (authorized-admin? db account group)
     (f)
@@ -121,8 +125,11 @@
             (log/info {:status :success})
             {:username username
              :token token})
-          (log/info {:status :failed
-                     :reason :invalid-token}))))))
+          (do
+            (log/audit db {:tag :invalid-token
+                           :message "The given token either doesn't exist, isn't yours, or is disabled"})
+            (log/info {:status :failed
+                       :reason :invalid-token})))))))
 
 (defn valid-totp-token?
   [otp {:as _user :keys [otp_secret_key]}]

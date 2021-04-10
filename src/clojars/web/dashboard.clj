@@ -2,7 +2,8 @@
   (:require
    [clojars.db :as db]
    [clojars.stats :as stats]
-   [clojars.web.common :refer [html-doc html-doc-with-large-header jar-link group-link tag
+   [clojars.web.common :refer [audit-table html-doc html-doc-with-large-header
+                               jar-link group-link tag
                                verified-group-badge verified-group-badge-small]]
    [clojars.web.helpers :as helpers]
    [clojars.web.structured-data :as structured-data]
@@ -113,4 +114,5 @@
        [:li (link-to "https://github.com/clojars/clojars-web/wiki/Pushing" "How do I deploy to clojars?")]
        [:li (link-to "https://github.com/clojars/clojars-web/wiki/Data" "How can I access clojars data programatically?")]
        [:li (link-to "https://github.com/clojars/clojars-web/wiki/Groups" "What are groups?")]
-       [:li (link-to "https://github.com/clojars/clojars-web/wiki/POM" "What does my POM need to look like?")]]]]]))
+       [:li (link-to "https://github.com/clojars/clojars-web/wiki/POM" "What does my POM need to look like?")]]]]]
+   (audit-table db account {:username account})))

@@ -70,16 +70,27 @@
             (str "upload-" (UUID/randomUUID)))
       (FileUtils/forceMkdir))))
 
+(def ^:private ^:dynamic *db*
+  "Used to avoid passing the db to every fn that needs to audit."
+  nil)
+
 (defn- throw-invalid
-  ([message]
-   (throw-invalid message nil))
-  ([message meta]
-   (throw-invalid message meta nil))
-  ([message meta cause]
-   (log/info {:status :failed
-              :message message})
+  ([tag message]
+   (throw-invalid tag message nil))
+  ([tag message meta]
+   (throw-invalid tag message meta nil))
+  ([tag message meta cause]
+   ;; don't log again if we threw this exception before
+   (when-not (:throw-invalid? meta)
+     (log/audit *db* {:tag tag
+                      :message message})
+     (log/info {:status :failed
+                :message message}))
    (throw
-     (ex-info message (merge {:report? false} meta) cause))))
+    (ex-info message (merge {:report? false
+                             :throw-invalid? true}
+                            meta)
+             cause))))
 
 (defn- throw-forbidden
   [e-or-message meta]
@@ -91,6 +102,7 @@
       (log/error {:tag :upload-exception
                   :error e-or-message}))
     (throw-invalid
+     :deploy-forbidden
      message
      (merge
       {:status 403
@@ -114,7 +126,8 @@
                          :group groupname
                          :artifact artifact
                          :version version
-                         :timestamp-version timestamp-version}
+                         :timestamp-version timestamp-version
+                         :username account}
         (check-group db account groupname) ;; will throw if there are any issues
         (let [upload-dir (find-upload-dir groupname artifact version timestamp-version session)]
           (f account upload-dir)
@@ -155,12 +168,14 @@
 
 (defn- validate-regex [x re message]
   (when-not (re-matches re x)
-    (throw-invalid message {:value x
+    (throw-invalid :regex-validation-failed
+                   message {:value x
                             :regex re})))
 
 (defn- validate-pom-entry [pom-data key value]
   (when-not (= (key pom-data) value)
     (throw-invalid
+      :pom-entry-mismatch
       (format "the %s in the pom (%s) does not match the %s you are deploying to (%s)"
         (name key) (key pom-data) (name key) value)
       {:pom pom-data})))
@@ -173,7 +188,8 @@
 (defn assert-non-redeploy [db group-id artifact-id version]
   (when (and (not (maven/snapshot-version? version))
              (db/find-jar db group-id artifact-id version))
-    (throw-invalid "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
+    (throw-invalid :non-snapshot-redeploy
+                   "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
 
 (defn assert-non-central-shadow [group-id artifact-id]
   (when-not (maven/can-shadow-maven? group-id artifact-id)
@@ -183,27 +199,32 @@
                   ;; report both failures to reach central and shadow attempts to sentry
                   :report? true}] 
         (if (= ret :failure)
-          (throw-invalid "failed to contact Maven Central to verify project name (see https://git.io/vMUHN)"
+          (throw-invalid :central-shadow-check-failure
+                         "failed to contact Maven Central to verify project name (see https://git.io/vMUHN)"
             (assoc meta :status 503))
-          (throw-invalid "shadowing Maven Central artifacts is not allowed (see https://git.io/vMUHN)"
+          (throw-invalid :central-shadow
+                         "shadowing Maven Central artifacts is not allowed (see https://git.io/vMUHN)"
             meta))))))
  
 (defn assert-jar-uploaded [artifacts pom]
   (when (and (= :jar (:packaging pom))
           (not (some (partial match-file-name #"\.jar$") artifacts)))
-    (throw-invalid "no jar file was uploaded")))
+    (throw-invalid :missing-jar-file
+                   "no jar file was uploaded")))
 
 (defn validate-checksums [artifacts]
   (doseq [f artifacts]
     ;; verify that at least one type of checksum file exists
     (when (not (or (.exists (fu/checksum-file f :md5))
                  (.exists (fu/checksum-file f :sha1))))
-      (throw-invalid (format "no checksums provided for %s" (.getName f))
+      (throw-invalid :file-missing-checksum
+                     (format "no checksums provided for %s" (.getName f))
         {:file f}))
     ;; verify provided checksums are valid
     (doseq [type [:md5 :sha1]]
       (when (not (fu/valid-checksum-file? f type false))
-        (throw-invalid (format "invalid %s checksum for %s" type (.getName f))
+        (throw-invalid :file-invalid-checksum
+                       (format "invalid %s checksum for %s" type (.getName f))
           {:file f})))))
 
 (defn assert-signatures [artifacts]
@@ -213,7 +234,8 @@
       (doseq [f artifacts
               :when (not (asc-matcher f))
               :when (not (.exists (io/file (str (.getAbsolutePath f) ".asc"))))]
-        (throw-invalid (format "%s has no signature" (.getName f)) {:file f})))))
+        (throw-invalid :file-missing-signature
+                       (format "%s has no signature" (.getName f)) {:file f})))))
 
 (defn validate-gav [group name version]
     ;; We're on purpose *at least* as restrictive as the recommendations on
@@ -259,44 +281,49 @@
     (let [pom (try
                 (maven/pom-to-map pom-file)
                 (catch Exception e
-                  (throw-invalid (str "invalid pom file: " (.getMessage e))
+                  (throw-invalid :invalid-pom-file
+                                 (str "invalid pom file: " (.getMessage e))
                     {:file pom-file}
                     e)))
-          {:keys [group group-path name] :as posted-metadata} (read-metadata dir)]
-
-      ;; since we trigger on maven-metadata.xml, we don't actually
-      ;; have the sums for it because they are uploaded *after* the
-      ;; metadata file itself. This means that it's possible for a
-      ;; corrupted file to slip through, so we try to parse it
-      (let [md-file (io/file dir group-path name "maven-metadata.xml")]
+          {:keys [group group-path name version] :as posted-metadata}
+          (read-metadata dir)
+          
+          md-file (io/file dir group-path name "maven-metadata.xml")]
+      (log/with-context {:version version}
+        ;; since we trigger on maven-metadata.xml, we don't actually
+        ;; have the sums for it because they are uploaded *after* the
+        ;; metadata file itself. This means that it's possible for a
+        ;; corrupted file to slip through, so we try to parse it
         (try
           (maven/read-metadata md-file)
           (catch Exception e
-            (throw-invalid "Failed to parse maven-metadata.xml"
-              {:file md-file}
-              e)))
+            (throw-invalid :invalid-maven-metadata-file
+                           "Failed to parse maven-metadata.xml"
+                           {:file md-file}
+                           e)))
 
         ;; If that succeeds, we create checksums for it
         (fu/create-checksum-file md-file :md5)
-        (fu/create-checksum-file md-file :sha1))
+        (fu/create-checksum-file md-file :sha1)
 
-      (validate-deploy db dir pom posted-metadata)
-      (db/check-and-add-group db account group)
-      (run! #(storage/write-artifact
-               storage
-               (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath %)) %)
-        (->> (file-seq dir)
-          (remove (memfn isDirectory))
-          (remove #(some #{(.getName %)} [metadata-edn]))))
+        (validate-deploy db dir pom posted-metadata)
+        (db/check-and-add-group db account group)
+        (run! #(storage/write-artifact
+                storage
+                (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath %)) %)
+              (->> (file-seq dir)
+                   (remove (memfn isDirectory))
+                   (remove #(some #{(.getName %)} [metadata-edn]))))
 
-      (db/add-jar db account pom)
-      (log/info {:tag :deploy-finalized})
-      (future
-        (search/index! search (assoc pom
-                                     :at (Date. (.lastModified pom-file))))
-        (log/info {:tag :deploy-indexed}))
-      (spit (io/file dir ".finalized") ""))
-    (throw-invalid "no pom file was uploaded")))
+        (db/add-jar db account pom)
+        (log/audit db {:tag :deployed})
+        (log/info {:tag :deploy-finalized})
+        (future
+          (search/index! search (assoc pom
+                                       :at (Date. (.lastModified pom-file))))
+          (log/info {:tag :deploy-indexed}))
+        (spit (io/file dir ".finalized") "")))
+    (throw-invalid :missing-pom-file "no pom file was uploaded")))
 
 (defn- deploy-finalized? [dir]
   (.exists (io/file dir ".finalized")))
@@ -367,52 +394,57 @@
    (PUT ["/:group/:artifact/:file"
          :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
         {body :body session :session {:keys [group artifact file]} :params}
-        (if (maven/snapshot-version? artifact)
-          ;; SNAPSHOT metadata will hit this route, but should be
-          ;; treated as a versioned file upload.
-          ;; See: https://github.com/clojars/clojars-web/issues/319
-          (let [version artifact
-                group-parts (str/split group #"/")
-                group (str/join "/" (butlast group-parts))
-                artifact (last group-parts)]
-            (handle-versioned-upload storage db body session group artifact version file))
-          (if (re-find #"maven-metadata\.xml$" file)
-            ;; ignore metadata sums, since we'll recreate those when
-            ;; the deploy is finalizied
-            (let [groupname (fu/path->group group)]
-              (upload-request
-                db
-                groupname
-                artifact
-                nil
-                nil
-                session
-                (fn [account upload-dir]
-                  (let [file (io/file upload-dir group artifact file)
-                        existing-sum (when (.exists file) (fu/checksum file :sha1))]
-                    (try-save-to-file file body)
-                    ;; only finalize if we haven't already or the
-                    ;; maven-metadata.xml file doesn't match the one
-                    ;; we already have
-                    ;; https://github.com/clojars/clojars-web/issues/640
-                    (when-not (or (deploy-finalized? upload-dir)
-                                  (= (fu/checksum file :sha1) existing-sum))
-                      (try
-                        (finalize-deploy storage db search
-                          account upload-dir)
-                        (catch Exception e
-                          (throw-forbidden e
-                            {:account account
-                             :group group
-                             :artifact artifact}))))))))
-            {:status 201
-             :headers {}
-             :body nil})))
+        (binding [*db* db]
+          (if (maven/snapshot-version? artifact)
+            ;; SNAPSHOT metadata will hit this route, but should be
+            ;; treated as a versioned file upload.
+            ;; See: https://github.com/clojars/clojars-web/issues/319
+            (let [version artifact
+                  group-parts (str/split group #"/")
+                  group (str/join "/" (butlast group-parts))
+                  artifact (last group-parts)]
+              (handle-versioned-upload storage db body session group artifact version file))
+            (if (re-find #"maven-metadata\.xml$" file)
+              ;; ignore metadata sums, since we'll recreate those when
+              ;; the deploy is finalizied
+              (let [groupname (fu/path->group group)]
+                (upload-request
+                 db
+                 groupname
+                 artifact
+                 nil
+                 nil
+                 session
+                 (fn [account upload-dir]
+                   (let [file (io/file upload-dir group artifact file)
+                         existing-sum (when (.exists file) (fu/checksum file :sha1))]
+                     (try-save-to-file file body)
+                     ;; only finalize if we haven't already or the
+                     ;; maven-metadata.xml file doesn't match the one
+                     ;; we already have
+                     ;; https://github.com/clojars/clojars-web/issues/640
+                     (when-not (or (deploy-finalized? upload-dir)
+                                   (= (fu/checksum file :sha1) existing-sum))
+                       (try
+                         (finalize-deploy storage db search
+                                          account upload-dir)
+                         (catch Exception e
+                           ;; FIXME: we may have already thrown-invalid here
+                           ;; - should we check for that and only
+                           ;; throw on other exceptions?
+                           (throw-forbidden e
+                                            {:account account
+                                             :group group
+                                             :artifact artifact}))))))))
+              {:status 201
+               :headers {}
+               :body nil}))))
    (PUT ["/:group/:artifact/:version/:filename"
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
          :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
         {body :body session :session {:keys [group artifact version filename]} :params}
-        (handle-versioned-upload storage db body session group artifact version filename))
+        (binding [*db* db]
+          (handle-versioned-upload storage db body session group artifact version filename)))
    (PUT "*" _ {:status 400 :headers {}})
    (not-found "Page not found")))
 
@@ -430,15 +462,19 @@
       {:status 400 :headers {}}
       (f req))))
 
-(defn wrap-reject-non-token [f]
+(defn wrap-reject-non-token [f db]
   (fn [req]
     (if (auth/unauthed-or-token-request? req)
       (f req)
-      (let [{:keys [username]} (auth/parse-authorization-header (get-in req [:headers "authorization"]))]
+      (let [{:keys [username]} (auth/parse-authorization-header (get-in req [:headers "authorization"]))
+            message "a deploy token is required to deploy (see https://git.io/JfwjM)"]
+        (log/audit db {:tag :deploy-password-rejection
+                       :message message
+                       :username username})
         (log/info {:tag :deploy-password-rejection
                    :username username})
         {:status 401
-         :headers {"status-message" "Unauthorized - a deploy token is required to deploy (see https://git.io/JfwjM)"}}))))
+         :headers {"status-message" (format "Unauthorized - %s" message)}}))))
 
 (defn wrap-exceptions [app reporter]
   (fn [req]

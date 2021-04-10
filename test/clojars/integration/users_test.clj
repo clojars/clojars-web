@@ -206,8 +206,7 @@
       (fill-in [:#username] "fixture")
       (press "Add Member")
       ;;(follow-redirect)
-      (within [:div.small-section
-               :table
+      (within [:table.group-member-list
                [:tr enlive/last-of-type]
                [:td enlive/first-of-type]]
               (has (text? "fixture")))))

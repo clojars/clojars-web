@@ -115,7 +115,7 @@
                 :allow-anon? false
                 :unauthenticated-handler
                 (partial workflows/http-basic-deny "clojars")})
-              (repo/wrap-reject-non-token)
+              (repo/wrap-reject-non-token db)
               (repo/wrap-exceptions error-reporter)
               (repo/wrap-file (:repo (config)))
               (log/wrap-request-context)
