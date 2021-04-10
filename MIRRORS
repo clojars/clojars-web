@@ -5,4 +5,5 @@ https://repo.clojars.org
 
 # if you are using Boot 2.7.0 or greater, you are already using the
 # CDN-fronted repo by default. If that is down, you can use the main
-server instead: https://clojars.org/repo/
+# server instead: 
+https://clojars.org/repo/
