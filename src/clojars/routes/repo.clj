@@ -111,9 +111,9 @@
       (ex-data e-or-message))
      cause)))
 
-(defn- check-group [db account group]
+(defn- check-group [db account group artifact]
   (try
-    (db/check-group (db/group-activenames db group) account group)
+    (db/check-group db account group artifact)
     (catch Exception e
       (throw-forbidden e
         {:account account
@@ -128,7 +128,9 @@
                          :version version
                          :timestamp-version timestamp-version
                          :username account}
-        (check-group db account groupname) ;; will throw if there are any issues
+        (when artifact
+          ;; will throw if there are any issues
+          (check-group db account groupname artifact))
         (let [upload-dir (find-upload-dir groupname artifact version timestamp-version session)]
           (f account upload-dir)
           ;; should we only do 201 if the file didn't already exist?
@@ -237,31 +239,28 @@
         (throw-invalid :file-missing-signature
                        (format "%s has no signature" (.getName f)) {:file f})))))
 
-(defn validate-gav [group name version]
-    ;; We're on purpose *at least* as restrictive as the recommendations on
-    ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
-    ;; If you want loosen these please include in your proposal the
-    ;; ramifications on usability, security and compatiblity with filesystems,
-    ;; OSes, URLs and tools.
-    (validate-regex name #"^[a-z0-9_.-]+$"
-      (str "project names must consist solely of lowercase "
-        "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
+(defn- validate-jar-name+version
+  [name version]
+  ;; We're on purpose *at least* as restrictive as the recommendations on
+  ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
+  ;; If you want loosen these please include in your proposal the
+  ;; ramifications on usability, security and compatiblity with filesystems,
+  ;; OSes, URLs and tools.
+  (validate-regex name #"^[a-z0-9_.-]+$"
+                  (str "project names must consist solely of lowercase "
+                       "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
 
-    (validate-regex group #"^[a-z0-9_.-]+$"
-      (str "group names must consist solely of lowercase "
-        "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
-
-    ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
-    ;; bar one broken non-ascii exception only these characters have been used.
-    ;; Even if we manage to support obscure characters some filesystems do not
-    ;; and some tools fail to escape URLs properly.  So to keep things nice and
-    ;; compatible for everyone let's lock it down.
-    (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
-      (str "version strings must consist solely of letters, "
-        "numbers, dots, pluses, hyphens and underscores (see https://git.io/v1IA2)")))
+  ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
+  ;; bar one broken non-ascii exception only these characters have been used.
+  ;; Even if we manage to support obscure characters some filesystems do not
+  ;; and some tools fail to escape URLs properly.  So to keep things nice and
+  ;; compatible for everyone let's lock it down.
+  (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
+                  (str "version strings must consist solely of letters, "
+                       "numbers, dots, pluses, hyphens and underscores (see https://git.io/v1IA2)")))
 
 (defn validate-deploy [db dir pom {:keys [group name version]}]
-  (validate-gav group name version)
+  (validate-jar-name+version name version)
   (validate-pom pom group name version)
   (assert-non-redeploy db group name version)
   (assert-non-central-shadow group name)
@@ -285,7 +284,7 @@
                                  (str "invalid pom file: " (.getMessage e))
                     {:file pom-file}
                     e)))
-          {:keys [group group-path name version] :as posted-metadata}
+          {:keys [group-path name version] :as posted-metadata}
           (read-metadata dir)
           
           md-file (io/file dir group-path name "maven-metadata.xml")]
@@ -307,7 +306,6 @@
         (fu/create-checksum-file md-file :sha1)
 
         (validate-deploy db dir pom posted-metadata)
-        (db/check-and-add-group db account group)
         (run! #(storage/write-artifact
                 storage
                 (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath %)) %)
@@ -385,7 +383,7 @@
             ;; but since this includes the group authorization check,
             ;; we do it here just in case. Will throw if there are any
             ;; issues.
-            (check-group db account groupname)
+            (check-group db account groupname artifact)
             (deploy-post-finalized-file storage upload-dir file)))))))
 
 ;; web handlers

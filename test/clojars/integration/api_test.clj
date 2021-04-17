@@ -8,8 +8,9 @@
             [kerodon.core :refer [session]]))
 
 (use-fixtures :each
-              help/default-fixture
-              help/run-test-app)
+  help/default-fixture
+  help/with-clean-database
+  help/run-test-app)
 
 (defn get-api [parts & [opts]]
   (-> (str "http://localhost:" help/test-port "/api/"
@@ -39,21 +40,21 @@
 
   (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/transit+json"]]
     (testing f
-      (is (= f (help/get-content-type (get-api [:groups "fake"] {:accept f}))))))
+      (is (= f (help/get-content-type (get-api [:groups "org.clojars.dantheman"] {:accept f}))))))
 
   (testing "default format is json"
-    (is (= "application/json" (help/get-content-type (get-api [:groups "fake"])))))
+    (is (= "application/json" (help/get-content-type (get-api [:groups "org.clojars.dantheman"])))))
 
   (testing "api endpoints uses permissive cors settings"
-    (is (help/assert-cors-header (get-api [:groups "fake"]))))
+    (is (help/assert-cors-header (get-api [:groups "org.clojars.dantheman"]))))
 
   (testing "list group artifacts"
-    (let [resp (get-api [:groups "fake"] {:accept :json})
+    (let [resp (get-api [:groups "org.clojars.dantheman"] {:accept :json})
           body (json/parse-string (:body resp) true)]
       (is (= {:latest_version "0.0.3-SNAPSHOT"
               :latest_release "0.0.2"
               :jar_name "test"
-              :group_name "fake"
+              :group_name "org.clojars.dantheman"
               :user "dantheman"
               :description "TEST"
               :homepage "http://example.com"
@@ -64,12 +65,12 @@
     (assert-404 [:groups "does-not-exist"]))
 
   (testing "get artifact"
-    (let [resp (get-api [:artifacts "fake" "test"] {:accept :json})
+    (let [resp (get-api [:artifacts "org.clojars.dantheman" "test"] {:accept :json})
           body (json/parse-string (:body resp) true)]
       (is (= {:latest_version "0.0.3-SNAPSHOT"
               :latest_release "0.0.2"
               :jar_name "test"
-              :group_name "fake"
+              :group_name "org.clojars.dantheman"
               :user "dantheman"
               :description "TEST"
               :homepage "http://example.com"
@@ -86,7 +87,7 @@
   (testing "get user"
     (let [resp (get-api [:users "dantheman"])
           body (json/parse-string (:body resp) true)]
-      (is (= {:groups ["fake" "net.clojars.dantheman" "org.clojars.dantheman"]}
+      (is (= {:groups ["net.clojars.dantheman" "org.clojars.dantheman"]}
              body))))
 
   (testing "get non-existent user"

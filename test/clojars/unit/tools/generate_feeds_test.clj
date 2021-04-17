@@ -14,6 +14,7 @@
   (doseq [name ["fake" "test"]
           version ["0.0.3-SNAPSHOT" "0.0.3-SNAPSHOT" "0.0.1" "0.0.2"]
           :let [pom-data (maven/pom-to-map (io/resource (format "%s-%s/%s.pom" name version name)))]]
+    (help/add-verified-group "testuser" (:group pom-data))
     (db/add-jar help/*db* "testuser" pom-data))
   (f))
 
@@ -41,7 +42,7 @@
                                    :developer-connection "scm:git:ssh://git@github.com/fake/test.git"
                                    :tag                  "70470ff6ae74505bdbfe5955fca6797f613c113c"
                                    :url                  "https://github.com/fake/test"}
-                     :group-id    "fake"
+                     :group-id    "org.clojars.dantheman"
                      :artifact-id "test"
                      :url         "http://example.com"
                      :homepage    "http://example.com"
@@ -50,9 +51,9 @@
 (def expected-jar-list '[[fake "0.0.1"]
                          [fake "0.0.2"]
                          [fake "0.0.3-SNAPSHOT"]
-                         [fake/test "0.0.1"]
-                         [fake/test "0.0.2"]
-                         [fake/test "0.0.3-SNAPSHOT"]])
+                         [org.clojars.dantheman/test "0.0.1"]
+                         [org.clojars.dantheman/test "0.0.2"]
+                         [org.clojars.dantheman/test "0.0.3-SNAPSHOT"]])
 
 (def expected-pom-list ["./fake/test/0.0.1/test.pom"
                         "./fake/test/0.0.2/test.pom"

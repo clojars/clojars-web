@@ -91,6 +91,7 @@
                    pom
                    (io/resource pom))
         jarmap   (maven/pom-to-map pom-file)]
+    (help/add-verified-group user (:group jarmap))
     (db/add-jar db user jarmap)
     (aether/deploy :coordinates [(keyword (:group jarmap)
                                           (:name jarmap))

@@ -85,13 +85,29 @@
 
 (defn verify-group!
   "Adds the group if it doesn't exist and isn't an illegal name, then
-  verifies the group if it isn't already verified. Will throw if the
-  group is a reserved name or the user doesn't have access to
-  it. Returns the verification record."
+  verifies the group if it isn't already verified. Returns the
+  verification record or an error string if the group is a reserved
+  name or the user doesn't have access to it."
   [username group-name]
-  (db/check-and-add-group *db* username group-name)
-  (db/verify-group! *db* username group-name)
-  (db/find-group-verification *db* group-name))
+  (let [actives (db/group-activenames *db* group-name)]
+    (cond
+      (and (seq actives)
+           (not (some #{username} actives)))
+      (format "'%s' doesn't have access to the '%s' group"
+              username
+              group-name)
+
+      (contains? db/reserved-names group-name)
+      (format "'%s' is a reserved name" group-name)
+
+      (not (re-find #"[.]" group-name))
+      (format "'%s' isn't a reverse domain name" group-name)
+
+      :else
+      (do
+        (db/add-group *db* username group-name)
+        (db/verify-group! *db* username group-name)
+        (db/find-group-verification *db* group-name)))))
 
 (defn handler [mapping]
   (nrepl/default-handler

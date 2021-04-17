@@ -16,7 +16,8 @@
    [clojure.java.jdbc :as jdbc]
    [clojure.string :as str]
    [clucy.core :as clucy]
-   [com.stuartsierra.component :as component])
+   [com.stuartsierra.component :as component]
+   [clojars.db :as db])
   (:import
    (java.io
     File)
@@ -197,3 +198,8 @@
     (cond-> data
       (:at data)      (update :at date->time-str)
       (:created data) (update :created date->time-str))))
+
+(defn add-verified-group
+  [account group]
+  (db/add-group *db* account group)
+  (db/verify-group! *db* account group))
