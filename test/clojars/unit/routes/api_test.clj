@@ -12,7 +12,9 @@
 
 (defn add-jar [i version & {:as override}]
   (with-redefs [db/get-time (fn [] (java.sql.Timestamp. i))]
-    (db/add-jar help/*db* "test-user" (merge (assoc jarmap :version version) override))))
+    (let [jarmap (merge (assoc jarmap :version version) override)]
+      (help/add-verified-group "test-user" (:group jarmap))
+      (db/add-jar help/*db* "test-user" jarmap))))
 
 
 (deftest only-release

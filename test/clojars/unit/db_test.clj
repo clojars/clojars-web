@@ -146,6 +146,7 @@
                 :group_name name
                 :authors "Alex Osborne, a little fish"
                 :description "An dog awesome and non-existent test jar."}]
+    (help/add-verified-group "test-user" name)
     (with-time created-at
       (db/add-jar help/*db* "test-user" jarmap)
       (are [x] (submap result x)
@@ -158,6 +159,7 @@
         jarmap {:name name :group name :version "1.0"
                 :licenses [{:name "foo" :url "bar"}]
                 :scm {:connection "ham" :url "biscuit"}}
+        _ (help/add-verified-group "test-user" name)
         _ (db/add-jar help/*db* "test-user" jarmap)
         jar (db/find-jar help/*db* name name)]
     (is (= (:licenses jarmap) (:licenses jar)))
@@ -181,6 +183,7 @@
           jarmap {:name name :group name :version "1.0"
                   :licenses [{:name [:gotcha] :url "bar"}]
                   :scm {:connection "ham" :url :boom}}
+          _ (help/add-verified-group "test-user" name)
           _ (db/add-jar help/*db* "test-user" jarmap)
           jar (db/find-jar help/*db* name name)]
       (is (= name (:jar_name jar)))
@@ -194,6 +197,7 @@
                 :homepage "http://clojars.org/"
                 :authors ["Alex Osborne" "a little fish"]
                 :dependencies [{:group_name "foo" :jar_name "bar" :version "1" :scope "test"}]}]
+    (help/add-verified-group "test-user" name)
     (db/add-jar help/*db* "test-user" jarmap)
     (let [deps (db/find-dependencies help/*db* name name "1.0")]
       (is (= 1 (count deps)))
@@ -214,6 +218,7 @@
                 :homepage "http://clojars.org/"
                 :authors ["Alex Osborne" "a little fish"]
                 :dependencies [{:group_name "foo" :jar_name "bar" :version "1" :scope "test"}]}]
+    (help/add-verified-group "test-user" name)
     (db/add-jar help/*db* "test-user" jarmap)
     (db/add-jar help/*db* "test-user" jarmap)
     (let [deps (db/find-dependencies help/*db* name name "1.0-SNAPSHOT")]
@@ -235,6 +240,8 @@
              :homepage "http://clojars.org/"
              :authors ["Alex Osborne" "a little fish"]
              :dependencies [{:group_name "foo" :jar_name "bar" :version "1" :scope "test"}]}]
+    (help/add-verified-group "test-user" group)
+    (help/add-verified-group "test-user" "another")
     (db/add-jar help/*db* "test-user" jar)
     (db/add-jar help/*db* "test-user"
       (assoc jar
@@ -255,6 +262,7 @@
              :homepage "http://clojars.org/"
              :authors ["Alex Osborne" "a little fish"]
              :dependencies [{:group_name "foo" :jar_name "bar" :version "1" :scope "test"}]}]
+    (help/add-verified-group "test-user" group)
     (db/add-jar help/*db* "test-user" jar)
     (db/add-jar help/*db* "test-user"
       (assoc jar
@@ -271,7 +279,7 @@
              :homepage "http://clojars.org/"
              :authors ["Alex Osborne" "a little fish"]
              :dependencies [{:group_name "foo" :jar_name "bar" :version "1" :scope "test"}]}]
-
+(help/add-verified-group "test-user" group)
     (with-time (Timestamp. (long 0))
       (db/add-jar help/*db* "test-user" jar))
     (db/jars-by-groupname help/*db* group)
@@ -291,7 +299,8 @@
         result {:jar_name name
                 :version "2"
                 :user "test-user"
-                :group_name name }]
+                :group_name name}]
+    (help/add-verified-group "test-user" name)
     (with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap)
       (with-time (Timestamp. 1)
@@ -303,6 +312,7 @@
 (deftest jars-with-multiple-versions
   (let [name "tester"
         jarmap {:name name :group name :version "1" }]
+    (help/add-verified-group "test-user" name)
     (with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
     (with-time (Timestamp. 1)
@@ -320,13 +330,13 @@
 
 (deftest jars-by-group-returns-all-jars-in-group
   (let [name "tester"
-        jarmap {:name name :group name :version "1" }
+        jarmap {:name name :group name :version "1"}
         result {:jar_name name
                 :version "1"
-                :group_name name }]
-    (db/add-member help/*db* name "test-user" "some-dude")
-    (db/add-member help/*db* "tester-group" "test-user2" "some-dude")
-    (db/add-member help/*db* name "test-user2" "some-dude")
+                :group_name name}]
+    (help/add-verified-group "test-user" name)
+    (help/add-verified-group "test-user2" "tester-group")
+    (db/add-member help/*db* name "test-user2" "some-user")
     (with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
     (with-time (Timestamp. 1)
@@ -345,11 +355,12 @@
 
 (deftest jars-by-user-only-returns-most-recent-version
   (let [name "tester"
-        jarmap {:name name :group name :version "1" }
+        jarmap {:name name :group name :version "1"}
         result {:jar_name name
                 :version "2"
                 :user "test-user"
-                :group_name name }]
+                :group_name name}]
+    (help/add-verified-group "test-user" name)
     (with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
     (with-time (Timestamp. 1)
@@ -360,14 +371,14 @@
 
 (deftest jars-by-user-returns-all-jars-by-user
   (let [name "tester"
-        jarmap {:name name :group name :version "1" }
+        jarmap {:name name :group name :version "1"}
         result {:jar_name name
                 :user "test-user"
                 :version "1"
-                :group_name name }]
-    (db/add-member help/*db* name "test-user" "some-dude")
-    (db/add-member help/*db* "tester-group" "test-user" "some-dude")
-    (db/add-member help/*db* name "test-user2" "some-dude")
+                :group_name name}]
+    (help/add-verified-group "test-user" name)
+    (help/add-verified-group "test-user" "tester-group")
+    (db/add-member help/*db* name "test-user2" "some-user")
     (with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
     (with-time (Timestamp. 1)
@@ -384,25 +395,10 @@
                   jars))
       (is (= 3 (count jars))))))
 
-(deftest add-jar-validates-group-name-is-not-reserved
-  (let [jarmap {:name "jar-name" :version "1"}]
-    (doseq [group db/reserved-names]
-      (is (thrown? Exception (db/add-jar help/*db* "test-user"
-                                         (assoc jarmap :group group)))))))
-
 (deftest add-jar-validates-group-permissions
     (let [jarmap {:name "jar-name" :version "1" :group "group-name"}]
       (db/add-member help/*db* "group-name" "some-user" "some-dude")
       (is (thrown? Exception (db/add-jar help/*db* "test-user" jarmap)))))
-
-
-(deftest add-jar-creates-single-member-group-for-user-as-admin
-    (let [jarmap {:name "jar-name" :version "1" :group "group-name"}]
-      (is (empty? (db/group-activenames help/*db* "group-name")))
-      (db/add-jar help/*db* "test-user" jarmap)
-      (is (= ["test-user"] (db/group-adminnames help/*db* "group-name")))
-      (is (= ["group-name"]
-             (db/find-groupnames help/*db* "test-user")))))
 
 (deftest recent-jars-returns-6-most-recent-jars-only-most-recent-version
   (let [name "tester"
@@ -419,6 +415,7 @@
                 :group_name name
                 :authors "Alex Osborne, a little fish"
                 :description "An dog awesome and non-existent test jar."}]
+    (help/add-verified-group "test-user" name)
     (with-time (Timestamp. (long 1))
       (db/add-jar help/*db* "test-user" (assoc jarmap :name "1")))
     (with-time (Timestamp. (long 2))
@@ -442,6 +439,8 @@
                 (db/recent-jars help/*db*)))))
 
 (deftest browse-projects-finds-jars
+  (help/add-verified-group "test-user" "jester")
+  (help/add-verified-group "test-user" "tester")
   (with-time (Timestamp. (long 0))
     (db/add-jar help/*db* "test-user" {:name "rock" :group "jester" :version "0.1"})
     (db/add-jar help/*db* "test-user" {:name "rock" :group "tester" :version "0.1"}))
@@ -467,6 +466,8 @@
             ( map #(select-keys % [:group_name :jar_name :version]))))))
 
 (deftest count-projects-works
+  (help/add-verified-group "test-user" "jester")
+  (help/add-verified-group "test-user" "tester")
   (db/add-jar help/*db* "test-user" {:name "rock" :group "jester" :version "0.1"})
   (db/add-jar help/*db* "test-user" {:name "rock" :group "tester" :version "0.1"})
   (db/add-jar help/*db* "test-user" {:name "rock" :group "tester" :version "0.2"})
@@ -479,6 +480,7 @@
   (is (= (db/count-projects-before help/*db* "z") 4)))
 
 (deftest can-check-jar-exists
+  (help/add-verified-group "test-user" "tester")
   (db/add-jar help/*db* "test-user" {:name "rock" :group "tester" :version "0.1"})
   (is (db/jar-exists help/*db* "tester" "rock"))
   (is (not (db/jar-exists help/*db* "tester" "paper"))))

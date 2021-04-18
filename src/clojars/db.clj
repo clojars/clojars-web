@@ -482,20 +482,39 @@
                           {:connection db}))
 
 (defn check-group
-  "Throws if the group is invalid or not accessible to the account"
-  [actives account groupname]
-  (let [err (fn [msg]
+  "Throws if the group does not exist, is not accessible to the account, or not verified
+  (when the jarname doesn't already exist).
+
+  We only allow deploys of new jars to verified groups. New versions of existing jars
+  can still be deployed to non-verified groups."
+  [db account groupname jarname]
+  (let [actives (group-activenames db groupname)
+        err (fn [msg]
               (throw (ex-info msg {:account account
                                    :group groupname})))]
-    (when (reserved-names groupname)
-      (err (format "The group name '%s' is reserved" groupname)))
-    (when (and (seq actives)
-               (not (some #{account} actives)))
-      (err (format "You don't have access to the '%s' group" groupname)))))
+    (cond
+      ;; group exists, but user doesn't have access to it
+      (and (seq actives)
+           (not (some #{account} actives)))
+      (err (format "You don't have access to the '%s' group" groupname))
 
-(defn check-and-add-group [db account groupname]
+      ;; group/jar exists, so new versions can be deployed
+      (jar-exists db groupname jarname)
+      true
+
+      ;; group doesn't exist, reject since we no longer auto-create groups
+      (empty? actives)
+      (err (format "Group '%s' doesn't exist (see https://git.io/JOs8J)" groupname))
+
+      ;; group isn't verified, so new jars/projects can't be deployed to it
+      (not (find-group-verification db groupname))
+      (err (format "Group '%s' isn't verified, so can't contain new projects (see https://git.io/JOs8J)" groupname)))))
+
+(defn add-group
+  "Adds a new group entry without any checks other than if it exists
+  already. Intended to be used from clojars.admin and tests."
+  [db account groupname]
   (let [actives (group-activenames db groupname)]
-    (check-group actives account groupname)
     (when (empty? actives)
       (add-admin db groupname account "clojars"))))
 
@@ -546,7 +565,7 @@
 
 
 (defn add-jar [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]
-  (check-and-add-group db account group)
+  (check-group db account group name)
   (sql/add-jar! {:groupname   group
                  :jarname     name
                  :version     version

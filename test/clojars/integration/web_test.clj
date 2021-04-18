@@ -34,6 +34,7 @@
       (is (re-find #"You really want an error" (.getMessage @err))))))
 
 (deftest browse-page-renders-multiple-pages
+  (help/add-verified-group "test-user" "tester")
   (doseq [i (range 21)]
     (db/add-jar
      help/*db*
@@ -59,6 +60,7 @@
              (has (text? "2")))))
 
 (deftest browse-page-can-jump
+  (help/add-verified-group "test-user" "tester")
   (doseq [i (range 100 125)]
     (db/add-jar
      help/*db*

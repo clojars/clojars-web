@@ -24,6 +24,7 @@
 (use-fixtures :each
   help/default-fixture
   help/with-local-repos
+  help/with-clean-database
   help/run-test-app)
 
 (defn repo-url []
@@ -114,7 +115,9 @@
         base-path      "org/clojars/dantheman/test/"
         repo           (:repo (config))]
 
-    ;; setup groups using unscoped token
+    (help/add-verified-group "dantheman" "org.dantheman")
+    ;; deploy to the groups with an unscoped token so they will show
+    ;; as options for token scoping
     (aether/deploy
      :coordinates '[org.clojars.dantheman/test "0.0.1"]
      :jar-file (io/file (io/resource "test.jar"))
@@ -270,31 +273,6 @@
           (is (.exists (io/file repo base-path' fname)))
           (is (s3/object-exists? repo-bucket (str base-path' fname))))))))
 
-(deftest user-can-deploy-to-new-group
-  (-> (session (help/app-from-system))
-      (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
-    (aether/deploy
-     :coordinates '[fake/test "0.0.1"]
-     :jar-file (io/file (io/resource "test.jar"))
-     :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-     :repository {"test" {:url (repo-url)
-                          :username "dantheman"
-                          :password token}}
-     :local-repo help/local-repo))
-  (-> (session (help/app-from-system))
-      (visit "/groups/fake")
-      (has (status? 200))
-      (within [:#content-wrapper
-               [:ul enlive/last-of-type]
-               [:li enlive/only-child]
-               :a]
-              (has (text? "dantheman")))
-      (follow "fake/test")
-      (has (status? 200))
-      (within [:#jar-sidebar :li.homepage :a]
-              (has (text? "https://example.org")))))
-
 (deftest user-cannot-deploy-to-groups-without-permission
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
@@ -338,14 +316,14 @@
                           :password token}}
      :local-repo help/local-repo)))
 
-(deftest user-cannot-deploy-to-reserved-groups
+(deftest user-cannot-deploy-to-a-non-existent-group
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-                          #"Forbidden - The group name 'dashboard' is reserved.$"
+                          #"Forbidden - Group 'new-group' doesn't exist \(see https://git.io/JOs8J\).$"
           (aether/deploy
-           :coordinates '[dashboard/test "0.0.1"]
+           :coordinates '[new-group/test "0.0.1"]
            :jar-file (io/file (io/resource "test.jar"))
            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                                        {:groupId "dashboard"})
@@ -356,10 +334,76 @@
 
     (match-audit {:username "dantheman"}
                  {:user "dantheman"
-                  :group_name "dashboard"
+                  :group_name "new-group"
                   :jar_name "test"
                   :version "0.0.1"
-                  :message "The group name 'dashboard' is reserved"
+                  :message "Group 'new-group' doesn't exist (see https://git.io/JOs8J)"
+                  :tag "deploy-forbidden"})))
+
+(deftest user-can-deploy-a-new-version-to-an-existing-project-in-a-non-verified-group
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+
+    ;; create a prior version in a non-verified group - we have to do
+    ;; this directly and prevent a verified group check since we can
+    ;; longer deploy to create the group or project
+    (db/add-admin help/*db* "legacy-group" "dantheman" "testing")
+    (with-redefs [db/check-group (constantly nil)]
+      (db/add-jar help/*db* "dantheman" {:group "legacy-group"
+                                         :name "test"
+                                         :version "0.0.1-SNAPSHOT"}))
+
+    (aether/deploy
+     :coordinates '[legacy-group/test "0.0.1"]
+     :jar-file (io/file (io/resource "test.jar"))
+     :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                 {:groupId "legacy-group"})
+     :repository {"test" {:url (repo-url)
+                          :username "dantheman"
+                          :password token}}
+     :local-repo help/local-repo)
+
+    (match-audit {:username "dantheman"}
+                 {:tag "deployed"
+                  :user "dantheman"
+                  :group_name "legacy-group"
+                  :jar_name "test"
+                  :version "0.0.1"})
+
+    (-> (session (help/app-from-system))
+        (visit "/")
+        (fill-in [:#search] "test")
+        (press [:#search-button])
+        (within [:div.result
+                 :div
+                 :div]
+                (has (text? "legacy-group/test 0.0.1"))))))
+
+(deftest user-cannot-deploy-new-project-to-non-verified-group
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+    (db/add-admin help/*db* "legacy-group" "dantheman" "testing")
+
+    (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
+                          #"Forbidden - Group 'legacy-group' isn't verified, so can't contain new projects \(see https://git.io/JOs8J\).$"
+          (aether/deploy
+           :coordinates '[legacy-group/test "0.0.1"]
+           :jar-file (io/file (io/resource "test.jar"))
+           :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                       {:groupId "dashboard"})
+           :repository {"test" {:url (repo-url)
+                                :username "dantheman"
+                                :password token}}
+           :local-repo help/local-repo)))
+
+    (match-audit {:username "dantheman"}
+                 {:user "dantheman"
+                  :group_name "legacy-group"
+                  :jar_name "test"
+                  :version "0.0.1"
+                  :message "Group 'legacy-group' isn't verified, so can't contain new projects (see https://git.io/JOs8J)"
                   :tag "deploy-forbidden"})))
 
 (deftest user-cannot-redeploy
@@ -367,7 +411,7 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (aether/deploy
-     :coordinates '[fake/test "0.0.1"]
+     :coordinates '[org.clojars.dantheman/test "0.0.1"]
      :jar-file (io/file (io/resource "test.jar"))
      :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
      :repository {"test" {:url (repo-url)
@@ -378,7 +422,7 @@
          org.sonatype.aether.deployment.DeploymentException
          #"Forbidden - redeploying non-snapshots"
           (aether/deploy
-           :coordinates '[fake/test "0.0.1"]
+           :coordinates '[org.clojars.dantheman/test "0.0.1"]
            :jar-file (io/file (io/resource "test.jar"))
            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
            :repository {"test" {:url (repo-url)
@@ -387,7 +431,7 @@
            :local-repo help/local-repo)))
     (match-audit {:username "dantheman"}
                  {:user "dantheman"
-                  :group_name "fake"
+                  :group_name "org.clojars.dantheman"
                   :jar_name "test"
                   :version "0.0.1"
                   :message "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)"
@@ -397,6 +441,7 @@
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+    (help/add-verified-group "dantheman" "org.tcrawley")
     (is (thrown-with-msg?
          org.sonatype.aether.deployment.DeploymentException
          #"Forbidden - shadowing Maven Central"
@@ -423,6 +468,7 @@
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+    (help/add-verified-group "dantheman" "net.mikera")
     (aether/deploy
      :coordinates '[net.mikera/clojure-pom "0.0.1"]
      :jar-file (io/file (io/resource "test.jar"))
@@ -439,7 +485,7 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (aether/deploy
-     :coordinates '[fake/test "0.0.3-SNAPSHOT"]
+     :coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
      :jar-file (io/file (io/resource "test.jar"))
      :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
      :repository {"test" {:url (repo-url)
@@ -447,7 +493,7 @@
                           :password token}}
      :local-repo help/local-repo)
     (aether/deploy
-     :coordinates '[fake/test "0.0.3-SNAPSHOT"]
+     :coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
      :jar-file (io/file (io/resource "test.jar"))
      :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
      :repository {"test" {:url (repo-url)
@@ -476,7 +522,7 @@
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
         timestamped-jar (atom nil)]
     (aether/deploy
-     :coordinates '[fake/test "0.0.3-SNAPSHOT"]
+     :coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
      :jar-file (io/file (io/resource "test.jar"))
      :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
      :repository {"test" {:url      (repo-url)
@@ -534,7 +580,7 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (aether/deploy
-     :coordinates '[fake/test "0.0.1"]
+     :coordinates '[org.clojars.dantheman/test "0.0.1"]
      :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
                     [:classifier "test" :extension "jar"] (io/file (io/resource "test.jar"))
                     [:extension "pom"] (io/file (io/resource "test-0.0.1/test.pom"))}
@@ -542,7 +588,7 @@
                           :username "dantheman"
                           :password token}}
      :local-repo help/local-repo))
-  (are [ext] (.exists (io/file (:repo (config)) "fake" "test" "0.0.1"
+  (are [ext] (.exists (io/file (:repo (config)) "org/clojars/dantheman" "test" "0.0.1"
                                (format "test-0.0.1%s" ext)))
     ".pom" ".jar" "-test.jar"))
 
@@ -551,7 +597,7 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (aether/deploy
-     :coordinates '[fake/test "0.0.3-SNAPSHOT"]
+     :coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
      :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
                     [:classifier "test" :extension "jar"] (io/file (io/resource "test.jar"))
                     [:extension "pom"] (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))}
@@ -560,7 +606,7 @@
                           :password token}}
      :local-repo help/local-repo))
   ;; we can't look for files directly since the version will be timestamped
-  (is (= 3 (->> (file-seq (io/file (:repo (config)) "fake" "test" "0.0.3-SNAPSHOT"))
+  (is (= 3 (->> (file-seq (io/file (:repo (config)) "org/clojars/dantheman" "test" "0.0.3-SNAPSHOT"))
                 (filter (memfn isFile))
                 (filter #(re-find #"(pom|jar|-test\.jar)$" (.getName %)))
                 count))))
@@ -571,7 +617,7 @@
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
         pom (io/file (io/resource "test-0.0.1/test.pom"))]
     (aether/deploy
-     :coordinates '[fake/test "0.0.1"]
+     :coordinates '[org.clojars.dantheman/test "0.0.1"]
      :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
                     [:extension "pom"] pom
                      ;; any content will do since we don't validate signatures
@@ -590,7 +636,7 @@
     (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
                           #"test-0.0.1.pom has no signature"
           (aether/deploy
-           :coordinates '[fake/test "0.0.1"]
+           :coordinates '[org.clojars.dantheman/test "0.0.1"]
            :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
                           [:extension "pom"] pom
                                            ;; any content will do since we don't validate signatures
@@ -602,7 +648,7 @@
 
     (match-audit {:username "dantheman"}
                  {:user "dantheman"
-                  :group_name "fake"
+                  :group_name "org.clojars.dantheman"
                   :jar_name "test"
                   :version "0.0.1"
                   :message "test-0.0.1.pom has no signature"
@@ -613,7 +659,7 @@
        org.sonatype.aether.deployment.DeploymentException
        #"Unauthorized"
         (aether/deploy
-         :coordinates '[fake/test "1.0.0"]
+         :coordinates '[org.clojars.dantheman/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
          :repository {"test" {:url (repo-url)}}
@@ -624,7 +670,7 @@
        org.sonatype.aether.deployment.DeploymentException
        #"Unauthorized - a deploy token is required to deploy"
         (aether/deploy
-         :coordinates '[fake/test "1.0.0"]
+         :coordinates '[org.clojars.dantheman/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
          :repository {"test" {:url      (repo-url)
@@ -643,9 +689,9 @@
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (is (thrown-with-msg?
          org.sonatype.aether.deployment.DeploymentException
-         #"Forbidden - the group in the pom \(fake\) does not match the group you are deploying to \(flake\)"
+         #"Forbidden - the group in the pom \(org.clojars.dantheman\) does not match the group you are deploying to \(net.clojars.dantheman\)"
           (aether/deploy
-           :coordinates '[flake/test "0.0.1"]
+           :coordinates '[net.clojars.dantheman/test "0.0.1"]
            :jar-file (io/file (io/resource "test.jar"))
            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
            :repository {"test" {:url (repo-url)
@@ -655,17 +701,17 @@
 
     (match-audit {:username "dantheman"}
                  {:user "dantheman"
-                  :group_name "flake"
+                  :group_name "net.clojars.dantheman"
                   :jar_name "test"
                   :version "0.0.1"
-                  :message "the group in the pom (fake) does not match the group you are deploying to (flake)"
+                  :message "the group in the pom (org.clojars.dantheman) does not match the group you are deploying to (net.clojars.dantheman)"
                   :tag "pom-entry-mismatch"})
 
     (is (thrown-with-msg?
          org.sonatype.aether.deployment.DeploymentException
          #"Forbidden - the name in the pom \(test\) does not match the name you are deploying to \(toast\)"
           (aether/deploy
-           :coordinates '[fake/toast "0.0.1"]
+           :coordinates '[org.clojars.dantheman/toast "0.0.1"]
            :jar-file (io/file (io/resource "test.jar"))
            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
            :repository {"test" {:url (repo-url)
@@ -675,7 +721,7 @@
 
     (match-audit {:username "dantheman"}
                  {:user "dantheman"
-                  :group_name "fake"
+                  :group_name "org.clojars.dantheman"
                   :jar_name "toast"
                   :version "0.0.1"
                   :message "the name in the pom (test) does not match the name you are deploying to (toast)"
@@ -685,7 +731,7 @@
          org.sonatype.aether.deployment.DeploymentException
          #"Forbidden - the version in the pom \(0.0.1\) does not match the version you are deploying to \(1.0.0\)"
           (aether/deploy
-           :coordinates '[fake/test "1.0.0"]
+           :coordinates '[org.clojars.dantheman/test "1.0.0"]
            :jar-file (io/file (io/resource "test.jar"))
            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
            :repository {"test" {:url (repo-url)
@@ -695,35 +741,11 @@
 
     (match-audit {:username "dantheman"}
                  {:user "dantheman"
-                  :group_name "fake"
+                  :group_name "org.clojars.dantheman"
                   :jar_name "test"
                   :version "1.0.0"
                   :message "the version in the pom (0.0.1) does not match the version you are deploying to (1.0.0)"
                   :tag "pom-entry-mismatch"})))
-
-(deftest deploy-requires-lowercase-group
-  (-> (session (help/app-from-system))
-      (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
-    (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
-                          #"Forbidden - group names must consist solely of lowercase"
-          (aether/deploy
-           :coordinates '[faKE/test "0.0.1"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                       {:groupId "faKE"})
-           :repository {"test" {:url (repo-url)
-                                :username "dantheman"
-                                :password token}}
-           :local-repo help/local-repo)))
-
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "faKE"
-                  :jar_name "test"
-                  :version "0.0.1"
-                  :message "group names must consist solely of lowercase letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"
-                  :tag "regex-validation-failed"})))
 
 (deftest deploy-requires-lowercase-project
   (-> (session (help/app-from-system))
@@ -732,7 +754,7 @@
     (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
                           #"Forbidden - project names must consist solely of lowercase"
           (aether/deploy
-           :coordinates '[fake/teST "0.0.1"]
+           :coordinates '[org.clojars.dantheman/teST "0.0.1"]
            :jar-file (io/file (io/resource "test.jar"))
            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                                        {:artifactId "teST"})
@@ -743,7 +765,7 @@
 
     (match-audit {:username "dantheman"}
                  {:user "dantheman"
-                  :group_name "fake"
+                  :group_name "org.clojars.dantheman"
                   :jar_name "teST"
                   :version "0.0.1"
                   :message "project names must consist solely of lowercase letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"
@@ -756,7 +778,7 @@
     (is (thrown-with-msg? org.sonatype.aether.deployment.DeploymentException
                           #"Forbidden - version strings must consist solely of letters"
           (aether/deploy
-           :coordinates '[fake/test "1.α.0"]
+           :coordinates '[org.clojars.dantheman/test "1.α.0"]
            :jar-file (io/file (io/resource "test.jar"))
            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                                        {:version "1.α.0"})
@@ -767,7 +789,7 @@
 
     (match-audit {:username "dantheman"}
                  {:user "dantheman"
-                  :group_name "fake"
+                  :group_name "org.clojars.dantheman"
                   :jar_name "test"
                   :version "1.α.0"
                   :message "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores (see https://git.io/v1IA2)"

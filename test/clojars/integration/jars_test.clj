@@ -17,22 +17,22 @@
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (-> (session (help/app))
-      (visit "/fake/test")
+      (visit "/org.clojars.dantheman/test")
       (within [:div#jar-title :h1 :a]
-              (has (text? "fake/test")))
+              (has (text? "org.clojars.dantheman/test")))
       (within [[:.package-config-example (html/nth-of-type 2)] :pre]
-              (has (text? "[fake/test \"0.0.2\"]")))
+              (has (text? "[org.clojars.dantheman/test \"0.0.2\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
 
 (deftest jars-with-only-snapshots-can-be-viewed
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (-> (session (help/app))
-      (visit "/fake/test")
+      (visit "/org.clojars.dantheman/test")
       (within [:div#jar-title :h1 :a]
-              (has (text? "fake/test")))
+              (has (text? "org.clojars.dantheman/test")))
       (within [[:.package-config-example (html/nth-of-type 2)] :pre]
-              (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
+              (has (text? "[org.clojars.dantheman/test \"0.0.3-SNAPSHOT\"]")))
       (within [:span.commit-url]
               (has (text? " with this commit")))
       (within [:ul#versions]
@@ -56,12 +56,12 @@
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.2/test.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (-> (session (help/app))
-      (visit "/fake/test")
+      (visit "/org.clojars.dantheman/test")
       (follow "0.0.3-SNAPSHOT")
       (within [:div#jar-title :h1 :a]
-              (has (text? "fake/test")))
+              (has (text? "org.clojars.dantheman/test")))
       (within [[:.package-config-example (html/nth-of-type 2)] :pre]
-              (has (text? "[fake/test \"0.0.3-SNAPSHOT\"]")))
+              (has (text? "[org.clojars.dantheman/test \"0.0.3-SNAPSHOT\"]")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT0.0.20.0.1")))))
 

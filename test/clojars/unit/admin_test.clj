@@ -7,7 +7,8 @@
    [clojars.storage :as storage]
    [clojars.test-helper :as help]
    [clojure.java.io :as io]
-   [clojure.test :refer [are deftest is join-fixtures use-fixtures]]))
+   [clojure.test :refer [are deftest is join-fixtures testing use-fixtures]]
+   [matcher-combinators.test]))
 
 (use-fixtures :each
   (join-fixtures
@@ -43,6 +44,7 @@
                                 (delete! [_ group# artifact#]
                                   (swap! *search-removals* conj (format "%s/%s" group# artifact#))))
                admin/*storage* (storage/fs-storage (:repo (config)))]
+       (help/add-verified-group "testuser" "org.ham")
        (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "1" :description "delete me"})
        (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "2" :description ""})
        (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "sandwich" :version "1" :description ""})
@@ -123,3 +125,22 @@
     (is (db/find-jar admin/*db* "org.ham" "sandwich"))
     (is (seq (db/group-activenames admin/*db* "org.ham")))
     (is (empty? @*search-removals*))))
+
+(deftest verify-group!-works
+  (with-repo-setup
+    (is (= "'testuser2' doesn't have access to the 'org.ham' group"
+           (admin/verify-group! "testuser2" "org.ham")))
+    (is (= "'about' is a reserved name"
+           (admin/verify-group! "testuser2" "about")))
+    (is (= "'abcd' isn't a reverse domain name"
+           (admin/verify-group! "testuser2" "abcd")))
+    (is (match? {:group_name "org.ham"
+                 :verified_by "testuser"}
+                (admin/verify-group! "testuser" "org.ham"))
+        "Can verify an existing group")
+
+    (testing "Can add and verify a new group"
+      (is (match? {:group_name "org.hambiscuit"
+                 :verified_by "testuser"}
+                  (admin/verify-group! "testuser" "org.hambiscuit")))
+      (is (some #{"testuser"} (db/group-activenames help/*db* "org.hambiscuit"))))))
