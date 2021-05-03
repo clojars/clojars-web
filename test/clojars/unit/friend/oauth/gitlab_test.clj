@@ -57,6 +57,23 @@
         (is (db/find-group-verification help/*db* "com.gitlab.jd"))
         (is (db/find-group-verification help/*db* "io.gitlab.jd"))))
 
+    (testing "with a valid upcased user"
+      (db/add-user help/*db* "john.doe2@example.org" "johndoe2" "pwd12345")
+      (set-mock-responses "john.doe2@example.org" "Jd2")
+
+      (let [req {:uri "/oauth/gitlab/callback"
+                 :params {:code "1234567890"}}
+            response (handle-workflow req)
+
+            {:keys [auth-provider identity provider-login username]} response]
+
+        (is (= "GitLab" auth-provider))
+        (is (= "johndoe2" identity))
+        (is (= "Jd2" provider-login))
+        (is (= "johndoe2" username))
+        (is (db/find-group-verification help/*db* "com.gitlab.jd2"))
+        (is (db/find-group-verification help/*db* "io.gitlab.jd2"))))
+
     (testing "with a valid user but group already exists"
       (db/add-admin help/*db* "com.gitlab.johnd" "someone" "clojars")
       (set-mock-responses "john.doe@example.org" "johnd")
