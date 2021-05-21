@@ -60,7 +60,7 @@
        (tag "$") " lein deploy clojars\n"]]]
     [:div.push-information.col-xs-12.col-sm-4
      [:h3.push-header "Push with "
-      (link-to "http://boot-clj.com/" "Boot")
+      (link-to "https://boot-clj.github.io/" "Boot")
       " (using "
       (link-to "https://github.com/adzerk/bootlaces" "bootlaces")
       ")"]
