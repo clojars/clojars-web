@@ -63,7 +63,7 @@
     (-> (component/system-map
          :app               (handler-component (:app config))
          :clojars-app       (endpoint-component web/clojars-app)
-         :db                (hikaricp (:db config))
+         :db                (hikaricp (assoc (:db config) :maximum-pool-size 20))
          :github            (github/new-github-service (:client-id github-oauth)
                                                        (:client-secret github-oauth)
                                                        (:callback-uri github-oauth))
