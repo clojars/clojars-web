@@ -131,6 +131,13 @@
       (println "\nGroup *not* verified."))))
 
 (defn check-and-verify-group!
+  "Looks up the TXT records for the given domain and confirms that:
+
+  * the TXT record has a Clojars username
+  * if the group exists, that username is an active member of the group
+
+  If those checks pass, it then asks for confirmation before marking
+  the group as verified."
   [group domain]
   (let [txt (get-txt-records domain)]
     (printf "TXT records for %s:\n" domain)
