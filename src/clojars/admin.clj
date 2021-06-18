@@ -128,7 +128,7 @@
       (do
         (verify-group! username group)
         (printf "\nGroup verified: https://clojars.org/groups/%s\n" group))
-      (println "\nGroup not verified."))))
+      (println "\nGroup *not* verified."))))
 
 (defn check-and-verify-group!
   [group domain]
@@ -165,7 +165,6 @@
           (do
             (println "Group exists. Active members:")
             (pprint group-active-members)
-            (println "User is an active member of the group.")
             (println "User is *not* an active member of the group."))))
       (println "Clojars TXT record not found."))))
 
