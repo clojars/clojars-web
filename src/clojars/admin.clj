@@ -122,6 +122,7 @@
 (defn- confirm-and-verify-group
   [username group]
   (printf "Do you want to verify %s for %s? [y/N] " group username)
+  (flush)
   (let [res (read-line)]
     (if (= res "y")
       (do
