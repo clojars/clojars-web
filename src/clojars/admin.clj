@@ -1,14 +1,17 @@
 (ns clojars.admin
-  (:require [clojars
-             [config :refer [config]]
-             [db :as db]
-             [file-utils :as fu]
-             [search :as search]
-             [storage :as storage]]            
-            [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clojure.tools.nrepl.server :as nrepl])
-  (:import java.text.SimpleDateFormat))
+  (:require
+   [clojars.config :refer [config]]
+   [clojars.db :as db]
+   [clojars.file-utils :as fu]
+   [clojars.search :as search]
+   [clojars.storage :as storage]
+   [clojure.java.io :as io]
+   [clojure.java.shell :as shell]
+   [clojure.pprint :refer [pprint]]
+   [clojure.string :as str]
+   [clojure.tools.nrepl.server :as nrepl])
+  (:import
+   java.text.SimpleDateFormat))
 
 (defn current-date-str []
   (.format (SimpleDateFormat. "yyyyMMdd") (db/get-time)))
@@ -19,22 +22,22 @@
 
 (defn backup-dir [base-dir path]
   (io/file base-dir
-    (str/join "-" (conj (vec (str/split path #"/"))
-                    (current-date-str)))))
+           (str/join "-" (conj (vec (str/split path #"/"))
+                               (current-date-str)))))
 
 (defn path->backup [path storage base-backup-dir]
   (let [ts-dir (backup-dir base-backup-dir path)]
     (run!
-      (fn [p]
-        (try
-          (let [url (storage/artifact-url storage p)
-                dest (io/file ts-dir p)]
-            (.mkdirs (.getParentFile dest))
-            (with-open [in (.openStream url)]
-              (io/copy in dest)))
-          (catch Exception e
-            (printf "WARNING: failed to backup %s: %s\n" p (.getMessage e)))))
-      (storage/path-seq storage path))))
+     (fn [p]
+       (try
+         (let [url (storage/artifact-url storage p)
+               dest (io/file ts-dir p)]
+           (.mkdirs (.getParentFile dest))
+           (with-open [in (.openStream url)]
+             (io/copy in dest)))
+         (catch Exception e
+           (printf "WARNING: failed to backup %s: %s\n" p (.getMessage e)))))
+     (storage/path-seq storage path))))
 
 (defn segments->path [segments]
   (let [[group & rest] (remove nil? segments)]
@@ -42,13 +45,13 @@
 
 (defn help []
   (println
-    (str/join "\n"
-      ["Admin functions - each function below returns a fn that does the actual work,"
-       "and makes a backup copy of the dir before removal:"
-       ""
-       "* (delete-group [group-id]) - deletes a group and all of the jars in it"
-       "* (delete-jars [group-id jar-id & [version]]) - deletes a jar, all versions"
-       "     if no version is provided"])))
+   (str/join "\n"
+             ["Admin functions - each function below returns a fn that does the actual work,"
+              "and makes a backup copy of the dir before removal:"
+              ""
+              "* (delete-group [group-id]) - deletes a group and all of the jars in it"
+              "* (delete-jars [group-id jar-id & [version]]) - deletes a jar, all versions"
+              "     if no version is provided"])))
 
 (defn delete-group [group-id]
   (if (seq (db/group-activenames *db* group-id))
@@ -72,7 +75,7 @@
       (do
         (println "Giving you a fn to delete jars that match" pretty-coords)
         (when-not
-            (and description (re-find #"(?i)delete me" description))
+         (and description (re-find #"(?i)delete me" description))
           (println "WARNING: jar description not set to 'delete me':" description))
         (fn []
           (println "Deleting" pretty-coords)
@@ -108,6 +111,62 @@
         (db/add-group *db* username group-name)
         (db/verify-group! *db* username group-name)
         (db/find-group-verification *db* group-name)))))
+
+(defn- get-txt-records
+  [domain]
+  (-> (shell/sh "dig" "txt" "+short" domain)
+      :out
+      (str/replace "\"" "")
+      (str/split #"\n")))
+
+(defn- confirm-and-verify-group
+  [username group]
+  (printf "Do you want to verify %s for %s? [y/N] " group username)
+  (let [res (read-line)]
+    (if (= res "y")
+      (do
+        (verify-group! username group)
+        (printf "\nGroup verified: https://clojars.org/groups/%s\n" group))
+      (println "\nGroup not verified."))))
+
+(defn check-and-verify-group!
+  [group domain]
+  (let [txt (get-txt-records domain)]
+    (printf "TXT records for %s:\n" domain)
+    (pprint txt)
+    (if-some [[_ username] (some #(re-find #"^clojars (.+)$" %) txt)]
+      (let [group-active-members (seq (db/group-activenames *db* group))
+            group-verification (db/find-group-verification *db* group)
+            user-record (db/find-user *db* username)]
+        (printf "Found username %s\n" username)
+        (cond
+          (nil? user-record)
+          (printf "User %s does not exist.\n" username)
+
+          group-verification
+          (do
+            (println "Group is already verified:")
+            (pprint group-verification))
+
+          (nil? group-active-members)
+          (do
+            (println "Group does not exist.")
+            (confirm-and-verify-group username group))
+
+          (contains? (set group-active-members) username)
+          (do
+            (println "Group exists. Active members:")
+            (pprint group-active-members)
+            (println "User is an active member of the group.")
+            (confirm-and-verify-group username group))
+
+          :else
+          (do
+            (println "Group exists. Active members:")
+            (pprint group-active-members)
+            (println "User is an active member of the group.")
+            (println "User is *not* an active member of the group."))))
+      (println "Clojars TXT record not found."))))
 
 (defn handler [mapping]
   (nrepl/default-handler
