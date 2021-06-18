@@ -15,7 +15,7 @@ and requesters need to add a `TXT` record for the domain that
 corresponds to the group.
 
 There is a `check-and-verify-group!` function in the
-[`clojars.admin`][check-ns] namespace that will verify the `TXT`
+[`clojars.admin`][admin-ns] namespace that will verify the `TXT`
 record and ask for confirmation before marking the group as
 verified. An example of usage:
 
