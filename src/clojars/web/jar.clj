@@ -133,8 +133,9 @@
    [:div#gradle-coordinates.package-config-example
     {:onClick "selectText('gradle-coordinates');"}
     [:pre
-     "compile "
-     [:span.string \' group_name ":" jar_name ":" version \']]]))
+     "implementation("
+     [:span.string \" group_name ":" jar_name ":" version \"]
+     \)]]))
 
 (defn maven-coordinates [{:keys [group_name jar_name version]}]
   (list
