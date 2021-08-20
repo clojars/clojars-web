@@ -13,6 +13,7 @@
     #(view/show-tokens %
                        (db/find-user-tokens-by-username db %)
                        (db/jars-by-groups-for-username db %)
+                       (db/find-groupnames db %)
                        {:message flash-msg})))
 
 (defn- parse-scope
@@ -31,6 +32,7 @@
         (view/show-tokens account
                           (db/find-user-tokens-by-username db account)
                           (db/jars-by-username db account)
+                          (db/find-groupnames db account)
                           {:new-token token})))))
 
 (defn- find-token [db token-id]

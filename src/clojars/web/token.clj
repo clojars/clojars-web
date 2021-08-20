@@ -17,25 +17,28 @@
   [{:keys [group_name jar_name]}]
   (cond
     jar_name   (format "%s/%s" group_name jar_name)
-    group_name (format "%s/*" group_name)
-    :else      "*"))
+    group_name (format "%s/*" group_name)))
 
 (defn- scope-options
-  [jars]
+  [jars groups]
   (let [jars (group-by :group_name jars)
-        groups (sort (keys jars))]
+        groups (-> groups
+                   (concat (keys jars))
+                   distinct
+                   sort)]
     (reduce
      (fn [acc group]
        (concat acc
                [[(scope {:group_name group}) group]]
-               (map scope (sort-by :jar_name (get jars group)))))
+               (when-some [jars (get jars group)]
+                 (map scope (sort-by :jar_name jars)))))
      [["*" ""]]
      groups)))
 
 (defn show-tokens
-  ([account tokens jars]
-   (show-tokens account tokens jars nil))
-  ([account tokens jars {:keys [error message new-token]}]
+  ([account tokens jars groups]
+   (show-tokens account tokens jars groups nil))
+  ([account tokens jars groups {:keys [error message new-token]}]
    (html-doc
     "Deploy Tokens"
     {:account account :description "Clojars deploy tokens"}
@@ -84,5 +87,5 @@
                            :required true}
                           :name)
               (label :scope "Token scope")
-              (drop-down :scope (scope-options jars))
+              (drop-down :scope (scope-options jars groups))
               (submit-button "Create Token"))])))
