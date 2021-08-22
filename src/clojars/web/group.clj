@@ -21,7 +21,7 @@
                                               :name groupname}])
                [:div#group-title
                 [:h1 (str groupname " group")]
-                (when verified-group?
+                (when (and verified-group? show-membership-details?)
                   verified-group-badge-small)]
                [:h2 "Projects"]
                (unordered-list (map jar-link (jars-by-groupname db groupname)))

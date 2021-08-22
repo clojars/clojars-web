@@ -6,16 +6,14 @@
             [ring.util.response :as response]))
 
 (defn show [db stats group-id artifact-id]
-  (when-let [artifact (db/with-verified-group
-                        db
-                        (db/find-jar db group-id artifact-id))]
+  (when-some [artifact (db/find-jar db group-id artifact-id)]
     (auth/try-account
-      #(view/show-jar db
-                      stats
-                      %
-                      artifact
-                      (db/recent-versions db group-id artifact-id 5)
-                      (db/count-versions db group-id artifact-id)))))
+     #(view/show-jar db
+                     stats
+                     %
+                     artifact
+                     (db/recent-versions db group-id artifact-id 5)
+                     (db/count-versions db group-id artifact-id)))))
 
 (defn list-versions [db group-id artifact-id]
   (when-let [artifact (db/find-jar db group-id artifact-id)]
@@ -24,12 +22,11 @@
          (db/recent-versions db group-id artifact-id)))))
 
 (defn- show-version [db stats group-id artifact-id version]
-  (when-let [artifact (db/with-verified-group
-                        db (db/find-jar db group-id artifact-id version))]
+  (when-some [artifact (db/find-jar db group-id artifact-id version)]
     (auth/try-account
      #(view/show-jar db stats % artifact
-        (db/recent-versions db group-id artifact-id 5)
-        (db/count-versions db group-id artifact-id)))))
+                    (db/recent-versions db group-id artifact-id 5)
+                    (db/count-versions db group-id artifact-id)))))
 
 (defn response-based-on-format
   "render appropriate response based on the file type suffix provided:

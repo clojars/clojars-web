@@ -143,12 +143,6 @@
                                {:connection db
                                 :result-set-fn first}))
 
-(defn with-verified-group
-  [db {:as jar :keys [group_name]}]
-  (when jar
-    (assoc jar
-           :verified-group? (boolean (find-group-verification db group_name)))))
-
 (defn verify-group! [db username group-name]
   (when-not (find-group-verification db group-name)
     (sql/verify-group! {:group_name group-name
@@ -305,7 +299,7 @@
   (vec
    (map
     (fn [{:keys [group_name jar_name]}]
-      (with-verified-group db (find-jar db group_name jar_name)))
+      (find-jar db group_name jar_name))
     (all-projects db
                   (* (dec current-page) per-page)
                   per-page))))

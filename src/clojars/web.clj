@@ -61,7 +61,7 @@
          #(let [validated-params (if (:page params)
                                    (assoc params :page (try-parse-page (:page params)))
                                    params)]
-            (search search-obj db % validated-params))))
+            (search search-obj % validated-params))))
    (GET "/projects" {:keys [params]}
         (try-account
          #(let [validated-params (if (:page params)
