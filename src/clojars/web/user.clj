@@ -58,7 +58,8 @@
 
 (defn password-validations [confirm]
   [[:password #(<= 8 (count %)) "Password must be 8 characters or longer"]
-   [:password #(= % confirm) "Password and confirm password must match"]])
+   [:password #(= % confirm) "Password and confirm password must match"]
+   [:password #(> 256 (count %)) "Password must be 256 or fewer characters"]])
 
 (defn user-validations []
   [[:email pred/present? "Email can't be blank"]

@@ -40,7 +40,16 @@
       (within [:div.error :ul :li]
               (has (text? "Password can't be blankPassword must be 8 characters or longer")))
 
-      (fill-in "Password" "password")
+      (fill-in "Email" "test@example.org")
+      (fill-in "Username" "dantheman")
+      (fill-in "Password" (apply str (range 123)))
+      (fill-in "Confirm password" (apply str (range 123)))
+      (press "Register")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+              (has (text? "Password must be 256 or fewer characters")))
+
+       (fill-in "Password" "password")
       (fill-in "Email" "test@example.com")
       (fill-in "Username" "dantheman")
       (press "Register")
