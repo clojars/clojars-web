@@ -1,4 +1,4 @@
-(defproject clojars-web "144"
+(defproject clojars-web "145-SNAPSHOT"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/core.memoize "0.8.2"]
