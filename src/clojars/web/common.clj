@@ -42,8 +42,8 @@
        "with hosting costs covered by:"]
       [:div.sponsors-group
        [:div.sponsor
-        (link-to "https://clubhouse.io/"
-                 (image "/images/clubhouse-logo.png" "Clubhouse Software"))]]
+        (link-to "https://shortcut.com/"
+                 (image "/images/shortcut-logo.png" "Shortcut Software Company"))]]
       [:div.sponsors-title
        "and in-kind sponsorship from:"]
       [:div.sponsors-group
