@@ -99,6 +99,7 @@ maven repository (your local `~/.m2/repository/` works well), and
 setup a search index:
 
 ```sh
+mkdir data/dev_repo
 cp -r ~/.m2/repository/* data/dev_repo
 lein run -m clojars.tools.setup-dev
 ```

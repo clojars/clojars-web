@@ -83,6 +83,8 @@
                   user (or (first (db/group-adminnames db group-id)) (rand-nth users))]]
         (when-not (db/find-jar db group-id artifact-id version)
           (printf "Importing %s/%s %s (user: %s)\n" group-id artifact-id version user)
+          (db/add-group db user group-id)
+          (db/verify-group! db user group-id)
           (db/add-jar db
                       user {:group group-id
                             :name artifact-id
