@@ -35,11 +35,11 @@
           user-repo (->> (str url) (re-find github-re) second)]
       user-repo))
 
-  (defn commit-url [jar]
+  (defn- tree-url [jar]
     (let [{:keys [url tag]} (:scm jar)
           base-url (first (re-find github-re (str url)))]
       (when (and base-url tag)
-        (str base-url "/commit/" tag)))))
+        (str base-url "/tree/" tag)))))
 
 (defn dependency-link [db dep]
   (link-to
@@ -161,8 +161,8 @@
    [:h4 "Pushed by"]
    (user-link (:user jar)) " on "
    [:span {:title (str (:created jar))} (simple-date (:created jar))]
-   (when-let [url (commit-url jar)]
-     [:span.commit-url " with " (link-to url "this commit")])))
+   (when-let [url (tree-url jar)]
+     [:span.commit-url " with " (link-to url "this git tree")])))
 
 (defn versions [jar recent-versions count]
   (list

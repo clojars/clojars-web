@@ -34,7 +34,7 @@
       (within [[:.package-config-example (html/nth-of-type 2)] :pre]
               (has (text? "[org.clojars.dantheman/test \"0.0.3-SNAPSHOT\"]")))
       (within [:span.commit-url]
-              (has (text? " with this commit")))
+              (has (text? " with this git tree")))
       (within [:ul#versions]
               (has (text? "0.0.3-SNAPSHOT")))))
 
