@@ -91,7 +91,11 @@
                             :version version
                             :description (format "Description for %s/%s" group-id artifact-id)
                             :homepage (format "http://example.com/%s/%s" group-id artifact-id)
-                            :authors ["Foo" "Bar" "Basil"]})
+                            :authors ["Foo" "Bar" "Basil"]
+                            :scm {:tag "abcde1"
+                                  :url (format "https://%s/%s/%s"
+                                               (rand-nth ["github.com" "gitlab.com" "other.org"])
+                                               group-id artifact-id)}})
           (update-metadata parent group-id artifact-id version)
           [group-id artifact-id version (rand-int 1000)]))
       (remove nil?)
