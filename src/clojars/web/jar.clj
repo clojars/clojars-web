@@ -28,14 +28,14 @@
        (url-encode (apply format "artifactdetails|%s|%s|%s|jar"
                           ((juxt :group_name :jar_name :version) jar)))))
 
+(def ^:private http-url-re #"^https?://")
 (def ^:private vcs-type-re #"^https?://(github|gitlab).com/")
 (def ^:private vcs-path-re #"^https?://[^/]+/([^/]+)/([^/]+)")
 
 (defn- vcs-host-info [jar]
-  (let [url (get-in jar [:scm :url])]
-    (when url
-      (let [url (str url)
-            [_ type] (re-find vcs-type-re url)
+  (let [url (str (get-in jar [:scm :url]))]
+    (when (re-find http-url-re url)
+      (let [[_ type] (re-find vcs-type-re url)
             [_ user name] (re-find vcs-path-re url)]
         {:repo-url url
          :type (keyword type)
