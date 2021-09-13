@@ -28,18 +28,25 @@
        (url-encode (apply format "artifactdetails|%s|%s|%s|jar"
                           ((juxt :group_name :jar_name :version) jar)))))
 
-(let [github-re #"^https?://github.com/([^/]+/[^/]+)"]
+(def ^:private vcs-type-re #"^https?://(github|gitlab).com/")
+(def ^:private vcs-path-re #"^https?://[^/]+/([^/]+)/([^/]+)")
 
-  (defn github-info [jar]
-    (let [url (get-in jar [:scm :url])
-          user-repo (->> (str url) (re-find github-re) second)]
-      user-repo))
+(defn- vcs-host-info [jar]
+  (let [url (get-in jar [:scm :url])]
+    (when url
+      (let [url (str url)
+            [_ type] (re-find vcs-type-re url)
+            [_ user name] (re-find vcs-path-re url)]
+        {:repo-url url
+         :type (keyword type)
+         :user user
+         :repo-name name}))))
 
-  (defn- tree-url [jar]
-    (let [{:keys [url tag]} (:scm jar)
-          base-url (first (re-find github-re (str url)))]
-      (when (and base-url tag)
-        (str base-url "/tree/" tag)))))
+(defn- vcs-host-tree-url [jar]
+  (let [{:keys [tag]} (:scm jar)
+        {:keys [repo-url]} (vcs-host-info jar)]
+    (when (and repo-url tag)
+      (str repo-url "/tree/" tag))))
 
 (defn dependency-link [db dep]
   (link-to
@@ -76,14 +83,19 @@
       {:url  (str "https://clojars.org/" (jar-name jar))
        :name jar_name}])))
 
-(defn github-link [jar]
-  (if-let [gh-info (github-info jar)]
-    (link-to (format "https://github.com/%s" gh-info)
-             (helpers/retinized-image "/images/github-mark.png" "GitHub")
-             gh-info)
-    [:p.github
-     (helpers/retinized-image "/images/github-mark.png" "GitHub")
-     "N/A"]))
+(defn- vcs-logo [type]
+  (apply helpers/retinized-image
+   (case type
+     :github ["/images/github-mark.png" "GitHub"]
+     :gitlab ["/images/gitlab-mark-black.png" "GitLab"]
+     ["/images/git-mark.png" "VCS"])))
+
+(defn- vcs-host-link [jar]
+  (if-let [{:keys [repo-url type user repo-name]} (vcs-host-info jar)]
+    (link-to repo-url
+             (vcs-logo type)
+             (format "%s/%s" user repo-name))
+    [:p (vcs-logo :unknown) "N/A"]))
 
 (defn cljdoc-uri
   "Returns the URI that this JAR would have on cljdoc.org. Doesn't validate that
@@ -161,7 +173,7 @@
    [:h4 "Pushed by"]
    (user-link (:user jar)) " on "
    [:span {:title (str (:created jar))} (simple-date (:created jar))]
-   (when-let [url (tree-url jar)]
+   (when-let [url (vcs-host-tree-url jar)]
      [:span.commit-url " with " (link-to url "this git tree")])))
 
 (defn versions [jar recent-versions count]
@@ -251,7 +263,7 @@
           verified-group-badge)]
        [:p.description (:description jar)]
        [:ul#jar-info-bar.row
-        [:li.col-xs-12.col-sm-3 (github-link jar)]
+        [:li.col-xs-12.col-sm-3 (vcs-host-link jar)]
         [:li.col-xs-12.col-sm-3 (cljdoc-link jar)]
         [:li.col-xs-12.col-sm-3
          total-downloads
