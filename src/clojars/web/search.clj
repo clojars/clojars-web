@@ -1,14 +1,12 @@
 (ns clojars.web.search
   (:require
    [cheshire.core :as json]
-   [clojars.db :as db]
    [clojars.log :as log]
    [clojars.search :as search]
    [clojars.web.common :refer [html-doc jar-link jar-fork?
                                collection-fork-notice
                                format-date page-nav flash xml-escape
-                               jar-notice maven-search-link
-                               verified-group-badge]]
+                               jar-notice maven-search-link]]
    [clojars.web.error-api :as error-api]
    [clojure.string :as str]
    [clojure.xml :as xml]
@@ -117,7 +115,7 @@
       (artifact-id->group-id artifact-id) [(artifact-id->group-id artifact-id) artifact-id]
       :else false)))
 
-(defn html-search [search db account query page]
+(defn html-search [search account query page]
   (html-doc (str query " - search - page " page) {:account account :query query :description (format "Clojars search results page %d for '%s'" page query)}
             [:div.light-article.row
              [:h1 (format "Search for '%s'" query)]
@@ -142,15 +140,12 @@
                     (when (some jar-fork? results)
                       collection-fork-notice)
                     [:ul.row
-                     (for [{:keys [group-id artifact-id version created description]} results
-                           :let [verified-group? (boolean (db/find-group-verification db group-id))]]
+                     (for [{:keys [group-id artifact-id version created description]} results]
                        [:li.search-results.col-xs-12.col-sm-6.col-md-4.col-lg-3
                         [:div.result
                          [:div
                           [:div (jar-link {:jar_name artifact-id
                                            :group_name group-id}) " " version]]
-                         (when verified-group?
-                           [:div verified-group-badge])
                          [:br]
                          (when (seq description)
                            [:span.desc description
@@ -165,10 +160,10 @@
                (catch Exception _
                  [:p "Could not search; please check your query syntax."]))]))
 
-(defn search [search db account params]
+(defn search [search account params]
   (let [q (params :q)
         page (or (params :page) 1)]
     (case (params :format)
       "json" (json-search search q page)
       "xml"  (xml-search search q page)
-      (html-search search db account q page))))
+      (html-search search account q page))))

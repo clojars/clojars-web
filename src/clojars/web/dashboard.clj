@@ -19,9 +19,7 @@
   (let [max-id (db/max-jars-id db)]
     (if-let [jars (get @recent-jars-cache max-id)]
       jars
-      (let [jars (mapv
-                  (partial db/with-verified-group db)
-                  (db/recent-jars db))]
+      (let [jars (db/recent-jars db)]
         (reset! recent-jars-cache {max-id jars})
         jars))))
 
