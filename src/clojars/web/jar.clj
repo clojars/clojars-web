@@ -48,6 +48,13 @@
     (when (and repo-url tag)
       (str repo-url "/tree/" tag))))
 
+(defn- vcs-host-tree-link [jar link-text]
+  (try
+   (when-some [url (vcs-host-tree-url jar)]
+     (link-to url link-text))
+   (catch Exception _
+     nil)))
+
 (defn dependency-link [db dep]
   (link-to
    (if (jar-exists db (:group_name dep) (:jar_name dep)) (jar-url dep) (maven-jar-url dep))
@@ -91,11 +98,15 @@
      ["/images/git-mark.png" "VCS"])))
 
 (defn- vcs-host-link [jar]
-  (if-let [{:keys [repo-url type user repo-name]} (vcs-host-info jar)]
-    (link-to repo-url
-             (vcs-logo type)
-             (format "%s/%s" user repo-name))
-    [:p (vcs-logo :unknown) "N/A"]))
+  (let [unknown [:p (vcs-logo :unknown) "N/A"]]
+    (if-some [{:keys [repo-url type user repo-name]} (vcs-host-info jar)]
+      (try
+        (link-to repo-url
+                (vcs-logo type)
+                (format "%s/%s" user repo-name))
+        (catch Exception _
+          unknown))
+      unknown)))
 
 (defn cljdoc-uri
   "Returns the URI that this JAR would have on cljdoc.org. Doesn't validate that
@@ -173,8 +184,8 @@
    [:h4 "Pushed by"]
    (user-link (:user jar)) " on "
    [:span {:title (str (:created jar))} (simple-date (:created jar))]
-   (when-let [url (vcs-host-tree-url jar)]
-     [:span.commit-url " with " (link-to url "this git tree")])))
+   (when-some [link (vcs-host-tree-link jar "this git tree")]
+     [:span.commit-url " with " link])))
 
 (defn versions [jar recent-versions count]
   (list
