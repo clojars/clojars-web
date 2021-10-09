@@ -22,6 +22,7 @@
                         (map :user))
         handler-fn (fn [account admin? group-users]
                      #(log/with-context {:tag :toggle-or-add-group-member
+                                         :group groupname
                                          :username account
                                          :username-to-add username
                                          :admin? admin?}
@@ -44,6 +45,8 @@
                           (do
                             (db/add-admin db groupname username account)
                             (log/info {:status :success})
+                            (log/audit db {:tag :member-added
+                                           :message (format "user '%s' added" username)})
                             (view/show-group db account groupname
                                              (into (remove (fn [active]
                                                              (= username (:user active))) actives)
@@ -92,6 +95,8 @@
                (do
                  (db/inactivate-member db groupname username account)
                  (log/info {:status :success})
+                 (log/audit db {:tag :member-removed
+                                :message (format "user '%s' removed" username)})
                  (view/show-group db account groupname
                                   (remove (fn [active] (= username (:user active))) actives)))
 

@@ -399,7 +399,7 @@
 (defn audit-table
   [db subject lookup]
   [:div
-   [:h2 (format "Audit Log for %s (for last 30 days)" subject)]
+   [:h2 (format "Audit Log for %s" subject)]
     [:table.audit
      [:tr
       [:th "Tag"]
