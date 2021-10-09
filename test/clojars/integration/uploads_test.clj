@@ -18,7 +18,6 @@
    [clojure.test :refer [are deftest is testing use-fixtures]]
    [kerodon.core :refer [fill-in follow press session visit within]]
    [kerodon.test :refer [has status? text?]]
-   [matcher-combinators.test]
    [net.cgrand.enlive-html :as enlive]))
 
 (use-fixtures :each
@@ -39,12 +38,6 @@
 (defn tmp-checksum-file [f type]
   (doto (fu/create-checksum-file f type)
     .deleteOnExit))
-
-(defmacro match-audit
-  [params m]
-  `(let [db# (:db (config))
-         audit# (first (db/find-audit db# ~params))]
-     (is (~'match? ~m audit#))))
 
 (deftest user-can-register-and-deploy
   (-> (session (help/app-from-system))
@@ -73,12 +66,12 @@
         (is (.exists (io/file repo base-path "0.0.1" (str "test-0.0.1." suffix))))
         (is (s3/object-exists? repo-bucket (str base-path "0.0.1/test-0.0.1." suffix)))))
 
-    (match-audit {:username "dantheman"}
-                 {:tag "deployed"
-                  :user "dantheman"
-                  :group_name "org.clojars.dantheman"
-                  :jar_name "test"
-                  :version "0.0.1"})
+    (help/match-audit {:username "dantheman"}
+                      {:tag "deployed"
+                       :user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.1"})
 
     (-> (session (help/app-from-system))
         (visit "/groups/org.clojars.dantheman")
@@ -222,10 +215,10 @@
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :tag "invalid-token"
-                  :message "The given token either doesn't exist, isn't yours, or is disabled"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :tag "invalid-token"
+                       :message "The given token either doesn't exist, isn't yours, or is disabled"})))
 
 (deftest user-can-deploy-artifacts-after-maven-metadata
   (-> (session (help/app-from-system))
@@ -289,13 +282,13 @@
                                 :username "dantheman"
                                 :password token}}
            :local-repo help/local-repo)))
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :tag "deploy-forbidden"
-                  :group_name "org.clojars.fixture"
-                  :jar_name "test"
-                  :version "0.0.1"
-                  :message "You don't have access to the 'org.clojars.fixture' group"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :tag "deploy-forbidden"
+                       :group_name "org.clojars.fixture"
+                       :jar_name "test"
+                       :version "0.0.1"
+                       :message "You don't have access to the 'org.clojars.fixture' group"})))
 
 (deftest user-can-deploy-to-group-when-not-admin
   (-> (session (help/app-from-system))
@@ -332,13 +325,13 @@
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "new-group"
-                  :jar_name "test"
-                  :version "0.0.1"
-                  :message "Group 'new-group' doesn't exist (see https://git.io/JOs8J)"
-                  :tag "deploy-forbidden"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "new-group"
+                       :jar_name "test"
+                       :version "0.0.1"
+                       :message "Group 'new-group' doesn't exist (see https://git.io/JOs8J)"
+                       :tag "deploy-forbidden"})))
 
 (deftest user-can-deploy-a-new-version-to-an-existing-project-in-a-non-verified-group
   (-> (session (help/app-from-system))
@@ -364,12 +357,12 @@
                           :password token}}
      :local-repo help/local-repo)
 
-    (match-audit {:username "dantheman"}
-                 {:tag "deployed"
-                  :user "dantheman"
-                  :group_name "legacy-group"
-                  :jar_name "test"
-                  :version "0.0.1"})
+    (help/match-audit {:username "dantheman"}
+                      {:tag "deployed"
+                       :user "dantheman"
+                       :group_name "legacy-group"
+                       :jar_name "test"
+                       :version "0.0.1"})
 
     (-> (session (help/app-from-system))
         (visit "/")
@@ -398,13 +391,13 @@
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "legacy-group"
-                  :jar_name "test"
-                  :version "0.0.1"
-                  :message "Group 'legacy-group' isn't verified, so can't contain new projects (see https://git.io/JOs8J)"
-                  :tag "deploy-forbidden"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "legacy-group"
+                       :jar_name "test"
+                       :version "0.0.1"
+                       :message "Group 'legacy-group' isn't verified, so can't contain new projects (see https://git.io/JOs8J)"
+                       :tag "deploy-forbidden"})))
 
 (deftest user-cannot-redeploy
   (-> (session (help/app-from-system))
@@ -429,13 +422,13 @@
                                 :username "dantheman"
                                 :password token}}
            :local-repo help/local-repo)))
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "org.clojars.dantheman"
-                  :jar_name "test"
-                  :version "0.0.1"
-                  :message "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)"
-                  :tag "non-snapshot-redeploy"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.1"
+                       :message "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)"
+                       :tag "non-snapshot-redeploy"})))
 
 (deftest deploy-cannot-shadow-central
   (-> (session (help/app-from-system))
@@ -456,13 +449,13 @@
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "org.tcrawley"
-                  :jar_name "dynapath"
-                  :version "0.0.1"
-                  :message "shadowing Maven Central artifacts is not allowed (see https://git.io/vMUHN)"
-                  :tag "central-shadow"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.tcrawley"
+                       :jar_name "dynapath"
+                       :version "0.0.1"
+                       :message "shadowing Maven Central artifacts is not allowed (see https://git.io/vMUHN)"
+                       :tag "central-shadow"})))
 
 (deftest deploy-cannot-shadow-central-unless-allowlisted
   (-> (session (help/app-from-system))
@@ -620,7 +613,7 @@
      :coordinates '[org.clojars.dantheman/test "0.0.1"]
      :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
                     [:extension "pom"] pom
-                     ;; any content will do since we don't validate signatures
+                    ;; any content will do since we don't validate signatures
                     [:extension "jar.asc"] pom
                     [:extension "pom.asc"] pom}
      :repository {"test" {:url (repo-url)
@@ -639,20 +632,20 @@
            :coordinates '[org.clojars.dantheman/test "0.0.1"]
            :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
                           [:extension "pom"] pom
-                                           ;; any content will do since we don't validate signatures
+                          ;; any content will do since we don't validate signatures
                           [:extension "jar.asc"] pom}
            :repository {"test" {:url (repo-url)
                                 :username "dantheman"
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "org.clojars.dantheman"
-                  :jar_name "test"
-                  :version "0.0.1"
-                  :message "test-0.0.1.pom has no signature"
-                  :tag "file-missing-signature"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.1"
+                       :message "test-0.0.1.pom has no signature"
+                       :tag "file-missing-signature"})))
 
 (deftest anonymous-cannot-deploy
   (is (thrown-with-msg?
@@ -678,10 +671,10 @@
                               :password "password"}}
          :local-repo help/local-repo)))
 
-  (match-audit {:username "guest"}
-               {:user    "guest"
-                :message "a deploy token is required to deploy (see https://git.io/JfwjM)"
-                :tag     "deploy-password-rejection"}))
+  (help/match-audit {:username "guest"}
+                    {:user    "guest"
+                     :message "a deploy token is required to deploy (see https://git.io/JfwjM)"
+                     :tag     "deploy-password-rejection"}))
 
 (deftest deploy-requires-path-to-match-pom
   (-> (session (help/app-from-system))
@@ -699,13 +692,13 @@
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "net.clojars.dantheman"
-                  :jar_name "test"
-                  :version "0.0.1"
-                  :message "the group in the pom (org.clojars.dantheman) does not match the group you are deploying to (net.clojars.dantheman)"
-                  :tag "pom-entry-mismatch"})
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "net.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.1"
+                       :message "the group in the pom (org.clojars.dantheman) does not match the group you are deploying to (net.clojars.dantheman)"
+                       :tag "pom-entry-mismatch"})
 
     (is (thrown-with-msg?
          org.sonatype.aether.deployment.DeploymentException
@@ -719,13 +712,13 @@
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "org.clojars.dantheman"
-                  :jar_name "toast"
-                  :version "0.0.1"
-                  :message "the name in the pom (test) does not match the name you are deploying to (toast)"
-                  :tag "pom-entry-mismatch"})
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "toast"
+                       :version "0.0.1"
+                       :message "the name in the pom (test) does not match the name you are deploying to (toast)"
+                       :tag "pom-entry-mismatch"})
 
     (is (thrown-with-msg?
          org.sonatype.aether.deployment.DeploymentException
@@ -739,13 +732,13 @@
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "org.clojars.dantheman"
-                  :jar_name "test"
-                  :version "1.0.0"
-                  :message "the version in the pom (0.0.1) does not match the version you are deploying to (1.0.0)"
-                  :tag "pom-entry-mismatch"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "1.0.0"
+                       :message "the version in the pom (0.0.1) does not match the version you are deploying to (1.0.0)"
+                       :tag "pom-entry-mismatch"})))
 
 (deftest deploy-requires-lowercase-project
   (-> (session (help/app-from-system))
@@ -763,13 +756,13 @@
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "org.clojars.dantheman"
-                  :jar_name "teST"
-                  :version "0.0.1"
-                  :message "project names must consist solely of lowercase letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"
-                  :tag "regex-validation-failed"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "teST"
+                       :version "0.0.1"
+                       :message "project names must consist solely of lowercase letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"
+                       :tag "regex-validation-failed"})))
 
 (deftest deploy-requires-ascii-version
   (-> (session (help/app-from-system))
@@ -787,13 +780,13 @@
                                 :password token}}
            :local-repo help/local-repo)))
 
-    (match-audit {:username "dantheman"}
-                 {:user "dantheman"
-                  :group_name "org.clojars.dantheman"
-                  :jar_name "test"
-                  :version "1.α.0"
-                  :message "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores (see https://git.io/v1IA2)"
-                  :tag "regex-validation-failed"})))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "1.α.0"
+                       :message "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores (see https://git.io/v1IA2)"
+                       :tag "regex-validation-failed"})))
 
 (deftest put-on-html-fails
   (let [sess (-> (session (help/app-from-system))

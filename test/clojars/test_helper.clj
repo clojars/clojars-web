@@ -1,6 +1,7 @@
 (ns clojars.test-helper
   (:require
    [clojars.config :as config]
+   [clojars.db :as db]
    [clojars.db.migrate :as migrate]
    [clojars.email :as email]
    [clojars.errors :as errors]
@@ -15,9 +16,10 @@
    [clojure.java.io :as io]
    [clojure.java.jdbc :as jdbc]
    [clojure.string :as str]
+   [clojure.test :refer [is]]
    [clucy.core :as clucy]
    [com.stuartsierra.component :as component]
-   [clojars.db :as db])
+   [matcher-combinators.test])
   (:import
    (java.io
     File)
@@ -203,3 +205,10 @@
   [account group]
   (db/add-group *db* account group)
   (db/verify-group! *db* account group))
+
+(defmacro match-audit
+  [params m]
+  `(let [db# (:db (config/config))
+         audit# (first (db/find-audit db# ~params))]
+     (prn (db/find-audit db# ~params))
+     (is (~'match? ~m audit#))))

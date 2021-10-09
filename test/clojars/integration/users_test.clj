@@ -218,7 +218,28 @@
       (within [:table.group-member-list
                [:tr enlive/last-of-type]
                [:td enlive/first-of-type]]
-              (has (text? "fixture")))))
+              (has (text? "fixture"))))
+  (help/match-audit {:username "dantheman"}
+                    {:tag "member-added"
+                     :user "dantheman"
+                     :group_name "org.clojars.dantheman"
+                     :message "user 'fixture' added"}))
+
+
+(deftest admin-can-remove-user-from-group
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      (visit "/groups/org.clojars.dantheman")
+      (fill-in [:#username] "fixture")
+      (press "Add Member")
+      (press "Remove Member"))
+  (help/match-audit {:username "dantheman"}
+                    {:tag "member-removed"
+                     :user "dantheman"
+                     :group_name "org.clojars.dantheman"
+                     :message "user 'fixture' removed"}))
 
 (deftest user-must-exist-to-be-added-to-group
   (-> (session (help/app))
