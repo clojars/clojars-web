@@ -295,6 +295,17 @@ WHERE (
   version = :version
 );
 
+--name: find-dependents
+SELECT *
+FROM deps
+WHERE (
+  dep_group_name = :groupname
+  AND
+  dep_jar_name = :jarname
+  AND
+  dep_version = :version
+);
+
 --name: all-projects
 SELECT DISTINCT group_name, jar_name
 FROM jars

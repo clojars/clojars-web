@@ -210,15 +210,23 @@
         [:li (dependency-link db dep)])])))
 
 (defn dependencies [db {:keys [group_name jar_name version]}]
-  (dependency-section db "Dependencies" "dependencies"
-                      (remove #(not= (:scope %) "compile")
-                              (map
-                               #(set/rename-keys % {:dep_group_name :group_name
-                                                    :dep_jar_name   :jar_name
-                                                    :dep_version    :version
-                                                    :dep_scope      :scope})
-                               (db/find-dependencies db
-                                                     group_name jar_name version)))))
+  (dependency-section
+   db "Dependencies" "dependencies"
+   (into []
+         (comp
+          (filter #(= (:dep_scope %) "compile"))
+          (map
+           #(set/rename-keys % {:dep_group_name :group_name
+                                :dep_jar_name   :jar_name
+                                :dep_version    :version})))
+         (db/find-dependencies db group_name jar_name version))))
+
+(defn dependents [db {:keys [group_name jar_name version]}]
+  (dependency-section
+   db "Dependents (on Clojars)" "dependents"
+   (filter
+    #(= (:dep_scope %) "compile")
+    (db/find-dependents db group_name jar_name version))))
 
 (defn homepage [{:keys [homepage]}]
   (when homepage
@@ -295,6 +303,8 @@
        [:li (versions jar recent-versions count)]
        (when-let [dependencies (dependencies db jar)]
          [:li dependencies])
+       (when-let [dependents (dependents db jar)]
+         [:li dependents])
        (when-let [homepage (homepage jar)]
          [:li.homepage homepage])
        (when-let [licenses (licenses jar)]
