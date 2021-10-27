@@ -210,5 +210,4 @@
   [params m]
   `(let [db# (:db (config/config))
          audit# (first (db/find-audit db# ~params))]
-     (prn (db/find-audit db# ~params))
      (is (~'match? ~m audit#))))

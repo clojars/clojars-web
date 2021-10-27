@@ -12,4 +12,12 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>fake</groupId>
+      <artifactId>fake</artifactId>
+      <version>0.0.2</version>
+    </dependency>
+  </dependencies>
 </project>

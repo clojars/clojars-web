@@ -278,6 +278,13 @@
                           :version   version}
                          {:connection db}))
 
+(defn find-dependents
+  [db groupname jarname version]
+  (sql/find-dependents {:groupname groupname
+                        :jarname   jarname
+                        :version   version}
+                       {:connection db}))
+
 (defn all-projects [db offset-num limit-num]
   (sql/all-projects {:num limit-num
                      :offset offset-num}

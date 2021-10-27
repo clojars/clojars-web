@@ -87,6 +87,14 @@
       (within [:ul#dependencies]
                (has (text? "org.clojure/clojure 1.3.0-beta1")))))
 
+(deftest canonical-jars-can-view-dependents
+  (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.2/fake.pom")
+  (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.2/test.pom")
+  (-> (session (help/app))
+      (visit "/fake")
+      (within [:ul#dependents]
+              (has (text? "org.clojars.dantheman/test 0.0.2")))))
+
 (deftest shadow-jars-have-a-message
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar"
     (help/rewrite-pom (io/file (io/resource "fake-0.0.1/fake.pom"))
