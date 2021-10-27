@@ -64,14 +64,14 @@
 
 ;; we know dependents are all on Clojars, so don't need to check existence
 (defn dependent-link
-  ([dep]
-   (link-to
-    (jar-url dep)
-    (if-some [version (:version dep)]
-      (format "%s %s" (jar-name dep) version)
-      (jar-name dep))))
-  ([_db dep]
-   (dependent-link dep)))
+  [dep]
+  (if-some [version (:version dep)]
+    (link-to
+     (jar-versioned-url dep)
+     (format "%s %s" (jar-name dep) version))
+    (link-to
+     (jar-url dep)
+     (jar-name dep))))
 
 (defn version-badge-url [jar]
   (format "https://img.shields.io/clojars/v%s.svg" (jar-url jar)))
@@ -214,40 +214,45 @@
      [:p (link-to (str (jar-url jar) "/versions")
                   (str "Show All Versions (" count " total)"))])))
 
-(defn dependency-section
-  ([db title id dependencies]
-   (dependency-section dependency-link db title id dependencies))
-  ([link-fn db title id dependencies]
-   (when (seq dependencies)
-     (list
-      [:h3 title]
-      [(keyword (str "ul#" id))
-       (for [dep dependencies]
-         [:li (link-fn db dep)])]))))
+(defn- dependencies [db {:keys [group_name jar_name version]}]
+  (when-some [deps (seq (into []
+                              (comp
+                               (filter #(= (:dep_scope %) "compile"))
+                               (map
+                                #(set/rename-keys % {:dep_group_name :group_name
+                                                     :dep_jar_name   :jar_name
+                                                     :dep_version    :version})))
+                              (db/find-dependencies db group_name jar_name version)))]
+    (list
+     [:h3 "Dependenies"]
+     [(keyword (str "ul#dependencies"))
+      (for [dep deps]
+        [:li (dependency-link db dep)])])))
 
-(defn dependencies [db {:keys [group_name jar_name version]}]
-  (dependency-section
-   db "Dependencies" "dependencies"
-   (into []
-         (comp
-          (filter #(= (:dep_scope %) "compile"))
-          (map
-           #(set/rename-keys % {:dep_group_name :group_name
-                                :dep_jar_name   :jar_name
-                                :dep_version    :version})))
-         (db/find-dependencies db group_name jar_name version))))
+(defn- get-dependents [db {:keys [group_name jar_name version]}]
+  (filter #(= (:dep_scope %) "compile")
+          (db/find-dependents db group_name jar_name version)))
 
-(defn dependents [db {:keys [group_name jar_name version]}]
-  (let [deps (->> (db/find-dependents db group_name jar_name version)
-                  (into []
-                        (comp (filter #(= (:dep_scope %) "compile"))
-                              (map #(select-keys % #{:group_name :jar_name}))
-                              (distinct)))
-                  (sort-by #(format "%s/%s" (:group_name %) (:jar_name %))))]
-    (dependency-section
-     dependent-link
-     db "Dependents (on Clojars)" "dependents"
-     deps)))
+(defn- dependents [db jar]
+  (when-some [deps (->> (get-dependents db jar)
+                        (into []
+                              (comp (map #(select-keys % #{:group_name :jar_name}))
+                                    (distinct)
+                                    (take 10)))
+                        (sort-by #(format "%s/%s" (:group_name %) (:jar_name %)))
+                        (seq))]
+    (list
+     [:h3 "Dependents (on Clojars)"]
+     [(keyword (str "ul#dependents"))
+      (for [dep deps]
+        [:li (dependent-link dep)])]
+     ;; by default, 10 dependents are shown. If there are only 10 to
+     ;; see, then there's no reason to show the 'all dependents' link
+     (let [count (count deps)]
+       (when (> count 10)
+         [:p (link-to (str (jar-url jar) "/dependents")
+                      (str "Show All Dependents (" count " total)"))])))))
+
 
 (defn homepage [{:keys [homepage]}]
   (when homepage
@@ -340,6 +345,17 @@
     (link-to "https://github.com/clojars/clojars-web/wiki/Stable-SNAPSHOT-Identifiers" "stable identifiers")
     " for SNAPSHOT versions you can take a look at "
     (link-to (repo-url jar) (format "the full Maven repository for %s." (jar-name jar)))]])
+
+(defn show-dependents [db account jar]
+  (let [dependents (sort-by #(format "%s/%s" (:group_name %) (:jar_name %)) (get-dependents db jar))]
+    (html-doc (str "all dependents of " (jar-name jar)) {:account account}
+              [:div.light-article
+               [:h1 "all dependents of " (jar-link jar)]
+               [:div.dependents
+                [:ul
+                 (for [d dependents]
+                   [:li.col-xs-12.col-sm-6.col-md-4.col-lg-3
+                    (dependent-link d)])]]])))
 
 (defn show-versions [account jar versions]
   (html-doc (str "all versions of " (jar-name jar)) {:account account}

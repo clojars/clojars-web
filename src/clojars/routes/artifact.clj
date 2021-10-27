@@ -21,6 +21,11 @@
       #(view/show-versions % artifact
          (db/recent-versions db group-id artifact-id)))))
 
+(defn list-dependents [db group-id artifact-id]
+  (when-let [artifact (db/find-jar db group-id artifact-id)]
+    (auth/try-account
+      #(view/show-dependents db % artifact))))
+
 (defn- show-version [db stats group-id artifact-id version]
   (when-some [artifact (db/find-jar db group-id artifact-id version)]
     (auth/try-account
@@ -50,6 +55,13 @@
    (GET ["/:group-id/:artifact-id", :group-id #"[^/]+" :artifact-id #"[^/]+"]
         [group-id artifact-id]
         (show db stats group-id artifact-id))
+
+   (GET ["/:artifact-id/dependents" :artifact-id #"[^/]+"] [artifact-id]
+        (list-dependents db artifact-id artifact-id))
+   (GET ["/:group-id/:artifact-id/dependents"
+         :group-id #"[^/]+" :artifact-id #"[^/]+"]
+        [group-id artifact-id]
+        (list-dependents db group-id artifact-id))
 
    (GET ["/:artifact-id/versions" :artifact-id #"[^/]+"] [artifact-id]
         (list-versions db artifact-id artifact-id))
