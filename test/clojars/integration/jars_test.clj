@@ -93,7 +93,7 @@
   (-> (session (help/app))
       (visit "/fake")
       (within [:ul#dependents]
-              (has (text? "org.clojars.dantheman/test 0.0.2")))))
+              (has (text? "org.clojars.dantheman/test")))))
 
 (deftest shadow-jars-have-a-message
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar"

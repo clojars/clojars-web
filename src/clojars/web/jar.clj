@@ -58,7 +58,20 @@
 (defn dependency-link [db dep]
   (link-to
    (if (jar-exists db (:group_name dep) (:jar_name dep)) (jar-url dep) (maven-jar-url dep))
-   (str (jar-name dep) " " (:version dep))))
+   (if-some [version (:version dep)]
+     (format "%s %s" (jar-name dep) version)
+     (jar-name dep))))
+
+;; we know dependents are all on Clojars, so don't need to check existence
+(defn dependent-link
+  ([dep]
+   (link-to
+    (jar-url dep)
+    (if-some [version (:version dep)]
+      (format "%s %s" (jar-name dep) version)
+      (jar-name dep))))
+  ([_db dep]
+   (dependent-link dep)))
 
 (defn version-badge-url [jar]
   (format "https://img.shields.io/clojars/v%s.svg" (jar-url jar)))
@@ -201,13 +214,16 @@
      [:p (link-to (str (jar-url jar) "/versions")
                   (str "Show All Versions (" count " total)"))])))
 
-(defn dependency-section [db title id dependencies]
-  (when (seq dependencies)
-    (list
-     [:h3 title]
-     [(keyword (str "ul#" id))
-      (for [dep dependencies]
-        [:li (dependency-link db dep)])])))
+(defn dependency-section
+  ([db title id dependencies]
+   (dependency-section dependency-link db title id dependencies))
+  ([link-fn db title id dependencies]
+   (when (seq dependencies)
+     (list
+      [:h3 title]
+      [(keyword (str "ul#" id))
+       (for [dep dependencies]
+         [:li (link-fn db dep)])]))))
 
 (defn dependencies [db {:keys [group_name jar_name version]}]
   (dependency-section
@@ -222,11 +238,16 @@
          (db/find-dependencies db group_name jar_name version))))
 
 (defn dependents [db {:keys [group_name jar_name version]}]
-  (dependency-section
-   db "Dependents (on Clojars)" "dependents"
-   (filter
-    #(= (:dep_scope %) "compile")
-    (db/find-dependents db group_name jar_name version))))
+  (let [deps (->> (db/find-dependents db group_name jar_name version)
+                  (into []
+                        (comp (filter #(= (:dep_scope %) "compile"))
+                              (map #(select-keys % #{:group_name :jar_name}))
+                              (distinct)))
+                  (sort-by #(format "%s/%s" (:group_name %) (:jar_name %))))]
+    (dependency-section
+     dependent-link
+     db "Dependents (on Clojars)" "dependents"
+     deps)))
 
 (defn homepage [{:keys [homepage]}]
   (when homepage
