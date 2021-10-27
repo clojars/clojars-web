@@ -50,10 +50,10 @@
 
 (defn- vcs-host-tree-link [jar link-text]
   (try
-   (when-some [url (vcs-host-tree-url jar)]
-     (link-to url link-text))
-   (catch Exception _
-     nil)))
+    (when-some [url (vcs-host-tree-url jar)]
+      (link-to url link-text))
+    (catch Exception _
+      nil)))
 
 (defn dependency-link [db dep]
   (link-to
@@ -99,24 +99,24 @@
        :name jar_name}]
      [{:url  (str "https://clojars.org/groups/" group_name)
        :name group_name}
-       ;; TODO: Not sure if this is a dirty hack or a stroke of brilliance
+      ;; TODO: Not sure if this is a dirty hack or a stroke of brilliance
       {:url  (str "https://clojars.org/" (jar-name jar))
        :name jar_name}])))
 
 (defn- vcs-logo [type]
   (apply helpers/retinized-image
-   (case type
-     :github ["/images/github-mark.png" "GitHub"]
-     :gitlab ["/images/gitlab-mark-black.png" "GitLab"]
-     ["/images/git-mark.png" "VCS"])))
+         (case type
+           :github ["/images/github-mark.png" "GitHub"]
+           :gitlab ["/images/gitlab-mark-black.png" "GitLab"]
+           ["/images/git-mark.png" "VCS"])))
 
 (defn- vcs-host-link [jar]
   (let [unknown [:p (vcs-logo :unknown) "N/A"]]
     (if-some [{:keys [repo-url type user repo-name]} (vcs-host-info jar)]
       (try
         (link-to repo-url
-                (vcs-logo type)
-                (format "%s/%s" user repo-name))
+                 (vcs-logo type)
+                 (format "%s/%s" user repo-name))
         (catch Exception _
           unknown))
       unknown)))
@@ -208,8 +208,8 @@
       [:li (link-to (jar-versioned-url (assoc jar
                                               :version (:version v)))
                     (:version v))])]
-    ;; by default, 5 versions are shown. If there are only 5 to
-    ;; see, then there's no reason to show the 'all versions' link
+   ;; by default, 5 versions are shown. If there are only 5 to
+   ;; see, then there's no reason to show the 'all versions' link
    (when (> count 5)
      [:p (link-to (str (jar-url jar) "/versions")
                   (str "Show All Versions (" count " total)"))])))
