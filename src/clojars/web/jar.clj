@@ -234,24 +234,20 @@
           (db/find-dependents db group_name jar_name version)))
 
 (defn- dependents [db jar]
-  (when-some [deps (->> (get-dependents db jar)
-                        (into []
-                              (comp (map #(select-keys % #{:group_name :jar_name}))
-                                    (distinct)
-                                    (take 10)))
-                        (sort-by #(format "%s/%s" (:group_name %) (:jar_name %)))
-                        (seq))]
+  (when-some [all-deps (seq (get-dependents db jar))]
     (list
      [:h3 "Dependents (on Clojars)"]
      [(keyword (str "ul#dependents"))
-      (for [dep deps]
+      (for [dep (->> all-deps
+                     (into []
+                           (comp (map #(select-keys % #{:group_name :jar_name}))
+                                 (distinct)))
+                     (sort-by #(format "%s/%s" (:group_name %) (:jar_name %)))
+                     (take 10))]
         [:li (dependent-link dep)])]
-     ;; by default, 10 dependents are shown. If there are only 10 to
-     ;; see, then there's no reason to show the 'all dependents' link
-     (let [count (count deps)]
-       (when (> count 10)
-         [:p (link-to (str (jar-url jar) "/dependents")
-                      (str "Show All Dependents (" count " total)"))])))))
+     [:p (link-to (str (jar-url jar) "/dependents")
+                  (format "Show All Dependent Versions (%s total)"
+                          (count all-deps)))])))
 
 
 (defn homepage [{:keys [homepage]}]
