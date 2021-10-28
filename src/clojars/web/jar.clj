@@ -224,7 +224,7 @@
                                                      :dep_version    :version})))
                               (db/find-dependencies db group_name jar_name version)))]
     (list
-     [:h3 "Dependenies"]
+     [:h3 "Dependencies"]
      [(keyword (str "ul#dependencies"))
       (for [dep deps]
         [:li (dependency-link db dep)])])))
