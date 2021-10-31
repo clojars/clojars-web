@@ -101,7 +101,7 @@
   (-> (session (help/app))
       (visit "/fake/dependents")
       (within [:div.dependents]
-              (has (text? "org.clojars.dantheman/test 0.0.2")))))
+              (has (text? "0.0.2org.clojars.dantheman/test0.0.2")))))
 
 (deftest shadow-jars-have-a-message
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar"
