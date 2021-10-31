@@ -5,6 +5,7 @@
    [clojars.config :refer [config]]
    [clojars.db :as db :refer [find-jar jar-exists]]
    [clojars.file-utils :as fu]
+   [clojars.maven :as maven]
    [clojars.stats :as stats]
    [clojars.web.common :refer [audit-table html-doc jar-link
                                tag jar-url jar-name jar-versioned-url group-is-name?
@@ -72,6 +73,10 @@
     (link-to
      (jar-url dep)
      (jar-name dep))))
+
+(defn dependent-version-link
+  [{:as dep :keys [version]}]
+  (link-to (jar-versioned-url dep) version))
 
 (defn version-badge-url [jar]
   (format "https://img.shields.io/clojars/v%s.svg" (jar-url jar)))
@@ -229,25 +234,25 @@
       (for [dep deps]
         [:li (dependency-link db dep)])])))
 
-(defn- get-dependents [db {:keys [group_name jar_name version]}]
+(defn- get-dependents [db {:keys [group_name jar_name]}]
   (filter #(= (:dep_scope %) "compile")
-          (db/find-dependents db group_name jar_name version)))
+          (db/find-jar-dependents db group_name jar_name)))
 
-(defn- dependents [db jar]
+(defn- dependents [db jar version-count]
   (when-some [all-deps (seq (get-dependents db jar))]
-    (list
-     [:h3 "Dependents (on Clojars)"]
-     [(keyword (str "ul#dependents"))
-      (for [dep (->> all-deps
-                     (into []
-                           (comp (map #(select-keys % #{:group_name :jar_name}))
-                                 (distinct)))
-                     (sort-by #(format "%s/%s" (:group_name %) (:jar_name %)))
-                     (take 10))]
-        [:li (dependent-link dep)])]
-     [:p (link-to (str (jar-url jar) "/dependents")
-                  (format "Show All Dependent Versions (%s total)"
-                          (count all-deps)))])))
+    (let [distinct-deps (into []
+                              (comp (map #(select-keys % #{:group_name :jar_name}))
+                                    (distinct))
+                              all-deps)]
+      (list
+       [:h3 "Dependents (on Clojars)"]
+       [(keyword (str "ul#dependents"))
+        (for [dep (take 10 distinct-deps)]
+          [:li (dependent-link dep)])]
+       [:p (link-to (str (jar-url jar) "/dependents")
+                    (format "All Dependents (%s) for all Versions (%s)"
+                            (count distinct-deps)
+                            version-count))]))))
 
 
 (defn homepage [{:keys [homepage]}]
@@ -277,7 +282,7 @@
 
 (defn show-jar [db stats account
                 {:keys [group_name jar_name verified-group? version] :as jar}
-                recent-versions count]
+                recent-versions version-count]
   (let [total-downloads        (-> (stats/download-count stats
                                                          group_name jar_name)
                                    (stats/format-stats))
@@ -322,10 +327,10 @@
                        :version version}))]
       [:ul#jar-sidebar.col-xs-12.col-sm-3
        [:li (pushed-by jar)]
-       [:li (versions jar recent-versions count)]
+       [:li (versions jar recent-versions version-count)]
        (when-let [dependencies (dependencies db jar)]
          [:li dependencies])
-       (when-let [dependents (dependents db jar)]
+       (when-let [dependents (dependents db jar version-count)]
          [:li dependents])
        (when-let [homepage (homepage jar)]
          [:li.homepage homepage])
@@ -343,15 +348,28 @@
     (link-to (repo-url jar) (format "the full Maven repository for %s." (jar-name jar)))]])
 
 (defn show-dependents [db account jar]
-  (let [dependents (sort-by #(format "%s/%s" (:group_name %) (:jar_name %)) (get-dependents db jar))]
-    (html-doc (str "all dependents of " (jar-name jar)) {:account account}
-              [:div.light-article
-               [:h1 "all dependents of " (jar-link jar)]
-               [:div.dependents
-                [:ul
-                 (for [d dependents]
-                   [:li.col-xs-12.col-sm-6.col-md-4.col-lg-3
-                    (dependent-link d)])]]])))
+  (let [dependents (->> (get-dependents db jar)
+                        (group-by :dep_version)
+                        (sort-by first #(maven/compare-versions %2 %1)))]
+    (html-doc
+     (str "All dependents of " (jar-name jar)) {:account account}
+     [:div.light-article
+      [:h1 "All dependents of " (jar-link jar)]
+      [:div.dependents
+       (for [[version deps] dependents]
+         [:div
+          [:h2 (link-to (jar-versioned-url (assoc jar :version version))
+                        version)]
+          (for [[base-d dep-versions] (->> deps
+                                           (sort-by first)
+                                           (group-by #(select-keys % #{:group_name :jar_name})))]
+            [:div.dependent-jar
+             [:h3 (jar-link base-d)]
+             [:div.dependent-versions
+              (interpose
+               ", "
+               (map dependent-version-link
+                    (sort #(maven/compare-versions %2 %1) dep-versions)))]])])]])))
 
 (defn show-versions [account jar versions]
   (html-doc (str "all versions of " (jar-name jar)) {:account account}

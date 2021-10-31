@@ -409,6 +409,15 @@ footer a {
 /*  white-space: nowrap;*/
 }
 
+#jar-sidebar ul#dependents,
+#jar-sidebar ul#versions {
+  margin-bottom: 1em;
+}
+
+div.dependent-jar, div.dependent-versions {
+    padding-left: 1em;
+}
+
 /* FIXME: clean up these class names so they can be reused */
 .result {
   position: relative;
