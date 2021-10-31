@@ -388,11 +388,16 @@
   (when s
     (raw (str/replace s #"(https://[^ )]+)" "<a href='$1'>$1</a>"))))
 
+;; handles link-to throwing an exception when given a non-url
+(defn safe-link-to [url text]
+  (try (link-to url text)
+       (catch Exception _ text)))
+
 (defn- link-project
   [{:as audit :keys [group_name jar_name version]}]
   (when audit
     (cond
-      version (link-to (jar-versioned-url audit) (format "%s/%s %s" group_name jar_name version))
+      version (safe-link-to (jar-versioned-url audit) (format "%s/%s %s" group_name jar_name version))
       jar_name (jar-link audit)
       :else (group-link group_name))))
 

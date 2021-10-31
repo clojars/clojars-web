@@ -10,7 +10,7 @@
    [clojars.web.common :refer [audit-table html-doc jar-link
                                tag jar-url jar-name jar-versioned-url group-is-name?
                                user-link jar-fork? jar-notice single-fork-notice
-                               simple-date verified-group-badge]]
+                               simple-date verified-group-badge safe-link-to]]
    [clojars.web.helpers :as helpers]
    [clojars.web.structured-data :as structured-data]
    [clojure.set :as set]
@@ -67,16 +67,16 @@
 (defn dependent-link
   [dep]
   (if-some [version (:version dep)]
-    (link-to
+    (safe-link-to
      (jar-versioned-url dep)
      (format "%s %s" (jar-name dep) version))
-    (link-to
+    (safe-link-to
      (jar-url dep)
      (jar-name dep))))
 
 (defn dependent-version-link
   [{:as dep :keys [version]}]
-  (link-to (jar-versioned-url dep) version))
+  (safe-link-to (jar-versioned-url dep) version))
 
 (defn version-badge-url [jar]
   (format "https://img.shields.io/clojars/v%s.svg" (jar-url jar)))
@@ -86,11 +86,6 @@
    "[![Clojars Project](%s)](https://clojars.org%s)"
    (version-badge-url jar)
    (jar-url jar)))
-
-;; handles link-to throwing an exception when given a non-url
-(defn safe-link-to [url text]
-  (try (link-to url text)
-       (catch Exception _ text)))
 
 (defn fork-notice [jar]
   (when (jar-fork? jar)
@@ -210,14 +205,14 @@
    [:h4 "Recent Versions"]
    [:ul#versions
     (for [v recent-versions]
-      [:li (link-to (jar-versioned-url (assoc jar
-                                              :version (:version v)))
-                    (:version v))])]
+      [:li (safe-link-to (jar-versioned-url (assoc jar
+                                                   :version (:version v)))
+                         (:version v))])]
    ;; by default, 5 versions are shown. If there are only 5 to
    ;; see, then there's no reason to show the 'all versions' link
    (when (> count 5)
-     [:p (link-to (str (jar-url jar) "/versions")
-                  (str "Show All Versions (" count " total)"))])))
+     [:p (safe-link-to (str (jar-url jar) "/versions")
+                       (str "Show All Versions (" count " total)"))])))
 
 (defn- dependencies [db {:keys [group_name jar_name version]}]
   (when-some [deps (seq (into []
@@ -358,8 +353,8 @@
       [:div.dependents
        (for [[version deps] dependents]
          [:div
-          [:h2 (link-to (jar-versioned-url (assoc jar :version version))
-                        version)]
+          [:h2 (safe-link-to (jar-versioned-url (assoc jar :version version))
+                             version)]
           (for [[base-d dep-versions] (->> deps
                                            (sort-by first)
                                            (group-by #(select-keys % #{:group_name :jar_name})))]
@@ -372,15 +367,15 @@
                     (sort #(maven/compare-versions %2 %1) dep-versions)))]])])]])))
 
 (defn show-versions [account jar versions]
-  (html-doc (str "all versions of " (jar-name jar)) {:account account}
+  (html-doc (str "All versions of " (jar-name jar)) {:account account}
             [:div.light-article
-             [:h1 "all versions of " (jar-link jar)]
+             [:h1 "All versions of " (jar-link jar)]
              [:div.versions
               [:ul
                (for [v versions]
                  [:li.col-xs-12.col-sm-6.col-md-4.col-lg-3
-                  (link-to (jar-versioned-url (assoc jar :version (:version v)))
-                           (:version v))])]]]
+                  (safe-link-to (jar-versioned-url (assoc jar :version (:version v)))
+                                (:version v))])]]]
             [:div.light-article
              (repo-note jar)]))
 
