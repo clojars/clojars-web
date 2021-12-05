@@ -2,7 +2,7 @@ version: 2.0
 jobs:
   build:
     docker:
-      - image: clojure:lein-2.8.1
+      - image: clojure:openjdk-17-lein-buster
         environment:
           - DB_PORT: 5432
           - CLOJARS_ENVIRONMENT: test
