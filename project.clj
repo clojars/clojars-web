@@ -90,10 +90,10 @@
    :profiles/test {}
    :project/dev   {:source-paths ["dev"]
                    :repl-options {:init-ns user}
-                   :dependencies [[reloaded.repl "0.2.0"]
-                                  [org.clojure/tools.namespace "0.2.11"]
+                   :dependencies [[reloaded.repl "0.2.4"]
+                                  [org.clojure/tools.namespace "1.2.0"]
                                   [eftest "0.5.9"]
-                                  [kerodon "0.7.0"
+                                  [kerodon "0.9.1"
                                    :exclusions [clj-time
                                                 org.apache.httpcomponents/httpcore
                                                 org.flatland/ordered
@@ -102,6 +102,6 @@
                                    :exclusions [commons-codec
                                                 javax.mail/mail
                                                 org.clojars.kjw/slf4j-simple]]
-                                  [nubank/matcher-combinators "3.1.4"]]
+                                  [nubank/matcher-combinators "3.3.1"]]
                    :resource-paths ["local-resources"]}
    :project/test  {}})
