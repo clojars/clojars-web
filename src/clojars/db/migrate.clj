@@ -103,8 +103,8 @@
                            "created_at timestamp not null default current_timestamp)"))
   (sql/with-db-transaction [trans db]
     (let [has-run? (sql/query trans ["SELECT name FROM migrations"]
-                              :row-fn :name
-                              :result-set-fn set)]
+                              {:row-fn :name
+                               :result-set-fn set})]
       (doseq [m migrations
               :when (not (has-run? (str (:name (meta m)))))]
         (run-and-record m trans)))))

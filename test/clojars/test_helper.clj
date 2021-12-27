@@ -66,13 +66,14 @@
 
 (defn clear-database [db]
   (try
-    (jdbc/db-do-commands db
-                         "delete from deps"
-                         "delete from groups"
-                         "delete from jars"
-                         "delete from users"
-                         "delete from group_verifications"
-                         "delete from audit")
+    (jdbc/db-do-commands
+     db
+     ["delete from deps"
+      "delete from groups"
+      "delete from jars"
+      "delete from users"
+      "delete from group_verifications"
+      "delete from audit"])
     (catch Exception _)))
 
 (defn with-clean-database [f]

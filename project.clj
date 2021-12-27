@@ -40,7 +40,7 @@
                   :exclusions [commons-logging]]
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.11"]
-                 [yesql "0.5.1"]
+                 [yesql "0.5.3"]
                  [org.postgresql/postgresql "42.3.1"]
                  [duct/hikaricp-component "0.1.2"
                   :exclusions [com.stuartsierra/component
