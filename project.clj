@@ -4,16 +4,13 @@
                  [org.clojure/core.memoize "1.0.253"]
                  [raven-clj "1.4.3"
                   :exclusions [cheshire]]
-                 [org.apache.maven/maven-model "3.0.4"
-                  :exclusions
-                  [org.codehaus.plexus/plexus-utils]]
+                 [org.apache.maven/maven-model "3.8.4"]
                  [com.cemerick/pomegranate "0.3.1"
                   :exclusions
                   [commons-logging
-                   org.apache.httpcomponents/httpcore
-                   org.codehaus.plexus/plexus-utils]]
+                   org.apache.httpcomponents/httpcore]]
                  ;; pomegranate transitively depends on two versions, so we explicitly bring in one
-                 [org.codehaus.plexus/plexus-utils "3.0"]
+                 [org.codehaus.plexus/plexus-utils "3.4.1"]
                  [ring-middleware-format "0.7.4"
                   :exclusions [ring/ring-core
                                cheshire
