@@ -34,7 +34,7 @@
                   :exclusions [commons-codec]]
                  [clj-stacktrace "0.2.8"]
                  [clj-time "0.15.2"]
-                 [ring/ring-anti-forgery "1.0.1"
+                 [ring/ring-anti-forgery "1.3.0"
                   :exclusions [commons-codec]]
                  [valip "0.2.0"
                   :exclusions [commons-logging]]
