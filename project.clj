@@ -2,7 +2,7 @@
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/core.memoize "1.0.253"]
-                 [raven-clj "1.4.3"
+                 [raven-clj "1.6.0"
                   :exclusions [cheshire]]
                  [org.apache.maven/maven-model "3.8.4"]
                  [com.cemerick/pomegranate "0.3.1"
