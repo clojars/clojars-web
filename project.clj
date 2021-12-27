@@ -64,7 +64,7 @@
                   :exclusions [commons-codec]]
 
                  ;; logging
-                 [org.clojure/tools.logging "1.1.0"]
+                 [org.clojure/tools.logging "1.2.3"]
                  [ch.qos.logback/logback-classic "1.3.0-alpha5"
                   :exclusions [com.sun.mail/javax.mail]]
                  
