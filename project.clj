@@ -52,8 +52,8 @@
                  [ring-jetty-component "0.3.1"
                   :exclusions [org.clojure/tools.reader
                                ring/ring-core]]
-                 [clj-http "3.10.0"
                  [digest "1.4.10"]
+                 [clj-http "3.12.3"
                   :exclusions [commons-codec
                                commons-io]]
                  [aero "1.1.3"]
