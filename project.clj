@@ -56,8 +56,8 @@
                  [clj-http "3.12.3"
                   :exclusions [commons-codec
                                commons-io]]
-                 [aero "1.1.3"]
                  [one-time "0.5.0"
+                 [aero "1.1.6"]
                   :exclusions [commons-codec]]
 
                  ;; logging
