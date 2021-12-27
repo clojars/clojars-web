@@ -45,7 +45,7 @@
                  [duct/hikaricp-component "0.1.2"
                   :exclusions [com.stuartsierra/component
                                org.slf4j/slf4j-api]]
-                 [duct "0.8.0"
+                 [duct "0.8.2"
                   :exclusions [org.clojure/tools.reader]]
                  [ring/ring-core "1.8.0"]
                  [ring/ring-jetty-adapter "1.8.0"]
