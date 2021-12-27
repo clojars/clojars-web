@@ -33,7 +33,7 @@
                  [buddy/buddy-core "1.6.0"
                   :exclusions [commons-codec]]
                  [clj-stacktrace "0.2.8"]
-                 [clj-time "0.11.0"]
+                 [clj-time "0.15.2"]
                  [ring/ring-anti-forgery "1.0.1"
                   :exclusions [commons-codec]]
                  [valip "0.2.0"
