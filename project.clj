@@ -66,11 +66,10 @@
                   :exclusions [com.sun.mail/javax.mail]]
                  
                  ;; AWS
-                 [com.cognitect.aws/api "0.8.408"
+                 [com.cognitect.aws/api "0.8.539"
                   :exclusions [org.eclipse.jetty/jetty-util]]
-                 [com.cognitect.aws/endpoints "1.1.11.705"]
-                 [com.cognitect.aws/s3 "784.2.593.0"]]
-  :plugins [[supersport "1"]]
+                 [com.cognitect.aws/endpoints "1.1.12.129"]
+                 [com.cognitect.aws/s3 "814.2.991.0"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"
   :release-tasks [["vcs" "assert-committed"]
