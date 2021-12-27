@@ -47,8 +47,8 @@
                                org.slf4j/slf4j-api]]
                  [duct "0.8.2"
                   :exclusions [org.clojure/tools.reader]]
-                 [ring/ring-core "1.8.0"]
-                 [ring/ring-jetty-adapter "1.8.0"]
+                 [ring/ring-core "1.9.4"]
+                 [ring/ring-jetty-adapter "1.9.4"]
                  [ring-jetty-component "0.3.1"
                   :exclusions [org.clojure/tools.reader
                                ring/ring-core]]
