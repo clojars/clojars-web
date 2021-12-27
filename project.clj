@@ -30,7 +30,7 @@
                                ring/ring-core
                                slingshot]]
                  [com.github.scribejava/scribejava-apis "8.3.1"]
-                 [buddy/buddy-core "1.6.0"
+                 [buddy/buddy-core "1.10.1"
                   :exclusions [commons-codec]]
                  [clj-stacktrace "0.2.8"]
                  [clj-time "0.15.2"]
