@@ -29,7 +29,7 @@
                                org.clojure/core.cache
                                ring/ring-core
                                slingshot]]
-                 [com.github.scribejava/scribejava-apis "7.1.1"]
+                 [com.github.scribejava/scribejava-apis "8.3.1"]
                  [buddy/buddy-core "1.6.0"
                   :exclusions [commons-codec]]
                  [clj-stacktrace "0.2.8"]
