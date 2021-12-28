@@ -5,11 +5,7 @@
                  [raven-clj "1.6.0"
                   :exclusions [cheshire]]
                  [org.apache.maven/maven-model "3.8.4"]
-                 [com.cemerick/pomegranate "0.3.1"
-                  :exclusions
-                  [commons-logging
-                   org.apache.httpcomponents/httpcore]]
-                 ;; pomegranate transitively depends on two versions, so we explicitly bring in one
+                 [org.apache.maven/maven-repository-metadata "3.8.4"]
                  [org.codehaus.plexus/plexus-utils "3.4.1"]
                  [ring-middleware-format "0.7.4"
                   :exclusions [ring/ring-core
@@ -91,6 +87,10 @@
    :project/dev   {:source-paths ["dev"]
                    :repl-options {:init-ns user}
                    :dependencies [[reloaded.repl "0.2.4"]
+                                  [clj-commons/pomegranate "1.2.1"
+                                   :exclusions
+                                   [commons-logging
+                                    org.apache.httpcomponents/httpcore]]
                                   [org.clojure/tools.namespace "1.2.0"]
                                   [eftest "0.5.9"]
                                   [kerodon "0.9.1"
