@@ -31,7 +31,10 @@
                                ;; not used, excluded to address CVE-2007-1652, CVE-2007-1651
                                org.openid4java/openid4java-nodeps
                                ;; not used, excluded to address CVE-2012-0881, CVE-2013-4002, CVE-2009-2625
-                               net.sourceforge.nekohtml/nekohtml]]
+                               net.sourceforge.nekohtml/nekohtml
+                               org.mindrot/jbcrypt]]
+                 ;; addresses CVE-2015-0886
+                 [org.mindrot/jbcrypt "0.4"]
                  [com.github.scribejava/scribejava-apis "8.3.1"]
                  [buddy/buddy-core "1.10.1"
                   :exclusions [commons-codec]]
