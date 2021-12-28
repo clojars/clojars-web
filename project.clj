@@ -25,8 +25,10 @@
                                org.clojure/core.cache
                                ring/ring-core
                                slingshot
-                               ;; not used, excluded to satisfy CVE-2007-1652, CVE-2007-1651
-                               org.openid4java/openid4java-nodeps]]
+                               ;; not used, excluded to address CVE-2007-1652, CVE-2007-1651
+                               org.openid4java/openid4java-nodeps
+                               ;; not used, excluded to address CVE-2012-0881, CVE-2013-4002, CVE-2009-2625
+                               net.sourceforge.nekohtml/nekohtml]]
                  [com.github.scribejava/scribejava-apis "8.3.1"]
                  [buddy/buddy-core "1.10.1"
                   :exclusions [commons-codec]]
