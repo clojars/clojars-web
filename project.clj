@@ -67,7 +67,9 @@
                                commons-io]]
                  [aero "1.1.6"]
                  [one-time "0.7.0"
-                  :exclusions [commons-codec]]
+                  :exclusions [commons-codec
+                               ;; not needed on java 17, addresses CWE-120
+                               com.github.jai-imageio/jai-imageio-core]]
 
                  ;; logging
                  [org.clojure/tools.logging "1.2.3"]
