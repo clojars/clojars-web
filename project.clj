@@ -11,7 +11,10 @@
                   :exclusions [ring/ring-core
                                cheshire
                                com.fasterxml.jackson.core/jackson-core
-                               com.fasterxml.jackson.dataformat/jackson-dataformat-smile]]
+                               com.fasterxml.jackson.dataformat/jackson-dataformat-smile
+                               org.yaml/snakeyaml]]
+                 ;; addresses CVE-2017-18640
+                 [org.yaml/snakeyaml "1.30"]
                  [org.apache.commons/commons-email "1.5"]
                  [net.cgrand/regex "1.0.1"
                   :exclusions [org.clojure/clojure]]
