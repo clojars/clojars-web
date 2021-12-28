@@ -37,7 +37,10 @@
                  [ring/ring-anti-forgery "1.3.0"
                   :exclusions [commons-codec]]
                  [valip "0.2.0"
-                  :exclusions [commons-logging]]
+                  :exclusions [commons-logging
+                               commons-validator/commons-validator]]
+                 ;; addresses CVE-2019-10086, CVE-2014-0114, CVE-2017-15708, CVE-2015-6420
+                 [commons-validator/commons-validator "1.7"]
                  [clucy "0.3.0"]
                  [org.clojure/tools.nrepl "0.2.11"]
                  [yesql "0.5.3"]
