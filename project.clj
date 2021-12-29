@@ -75,7 +75,10 @@
                  [one-time "0.7.0"
                   :exclusions [commons-codec
                                ;; not needed on java 17, addresses CWE-120
-                               com.github.jai-imageio/jai-imageio-core]]
+                               com.github.jai-imageio/jai-imageio-core
+                               ;; not used, addresses CVE-2020-11987, CVE-2019-17566
+                               org.apache.xmlgraphics/batik-dom
+                               org.apache.xmlgraphics/batik-svggen]]
 
                  ;; logging
                  [org.clojure/tools.logging "1.2.3"]
