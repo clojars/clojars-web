@@ -15,6 +15,8 @@
                                cheshire
                                com.fasterxml.jackson.core/jackson-core
                                com.fasterxml.jackson.dataformat/jackson-dataformat-smile
+                               ;; newer version brought in by com.cognitect.aws/api
+                               org.clojure/tools.reader
                                org.yaml/snakeyaml]]
                  ;; addresses CVE-2017-18640
                  [org.yaml/snakeyaml "1.30"]
@@ -38,7 +40,8 @@
                                org.mindrot/jbcrypt]]
                  ;; addresses CVE-2015-0886
                  [org.mindrot/jbcrypt "0.4"]
-                 [com.github.scribejava/scribejava-apis "8.3.1"]
+                 [com.github.scribejava/scribejava-apis "8.3.1"
+                  :exclusions [com.fasterxml.jackson.core/jackson-databind]]
                  [buddy/buddy-core "1.10.1"
                   :exclusions [commons-codec
                                cheshire]]
@@ -47,7 +50,9 @@
                  [clj-stacktrace "0.2.8"]
                  [clj-time "0.15.2"]
                  [ring/ring-anti-forgery "1.3.0"
-                  :exclusions [commons-codec]]
+                  :exclusions [commons-codec
+                               ;; newer version brought in by ring/ring-core
+                               crypto-random]]
                  [valip "0.2.0"
                   :exclusions [commons-logging
                                commons-validator/commons-validator]]
