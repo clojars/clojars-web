@@ -40,7 +40,10 @@
                  [org.mindrot/jbcrypt "0.4"]
                  [com.github.scribejava/scribejava-apis "8.3.1"]
                  [buddy/buddy-core "1.10.1"
-                  :exclusions [commons-codec]]
+                  :exclusions [commons-codec
+                               cheshire]]
+                 ;; addresses CVE-2020-28491
+                 [cheshire "5.10.1"]
                  [clj-stacktrace "0.2.8"]
                  [clj-time "0.15.2"]
                  [ring/ring-anti-forgery "1.3.0"
