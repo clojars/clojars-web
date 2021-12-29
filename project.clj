@@ -125,11 +125,15 @@
                                    :exclusions [clj-time
                                                 org.apache.httpcomponents/httpcore
                                                 org.flatland/ordered
+                                                org.jsoup/jsoup
                                                 ring/ring-codec]]
                                   [net.polyc0l0r/bote "0.1.0"
                                    :exclusions [commons-codec
                                                 javax.mail/mail
                                                 org.clojars.kjw/slf4j-simple]]
-                                  [nubank/matcher-combinators "3.3.1"]]
+                                  [nubank/matcher-combinators "3.3.1"
+                                   ;; we don't use midje, so excluding it to
+                                   ;; remove dep conflicts from its dependencies
+                                   :exclusions [midje]]]
                    :resource-paths ["local-resources"]}
    :project/test  {}})
