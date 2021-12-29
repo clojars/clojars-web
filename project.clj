@@ -2,6 +2,9 @@
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/core.memoize "1.0.253"]
+                 ;; manage jetty dependency directly to make it easier to address CVEs
+                 ;; addresses CVE-2021-34429
+                 [org.eclipse.jetty/jetty-server "9.4.44.v20210927"]
                  [raven-clj "1.6.0"
                   :exclusions [cheshire]]
                  [org.apache.maven/maven-model "3.8.4"]
@@ -77,8 +80,7 @@
                   :exclusions [com.sun.mail/javax.mail]]
                  
                  ;; AWS
-                 [com.cognitect.aws/api "0.8.539"
-                  :exclusions [org.eclipse.jetty/jetty-util]]
+                 [com.cognitect.aws/api "0.8.539"]
                  [com.cognitect.aws/endpoints "1.1.12.129"]
                  [com.cognitect.aws/s3 "814.2.991.0"]]
   :main ^:skip-aot clojars.main
