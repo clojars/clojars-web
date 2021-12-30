@@ -20,7 +20,7 @@
   [psql-db]
   (jdbc/db-do-commands
     psql-db
-    (map
+    (mapv
       #(format "delete from %s" (name %))
       tables)))
 

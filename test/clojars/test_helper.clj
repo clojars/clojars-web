@@ -1,5 +1,6 @@
 (ns clojars.test-helper
   (:require
+   [cemerick.pomegranate.aether :as aether]
    [clojars.config :as config]
    [clojars.db :as db]
    [clojars.db.migrate :as migrate]
@@ -26,7 +27,9 @@
    (java.time
     ZonedDateTime)
    (java.util
-    Date)))
+    Date)
+   (org.apache.maven.wagon.providers.http
+    HttpWagon)))
 
 (def tmp-dir (io/file (System/getProperty "java.io.tmpdir")))
 (def local-repo (io/file tmp-dir "clojars" "test" "local-repo"))
@@ -48,6 +51,11 @@
   (delete-file-recursively local-repo2)
   (f))
 
+;; We use non-secure http repos in tests, but pomegranate throws if the repo
+;; isn't secure without a wagon registered.
+(defn register-http-wagon! []
+  (aether/register-wagon-factory! "http" #(HttpWagon.)))
+
 (defn default-fixture [f]
   (binding [config/*profile* "test"]
     (let [cleanup (fn [] (run!
@@ -66,13 +74,14 @@
 
 (defn clear-database [db]
   (try
-    (jdbc/db-do-commands db
-                         "delete from deps"
-                         "delete from groups"
-                         "delete from jars"
-                         "delete from users"
-                         "delete from group_verifications"
-                         "delete from audit")
+    (jdbc/db-do-commands
+     db
+     ["delete from deps"
+      "delete from groups"
+      "delete from jars"
+      "delete from users"
+      "delete from group_verifications"
+      "delete from audit"])
     (catch Exception _)))
 
 (defn with-clean-database [f]
