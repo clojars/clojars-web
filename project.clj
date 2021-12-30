@@ -94,6 +94,7 @@
                  [com.cognitect.aws/api "0.8.539"]
                  [com.cognitect.aws/endpoints "1.1.12.129"]
                  [com.cognitect.aws/s3 "814.2.991.0"]]
+  :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"
   :release-tasks [["vcs" "assert-committed"]
