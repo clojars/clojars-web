@@ -24,10 +24,6 @@
   (:import
    (java.io
     File)
-   (java.time
-    ZonedDateTime)
-   (java.util
-    Date)
    (org.apache.maven.wagon.providers.http
     HttpWagon)))
 
@@ -194,12 +190,6 @@
                         m))
         (->> (spit new-pom)))
     new-pom))
-
-(defn date-from-iso-8601-str
-  [iso-8601-date-string]
-  (-> (ZonedDateTime/parse iso-8601-date-string)
-      .toInstant
-      (Date/from)))
 
 (defn at-as-time-str
   "Adjusts the :at (or :created) Date to a millis-since-epoch string to
