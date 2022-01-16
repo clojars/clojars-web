@@ -12,15 +12,30 @@
     [t group-id artifact-id version])
   (total-downloads [t]))
 
-(defn- download-all-stats
-  "Pulls the all.edn stats file from s3 and returns them as a map."
-  [s3-bucket]
-  (with-open [rdr (-> (s3/get-object-stream s3-bucket "all.edn")
+(defn- read-all-stats
+  [stream]
+  (with-open [rdr (-> stream
                       (io/reader)
                       (PushbackReader.))]
     (edn/read rdr)))
 
-(def all (memo/ttl download-all-stats :ttl/threshold (* 60 60 1000))) ;; 1 hour
+(defn- download-all-stats
+  "Pulls the all.edn stats file from s3 and returns them as a map."
+  [s3-bucket]
+  (read-all-stats (s3/get-object-stream s3-bucket "all.edn")))
+
+(def ^:private stats-cache-ttl (* 60 60 1000)) ;; 1 hour
+
+(def all (memo/ttl download-all-stats :ttl/threshold stats-cache-ttl))
+
+(defn- calc-total-downloads
+  [s3-bucket]
+    (->> (all s3-bucket)
+         (vals)
+         (mapcat vals)
+         (reduce +)))
+
+(def all-total-downloads (memo/ttl calc-total-downloads :ttl/threshold stats-cache-ttl))
 
 (defrecord ArtifactStats [stats-bucket]
   Stats
@@ -31,10 +46,7 @@
   (download-count [_ group-id artifact-id version]
     (get-in (all stats-bucket) [[group-id artifact-id] version] 0))
   (total-downloads [_]
-    (->> (all stats-bucket)
-         (vals)
-         (mapcat vals)
-         (reduce +))))
+    (all-total-downloads stats-bucket)))
 
 (defn artifact-stats
   "Returns a stats implementation for artifact stats.

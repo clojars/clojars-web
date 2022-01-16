@@ -58,7 +58,9 @@
                                commons-validator/commons-validator]]
                  ;; addresses CVE-2019-10086, CVE-2014-0114, CVE-2017-15708, CVE-2015-6420
                  [commons-validator/commons-validator "1.7"]
-                 [clucy "0.3.0"]
+                 [org.apache.lucene/lucene-core "8.11.1"]
+                 [org.apache.lucene/lucene-analyzers-common "8.11.1"]
+                 [org.apache.lucene/lucene-queryparser "8.11.1"]
                  [org.clojure/tools.nrepl "0.2.11"]
                  [yesql "0.5.3"]
                  [org.postgresql/postgresql "42.3.1"]

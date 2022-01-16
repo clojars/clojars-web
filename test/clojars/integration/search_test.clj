@@ -5,7 +5,8 @@
             [clojars.test-helper :as help]
             [clojure.set :as set]
             [clojure.test :refer [deftest is testing use-fixtures]]
-            [clojure.xml :as xml]))
+            [clojure.xml :as xml]
+            [matcher-combinators.test]))
 
 (use-fixtures :each
   help/default-fixture
@@ -79,7 +80,7 @@
             result (json/parse-string (:body resp) true)]
         (is (= 200 (:status resp)))
         (is (= 2 (:count result)))
-        (is (= search-data (:results result)))))
+        (is (match? search-data (:results result)))))
 
     (testing "json request with invalid page returns error"
       (let [resp (do-search-with-page :json "test" "a" {:throw-exceptions false})
