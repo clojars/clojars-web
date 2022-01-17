@@ -172,12 +172,12 @@
    (Paths/get index-path (into-array String nil))))
 
 (defn- index-jar
-  [^IndexWriter index-writer stats jar create?]
+  [^IndexWriter index-writer stats jar]
   (let [jar' (set/rename-keys jar renames)
         doc (jar->doc jar' (calculate-document-boost stats jar'))]
-    (if create?
-      (.addDocument index-writer doc)
-      (.updateDocument index-writer (Term. "id" (jar->id jar')) doc))))
+    ;; always delete and replace the doc, since we are indexing every version
+    ;; and the last one wins
+    (.updateDocument index-writer (Term. "id" (jar->id jar')) doc)))
 
 (defn- track-index-status
   [{:keys [indexed last-time] :as status}]
@@ -197,7 +197,7 @@
             (reduce
              (fn [status jar]
                (try
-                 (index-jar index-writer stats jar true)
+                 (index-jar index-writer stats jar)
                  (catch Exception e
                    (printf "Failed to index %s/%s:%s - %s\n"
                            (:group_name jar) (:jar_name jar) (:version jar)
@@ -298,7 +298,7 @@
   Search
   (index! [_t pom]
     (with-open [index-writer (index-writer index false)]
-      (index-jar index-writer stats pom false)))
+      (index-jar index-writer stats pom)))
   (search [_t query page]
     (-search index query page))
   (delete! [_t group-id]
