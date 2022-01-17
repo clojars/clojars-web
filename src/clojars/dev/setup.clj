@@ -6,7 +6,8 @@
             [clojars.file-utils :as fu]
             [clojars.search :as search]
             [clojure.java.io :as io]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojars.stats :as stats])
   (:import [org.apache.maven.artifact.repository.metadata Metadata Versioning]
            [org.apache.maven.artifact.repository.metadata.io.xpp3
             MetadataXpp3Reader
@@ -66,12 +67,9 @@
 
 (defn import-repo
   "Builds a dev db from the contents of the repo."
-  [db repo stats-dir users]
-  (let [group-artifact-pattern (re-pattern (str repo "/(.*)/([^/]*)$"))
-        stats-file (io/file stats-dir "all.edn")]
-    (let [d (io/file stats-dir)]
-      (when-not (.exists d)
-        (.mkdirs d)))
+  [db repo stats-file users]
+  (let [group-artifact-pattern (re-pattern (str repo "/(.*)/([^/]*)$"))]
+    (io/make-parents stats-file)
     (->>
       (for [version-dir (file-seq (io/file repo))
             :when (and (.isDirectory version-dir)
@@ -107,7 +105,8 @@
     (println "Wrote download stats to" (.getAbsolutePath stats-file))))
 
 (defn setup-dev-environment []
-  (let [{:keys [repo stats-dir db]} (config)]
+  (let [{:keys [repo stats-dir db]} (config)
+        stats-file (io/file stats-dir "all.edn")]
     (println "NOTE: this will clear the contents of" db
       "and import all of the projects in" repo "into the db.\n")
     (print "Are you sure you want to continue? [y/N] ")
@@ -120,6 +119,6 @@
     (println "==> Creating 10 test users...")
     (let [test-users (add-test-users db 10)]
       (println "==> Importing" repo "into the db...")
-      (import-repo db repo stats-dir test-users))
+      (import-repo db repo stats-file test-users))
     (println "==> Indexing...")
-    (search/generate-index db)))
+    (search/generate-index db (stats/local-artifact-stats stats-file))))

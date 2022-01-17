@@ -1,20 +1,52 @@
 (ns clojars.search
   (:refer-clojure :exclude [index])
-  (:require [clojars
-             [config :refer [config]]
-             [stats :as stats]]
-            [clojars.db :as db]
-            [clojure
-             [set :as set]
-             [string :as string]]
-            [clucy.core :as clucy]
-            [com.stuartsierra.component :as component])
-  (:import [org.apache.lucene.analysis KeywordAnalyzer PerFieldAnalyzerWrapper]
-           org.apache.lucene.analysis.standard.StandardAnalyzer
-           org.apache.lucene.index.IndexNotFoundException
-           org.apache.lucene.queryParser.QueryParser
-           org.apache.lucene.search.IndexSearcher
-           [org.apache.lucene.search.function CustomScoreQuery DocValues FieldCacheSource ValueSourceQuery]))
+  (:require
+   [clojars.config :refer [config]]
+   [clojars.db :as db]
+   [clojars.stats :as stats]
+   [clojure.set :as set]
+   [clojure.string :as str]
+   [com.stuartsierra.component :as component])
+  (:import
+   (java.nio.file
+    Paths)
+   (java.util
+    Date)
+   (org.apache.lucene.analysis
+    CharArraySet)
+   (org.apache.lucene.analysis.core
+    KeywordAnalyzer)
+   (org.apache.lucene.analysis.miscellaneous
+    PerFieldAnalyzerWrapper)
+   (org.apache.lucene.analysis.standard
+    StandardAnalyzer)
+   (org.apache.lucene.document
+    Document
+    DoubleDocValuesField
+    Field$Store
+    StringField
+    TextField)
+   (org.apache.lucene.index
+    DirectoryReader
+    IndexReader
+    IndexWriter
+    IndexWriterConfig
+    IndexWriterConfig$OpenMode
+    Term)
+   (org.apache.lucene.queries.function
+    FunctionScoreQuery)
+   (org.apache.lucene.queryparser.flexible.standard
+    StandardQueryParser)
+   (org.apache.lucene.search
+    DoubleValuesSource
+    IndexSearcher
+    ScoreDoc
+    TopDocs)
+   (org.apache.lucene.store
+    Directory
+    NIOFSDirectory)))
+
+(set! *warn-on-reflection* true)
 
 (defprotocol Search
   (index! [t pom])
@@ -23,105 +55,100 @@
     [t group-id]
     [t group-id artifact-id]))
 
+(def ^:private renames
+  {:name       :artifact-id
+   :jar_name   :artifact-id
+   :group      :group-id
+   :group_name :group-id
+   :created    :at
+   :homepage   :url})
 
-(def content-fields [:artifact-id :group-id :version :description
-                     :url #(->> % :authors (string/join " "))])
+(defn- ^String doc-id [group-id artifact-id]
+  (str group-id ":" artifact-id))
 
-(def field-settings {:artifact-id {:analyzed false}
-                     :group-id {:analyzed false}
-                     :version {:analyzed false}
-                     :at {:analyzed false}})
+(defn- ^String jar->id [{:keys [artifact-id group-id]}]
+  (doc-id group-id artifact-id))
 
-;; TODO: make this easy to do from clucy
-(defonce analyzer (let [a (PerFieldAnalyzerWrapper.
-                           ;; Our default analyzer has no stop words.
-                           (StandardAnalyzer. clucy/*version* #{}))]
-                    (doseq [[field {:keys [analyzed]}] field-settings
-                            :when (false? analyzed)]
-                      (.addAnalyzer a (name field) (KeywordAnalyzer.)))
-                    a))
+(defn delete-from-index [^IndexWriter index-writer ^String group-id & [artifact-id]]
+  (let [term (if artifact-id
+               (Term. "id" (doc-id group-id artifact-id))
+               (Term. "group-id" group-id))]
+    (.deleteDocuments index-writer
+                      ^"[Lorg.apache.lucene.index.Term;" (into-array [term]))))
 
-(def renames {:name       :artifact-id
-              :jar_name   :artifact-id
-              :group      :group-id
-              :group_name :group-id
-              :created    :at
-              :homepage   :url})
+(defn indexing-analyzer []
+  (PerFieldAnalyzerWrapper.
+   (StandardAnalyzer. CharArraySet/EMPTY_SET)
+   {"artifact-id" (KeywordAnalyzer.)
+    "group-id"    (KeywordAnalyzer.)
+    "at"          (KeywordAnalyzer.)}))
 
-(defn delete-from-index [index group-id & [artifact-id]]
-  (binding [clucy/*analyzer* analyzer]
-    (clucy/search-and-delete index
-                             (cond-> (str "group-id:" group-id)
-                                     artifact-id (str " AND artifact-id:" artifact-id)))))
+(defn- ^IndexWriter index-writer [index create?]
+  (IndexWriter.
+   index
+   (doto (IndexWriterConfig. (indexing-analyzer))
+     (.setOpenMode (if create?
+                     IndexWriterConfig$OpenMode/CREATE
+                     IndexWriterConfig$OpenMode/CREATE_OR_APPEND)))))
 
-(defn update-if-exists
-  [m k f & args]
-  (if (contains? m k)
-    (apply update m k f args)
-    m))
+(defn- ^IndexReader index-reader
+  [^Directory index]
+  (DirectoryReader/open index))
 
-(defn index-jar [index jar]
-  (let [jar' (-> jar
-                (set/rename-keys renames)
-                (update :licenses #(mapv :name %))
-                (update-if-exists :at (memfn getTime)))
-        ;; TODO: clucy forces its own :_content on you
-        content (string/join " " ((apply juxt content-fields) jar'))
-        doc (assoc (dissoc jar' :dependencies :scm)
-                   :_content content)]
-    (binding [clucy/*analyzer* analyzer]
-      (let [[old] (try
-                    (clucy/search index (format "artifact-id:%s AND group-id:%s"
-                                                (some-> doc :artifact-id (QueryParser/escape))
-                                                (some-> doc :group-id (QueryParser/escape))) 1)
-                    (catch IndexNotFoundException _
-                      ;; This happens when the index is searched before any data
-                      ;; is added. We can treat it here as a nil return
-                      ))]
-        (if old
-          (when (< (Long. (:at old)) (:at doc))
-            (clucy/search-and-delete index (format "artifact-id:%s AND group-id:%s"
-                                                   (some-> doc :artifact-id (QueryParser/escape))
-                                                   (some-> doc :group-id (QueryParser/escape))))
-            (clucy/add index (with-meta doc field-settings)))
-          (clucy/add index (with-meta doc field-settings)))))))
+(def ^:private content-fields
+  #{:artifact-id
+    :group-id
+    :description
+    :url
+    :version
+    #(->> % :authors (str/join " "))})
 
-(defn- track-index-status
-  [{:keys [indexed last-time] :as status}]
-  (let [status' (update status :indexed inc)]
-    (if (= 0 (rem indexed 1000))
-        (let [next-time (System/currentTimeMillis)]
-          (printf "Indexed %s jars (%f/second)\n" indexed (float (/ (* 1000 1000) (- next-time last-time))))
-          (flush)
-          (assoc status' :last-time next-time))
-        status')))
+(def ^:private ^String content-field-name "_content")
+(def ^:private ^String boost-field-name "_download_boost")
 
-(defn generate-index [db]
-  (let [index-path ((config) :index-path)]
-    (printf "index-path: %s\n" index-path)
-    (with-open [index (clucy/disk-index index-path)]
-      ;; searching with an empty index creates an exception
-      (clucy/add index {:dummy true})
-      (let [{:keys [indexed start-time]}
-            (reduce
-              (fn [status jar]
-                (try
-                  (index-jar index jar)
-                  (catch Exception e
-                    (printf "Failed to index %s/%s:%s - %s\n" (:group_name jar) (:jar_name jar) (:version jar)
-                            (.getMessage e))
-                    (.printStackTrace e)))
-                (track-index-status status))
-              {:indexed 0
-               :last-time (System/currentTimeMillis)
-               :start-time (System/currentTimeMillis)}
-              (db/all-jars db))
-            seconds (float (/ (- (System/currentTimeMillis) start-time) 1000))]
-        (printf "Indexing complete. Indexed %s jars in %f seconds (%f/second)\n"
-                indexed seconds (/ indexed seconds))
-        (flush))
-      (clucy/search-and-delete index "dummy:true"))))
+;; *StringField* is indexed but not tokenized, term freq. or positional info not indexed
+(defn- string-field
+  [^String name ^String value]
+  (StringField. name value Field$Store/YES))
 
+;; Indexed & tokenized
+(defn- text-field
+  [^String name ^String value]
+  (TextField. name value Field$Store/YES))
+
+(defn ^Iterable jar->doc
+  [{:keys [at
+           artifact-id
+           group-id
+           description
+           licenses
+           url
+           version]
+    :or   {at (Date.)}
+    :as   jar}
+   download-boost]
+  (doto (Document.)
+    ;; id: We need a unique identifier for each doc so that we can use updateDocument
+    (.add (string-field "id" (jar->id jar)))
+    (.add (string-field "artifact-id" artifact-id))
+    (.add (string-field "group-id" group-id))
+    (cond-> description
+      (.add (text-field "description" description)))
+    (.add (string-field "at" (str (.getTime ^Date at))))
+    (.add (text-field "licenses" (str/join " " (map :name licenses))))
+    (cond-> url
+      (.add (string-field "url" url)))
+    ;; version isn't really useful to search, since we only store the
+    ;; most-recently-seen value, but we have it here because we've had it
+    ;; historically
+    (cond-> version
+      (.add (string-field "version" version)))
+    ;; content field containing all values to use as the default search field
+    (.add (text-field content-field-name
+                      (str/join " " ((apply juxt content-fields) jar))))
+    ;; adds a boost field based on the ratio of downloads of the jar to the
+    ;; total number of downloads. This is then applied to the query below.
+    (.add (DoubleDocValuesField. boost-field-name download-boost))))
 
 ;; We multiply this by the fraction of total downloads an item gets to
 ;; compute its download score. It's an arbitrary value chosen to give
@@ -132,32 +159,59 @@
 
 (def download-score-weight 50)
 
-(defn download-values [stats]
+(defn- calculate-document-boost
+  [stats {:as _jar :keys [artifact-id group-id]}]
   (let [total (stats/total-downloads stats)]
-    (ValueSourceQuery.
-     (proxy [FieldCacheSource] ["download-count"]
-       (getCachedFieldValues [cache _ reader]
-         (let [ids (map vector
-                        (.getStrings cache reader "group-id")
-                        (.getStrings cache reader "artifact-id"))
-               download-score (fn [i]
-                                (let [score
-                                      (inc
-                                         (* download-score-weight
-                                            (/ (apply
-                                                (comp inc stats/download-count)
-                                                stats
-                                                (nth ids i))
-                                               (max 1 total))))]
-                                  score))]
-           (proxy [DocValues] []
-             (floatVal [i]
-               (download-score i))
-             (intVal [i]
-               (download-score i))
-             (toString [i]
-               (str "download-count="
-                    (download-score i))))))))))
+    (* download-score-weight
+       (/ (or (stats/download-count stats group-id artifact-id) 0)
+          (max 1 total)))))
+
+(defn disk-index
+  [index-path]
+  (NIOFSDirectory/open
+   (Paths/get index-path (into-array String nil))))
+
+(defn- index-jar
+  [^IndexWriter index-writer stats jar create?]
+  (let [jar' (set/rename-keys jar renames)
+        doc (jar->doc jar' (calculate-document-boost stats jar'))]
+    (if create?
+      (.addDocument index-writer doc)
+      (.updateDocument index-writer (Term. "id" (jar->id jar')) doc))))
+
+(defn- track-index-status
+  [{:keys [indexed last-time] :as status}]
+  (let [status' (update status :indexed inc)]
+    (if (= 0 (rem indexed 1000))
+      (let [next-time (System/currentTimeMillis)]
+        (printf "Indexed %s jars (%f/second)\n" indexed (float (/ (* 1000 1000) (- next-time last-time))))
+        (flush)
+        (assoc status' :last-time next-time))
+      status')))
+
+(defn generate-index [db stats]
+  (let [index-path ((config) :index-path)]
+    (printf "index-path: %s\n" index-path)
+    (with-open [index-writer (index-writer (disk-index index-path) true)]
+      (let [{:keys [indexed start-time]}
+            (reduce
+             (fn [status jar]
+               (try
+                 (index-jar index-writer stats jar true)
+                 (catch Exception e
+                   (printf "Failed to index %s/%s:%s - %s\n"
+                           (:group_name jar) (:jar_name jar) (:version jar)
+                           (.getMessage e))
+                   (.printStackTrace e)))
+               (track-index-status status))
+             {:indexed 0
+              :last-time (System/currentTimeMillis)
+              :start-time (System/currentTimeMillis)}
+             (db/all-jars db))
+            seconds (float (/ (- (System/currentTimeMillis) start-time) 1000))]
+        (printf "Indexing complete. Indexed %s jars in %f seconds (%f/second)\n"
+                indexed seconds (/ indexed seconds))
+        (flush)))))
 
 (defn date-in-epoch-ms
   [iso-8601-date-string]
@@ -172,53 +226,87 @@
           (date-in-epoch-ms start-time)
           (date-in-epoch-ms end-time)))
 
-(defn replace-time-range
+(defn ^String replace-time-range
   "Replaces human readable time range in query with epoch milliseconds"
   [query]
   (let [matches (re-find #"at:\[(.*) TO (.*)\]" query)]
     (if (or (nil? matches) (not= (count matches) 3))
       query
       (try (->> (lucene-time-syntax (nth matches 1) (nth matches 2))
-                (string/replace query (nth matches 0)))
+                (str/replace query (nth matches 0)))
            (catch Exception _ query)))))
 
-; http://stackoverflow.com/questions/963781/how-to-achieve-pagination-in-lucene
-(defn -search [stats index query page]
+(defn- parse-doc
+  [^Document doc score]
+  {:artifact-id (.get doc "artifact-id")
+   :at          (.get doc "at")
+   :group-id    (.get doc "group-id")
+   :description (.get doc "description")
+   :version     (.get doc "version")
+   :score       score})
+
+(defn -search*
+  [^IndexReader index-reader query limit]
+  (let [searcher (IndexSearcher. index-reader)
+        parser   (StandardQueryParser. (StandardAnalyzer. CharArraySet/EMPTY_SET))
+        query    (.parse parser (replace-time-range query) content-field-name)
+        query    (FunctionScoreQuery/boostByValue query (DoubleValuesSource/fromDoubleField boost-field-name))
+        hits     (.search searcher query ^long limit)]
+    {:hits     hits
+     :searcher searcher
+     :query    query}))
+
+;; http://stackoverflow.com/questions/963781/how-to-achieve-pagination-in-lucene
+(defn -search
+  [index query page]
   (if (empty? query)
     []
-    (binding [clucy/*analyzer* analyzer]
-      (with-open [searcher (IndexSearcher. index)]
-        (let [per-page 24
-              offset (* per-page (- page 1))
-              parser (QueryParser. clucy/*version*
-                                   "_content"
-                                   clucy/*analyzer*)
-              query  (.parse parser (replace-time-range query))
-              query  (CustomScoreQuery. query (download-values stats))
-              hits   (.search searcher query (* per-page page))
-              highlighter (#'clucy/make-highlighter query searcher nil)]
-          (doall
-           (let [dhits (take per-page (drop offset (.scoreDocs hits)))]
-             (with-meta (for [hit dhits]
-                          (#'clucy/document->map
-                           (.doc searcher (.doc hit))
-                           (.score hit)
-                           highlighter))
-               {:total-hits (.totalHits hits)
-                :max-score (.getMaxScore hits)
-                :results-per-page per-page
-                :offset offset}))))))))
+    (with-open [index-reader (index-reader index)]
+      (let [per-page 24
+            offset (* per-page (- page 1))
 
-(defrecord LuceneSearch [stats index-factory index]
+            {:keys [^TopDocs hits ^IndexSearcher searcher]}
+            (-search* index-reader query (* per-page page))
+
+            results (for [^ScoreDoc hit (take per-page (drop offset (.scoreDocs hits)))]
+                      (parse-doc (.doc searcher (.doc hit)) (.score hit)))]
+        (doall
+         (with-meta results
+           {:total-hits       (.-value (.totalHits hits))
+            :max-score        (reduce max 0 (map :score results))
+            :results-per-page per-page
+            :offset           offset}))))))
+
+(defn explain-top-n
+  "Debugging function to print out the score and its explanation of the
+   top `n` matches for the given query.
+   "
+  ([search-comp query] (explain-top-n 5 search-comp query))
+  ([n {:keys [index]} query]
+   (with-open [index-reader (index-reader index)]
+     (let [{:keys [^TopDocs hits ^IndexSearcher searcher query]}
+           (-search* index-reader query 24)]
+       (println query)
+       (run!
+        (fn [^ScoreDoc sd]
+          (println
+           (.get (.doc searcher (.-doc sd)) "id")
+           (.explain searcher query (.-doc sd))))
+        (take n (.scoreDocs hits)))))))
+
+(defrecord LuceneSearch [stats index-factory ^Directory index]
   Search
-  (index! [t pom]
-    (index-jar index pom))
-  (search [t query page]
-    (-search stats index query page))
-  (delete! [t group-id]
-    (delete-from-index index group-id))
-  (delete! [t group-id artifact-id]
-    (delete-from-index index group-id artifact-id))
+  (index! [_t pom]
+    (with-open [index-writer (index-writer index false)]
+      (index-jar index-writer stats pom false)))
+  (search [_t query page]
+    (-search index query page))
+  (delete! [_t group-id]
+    (with-open [index-writer (index-writer index false)]
+      (delete-from-index index-writer group-id)))
+  (delete! [_t group-id artifact-id]
+    (with-open [index-writer (index-writer index false)]
+      (delete-from-index index-writer group-id artifact-id)))
   component/Lifecycle
   (start [t]
     (if index

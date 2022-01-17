@@ -47,7 +47,7 @@
   (let [attrs {:jar_name (:artifact-id jar)
                :group_name (:group-id jar)
                :version (:version jar)
-               :description (xml-escape (:description jar))}
+               :description (some-> (:description jar) xml-escape)}
         created (:at jar)]
     {:tag :result :attrs (if created
                            (assoc attrs :created created)

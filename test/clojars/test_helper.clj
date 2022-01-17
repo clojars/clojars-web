@@ -18,16 +18,13 @@
    [clojure.java.jdbc :as jdbc]
    [clojure.string :as str]
    [clojure.test :refer [is]]
-   [clucy.core :as clucy]
    [com.stuartsierra.component :as component]
    [matcher-combinators.test])
   (:import
    (java.io
     File)
-   (java.time
-    ZonedDateTime)
-   (java.util
-    Date)
+   (org.apache.lucene.store
+    RAMDirectory)
    (org.apache.maven.wagon.providers.http
     HttpWagon)))
 
@@ -98,9 +95,9 @@
 
 (defrecord NoStats []
   stats/Stats
-  (download-count [t group-id artifact-id] 0)
-  (download-count [t group-id artifact-id version] 0)
-  (total-downloads [t] 0))
+  (download-count [_t _group-id _artifact-id] 0)
+  (download-count [_t _group-id _artifact-id _version] 0)
+  (total-downloads [_t] 0))
 
 (defn no-stats []
   (->NoStats))
@@ -115,6 +112,9 @@
     (f)))
 
 (declare ^:dynamic test-port)
+
+(defn memory-index []
+  (RAMDirectory.))
 
 (defn app
   ([] (app {}))
@@ -149,7 +149,7 @@
     (binding [system (component/start (assoc (system/new-system (config/config))
                                              :repo-bucket (s3/mock-s3-client)
                                              :error-reporter (quiet-reporter)
-                                             :index-factory #(clucy/memory-index)
+                                             :index-factory memory-index
                                              :mailer (email/mock-mailer)
                                              :stats (no-stats)
                                              :github (oauth-service/new-mock-oauth-service "GitHub" {})))]
@@ -194,12 +194,6 @@
                         m))
         (->> (spit new-pom)))
     new-pom))
-
-(defn date-from-iso-8601-str
-  [iso-8601-date-string]
-  (-> (ZonedDateTime/parse iso-8601-date-string)
-      .toInstant
-      (Date/from)))
 
 (defn at-as-time-str
   "Adjusts the :at (or :created) Date to a millis-since-epoch string to

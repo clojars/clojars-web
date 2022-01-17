@@ -1,8 +1,11 @@
 (ns clojars.tools.build-search-index
-  (:require [clojars
-             [config :refer [config]]
-             [search :refer [generate-index]]])
-  (:gen-class))
+  (:gen-class)
+  (:require
+   [clojars.config :refer [config]]
+   [clojars.search :as search]
+   [clojars.system :as system]
+   [com.stuartsierra.component :as component]))
 
-(defn -main [& [db]]
-  (generate-index (or db (:db (config)))))
+(defn -main []
+  (let [system (component/start (system/base-system (config)))]
+    (search/generate-index (:db system) (:stats system))))
