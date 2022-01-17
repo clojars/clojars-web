@@ -49,11 +49,32 @@
     (all-total-downloads stats-bucket)))
 
 (defn artifact-stats
-  "Returns a stats implementation for artifact stats.
+  "Returns a stats implementation for artifact stats read from s3.
   Does not have an an s3 bucket client assoc'ed, that should be done
   via component/using or system/using."
   []
   (map->ArtifactStats {}))
+
+(defrecord LocalArtifactStats [stats-file]
+  Stats
+  (download-count [_ group-id artifact-id]
+    (->> (get (read-all-stats (io/input-stream stats-file)) [group-id artifact-id])
+         (vals)
+          (reduce +)))
+  (download-count [_ group-id artifact-id version]
+    (get-in (read-all-stats (io/input-stream stats-file))
+            [[group-id artifact-id] version]
+            0))
+  (total-downloads [_]
+    (->> (read-all-stats stats-file)
+         (vals)
+         (mapcat vals)
+         (reduce +))))
+
+(defn local-artifact-stats
+  "Returns a stats implementation for artifact stats that reads from a local file."
+  [stats-file]
+  (->LocalArtifactStats stats-file))
 
 (defn format-stats [num]
   (.format (DecimalFormat. "#,##0") num))

@@ -37,7 +37,7 @@ something pushed to the production website.
 Development
 -----------
 
-**Note: Java 8+ is required**
+**Note: Java 17 is required**
 
 ### Development system
 
