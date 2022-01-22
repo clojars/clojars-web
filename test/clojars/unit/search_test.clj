@@ -54,8 +54,6 @@
       (with-lucene-search-component [lein-ring
                                      lein-modules
                                      c]
-        (is (match? [lein-modules lein-ring] (search/search lc "lein-modules" 1)))
-        (is (match? [lein-ring lein-modules] (search/search lc "lein-ring" 1)))
         (is (match? [lein-ring lein-modules] (search/search lc "lein" 1)))))))
 
 (deftest search-by-group-id
@@ -86,8 +84,10 @@
     (with-lucene-search-component [lein-ring
                                    (merge c {:description "some completely unrelated description"})]
       (is (match? [lein-ring] (search/search lc "leiningen" 1)))
+      (is (match? [lein-ring] (search/search lc "Leiningen" 1)))
       (is (match? [lein-ring] (search/search lc "ring" 1)))
-      (is (match? [lein-ring] (search/search lc "tasks" 1))))))
+      (is (match? [lein-ring] (search/search lc "tasks" 1)))
+      (is (match? [lein-ring] (search/search lc "Tasks" 1))))))
 
 (deftest search-by-creation-time-in-epoch-milliseconds
   (let [lein-ring-old (merge lein-ring

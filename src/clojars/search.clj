@@ -13,13 +13,14 @@
    (java.util
     Date)
    (org.apache.lucene.analysis
-    CharArraySet)
+    Analyzer
+    Analyzer$TokenStreamComponents
+    LowerCaseFilter)
    (org.apache.lucene.analysis.core
-    KeywordAnalyzer)
+    KeywordAnalyzer
+    WhitespaceTokenizer)
    (org.apache.lucene.analysis.miscellaneous
     PerFieldAnalyzerWrapper)
-   (org.apache.lucene.analysis.standard
-    StandardAnalyzer)
    (org.apache.lucene.document
     Document
     DoubleDocValuesField
@@ -76,9 +77,26 @@
     (.deleteDocuments index-writer
                       ^"[Lorg.apache.lucene.index.Term;" (into-array [term]))))
 
+(defn- whitespace+lowercase-analyzer
+  "Returns an analyzer that splits on whitespace and converts to lowercase. We use
+  a custom analyzer because:
+
+  - StandardAnalyzer splits on hyphens, but we want to be able to match foo-bar
+  - WhitespaceAnalyzer doesn't split on hyphens, but doesn't lowercase tokens either
+
+  We do split tokens on hyphens when adding them to the index, but do that
+  manually (see `hyphen-remover`)."
+  []
+  (proxy [Analyzer] []
+    (createComponents [_fieldname]
+      (let [wst (WhitespaceTokenizer.)]
+        (Analyzer$TokenStreamComponents.
+         wst
+         (LowerCaseFilter. wst))))))
+
 (defn indexing-analyzer []
   (PerFieldAnalyzerWrapper.
-   (StandardAnalyzer. CharArraySet/EMPTY_SET)
+   (whitespace+lowercase-analyzer)
    {"artifact-id" (KeywordAnalyzer.)
     "group-id"    (KeywordAnalyzer.)
     "at"          (KeywordAnalyzer.)}))
@@ -95,13 +113,31 @@
   [^Directory index]
   (DirectoryReader/open index))
 
+(defn- hyphen-remover
+  "Replaces hyphens. This is used to expand a token into its components for use in
+  the full content string. Should be used alongside the unexpanded token so it
+  is still searchable."
+  [kw]
+  (fn [m]
+    (when-some [v (get m kw)]
+      (str/replace v #"[-]" " "))))
+
+(defn- period-remover
+  "Removes periods at the end of sentences since the whitespace tokenizer won't."
+  [kw]
+  (fn [m]
+    (when-some [v (get m kw)]
+      (str/replace v #"\.(\s|$)" " "))))
+
 (def ^:private content-fields
-  #{:artifact-id
-    :group-id
-    :description
-    :url
-    :version
-    #(->> % :authors (str/join " "))})
+  [:artifact-id
+   (hyphen-remover :artifact-id)
+   :group-id
+   (hyphen-remover :group-id)
+   (period-remover :description)
+   :url
+   :version
+   #(->> % :authors (str/join " "))])
 
 (def ^:private ^String content-field-name "_content")
 (def ^:private ^String boost-field-name "_download_boost")
@@ -248,7 +284,7 @@
 (defn -search*
   [^IndexReader index-reader query limit]
   (let [searcher (IndexSearcher. index-reader)
-        parser   (StandardQueryParser. (StandardAnalyzer. CharArraySet/EMPTY_SET))
+        parser   (StandardQueryParser. (whitespace+lowercase-analyzer))
         query    (.parse parser (replace-time-range query) content-field-name)
         query    (FunctionScoreQuery/boostByValue query (DoubleValuesSource/fromDoubleField boost-field-name))
         hits     (.search searcher query ^long limit)]
