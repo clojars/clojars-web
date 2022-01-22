@@ -12,6 +12,8 @@
     Paths)
    (java.util
     Date)
+   (org.apache.lucene.search.similarities
+    BM25Similarity)
    (org.apache.lucene.analysis
     Analyzer
     Analyzer$TokenStreamComponents
@@ -101,13 +103,21 @@
     "group-id"    (KeywordAnalyzer.)
     "at"          (KeywordAnalyzer.)}))
 
+(defn- no-len-similarity
+  "Used to override the default similarity to ignore the length of a document when scoring.
+  1.2 is the default k1. Setting b to 0 (instead of the default of 0.75) forces
+  the doc length to be ignored."
+  []
+  (BM25Similarity. 1.2 0))
+
 (defn- ^IndexWriter index-writer [index create?]
   (IndexWriter.
    index
    (doto (IndexWriterConfig. (indexing-analyzer))
      (.setOpenMode (if create?
                      IndexWriterConfig$OpenMode/CREATE
-                     IndexWriterConfig$OpenMode/CREATE_OR_APPEND)))))
+                     IndexWriterConfig$OpenMode/CREATE_OR_APPEND))
+     (.setSimilarity (no-len-similarity)))))
 
 (defn- ^IndexReader index-reader
   [^Directory index]
@@ -283,7 +293,8 @@
 
 (defn -search*
   [^IndexReader index-reader query limit]
-  (let [searcher (IndexSearcher. index-reader)
+  (let [searcher (doto (IndexSearcher. index-reader)
+                   (.setSimilarity (no-len-similarity)))
         parser   (StandardQueryParser. (whitespace+lowercase-analyzer))
         query    (.parse parser (replace-time-range query) content-field-name)
         query    (FunctionScoreQuery/boostByValue query (DoubleValuesSource/fromDoubleField boost-field-name))
