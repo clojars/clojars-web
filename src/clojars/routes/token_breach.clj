@@ -14,14 +14,15 @@
   "Retrieves the public key text from the github api for the key
   identifier, then converts the key text to a key object."
   [identifier]
-  (->> (client/get "https://api.github.com/meta/public_keys/token_scanning"
-                   {:as :json})
-       :body
-       :public_keys
-       (some (fn [{:keys [key_identifier key]}]
-               (when (= identifier key_identifier)
-                 key)))
-       (keys/str->public-key)))
+  (when identifier
+    (some->> (client/get "https://api.github.com/meta/public_keys/token_scanning"
+                         {:as :json})
+             :body
+             :public_keys
+             (some (fn [{:keys [key_identifier key]}]
+                     (when (= identifier key_identifier)
+                       key)))
+             (keys/str->public-key))))
 
 (defn- valid-github-request?
   "Verifies the request was signed using GitHub's key.
@@ -29,9 +30,11 @@
   [headers body-str]
   (let [key-id (get headers "github-public-key-identifier")
         key-sig (get headers "github-public-key-signature")
-        key (get-github-key key-id)
-        sig (base64/decode key-sig)]
-    (dsa/verify body-str sig {:key key :alg :ecdsa+sha256})))
+        key (get-github-key key-id)]
+    (when (and body-str key key-sig)
+      (dsa/verify body-str
+                  (base64/decode key-sig)
+                  {:key key :alg :ecdsa+sha256}))))
 
 ;; - make emails async
 ;; - add timing logs

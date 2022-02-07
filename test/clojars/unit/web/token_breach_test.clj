@@ -43,6 +43,15 @@
   (filter-some #(= token-name (:name %))
                (db/find-user-tokens-by-username help/*db* username)))
 
+(deftest test-github-token-breach-request-with-invalid-identifier
+  (help/with-test-system
+    (with-redefs [client/get (constantly {:body github-response})]
+      (let [app (help/app-from-system)
+            request (-> (build-breach-request "whatever")
+                        (header "GITHUB-PUBLIC-KEY-IDENTIFIER" "bad"))
+            res (app request)]
+        (is (= 422 (:status res)))))))
+
 (deftest test-github-token-breach-reporting-works
   (help/with-test-system
     (let [_user (db/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
