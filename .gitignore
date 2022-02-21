@@ -16,6 +16,8 @@ pom.xml
 *.iml
 .idea
 
+.lsp/
+
 /.lein-deps-sum
 /.lein-repl-history
 /.lein-failures
