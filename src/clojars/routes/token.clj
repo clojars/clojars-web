@@ -21,11 +21,11 @@
   (when-not (empty? scope)
     (str/split scope #"/")))
 
-(defn- create-token [db token-name scope]
+(defn- create-token [db token-name scope single-use?]
   (auth/with-account
     (fn [account]
       (let [[group-name jar-name] (parse-scope scope)
-            token (db/add-deploy-token db account token-name group-name jar-name)]
+            token (db/add-deploy-token db account token-name group-name jar-name single-use?)]
         (log/info {:tag :create-token
                    :username account
                    :status :success})
@@ -66,7 +66,7 @@
   (compojure/routes
    (GET ["/tokens"] {:keys [flash]}
         (get-tokens db flash))
-   (POST ["/tokens"] [name scope]
-         (create-token db name scope))
+   (POST ["/tokens"] [name scope single_use]
+         (create-token db name scope single_use))
    (DELETE ["/tokens/:id", :id #"[0-9]+"] [id]
            (disable-token db id))))

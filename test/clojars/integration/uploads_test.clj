@@ -200,6 +200,34 @@
                                             :artifactId "test2"})
                :password  artifact-scoped-token})))))))
 
+(deftest deploying-with-a-single-use-token
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+
+  (let [token (create-deploy-token
+               (session (help/app-from-system))
+               "dantheman" "password" "single-use" nil true)]
+
+    (testing "first deploy with single-use-token works"
+      (deploy
+       {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                    {:groupId "org.clojars.dantheman"})
+        :password token}))
+
+    (testing "reuse of token fails"
+      (is (thrown-with-msg?
+           DeploymentException
+           #"The provided single-use token has already been used"
+           (deploy
+            {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+             :jar-file (io/file (io/resource "test.jar"))
+             :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                         {:groupId "org.clojars.dantheman"
+                                          :version "0.0.2"})
+             :password  token}))))))
+
 (deftest user-cannot-deploy-with-disabled-token
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
@@ -226,6 +254,52 @@
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+        add-checksums (partial mapcat (fn [[f no-version?]]
+                                        [[f no-version?]
+                                         [(tmp-checksum-file f :md5) no-version?]
+                                         [(tmp-checksum-file f :sha1) no-version?]]))
+        files (add-checksums [[(tmp-file
+                                (io/file (io/resource "test.jar")) "test-0.0.1.jar")]
+                              [(tmp-file
+                                (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                                  {:groupId "org.clojars.dantheman"})
+                                "test-0.0.1.pom")]
+                              [(tmp-file
+                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                "maven-metadata.xml")
+                               :no-version]
+                              ;; maven 3.5 will upload maven-metadata.xml twice when there are classified artifacts
+                              ;; see https://github.com/clojars/clojars-web/issues/640
+                              [(tmp-file
+                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                "maven-metadata.xml")
+                               :no-version]
+                              [(tmp-file
+                                (io/file (io/resource "test.jar")) "test-sources-0.0.1.jar")]])]
+    ;; we use clj-http here instead of aether to have control over the
+    ;; order the files are uploaded
+    (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
+      (doseq [[f no-version?] files]
+        (client/put (format "%s/org/clojars/dantheman/test/%s%s"
+                            (repo-url)
+                            (if no-version? "" "0.0.1/")
+                            (.getName f))
+                    {:body f
+                     :basic-auth ["dantheman" token]})))
+
+    (let [base-path "org/clojars/dantheman/test/"
+          repo-bucket (:repo-bucket help/system)
+          repo (:repo (config))]
+      (doseq [[f no-version?] files]
+        (let [fname (.getName f)
+              base-path' (if no-version? base-path (str base-path "0.0.1/"))]
+          (is (.exists (io/file repo base-path' fname)))
+          (is (s3/object-exists? repo-bucket (str base-path' fname))))))))
+
+(deftest user-can-deploy-artifacts-after-maven-metadata-using-single-use-token
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing"  nil true)
         add-checksums (partial mapcat (fn [[f no-version?]]
                                         [[f no-version?]
                                          [(tmp-checksum-file f :md5) no-version?]

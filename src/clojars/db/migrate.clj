@@ -86,6 +86,12 @@
                            "tag text not null,"
                            "created timestamp not null default current_timestamp)")))
 
+(defn- add-single-use-to-tokens
+  [trans]
+  (sql/db-do-commands trans
+                      ["create type single_use_status as enum ('no', 'yes', 'used')"
+                       "alter table deploy_tokens add single_use single_use_status default 'no'"]))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -94,7 +100,8 @@
    #'add-mfa-fields-to-users-table
    #'add-hash-to-deploy-tokens-table
    #'add-group-verifications-table
-   #'add-audit-table])
+   #'add-audit-table
+   #'add-single-use-to-tokens])
 
 (defn migrate [db]
   (sql/db-do-commands db

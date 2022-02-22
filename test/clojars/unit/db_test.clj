@@ -492,7 +492,7 @@
         tokenname "test-token"
         _ (db/add-user help/*db* "email@example.com" username "a-password")
         {:keys [token]} (db/add-deploy-token help/*db*
-                                             username tokenname groupname jarname)
+                                             username tokenname groupname jarname false)
         {:keys [group_name jar_name token_hash]} (db/find-token-by-value help/*db* token)]
     (is (= groupname group_name))
     (is (= jarname jar_name))

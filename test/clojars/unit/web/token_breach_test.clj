@@ -58,7 +58,7 @@
           app (help/app-from-system)]
       (with-redefs [client/get (constantly {:body github-response})]
         (testing "when token is enabled"
-          (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil)
+          (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil false)
                 email-sent? (promise)
                 _ (add-watch email/mock-emails nil
                              (fn [_ _ _ new-val]
@@ -77,7 +77,7 @@
             (is (re-find #"has been disabled" message))))
 
         (testing "when token is disabled"
-          (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil)
+          (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil false)
                 db-token (find-token "ham" "another token")
                 _ (db/disable-deploy-token help/*db* (:id db-token))
                 email-sent? (promise)

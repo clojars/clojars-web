@@ -2,7 +2,7 @@
   (:require
    [clojars.web.common :refer [flash html-doc error-list simple-date]]
    [clojars.web.safe-hiccup :refer [form-to]]
-   [hiccup.form :refer [drop-down label text-field submit-button]]))
+   [hiccup.form :refer [check-box drop-down label text-field submit-button]]))
 
 (defn- new-token-message
   [{:keys [name token]}]
@@ -61,6 +61,7 @@
        [:tr
         [:th "Token Name"]
         [:th "Scope"]
+        [:th "Single Use?"]
         [:th "Created"]
         [:th "Disabled"]
         [:th "Last Used"]
@@ -71,6 +72,7 @@
          [:tr
           [:td.name {:class (when disabled?  "token-disabled")} (:name token)]
           [:td.scope (scope token)]
+          [:td.single-use (:single_use token)]
           [:td.created (simple-date (:created token))]
           [:td.updated (when disabled? (simple-date (:updated token)))]
           [:td.last-used (simple-date (:last_used token))]
@@ -88,4 +90,6 @@
                           :name)
               (label :scope "Token scope")
               (drop-down :scope (scope-options jars groups))
+              (label :single_use "Single use?")
+              (check-box :single_use)
               (submit-button "Create Token"))])))
