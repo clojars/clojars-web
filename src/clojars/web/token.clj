@@ -2,7 +2,8 @@
   (:require
    [clojars.web.common :refer [flash html-doc error-list simple-date]]
    [clojars.web.safe-hiccup :refer [form-to]]
-   [hiccup.form :refer [check-box drop-down label text-field submit-button]]))
+   [hiccup.form :refer [check-box drop-down label text-field submit-button]]
+   [clojure.string :as str]))
 
 (defn- new-token-message
   [{:keys [name token]}]
@@ -41,7 +42,9 @@
   ([account tokens jars groups {:keys [error message new-token]}]
    (html-doc
     "Deploy Tokens"
-    {:account account :description "Clojars deploy tokens"}
+    {:account account
+     :description "Clojars deploy tokens"
+     :extra-js ["/js/tokens.js"]}
     [:div
      [:h1 "Deploy Tokens"]
      (error-list (when error [error]))
@@ -56,6 +59,10 @@
        [:li "any artifact within a group you have access to ('group-name/*')"]
        [:li "a particular artifact you have access to ('group-name/artifact-name')"]]]]
     [:div.token-table.col-xs-12.col-sm-12
+     [:div
+      [:span "Show: "]
+      [:span "disabled tokens?" (check-box :show-disabled)]
+      [:span "used single-use tokens?" (check-box :show-used)]]
      [:table.table.deploy-tokens
       [:thead
        [:tr
@@ -68,9 +75,14 @@
         [:th "Actions"]]]
       [:tbody
        (for [token (sort-by (juxt :disabled :name :created) tokens)
-             :let [disabled? (:disabled token)]]
-         [:tr
-          [:td.name {:class (when disabled?  "token-disabled")} (:name token)]
+             :let [disabled? (:disabled token)
+                   used? (= :single-use-status/used (:single_use token))
+                   classes (str/join " "
+                                     (remove nil?
+                                             [(when disabled? "token-disabled")
+                                              (when used? "token-used")]))]]
+         [:tr {:class classes}
+          [:td.name (:name token)]
           [:td.scope (scope token)]
           [:td.single-use (:single_use token)]
           [:td.created (simple-date (:created token))]
