@@ -372,8 +372,8 @@ SET otp_secret_key = null, otp_recovery_code = null, otp_active = false
 WHERE "user" = :username;
 
 --name: insert-deploy-token<!
-INSERT INTO deploy_tokens (name, user_id, token, token_hash, group_name, jar_name, single_use)
-VALUES (:name, :user_id, :token, :token_hash, :group_name, :jar_name, :single_use);
+INSERT INTO deploy_tokens (name, user_id, token, token_hash, group_name, jar_name, single_use, expires_at)
+VALUES (:name, :user_id, :token, :token_hash, :group_name, :jar_name, :single_use, :expires_at);
 
 --name: consume-deploy-token!
 UPDATE deploy_tokens

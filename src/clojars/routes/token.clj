@@ -6,7 +6,9 @@
    [clojure.string :as str]
    [compojure.core :as compojure :refer [GET POST DELETE]]
    [ring.util.response :refer [redirect]]
-   [clojars.log :as log]))
+   [clojars.log :as log])
+  (:import
+   (java.sql Timestamp)))
 
 (defn- get-tokens [db flash-msg]
   (auth/with-account
@@ -21,11 +23,21 @@
   (when-not (empty? scope)
     (str/split scope #"/")))
 
-(defn- create-token [db token-name scope single-use?]
+(let [ms-per-hour (* 1000 60 60)]
+  (defn- calculate-expires-at
+    [expires-in-hours]
+    (when-not (str/blank? expires-in-hours)
+      (-> (db/get-time)
+          (.getTime)
+          (+ (* (Integer/parseInt expires-in-hours) ms-per-hour))
+          (Timestamp.)))))
+
+(defn- create-token [db token-name scope single-use? expires-in]
   (auth/with-account
     (fn [account]
       (let [[group-name jar-name] (parse-scope scope)
-            token (db/add-deploy-token db account token-name group-name jar-name single-use?)]
+            token (db/add-deploy-token db account token-name group-name jar-name
+                                       single-use? (calculate-expires-at expires-in))]
         (log/info {:tag :create-token
                    :username account
                    :status :success})
@@ -66,7 +78,7 @@
   (compojure/routes
    (GET ["/tokens"] {:keys [flash]}
         (get-tokens db flash))
-   (POST ["/tokens"] [name scope single_use]
-         (create-token db name scope single_use))
+   (POST ["/tokens"] [name scope single_use expires_in]
+         (create-token db name scope single_use expires_in))
    (DELETE ["/tokens/:id", :id #"[0-9]+"] [id]
            (disable-token db id))))

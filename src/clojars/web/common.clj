@@ -11,7 +11,9 @@
    [hiccup.core :refer [html]]
    [hiccup.element :refer [link-to unordered-list image]]
    [hiccup.page :refer [include-css include-js]]
-   [ring.util.codec :refer [url-encode]]))
+   [ring.util.codec :refer [url-encode]])
+  (:import
+   (java.text SimpleDateFormat)))
 
 (defn when-ie [& contents]
   (str
@@ -326,12 +328,20 @@
 (defn group-link [groupname]
   (link-to (str "/groups/" groupname) groupname))
 
-(defn format-date [s]
-  (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") s))
+(let [date-formatter (SimpleDateFormat. "yyyy-MM-dd")]
+  (defn format-date [d]
+    (when d
+      (.format date-formatter d))))
 
-(defn simple-date [s]
-  (when s
-    (.format (java.text.SimpleDateFormat. "MMM d, yyyy") s)))
+(let [simple-date-formatter (SimpleDateFormat. "MMM d, yyyy")]
+  (defn simple-date [d]
+    (when d
+      (.format simple-date-formatter d))))
+
+(let [timestamp-formatter (SimpleDateFormat. "MMM d, yyyy HH:mm:ss Z")]
+  (defn format-timestamp [t]
+    (when t
+      (.format timestamp-formatter t))))
 
 (defn page-nav [current-page total-pages & {:keys [base-path] :or {base-path "/projects?page="}}]
   (let [previous-text (raw "&#8592; Previous")

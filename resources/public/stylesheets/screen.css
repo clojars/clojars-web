@@ -693,6 +693,7 @@ table.deploy-tokens td {
 }
 
 table.deploy-tokens tr.token-disabled td.name,
+table.deploy-tokens tr.token-expired td.name,
 table.deploy-tokens tr.token-used td.name {
     text-decoration: line-through;
 }

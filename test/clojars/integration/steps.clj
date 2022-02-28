@@ -37,10 +37,8 @@
 
 (defn create-deploy-token
   ([state user password token-name]
-   (create-deploy-token state user password token-name nil false))
-  ([state user password token-name scope]
-   (create-deploy-token state user password token-name scope false))
-  ([state user password token-name scope single-use?]
+   (create-deploy-token state user password token-name {}))
+  ([state user password token-name {:keys [expires-in scope single-use?]}]
    (-> state
        (login-as user password)
        (follow-redirect)
@@ -48,6 +46,7 @@
        (fill-in "Token name" token-name)
        (cond-> scope (choose "Token scope" scope))
        (cond-> single-use? (check "Single use?"))
+       (cond-> expires-in (choose "Expires in" expires-in))
        (press "Create Token")
        :enlive
        (enlive/select [:div.new-token :> :pre])

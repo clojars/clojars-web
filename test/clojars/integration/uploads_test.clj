@@ -21,6 +21,7 @@
    [kerodon.test :refer [has status? text?]]
    [net.cgrand.enlive-html :as enlive])
   (:import
+   (java.sql Timestamp)
    (org.eclipse.aether.deployment
     DeploymentException)))
 
@@ -120,7 +121,7 @@
         (login-as "dantheman" "password")
         (visit "/tokens")
         (within [:td.last-used]
-                (has (text? (common/simple-date now)))))))
+                (has (text? (common/format-timestamp now)))))))
 
 (deftest deploying-with-a-scoped-token
   (-> (session (help/app-from-system))
@@ -151,7 +152,7 @@
     (testing "with a group-scoped token"
       (let [group-scoped-token (create-deploy-token
                                 (session (help/app-from-system)) "dantheman" "password" "group-scoped"
-                                "org.clojars.dantheman")]
+                                {:scope "org.clojars.dantheman"})]
 
         (deploy
          {:coordinates '[org.clojars.dantheman/test "0.0.2"]
@@ -177,7 +178,7 @@
     (testing "with an artifact-scoped token"
       (let [artifact-scoped-token (create-deploy-token
                                    (session (help/app-from-system)) "dantheman" "password" "artifact-scoped"
-                                   "org.clojars.dantheman/test")]
+                                   {:scope "org.clojars.dantheman/test"})]
 
         (deploy
          {:coordinates '[org.clojars.dantheman/test "0.0.3"]
@@ -206,7 +207,8 @@
 
   (let [token (create-deploy-token
                (session (help/app-from-system))
-               "dantheman" "password" "single-use" nil true)]
+               "dantheman" "password" "single-use" {:single-use? true})]
+
 
     (testing "first deploy with single-use-token works"
       (deploy
@@ -227,6 +229,40 @@
                                          {:groupId "org.clojars.dantheman"
                                           :version "0.0.2"})
              :password  token}))))))
+
+(deftest deploying-with-an-expiring-token
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+
+  (let [token (create-deploy-token
+               (session (help/app-from-system))
+               "dantheman" "password" "single-use" {:expires-in "1 Hour"})]
+
+    (testing "deploy before token expires works"
+      (deploy
+       {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                    {:groupId "org.clojars.dantheman"})
+        :password token}))
+
+    (testing "deploy after token expires fails"
+      (help/with-time (Timestamp. (+ (.getTime (db/get-time)) (* 2 1000 60 60))) ;; 2 hours
+        (is (thrown-with-msg?
+             DeploymentException
+             #"401 Unauthorized"
+             (deploy
+              {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+               :jar-file (io/file (io/resource "test.jar"))
+               :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                           {:groupId "org.clojars.dantheman"
+                                            :version "0.0.2"})
+               :password  token})))
+
+        (help/match-audit {:username "dantheman"}
+                          {:user "dantheman"
+                           :tag "expired-token"
+                           :message "The given token is expired"})))))
 
 (deftest user-cannot-deploy-with-disabled-token
   (-> (session (help/app-from-system))
@@ -299,7 +335,7 @@
 (deftest user-can-deploy-artifacts-after-maven-metadata-using-single-use-token
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing"  nil true)
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing" {:single-use? true})
         add-checksums (partial mapcat (fn [[f no-version?]]
                                         [[f no-version?]
                                          [(tmp-checksum-file f :md5) no-version?]

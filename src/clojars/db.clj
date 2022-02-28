@@ -429,7 +429,7 @@
   (boolean (and v (re-find #"^CLOJARS_[0-9a-f]{60}$" v))))
 
 (defn add-deploy-token
-  [db username token-name group-name jar-name single-use?]
+  [db username token-name group-name jar-name single-use? expires-at]
   (let [user (find-user db username)
         token (generate-deploy-token)
         record {:user_id (:id user)
@@ -440,7 +440,8 @@
                 :jar_name jar-name
                 :single_use (if single-use?
                               :single-use-status/yes
-                              :single-use-status/no)}]
+                              :single-use-status/no)
+                :expires_at expires-at}]
     (sql/insert-deploy-token<! (update record :token bcrypt)
                                {:connection db})
     record))
