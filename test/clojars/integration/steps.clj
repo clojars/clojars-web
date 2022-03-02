@@ -5,7 +5,7 @@
             [clojars.maven :as maven]
             [clojars.test-helper :as help]
             [clojure.java.io :as io]
-            [kerodon.core :refer [choose fill-in follow follow-redirect press visit]]
+            [kerodon.core :refer [check choose fill-in follow follow-redirect press visit]]
             [net.cgrand.enlive-html :as enlive]
             [one-time.core :as ot])
   (:import java.io.File))
@@ -37,14 +37,16 @@
 
 (defn create-deploy-token
   ([state user password token-name]
-   (create-deploy-token state user password token-name nil))
-  ([state user password token-name scope]
+   (create-deploy-token state user password token-name {}))
+  ([state user password token-name {:keys [expires-in scope single-use?]}]
    (-> state
        (login-as user password)
        (follow-redirect)
        (follow "deploy tokens")
        (fill-in "Token name" token-name)
        (cond-> scope (choose "Token scope" scope))
+       (cond-> single-use? (check "Single use?"))
+       (cond-> expires-in (choose "Expires in" expires-in))
        (press "Create Token")
        :enlive
        (enlive/select [:div.new-token :> :pre])

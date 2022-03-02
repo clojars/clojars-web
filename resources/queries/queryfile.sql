@@ -371,9 +371,14 @@ UPDATE users
 SET otp_secret_key = null, otp_recovery_code = null, otp_active = false
 WHERE "user" = :username;
 
---name: insert-deploy-token!
-INSERT INTO deploy_tokens (name, user_id, token, token_hash, group_name, jar_name)
-VALUES (:name, :user_id, :token, :token_hash, :group_name, :jar_name);
+--name: insert-deploy-token<!
+INSERT INTO deploy_tokens (name, user_id, token, token_hash, group_name, jar_name, single_use, expires_at)
+VALUES (:name, :user_id, :token, :token_hash, :group_name, :jar_name, :single_use, :expires_at);
+
+--name: consume-deploy-token!
+UPDATE deploy_tokens
+SET single_use = 'used', updated = :updated
+WHERE id = :token_id
 
 --name: disable-deploy-token!
 UPDATE deploy_tokens

@@ -6,6 +6,7 @@
    [clj-time.coerce :as time.coerce]
    [clj-time.core :as time]
    [clojars.config :refer [config]]
+   [clojure.java.jdbc :as jdbc]
    [clojars.db.sql :as sql]
    [clojars.maven :as mvn]
    [clojars.util :refer [filter-some]]
@@ -15,12 +16,16 @@
    [clojure.string :as str]
    [one-time.core :as ot])
   (:import
+   (clojure.lang
+    Keyword)
    (java.security
     SecureRandom)
    (java.sql
     Timestamp)
    (java.util
-    UUID)))
+    UUID)
+   (org.postgresql.util
+    PGobject)))
 
 (def reserved-names
   #{"about"
@@ -82,6 +87,33 @@
     "username"
     "webmaster"
     "welcome"})
+
+;; ----- JDBC extensions -----
+
+;; read/write postgres enums
+;; from https://www.bevuta.com/en/blog/using-postgresql-enums-in-clojure/
+
+(defn- kw->pgenum [kw]
+  (let [type (-> (namespace kw)
+         (str/replace "-" "_"))
+    value (name kw)]
+    (doto (PGobject.)
+      (.setType type)
+      (.setValue value))))
+
+(extend-type Keyword
+  jdbc/ISQLValue
+  (sql-value [kw]
+    (kw->pgenum kw)))
+
+(let [schema-enums #{"single_use_status"}]
+  (extend-type String
+    jdbc/IResultSetReadColumn
+    (result-set-read-column [val rsmeta idx]
+      (let [type (.getColumnTypeName rsmeta idx)]
+        (if (contains? schema-enums type)
+          (keyword (str/replace type "_" "-") val)
+          val)))))
 
 (defn get-time []
   (Timestamp. (System/currentTimeMillis)))
@@ -396,7 +428,8 @@
   [v]
   (boolean (and v (re-find #"^CLOJARS_[0-9a-f]{60}$" v))))
 
-(defn add-deploy-token [db username token-name group-name jar-name]
+(defn add-deploy-token
+  [db username token-name group-name jar-name single-use? expires-at]
   (let [user (find-user db username)
         token (generate-deploy-token)
         record {:user_id (:id user)
@@ -404,10 +437,20 @@
                 :token token
                 :token_hash (hash-deploy-token token)
                 :group_name group-name
-                :jar_name jar-name}]
-    (sql/insert-deploy-token! (update record :token bcrypt)
-                              {:connection db})
+                :jar_name jar-name
+                :single_use (if single-use?
+                              :single-use-status/yes
+                              :single-use-status/no)
+                :expires_at expires-at}]
+    (sql/insert-deploy-token<! (update record :token bcrypt)
+                               {:connection db})
     record))
+
+(defn consume-deploy-token [db token-id]
+  (sql/consume-deploy-token!
+   {:token_id token-id
+    :updated (get-time)}
+   {:connection db}))
 
 (defn disable-deploy-token [db token-id]
   (sql/disable-deploy-token!

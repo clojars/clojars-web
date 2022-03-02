@@ -4,6 +4,7 @@
    [clojars.db :as db]
    [clojars.errors :refer [report-error]]
    [clojars.file-utils :as fu]
+   [clojars.util :as util]
    [clojars.log :as log]
    [clojars.maven :as maven]
    [clojars.search :as search]
@@ -44,15 +45,23 @@
     (when (.exists md-file)
       (read-string (slurp md-file)))))
 
-(defn write-metadata [dir group-name group-path artifact version timestamp-version]
-  (spit (io/file dir metadata-edn)
-    (pr-str (merge-with #(if %2 %2 %1)
-              (read-metadata dir)
-              {:group group-name
-               :group-path group-path
-               :name artifact
-               :version version
-               :timestamp-version timestamp-version}))))
+(defn- token-from-session
+  [{:as _session :cemerick.friend/keys [identity]}]
+  (let [{:keys [authentications current]} identity]
+    (get-in authentications [current :token])))
+
+(defn- write-metadata
+  [session dir group-name group-path artifact version timestamp-version]
+  (let [token-id (:id (token-from-session session))
+        metadata (util/assoc-some
+                  (read-metadata dir)
+                  :group group-name
+                  :group-path group-path
+                  :name artifact
+                  :version version
+                  :timestamp-version timestamp-version
+                  :token-id token-id)]
+    (spit (io/file dir metadata-edn) (pr-str metadata))))
 
 (defn find-upload-dir [group artifact version timestamp-version {:keys [upload-dirs]}]
   (if-let [dir (some (fn [dir]
@@ -275,7 +284,13 @@
      ~@body
      (prn (assoc ~meta :time (- (System/currentTimeMillis) start#)))))
 
-(defn finalize-deploy [storage db search account ^File dir]
+(defn- maybe-consume-single-use-token
+  [db session]
+  (let [token (token-from-session session)]
+    (when (= :single-use-status/yes (:single_use token))
+      (db/consume-deploy-token db (:id token)))))
+
+(defn finalize-deploy [storage db search session account ^File dir]
   (if-let [pom-file (find-pom dir)]
     (let [pom (try
                 (maven/pom-to-map pom-file)
@@ -314,6 +329,7 @@
                    (remove #(some #{(.getName %)} [metadata-edn]))))
 
         (db/add-jar db account pom)
+        (maybe-consume-single-use-token db session)
         (log/audit db {:tag :deployed})
         (log/info {:tag :deploy-finalized})
         (future
@@ -331,9 +347,8 @@
     (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
 
 (defn- token-session-matches-group-artifact?
-  [{:cemerick.friend/keys [identity]} group artifact]
-  (let [{:keys [authentications current]}       identity
-        {:as token :keys [group_name jar_name]} (get-in authentications [current :token])]
+  [session group artifact]
+  (let [{:as token :keys [group_name jar_name]} (token-from-session session)]
     (or
      ;; not a token request
      (nil? token)
@@ -358,6 +373,18 @@
      {:group group
       :artifact artifact})))
 
+(defn- maybe-assert-single-use-token-unused
+  [session upload-dir]
+  (let [token (token-from-session session)]
+    ;; We are starting a new upload with a used token. We can't blindly reject
+    ;; all used token requests since we may get legitimate upload requests after
+    ;; the deploy is finalized
+    (when (and (= :single-use-status/used (:single_use token))
+               (nil? (:token-id (read-metadata upload-dir))))
+      (throw-forbidden
+           "The provided single-use token has already been used"
+           {}))))
+
 (defn- handle-versioned-upload [storage db body session group artifact version filename]
   (let [groupname (fu/path->group group)
         timestamp-version (when (maven/snapshot-version? version) (maven/snapshot-timestamp-version filename))]
@@ -370,13 +397,8 @@
       session
       (fn [account upload-dir]
         (maybe-assert-token-matches-group+artifact session groupname artifact)
-        (write-metadata
-          upload-dir
-          groupname
-          group
-          artifact
-          version
-          timestamp-version)
+        (maybe-assert-single-use-token-unused session upload-dir)
+        (write-metadata session upload-dir groupname group artifact version timestamp-version)
         (let [file (try-save-to-file (io/file upload-dir group artifact version filename) body)]
           (when (deploy-finalized? upload-dir)
             ;; a deploy should never get this far with a bad group,
@@ -424,7 +446,7 @@
                      (when-not (or (deploy-finalized? upload-dir)
                                    (= (fu/checksum file :sha1) existing-sum))
                        (try
-                         (finalize-deploy storage db search
+                         (finalize-deploy storage db search session
                                           account upload-dir)
                          (catch Exception e
                            ;; FIXME: we may have already thrown-invalid here

@@ -1,8 +1,10 @@
 (ns clojars.web.token
   (:require
-   [clojars.web.common :refer [flash html-doc error-list simple-date]]
+   [clojars.web.common :refer [flash format-timestamp html-doc error-list]]
    [clojars.web.safe-hiccup :refer [form-to]]
-   [hiccup.form :refer [drop-down label text-field submit-button]]))
+   [clojars.auth :as auth]
+   [hiccup.form :refer [check-box drop-down label text-field submit-button]]
+   [clojure.string :as str]))
 
 (defn- new-token-message
   [{:keys [name token]}]
@@ -35,13 +37,23 @@
      [["*" ""]]
      groups)))
 
+(def ^:private expiry-options
+  [["Never"   ""]
+   ["1 Hour"  "1"]
+   ["1 Day"   "24"]
+   ["1 Week"  "168"]
+   ["30 days" "720"]
+   ["90 days" "2160"]])
+
 (defn show-tokens
   ([account tokens jars groups]
    (show-tokens account tokens jars groups nil))
   ([account tokens jars groups {:keys [error message new-token]}]
    (html-doc
     "Deploy Tokens"
-    {:account account :description "Clojars deploy tokens"}
+    {:account account
+     :description "Clojars deploy tokens"
+     :extra-js ["/js/tokens.js"]}
     [:div
      [:h1 "Deploy Tokens"]
      (error-list (when error [error]))
@@ -56,24 +68,40 @@
        [:li "any artifact within a group you have access to ('group-name/*')"]
        [:li "a particular artifact you have access to ('group-name/artifact-name')"]]]]
     [:div.token-table.col-xs-12.col-sm-12
+     [:div
+      [:span "Show: "]
+      [:span "disabled tokens?" (check-box :show-disabled)]
+      [:span "expired tokens?" (check-box :show-expired)]
+      [:span "used single-use tokens?" (check-box :show-used)]]
      [:table.table.deploy-tokens
       [:thead
        [:tr
         [:th "Token Name"]
         [:th "Scope"]
+        [:th "Single Use?"]
+        [:th "Expires"]
         [:th "Created"]
         [:th "Disabled"]
         [:th "Last Used"]
         [:th "Actions"]]]
       [:tbody
        (for [token (sort-by (juxt :disabled :name :created) tokens)
-             :let [disabled? (:disabled token)]]
-         [:tr
-          [:td.name {:class (when disabled?  "token-disabled")} (:name token)]
+             :let [disabled? (:disabled token)
+                   expired? (auth/token-expired? token)
+                   used? (= :single-use-status/used (:single_use token))
+                   classes (str/join " "
+                                     (remove nil?
+                                             [(when disabled? "token-disabled")
+                                              (when expired? "token-expired")
+                                              (when used? "token-used")]))]]
+         [:tr {:class classes}
+          [:td.name (:name token)]
           [:td.scope (scope token)]
-          [:td.created (simple-date (:created token))]
-          [:td.updated (when disabled? (simple-date (:updated token)))]
-          [:td.last-used (simple-date (:last_used token))]
+          [:td.single-use (:single_use token)]
+          [:td.expires (format-timestamp (:expires_at token))]
+          [:td.created (format-timestamp (:created token))]
+          [:td.updated (when disabled? (format-timestamp (:updated token)))]
+          [:td.last-used (format-timestamp (:last_used token))]
           [:td.actions (when-not disabled?
                          (form-to [:delete (str "/tokens/" (:id token))]
                                   [:input.button {:type "submit" :value "Disable Token"}]))]])]]]
@@ -88,4 +116,8 @@
                           :name)
               (label :scope "Token scope")
               (drop-down :scope (scope-options jars groups))
+              (label :single_use "Single use?")
+              (check-box :single_use)
+              (label :expires_in "Expires in")
+              (drop-down :expires_in expiry-options)
               (submit-button "Create Token"))])))

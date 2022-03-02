@@ -102,6 +102,11 @@
       (db/is-deploy-token? password))
     true))
 
+(defn token-expired?
+  [{:as _token :keys [expires_at]}]
+  (and expires_at
+       (.after (db/get-time) expires_at)))
+
 (defn token-credential-fn [db]
   (fn [{:keys [username password]}]
     (log/with-context {:tag :authentication
@@ -116,15 +121,21 @@
                                             (or (not token_hash) ;; pre-hash token
                                                 (= password-hash token_hash))))
                                  (some #(when (creds/bcrypt-verify password (:token %)) %))))]
-          (do
-            (db/set-deploy-token-used db (:id token))
-            (when-not (:token_hash token)
-              ;; set token hashes for tokens that were created before we
-              ;; added the hash to the db
-              (db/set-deploy-token-hash db (:id token) password))
-            (log/info {:status :success})
-            {:username username
-             :token token})
+          (if (token-expired? token)
+            (do
+              (log/audit db {:tag :expired-token
+                             :message "The given token is expired"})
+              (log/info {:status :failed
+                         :reason :expired-token}))
+            (do
+              (db/set-deploy-token-used db (:id token))
+              (when-not (:token_hash token)
+                ;; set token hashes for tokens that were created before we
+                ;; added the hash to the db
+                (db/set-deploy-token-hash db (:id token) password))
+              (log/info {:status :success})
+              {:username username
+               :token token}))
           (do
             (log/audit db {:tag :invalid-token
                            :message "The given token either doesn't exist, isn't yours, or is disabled"})

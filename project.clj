@@ -116,7 +116,9 @@
    :profiles/dev  {}
    :profiles/test {}
    :project/dev   {:source-paths ["dev"]
-                   :repl-options {:init-ns user}
+                   :repl-options {:init-ns user
+                                  :nrepl-middleware
+                                  [sc.nrepl.middleware/wrap-letsc]}
                    :dependencies [[reloaded.repl "0.2.4"]
                                   [clj-commons/pomegranate "1.2.1"
                                    :exclusions
@@ -137,6 +139,7 @@
                                   [nubank/matcher-combinators "3.3.1"
                                    ;; we don't use midje, so excluding it to
                                    ;; remove dep conflicts from its dependencies
-                                   :exclusions [midje]]]
+                                   :exclusions [midje]]
+                                  [vvvvalvalval/scope-capture-nrepl "0.3.1"]]
                    :resource-paths ["local-resources"]}
    :project/test  {}})

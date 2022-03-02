@@ -21,6 +21,7 @@
    [kerodon.test :refer [has status? text?]]
    [net.cgrand.enlive-html :as enlive])
   (:import
+   (java.sql Timestamp)
    (org.eclipse.aether.deployment
     DeploymentException)))
 
@@ -120,7 +121,7 @@
         (login-as "dantheman" "password")
         (visit "/tokens")
         (within [:td.last-used]
-                (has (text? (common/simple-date now)))))))
+                (has (text? (common/format-timestamp now)))))))
 
 (deftest deploying-with-a-scoped-token
   (-> (session (help/app-from-system))
@@ -151,7 +152,7 @@
     (testing "with a group-scoped token"
       (let [group-scoped-token (create-deploy-token
                                 (session (help/app-from-system)) "dantheman" "password" "group-scoped"
-                                "org.clojars.dantheman")]
+                                {:scope "org.clojars.dantheman"})]
 
         (deploy
          {:coordinates '[org.clojars.dantheman/test "0.0.2"]
@@ -177,7 +178,7 @@
     (testing "with an artifact-scoped token"
       (let [artifact-scoped-token (create-deploy-token
                                    (session (help/app-from-system)) "dantheman" "password" "artifact-scoped"
-                                   "org.clojars.dantheman/test")]
+                                   {:scope "org.clojars.dantheman/test"})]
 
         (deploy
          {:coordinates '[org.clojars.dantheman/test "0.0.3"]
@@ -199,6 +200,69 @@
                                            {:groupId "org.clojars.dantheman"
                                             :artifactId "test2"})
                :password  artifact-scoped-token})))))))
+
+(deftest deploying-with-a-single-use-token
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+
+  (let [token (create-deploy-token
+               (session (help/app-from-system))
+               "dantheman" "password" "single-use" {:single-use? true})]
+
+
+    (testing "first deploy with single-use-token works"
+      (deploy
+       {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                    {:groupId "org.clojars.dantheman"})
+        :password token}))
+
+    (testing "reuse of token fails"
+      (is (thrown-with-msg?
+           DeploymentException
+           #"The provided single-use token has already been used"
+           (deploy
+            {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+             :jar-file (io/file (io/resource "test.jar"))
+             :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                         {:groupId "org.clojars.dantheman"
+                                          :version "0.0.2"})
+             :password  token}))))))
+
+(deftest deploying-with-an-expiring-token
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+
+  (let [token (create-deploy-token
+               (session (help/app-from-system))
+               "dantheman" "password" "single-use" {:expires-in "1 Hour"})]
+
+    (testing "deploy before token expires works"
+      (deploy
+       {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                    {:groupId "org.clojars.dantheman"})
+        :password token}))
+
+    (testing "deploy after token expires fails"
+      (help/with-time (Timestamp. (+ (.getTime (db/get-time)) (* 2 1000 60 60))) ;; 2 hours
+        (is (thrown-with-msg?
+             DeploymentException
+             #"401 Unauthorized"
+             (deploy
+              {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+               :jar-file (io/file (io/resource "test.jar"))
+               :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                           {:groupId "org.clojars.dantheman"
+                                            :version "0.0.2"})
+               :password  token})))
+
+        (help/match-audit {:username "dantheman"}
+                          {:user "dantheman"
+                           :tag "expired-token"
+                           :message "The given token is expired"})))))
 
 (deftest user-cannot-deploy-with-disabled-token
   (-> (session (help/app-from-system))
@@ -226,6 +290,52 @@
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+        add-checksums (partial mapcat (fn [[f no-version?]]
+                                        [[f no-version?]
+                                         [(tmp-checksum-file f :md5) no-version?]
+                                         [(tmp-checksum-file f :sha1) no-version?]]))
+        files (add-checksums [[(tmp-file
+                                (io/file (io/resource "test.jar")) "test-0.0.1.jar")]
+                              [(tmp-file
+                                (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                                  {:groupId "org.clojars.dantheman"})
+                                "test-0.0.1.pom")]
+                              [(tmp-file
+                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                "maven-metadata.xml")
+                               :no-version]
+                              ;; maven 3.5 will upload maven-metadata.xml twice when there are classified artifacts
+                              ;; see https://github.com/clojars/clojars-web/issues/640
+                              [(tmp-file
+                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                "maven-metadata.xml")
+                               :no-version]
+                              [(tmp-file
+                                (io/file (io/resource "test.jar")) "test-sources-0.0.1.jar")]])]
+    ;; we use clj-http here instead of aether to have control over the
+    ;; order the files are uploaded
+    (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
+      (doseq [[f no-version?] files]
+        (client/put (format "%s/org/clojars/dantheman/test/%s%s"
+                            (repo-url)
+                            (if no-version? "" "0.0.1/")
+                            (.getName f))
+                    {:body f
+                     :basic-auth ["dantheman" token]})))
+
+    (let [base-path "org/clojars/dantheman/test/"
+          repo-bucket (:repo-bucket help/system)
+          repo (:repo (config))]
+      (doseq [[f no-version?] files]
+        (let [fname (.getName f)
+              base-path' (if no-version? base-path (str base-path "0.0.1/"))]
+          (is (.exists (io/file repo base-path' fname)))
+          (is (s3/object-exists? repo-bucket (str base-path' fname))))))))
+
+(deftest user-can-deploy-artifacts-after-maven-metadata-using-single-use-token
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing" {:single-use? true})
         add-checksums (partial mapcat (fn [[f no-version?]]
                                         [[f no-version?]
                                          [(tmp-checksum-file f :md5) no-version?]

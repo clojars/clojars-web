@@ -13,11 +13,6 @@
 (use-fixtures :each
   help/with-clean-database)
 
-(defmacro with-time
-  [t & body]
-  `(with-redefs [db/get-time (constantly ~t)]
-     ~@body))
-
 (defn submap [s m]
   (every? (fn [[k v]] (= (get m k) v)) s))
 
@@ -63,9 +58,9 @@
         email2 "test2@example.com"
         name2 "testuser2"
         password2 "password2"]
-    (with-time created-at
+    (help/with-time created-at
       (db/add-user help/*db* email name password)
-      (with-time (Timestamp. 1)
+      (help/with-time (Timestamp. 1)
         (db/update-user help/*db* name email2 name2 password2)
         (are [x] (submap {:email email2
                           :user name2
@@ -147,7 +142,7 @@
                 :authors "Alex Osborne, a little fish"
                 :description "An dog awesome and non-existent test jar."}]
     (help/add-verified-group "test-user" name)
-    (with-time created-at
+    (help/with-time created-at
       (db/add-jar help/*db* "test-user" jarmap)
       (are [x] (submap result x)
         (db/find-jar help/*db* name name)
@@ -280,10 +275,10 @@
              :authors ["Alex Osborne" "a little fish"]
              :dependencies [{:group_name "foo" :jar_name "bar" :version "1" :scope "test"}]}]
 (help/add-verified-group "test-user" group)
-    (with-time (Timestamp. (long 0))
+    (help/with-time (Timestamp. (long 0))
       (db/add-jar help/*db* "test-user" jar))
     (db/jars-by-groupname help/*db* group)
-    (with-time (Timestamp. (long 1))
+    (help/with-time (Timestamp. (long 1))
       (db/add-jar help/*db* "test-user"
                             (assoc jar
                                    :version "2.0")))
@@ -301,9 +296,9 @@
                 :user "test-user"
                 :group_name name}]
     (help/add-verified-group "test-user" name)
-    (with-time (Timestamp. 0)
+    (help/with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap)
-      (with-time (Timestamp. 1)
+      (help/with-time (Timestamp. 1)
         (db/add-jar help/*db* "test-user" (assoc jarmap :version "2"))))
     (let [jars (db/jars-by-groupname help/*db* name)]
       (dorun (map #(is (= %1 (select-keys %2 (keys %1)))) [result] jars))
@@ -313,13 +308,13 @@
   (let [name "tester"
         jarmap {:name name :group name :version "1" }]
     (help/add-verified-group "test-user" name)
-    (with-time (Timestamp. 0)
+    (help/with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
-    (with-time (Timestamp. 1)
+    (help/with-time (Timestamp. 1)
       (db/add-jar help/*db* "test-user" (assoc jarmap :version "2")))
-    (with-time (Timestamp. 2)
+    (help/with-time (Timestamp. 2)
       (db/add-jar help/*db* "test-user" (assoc jarmap :version "3")))
-    (with-time (Timestamp. 3)
+    (help/with-time (Timestamp. 3)
       (db/add-jar help/*db* "test-user" (assoc jarmap :version "4-SNAPSHOT")))
     (is (= 4 (db/count-versions help/*db* name name)))
     (is (= ["4-SNAPSHOT" "3" "2" "1"]
@@ -337,13 +332,13 @@
     (help/add-verified-group "test-user" name)
     (help/add-verified-group "test-user2" "tester-group")
     (db/add-member help/*db* name "test-user2" "some-user")
-    (with-time (Timestamp. 0)
+    (help/with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
-    (with-time (Timestamp. 1)
+    (help/with-time (Timestamp. 1)
       (db/add-jar help/*db* "test-user" (assoc jarmap :name "tester2")))
-    (with-time (Timestamp. 2)
+    (help/with-time (Timestamp. 2)
       (db/add-jar help/*db* "test-user2" (assoc jarmap :name "tester3")))
-    (with-time (Timestamp. 3)
+    (help/with-time (Timestamp. 3)
       (db/add-jar help/*db* "test-user2" (assoc jarmap :group "tester-group")))
     (let [jars (db/jars-by-groupname help/*db* name)]
       (dorun (map #(is (submap %1 %2))
@@ -361,9 +356,9 @@
                 :user "test-user"
                 :group_name name}]
     (help/add-verified-group "test-user" name)
-    (with-time (Timestamp. 0)
+    (help/with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
-    (with-time (Timestamp. 1)
+    (help/with-time (Timestamp. 1)
       (db/add-jar help/*db* "test-user" (assoc jarmap :version "2")))
     (let [jars (db/jars-by-username help/*db* "test-user")]
       (dorun (map #(is (= %1 (select-keys %2 (keys %1)))) [result] jars))
@@ -379,13 +374,13 @@
     (help/add-verified-group "test-user" name)
     (help/add-verified-group "test-user" "tester-group")
     (db/add-member help/*db* name "test-user2" "some-user")
-    (with-time (Timestamp. 0)
+    (help/with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
-    (with-time (Timestamp. 1)
+    (help/with-time (Timestamp. 1)
       (db/add-jar help/*db* "test-user" (assoc jarmap :name "tester2")))
-    (with-time (Timestamp. 2)
+    (help/with-time (Timestamp. 2)
       (db/add-jar help/*db* "test-user2" (assoc jarmap :name "tester3")))
-    (with-time (Timestamp. 3)
+    (help/with-time (Timestamp. 3)
       (db/add-jar help/*db* "test-user" (assoc jarmap :group "tester-group")))
     (let [jars (db/jars-by-username help/*db* "test-user")]
       (dorun (map #(is (submap %1 %2))
@@ -416,19 +411,19 @@
                 :authors "Alex Osborne, a little fish"
                 :description "An dog awesome and non-existent test jar."}]
     (help/add-verified-group "test-user" name)
-    (with-time (Timestamp. (long 1))
+    (help/with-time (Timestamp. (long 1))
       (db/add-jar help/*db* "test-user" (assoc jarmap :name "1")))
-    (with-time (Timestamp. (long 2))
+    (help/with-time (Timestamp. (long 2))
       (db/add-jar help/*db* "test-user" (assoc jarmap :name "2")))
-    (with-time (Timestamp. (long 3))
+    (help/with-time (Timestamp. (long 3))
       (db/add-jar help/*db* "test-user" (assoc jarmap :name "3")))
-    (with-time (Timestamp. (long 4))
+    (help/with-time (Timestamp. (long 4))
       (db/add-jar help/*db* "test-user" (assoc jarmap :name "4")))
-    (with-time (Timestamp. (long 5))
+    (help/with-time (Timestamp. (long 5))
       (db/add-jar help/*db* "test-user" (assoc jarmap :version "5")))
-    (with-time (Timestamp. (long 6))
+    (help/with-time (Timestamp. (long 6))
       (db/add-jar help/*db* "test-user" (assoc jarmap :name "6")))
-    (with-time (Timestamp. (long 7))
+    (help/with-time (Timestamp. (long 7))
       (db/add-jar help/*db* "test-user" (assoc jarmap :version "7")))
     (dorun (map #(is (submap %1 %2))
                 [(assoc result :version "7")
@@ -441,13 +436,13 @@
 (deftest browse-projects-finds-jars
   (help/add-verified-group "test-user" "jester")
   (help/add-verified-group "test-user" "tester")
-  (with-time (Timestamp. (long 0))
+  (help/with-time (Timestamp. (long 0))
     (db/add-jar help/*db* "test-user" {:name "rock" :group "jester" :version "0.1"})
     (db/add-jar help/*db* "test-user" {:name "rock" :group "tester" :version "0.1"}))
-  (with-time (Timestamp. (long 1))
+  (help/with-time (Timestamp. (long 1))
     (db/add-jar help/*db* "test-user" {:name "rock" :group "tester" :version "0.2"})
     (db/add-jar help/*db* "test-user" {:name "paper" :group "tester" :version "0.1"}))
-  (with-time (Timestamp. (long 2))
+  (help/with-time (Timestamp. (long 2))
     (db/add-jar help/*db* "test-user" {:name "scissors" :group "tester" :version "0.1"}))
     ; tests group_name and jar_name ordering
     (is (=
@@ -492,11 +487,23 @@
         tokenname "test-token"
         _ (db/add-user help/*db* "email@example.com" username "a-password")
         {:keys [token]} (db/add-deploy-token help/*db*
-                                             username tokenname groupname jarname)
-        {:keys [group_name jar_name token_hash]} (db/find-token-by-value help/*db* token)]
+                                             username tokenname groupname jarname false nil)
+
+        {:keys [expires_at group_name jar_name single_use token_hash]}
+        (db/find-token-by-value help/*db* token)]
+    (is (nil? expires_at))
     (is (= groupname group_name))
     (is (= jarname jar_name))
+    (is (= :single-use-status/no single_use))
     (is (= (-> token buddy.hash/sha256 buddy.codecs/bytes->hex)
-           token_hash))))
+           token_hash))
+
+    (let [expires-at-time (db/get-time)
+          {:keys [token]} (db/add-deploy-token
+                           help/*db*
+                           username tokenname groupname jarname true expires-at-time)
+          {:keys [expires_at single_use]} (db/find-token-by-value help/*db* token)]
+      (is (= expires-at-time expires_at))
+      (is (= :single-use-status/yes single_use)))))
 
 ;; TODO: recent-versions

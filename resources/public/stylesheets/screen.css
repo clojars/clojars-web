@@ -677,6 +677,12 @@ input.red-button {
     background-color: red;
 }
 
+.token-table input[type="checkbox"] {
+  width: 1em;
+  margin-left: 3px;
+  margin-right: 5px;
+}
+
 table.audit th,
 table.audit td,
 .group-member-list th,
@@ -686,7 +692,9 @@ table.deploy-tokens td {
     padding: 0 5px;
 }
 
-table.deploy-tokens td.token-disabled {
+table.deploy-tokens tr.token-disabled td.name,
+table.deploy-tokens tr.token-expired td.name,
+table.deploy-tokens tr.token-used td.name {
     text-decoration: line-through;
 }
 

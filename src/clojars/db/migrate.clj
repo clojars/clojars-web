@@ -1,9 +1,9 @@
 (ns clojars.db.migrate
   (:require [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
-            [clojure.string :as str])
-  (:import (java.io File)
-           (java.sql Timestamp)))
+            [clojure.string :as str]
+            [clojars.db :as db])
+  (:import (java.io File)))
 
 (defn initial-schema [trans]
   (doseq [cmd (map str/trim
@@ -24,7 +24,7 @@
                "migrations"
                [:name :created_at]
                [(str (:name (meta migration)))
-                (Timestamp. (System/currentTimeMillis))]))
+                (db/get-time)]))
 
 (defn- add-deploy-tokens-table
   [trans]
@@ -86,6 +86,17 @@
                            "tag text not null,"
                            "created timestamp not null default current_timestamp)")))
 
+(defn- add-single-use-to-tokens
+  [trans]
+  (sql/db-do-commands trans
+                      ["create type single_use_status as enum ('no', 'yes', 'used')"
+                       "alter table deploy_tokens add single_use single_use_status default 'no'"]))
+
+(defn- add-expires-at-to-tokens
+  [trans]
+  (sql/db-do-commands trans
+                      "alter table deploy_tokens add expires_at timestamp"))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -94,7 +105,9 @@
    #'add-mfa-fields-to-users-table
    #'add-hash-to-deploy-tokens-table
    #'add-group-verifications-table
-   #'add-audit-table])
+   #'add-audit-table
+   #'add-single-use-to-tokens
+   #'add-expires-at-to-tokens])
 
 (defn migrate [db]
   (sql/db-do-commands db

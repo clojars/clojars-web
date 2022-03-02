@@ -214,3 +214,8 @@
   `(let [db# (:db (config/config))
          audit# (first (db/find-audit db# ~params))]
      (is (~'match? ~m audit#))))
+
+(defmacro with-time
+  [t & body]
+  `(with-redefs [db/get-time (constantly ~t)]
+     ~@body))
