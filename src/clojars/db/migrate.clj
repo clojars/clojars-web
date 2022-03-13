@@ -97,6 +97,11 @@
   (sql/db-do-commands trans
                       "alter table deploy_tokens add expires_at timestamp"))
 
+(defn- add-send-deploy-emails-to-users
+  [trans]
+  (sql/db-do-commands trans
+                      "alter table users add send_deploy_emails boolean default false"))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -107,7 +112,8 @@
    #'add-group-verifications-table
    #'add-audit-table
    #'add-single-use-to-tokens
-   #'add-expires-at-to-tokens])
+   #'add-expires-at-to-tokens
+   #'add-send-deploy-emails-to-users])
 
 (defn migrate [db]
   (sql/db-do-commands db

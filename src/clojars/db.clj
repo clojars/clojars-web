@@ -346,6 +346,7 @@
   (let [record {:email email
                 :username username
                 :password (bcrypt password)
+                :send_deploy_emails true
                 :created (get-time)}]
     (sql/insert-user! record
                       {:connection db})
