@@ -328,20 +328,17 @@
 (defn group-link [groupname]
   (link-to (str "/groups/" groupname) groupname))
 
-(let [date-formatter (SimpleDateFormat. "yyyy-MM-dd")]
-  (defn format-date [d]
-    (when d
-      (.format date-formatter d))))
+(defn format-date [d]
+  (when d
+    (.format (SimpleDateFormat. "yyyy-MM-dd") d)))
 
-(let [simple-date-formatter (SimpleDateFormat. "MMM d, yyyy")]
-  (defn simple-date [d]
-    (when d
-      (.format simple-date-formatter d))))
+(defn simple-date [d]
+  (when d
+    (.format (SimpleDateFormat. "MMM d, yyyy") d)))
 
-(let [timestamp-formatter (SimpleDateFormat. "MMM d, yyyy HH:mm:ss Z")]
-  (defn format-timestamp [t]
-    (when t
-      (.format timestamp-formatter t))))
+(defn format-timestamp [t]
+  (when t
+    (.format (SimpleDateFormat. "MMM d, yyyy HH:mm:ss Z") t)))
 
 (defn page-nav [current-page total-pages & {:keys [base-path] :or {base-path "/projects?page="}}]
   (let [previous-text (raw "&#8592; Previous")
