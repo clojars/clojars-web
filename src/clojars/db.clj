@@ -201,6 +201,10 @@
                          {:connection db
                           :row-fn :user}))
 
+(defn group-active-users [db groupname]
+  (sql/group-active-users {:groupname groupname}
+                          {:connection db}))
+
 (defn group-allnames [db groupname]
   (sql/group-actives {:groupname groupname}
                      {:connection db
