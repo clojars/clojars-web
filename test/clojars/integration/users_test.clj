@@ -261,25 +261,17 @@
   (with-test-system
     (-> (session (help/app-from-system))
         (register-as "fixture" "fixture@example.org" "password"))
-    (let [email-sent? (atom (promise))
-          reset-email (fn []
-                        (reset! email/mock-emails [])
-                        (reset! email-sent? (promise)))
-          _ (add-watch email/mock-emails nil
-                       (fn [_ _ _ new-val]
-                         (when (seq new-val)
-                           (deliver @email-sent? true))))
-          [otp-secret] (enable-mfa (session (help/app-from-system)) "fixture" "password")
-          _ (is (true? (deref @email-sent? 100 ::timeout)))
+    (let [[otp-secret] (enable-mfa (session (help/app-from-system)) "fixture" "password")
+          _ (is (true? (email/wait-for-mock-emails)))
           [address title body] (first @email/mock-emails)]
       (is (= "fixture@example.org" address))
       (is (= "Two-factor auth was enabled on your Clojars account" title))
       (is (re-find #"'fixture'" body))
 
       (testing "when manually disabled"
-        (reset-email)
+        (email/expect-mock-emails 1)
         (disable-mfa (session (help/app-from-system)) "fixture" "password" otp-secret)
-        (is (true? (deref @email-sent? 100 ::timeout)))
+        _ (is (true? (email/wait-for-mock-emails)))
         (let [[address title body] (first @email/mock-emails)]
           (is (= "fixture@example.org" address))
           (is (= "Two-factor auth was disabled on your Clojars account" title))
@@ -287,14 +279,12 @@
           (is (re-find #"manually disabled" body))))
 
       (testing "when recovery code used"
-        (reset-email)
+        (email/expect-mock-emails 2)
         (let [[_otp-secret recovery-code] (enable-mfa (session (help/app-from-system)) "fixture" "password")]
-          ;; wait for the enable email to be sent
-          (is (true? (deref @email-sent? 100 ::timeout)))
-          (reset-email)
           (login-as (session (help/app-from-system)) "fixture" "password" recovery-code)
-          (is (true? (deref @email-sent? 100 ::timeout)))
-          (let [[address title body] (first @email/mock-emails)]
+          ;; wait for the enable then recovery emails to be sent
+          (is (true? (email/wait-for-mock-emails)))
+          (let [[address title body] (second @email/mock-emails)]
             (is (= "fixture@example.org" address))
             (is (= "Two-factor auth was disabled on your Clojars account" title))
             (is (re-find #"'fixture'" body))

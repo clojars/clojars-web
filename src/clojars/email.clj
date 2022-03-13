@@ -1,6 +1,9 @@
 (ns clojars.email
-  (:import [org.apache.commons.mail SimpleEmail])
-  (:require [clojars.log :as log]))
+  (:require
+   [clojars.log :as log])
+  (:import
+   (java.util.concurrent CountDownLatch TimeUnit)
+   (org.apache.commons.mail SimpleEmail)))
 
 (defn simple-mailer [{:keys [hostname username password port tls? from]}]
   (fn [to subject message]
@@ -30,7 +33,25 @@
 
 (def mock-emails (atom []))
 
-(defn mock-mailer []
-  (reset! mock-emails [])
-  (fn [to subject message]
-    (swap! mock-emails conj [to subject message])))
+(let [email-latch (atom nil)]
+  (defn expect-mock-emails
+    "Sets up the email mock to wait for `n` emails in `wait-for-mock-emails`."
+    ([]
+     (expect-mock-emails 1))
+    ([n]
+     (reset! mock-emails [])
+     (reset! email-latch (CountDownLatch. n))))
+
+  (defn wait-for-mock-emails
+    "Blocks for up to 100ms waiting for `n` emails to be sent via the mock,
+  where `n` was passed to `expect-mock-emails` (defaulting to 1 if not called).
+  Returns true if `n` reached within that time. Reset with `expect-mock-emails`
+  between tests using the same system."
+    []
+    (.await @email-latch 100 TimeUnit/MILLISECONDS))
+
+  (defn mock-mailer []
+    (expect-mock-emails)
+    (fn [to subject message]
+      (swap! mock-emails conj [to subject message])
+      (.countDown @email-latch))))
