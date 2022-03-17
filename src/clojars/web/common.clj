@@ -141,7 +141,8 @@
              [:div.row
               [:nav.navigation.secondary-navigation.col-xs-24.col-sm-12
                (unordered-list
-                [(link-to "/mfa" "two-factor auth")
+                [(link-to "/notification-preferences" "notification prefs")
+                 (link-to "/mfa" "two-factor auth")
                  (link-to "/profile" "profile")
                  (link-to "/tokens" "deploy tokens")])]])
            body

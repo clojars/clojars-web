@@ -61,6 +61,7 @@
     "maven"
     "mfa"
     "new"
+    "notification-preferences"
     "options"
     "pages"
     "password"
@@ -375,6 +376,10 @@
               (bcrypt password))
        {:connection db}))
     fields))
+
+(defn update-user-notifications [db account prefs]
+  (sql/update-user-notifications! (assoc prefs :account account)
+                                  {:connection db}))
 
 (defn reset-user-password [db username reset-code password]
   (assert (not (str/blank? reset-code)))

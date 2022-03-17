@@ -358,6 +358,11 @@ UPDATE users
 SET email = :email, "user" = :username, password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
 WHERE "user" = :account;
 
+--name: update-user-notifications!
+UPDATE users
+SET send_deploy_emails = :send_deploy_emails
+WHERE "user" = :account;
+
 --name: reset-user-password!
 UPDATE users
 SET password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
