@@ -129,17 +129,21 @@
                        :placeholder "Search projects..."
                        :value (:query ctx)
                        :required true}]]]
-            [:nav.main-navigation.col-xs-12.col-sm-6
+            [:nav.navigation.main-navigation.col-xs-12.col-sm-6
              (if (:account ctx)
                (unordered-list
                 [(link-to "/" "dashboard")
-                 (link-to "/mfa" "two-factor auth")
-                 (link-to "/profile" "profile")
-                 (link-to "/tokens" "deploy tokens")
                  (link-to "/logout" "logout")])
                (unordered-list
                 [(link-to "/login" "login")
                  (link-to "/register" "register")]))]]
+           (when (:account ctx)
+             [:div.row
+              [:nav.navigation.secondary-navigation.col-xs-24.col-sm-12
+               (unordered-list
+                [(link-to "/mfa" "two-factor auth")
+                 (link-to "/profile" "profile")
+                 (link-to "/tokens" "deploy tokens")])]])
            body
            (footer (get ctx :footer-links? true))]]))
 
@@ -194,7 +198,7 @@
              (link-to "/" (helpers/retinized-image "/images/clojars-logo.png" "Clojars"))
              [:h1
               (link-to "/" "Clojars")]]
-            [:nav.main-navigation.col-xs-12.col-sm-6
+            [:nav.navigation.main-navigation.col-xs-12.col-sm-6
              (if (:account ctx)
                (unordered-list
                 [(link-to "/" "dashboard")
