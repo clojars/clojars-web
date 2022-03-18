@@ -140,7 +140,7 @@ footer a {
   margin: 0 5px;
 }
 
-.main-navigation {
+.navigation {
   text-align: right;
   font-weight: 600;
   font-size: 0.8em;
@@ -150,21 +150,39 @@ footer a {
   vertical-align: middle;
 }
 
-.main-navigation a {
-  color: #ffb33b;
+.navigation a {
   padding: 10px;
   border-radius: 10px;
   transition: background-color 0.2s ease-in-out;
 }
 
-.main-navigation a:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+.navigation a:hover {
   text-decoration: none;
 }
 
-.main-navigation li {
+.navigation li {
   display: inline;
   margin-left: 15px;
+}
+
+.main-navigation a {
+  color: #ffb33b;
+}
+
+.main-navigation a:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.secondary-navigation {
+  background-color: #e2e4e3;
+}
+
+.secondary-navigation a {
+  color: #380036;
+}
+
+.secondary-navigation a:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .hero header .home h1 {
@@ -272,6 +290,7 @@ footer a {
 .small-section {
   max-width: 550px;
   margin: 0 auto 80px;
+  clear: both;
 }
 
 .push-example {

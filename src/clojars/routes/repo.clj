@@ -2,6 +2,7 @@
   (:require 
    [clojars.auth :as auth :refer [with-account]]
    [clojars.db :as db]
+   [clojars.event :as event]
    [clojars.errors :refer [report-error]]
    [clojars.file-utils :as fu]
    [clojars.util :as util]
@@ -290,6 +291,11 @@
     (when (= :single-use-status/yes (:single_use token))
       (db/consume-deploy-token db (:id token)))))
 
+(defn- emit-deploy-events
+  [db {:as version-data :keys [group]}]
+  (doseq [user (db/group-active-users db group)]
+    (event/emit :version-deployed (assoc version-data :user user))))
+
 (defn finalize-deploy [storage db search session account ^File dir]
   (if-let [pom-file (find-pom dir)]
     (let [pom (try
@@ -336,7 +342,8 @@
           (search/index! search (assoc pom
                                        :at (Date. (.lastModified pom-file))))
           (log/info {:tag :deploy-indexed}))
-        (spit (io/file dir ".finalized") "")))
+        (spit (io/file dir ".finalized") "")
+        (emit-deploy-events db (assoc posted-metadata :deployer-username account))))
     (throw-invalid :missing-pom-file "no pom file was uploaded")))
 
 (defn- deploy-finalized? [dir]

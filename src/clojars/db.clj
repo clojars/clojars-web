@@ -61,6 +61,7 @@
     "maven"
     "mfa"
     "new"
+    "notification-preferences"
     "options"
     "pages"
     "password"
@@ -200,6 +201,10 @@
   (sql/group-activenames {:groupname groupname}
                          {:connection db
                           :row-fn :user}))
+
+(defn group-active-users [db groupname]
+  (sql/group-active-users {:groupname groupname}
+                          {:connection db}))
 
 (defn group-allnames [db groupname]
   (sql/group-actives {:groupname groupname}
@@ -346,6 +351,7 @@
   (let [record {:email email
                 :username username
                 :password (bcrypt password)
+                :send_deploy_emails true
                 :created (get-time)}]
     (sql/insert-user! record
                       {:connection db})
@@ -370,6 +376,10 @@
               (bcrypt password))
        {:connection db}))
     fields))
+
+(defn update-user-notifications [db account prefs]
+  (sql/update-user-notifications! (assoc prefs :account account)
+                                  {:connection db}))
 
 (defn reset-user-password [db username reset-code password]
   (assert (not (str/blank? reset-code)))

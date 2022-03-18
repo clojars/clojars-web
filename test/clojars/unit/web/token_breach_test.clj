@@ -59,14 +59,9 @@
       (with-redefs [client/get (constantly {:body github-response})]
         (testing "when token is enabled"
           (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
-                email-sent? (promise)
-                _ (add-watch email/mock-emails nil
-                             (fn [_ _ _ new-val]
-                               (when (seq new-val)
-                                 (deliver email-sent? true))))
                 res (app (build-breach-request (:token token)))
                 db-token (find-token "ham" "a token")
-                _ (is (true? (deref email-sent? 100 ::timeout)))
+                _ (is (true? (email/wait-for-mock-emails)))
                 [to subject message] (first @email/mock-emails)]
             (is (= 200 (:status res)))
             (is (:disabled db-token))
@@ -80,14 +75,9 @@
           (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil false nil)
                 db-token (find-token "ham" "another token")
                 _ (db/disable-deploy-token help/*db* (:id db-token))
-                email-sent? (promise)
-                _ (reset! email/mock-emails [])
-                _ (add-watch email/mock-emails nil
-                             (fn [_ _ _ new-val]
-                               (when (seq new-val)
-                                 (deliver email-sent? true))))
+                _ (email/expect-mock-emails 1)
                 res (app (build-breach-request (:token token)))
-                _ (is (true? (deref email-sent? 100 ::timeout)))
+                _ (is (true? (email/wait-for-mock-emails)))
                 [to subject message] (first @email/mock-emails)]
             (is (= 200 (:status res)))
             (is (= "ham@biscuit.co" to))

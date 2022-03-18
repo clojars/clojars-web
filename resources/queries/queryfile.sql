@@ -97,6 +97,22 @@ WHERE (
       inactive IS NOT true
 );
 
+--name: group-active-users
+SELECT u.*
+FROM users u
+JOIN (
+  SELECT "user"
+  FROM groups
+  WHERE (
+    name = :groupname
+    AND
+    inactive IS NOT true
+  )
+) g
+ON (
+  u.user = g.user
+)
+
 --name: group-allnames
 SELECT "user"
 FROM groups
@@ -329,8 +345,8 @@ FROM (
 WHERE group_name || '/' || jar_name < :s;
 
 --name: insert-user!
-INSERT INTO users (email, "user", password, created)
-VALUES (:email, :username, :password,:created);
+INSERT INTO users (email, "user", password, send_deploy_emails, created)
+VALUES (:email, :username, :password, :send_deploy_emails, :created);
 
 --name: update-user!
 UPDATE users
@@ -340,6 +356,11 @@ WHERE "user" = :account;
 --name: update-user-with-password!
 UPDATE users
 SET email = :email, "user" = :username, password = :password, password_reset_code = NULL, password_reset_code_created_at = NULL
+WHERE "user" = :account;
+
+--name: update-user-notifications!
+UPDATE users
+SET send_deploy_emails = :send_deploy_emails
 WHERE "user" = :account;
 
 --name: reset-user-password!

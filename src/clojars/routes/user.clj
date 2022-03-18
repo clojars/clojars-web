@@ -120,6 +120,13 @@
          (auth/with-account
            #(disable-mfa db % (db/find-user db %) params)))
 
+   (GET "/notification-preferences" {:keys [flash]}
+        (auth/with-account
+          #(view/notifications-form % (db/find-user db %) flash)))
+   (POST "/notification-preferences" {:keys [params]}
+         (auth/with-account
+           #(view/update-notifications db % params)))
+
    (GET "/register" {:keys [params flash]}
         (view/register-form params flash))
 

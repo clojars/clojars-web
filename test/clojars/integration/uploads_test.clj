@@ -17,9 +17,10 @@
    [clojure.java.jdbc :as sql]
    [clojure.string :as str]
    [clojure.test :refer [are deftest is testing use-fixtures]]
-   [kerodon.core :refer [fill-in follow press session visit within]]
+   [kerodon.core :refer [fill-in follow press session uncheck visit within]]
    [kerodon.test :refer [has status? text?]]
-   [net.cgrand.enlive-html :as enlive])
+   [net.cgrand.enlive-html :as enlive]
+   [clojars.email :as email])
   (:import
    (java.sql Timestamp)
    (org.eclipse.aether.deployment
@@ -920,3 +921,62 @@
     (let [{:keys [token_hash]} (db/find-token-by-value db token)]
       (is (= (db/hash-deploy-token token)
              token_hash)))))
+
+(deftest deploy-sends-notification-emails
+  (-> (session (help/app-from-system))
+      (register-as "donthemon" "test2@example.org" "password"))
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password")
+      (visit "/groups/org.clojars.dantheman")
+      (fill-in [:#username] "donthemon")
+      (press "Add Member"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+    (email/expect-mock-emails 2)
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                  {:groupId "org.clojars.dantheman"})
+      :password token})
+
+    (is (true? (email/wait-for-mock-emails)))
+    (let [emails @email/mock-emails
+          addresses (into #{} (map first) emails)
+          titles (map second emails)
+          bodies (map #(nth % 2) emails)]
+      (is (= #{"test@example.org" "test2@example.org"} addresses))
+      (is (every? #(= "[Clojars] dantheman deployed org.clojars.dantheman/test 0.0.1" %)
+                  titles))
+      (is (every? #(re-find #"User 'dantheman' just deployed org.clojars.dantheman/test 0.0.1" %)
+                  bodies))
+      (is (every? #(re-find #"https://clojars.org/org.clojars.dantheman/test/versions/0.0.1" %)
+                  bodies)))))
+
+(deftest deploy-sends-notification-emails-only-when-enabled
+  (-> (session (help/app-from-system))
+      (register-as "donthemon" "test2@example.org" "password")
+      (visit "/notification-preferences")
+      (uncheck "Receive deploy notification emails?")
+      (press "Update"))
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password")
+      (visit "/groups/org.clojars.dantheman")
+      (fill-in [:#username] "donthemon")
+      (press "Add Member"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+    (email/expect-mock-emails 1)
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                  {:groupId "org.clojars.dantheman"})
+      :password token})
+
+    (is (true? (email/wait-for-mock-emails)))
+    (let [emails @email/mock-emails
+          [[address title body]] emails]
+      (is (= 1 (count emails)))
+      (is (= "test@example.org" address))
+      (is (= "[Clojars] dantheman deployed org.clojars.dantheman/test 0.0.1" title))
+      (is (re-find #"User 'dantheman' just deployed org.clojars.dantheman/test 0.0.1" body))
+      (is (re-find #"https://clojars.org/org.clojars.dantheman/test/versions/0.0.1" body)))))

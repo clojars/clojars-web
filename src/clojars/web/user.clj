@@ -3,10 +3,15 @@
    [buddy.core.codecs.base64 :as base64]
    [cemerick.friend.credentials :as creds]
    [clojars.config :refer [config]]
-   [clojars.db :as db :refer [find-user group-activenames
-                              reserved-names update-user jars-by-username
-                              find-groupnames find-user-by-user-or-email
-                              find-group-verification]]
+   [clojars.db :as db :refer [find-group-verification
+                              find-groupnames
+                              find-user
+                              find-user-by-user-or-email
+                              group-activenames
+                              jars-by-username
+                              reserved-names
+                              update-user
+                              update-user-notifications]]
    [clojars.log :as log]
    [clojars.web.common :refer [html-doc error-list jar-link
                                flash group-link verified-group-badge-small]]
@@ -137,6 +142,33 @@
           (log/info {:status :success})
           (assoc (redirect "/profile")
                  :flash "Profile updated."))))))
+
+(defn notifications-form [account user flash-msg & [errors]]
+  (html-doc "Notification Preferences" {:account account}
+            [:div.small-section
+             (flash flash-msg)
+             [:h1 "Notification Preferences"]
+             (error-list errors)
+             (form-to [:post "/notification-preferences"]
+                      [:label {:for :send-deploy-emails
+                               :style "display:inline;margin-right:5px"}
+                       "Receive deploy notification emails?"]
+                      [:input {:type :checkbox
+                               :name :send-deploy-emails
+                               :id   :send-deploy-emails
+                               :value 1
+                               :style "display: inline;width:auto;margin-right:5px"
+                               :checked (:send_deploy_emails user)}]
+                      [:p "If checked, you will receive an email notifying you of every deploy in any group you are a member of."]
+                      (submit-button "Update"))]))
+
+(defn update-notifications [db account {:keys [send-deploy-emails] :as _params}]
+  (log/with-context {:tag :update-notification-preferences
+                     :username account}
+    (update-user-notifications db account {:send_deploy_emails (boolean send-deploy-emails)})
+    (log/info {:status :success})
+    (assoc (redirect "/notification-preferences")
+           :flash "Notification preferences updated.")))
 
 (defn show-user [db account user]
   (html-doc (user :user) {:account account}

@@ -13,12 +13,14 @@
   (mailer email title (str/join "\n\n" body)))
 
 (defn handler
-  [{:keys [db mailer]} type {:as data :keys [user-id username]}]
+  [{:keys [db mailer]} type {:as data :keys [user user-id username]}]
   (when (contains? (set (keys (methods notification))) type)
-    (let [user (if user-id
-                 (db/find-user-by-id db user-id)
-                 (db/find-user db username))]
-      (notification type mailer user data))))
+    (let [user' (cond
+                  user     user
+                  user-id  (db/find-user-by-id db user-id)
+                  username (db/find-user db username)
+                  :else    nil)]
+      (notification type mailer user' data))))
 
 (defn notification-component
   "Handles email notifications. Needs :db, :mailer."
