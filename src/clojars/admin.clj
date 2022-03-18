@@ -142,7 +142,7 @@
   (let [txt (get-txt-records domain)]
     (printf "TXT records for %s:\n" domain)
     (pprint txt)
-    (if-some [[_ username] (some #(re-find #"^clojars (.+)$" %) txt)]
+    (if-some [[_ username] (some #(re-find #"^clojars-?(.+)$" %) txt)]
       (let [group-active-members (seq (db/group-activenames *db* group))
             group-verification (db/find-group-verification *db* group)
             user-record (db/find-user *db* username)]
