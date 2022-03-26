@@ -17,7 +17,7 @@
                                flash group-link verified-group-badge-small]]
    [clojars.web.safe-hiccup :refer [form-to]]
    [clojure.string :refer [blank?]]
-   [hiccup.element :refer [link-to unordered-list]]
+   [hiccup.element :refer [unordered-list]]
    [hiccup.form :refer [label text-field
                         password-field
                         submit-button
@@ -290,11 +290,7 @@
     [:div.help
      [:p
       "With two-factor authentication, you can set up a Time-based One Time Password (TOTP) device "
-      "that will generate tokens you can use in addition to your password to log in."]
-     [:p
-      "Note: once you enable two-factor authentication, you must use a "
-      (link-to "/tokens" "deploy token")
-      " to deploy artifacts; your password will no longer work for deployment."]]
+      "that will generate tokens you can use in addition to your password to log in."]]
     [:p "Two-factor authentication is currently "
      [:strong (if otp_active "enabled." "disabled.")]
      (format " To %s it, enter your password." (if otp_active "disable" "enable"))]
