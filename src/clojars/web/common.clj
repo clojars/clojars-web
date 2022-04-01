@@ -37,6 +37,7 @@
      (link-to "/security" "security")
      (link-to "/dmca" "DMCA")
      (link-to "https://github.com/clojars/clojars-web/wiki/" "help")
+     (link-to "https://github.com/clojars/clojars-web/wiki/Data" "API")
      [:div.sponsors
       [:div.sponsors-title
        "sponsored by"
