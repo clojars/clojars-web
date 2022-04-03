@@ -40,8 +40,9 @@
           help/test-port))
 
 (defn deploy
-  [{:keys [artifact-map coordinates jar-file password pom-file transfer-listener]
-    :or {transfer-listener (fn [])}}]
+  [{:keys [artifact-map coordinates jar-file password pom-file transfer-listener username]
+    :or {transfer-listener (fn [])
+         username "dantheman"}}]
   ;; HttpWagon uses a static, inaccessible http client that caches cookies, so
   ;; we have to clear sessions on each deploy to mimic having new prucesses
   ;; deploying.
@@ -52,7 +53,7 @@
    :jar-file jar-file
    :pom-file pom-file
    :repository {"test" {:url (repo-url)
-                        :username "dantheman"
+                        :username username
                         :password password}}
    :local-repo help/local-repo
    :transfer-listener transfer-listener))
@@ -123,6 +124,18 @@
         (visit "/tokens")
         (within [:td.last-used]
                 (has (text? (common/format-timestamp now)))))))
+
+(deftest user-can-deploy-using-email-address
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+      (deploy
+       {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                    {:groupId "org.clojars.dantheman"})
+        :username "test@example.org"
+        :password token})))
 
 (deftest deploying-with-a-scoped-token
   (-> (session (help/app-from-system))

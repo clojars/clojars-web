@@ -108,13 +108,15 @@
        (.after (db/get-time) expires_at)))
 
 (defn token-credential-fn [db]
-  (fn [{:keys [username password]}]
+  (fn [{username-or-email :username password :password}]
     (log/with-context {:tag :authentication
-                       :username username
+                       :username username-or-email
                        :type :token}
       (let [password-hash (when password
-                            (db/hash-deploy-token password))]
-        (if-let [token (and password
+                            (db/hash-deploy-token password))
+            username (:user (db/find-user-by-user-or-email db username-or-email))]
+        (if-let [token (and username
+                            password
                             (->> (db/find-user-tokens-by-username db username)
                                  (remove :disabled)
                                  (filter #(let [{:keys [token_hash]} %]
