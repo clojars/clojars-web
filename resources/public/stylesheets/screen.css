@@ -699,7 +699,7 @@ input.red-button {
 .token-table input[type="checkbox"] {
   width: 1em;
   margin-left: 3px;
-  margin-right: 5px;
+  margin-right: 12px;
 }
 
 table.audit th,
