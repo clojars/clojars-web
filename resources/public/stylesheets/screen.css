@@ -752,3 +752,11 @@ a.login-button:hover, a.login-button:focus {
 #login-or {
   text-align: center;
 }
+
+.form-table label {
+  margin-right: 10px;
+}
+
+.form-table input {
+  width: auto;
+}

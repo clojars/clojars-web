@@ -45,6 +45,12 @@
    ["30 days" "720"]
    ["90 days" "2160"]])
 
+(defn- form-table
+  [label-input-pairs]
+  [:table.form-table
+   (for [[label input] label-input-pairs]
+     [:tr [:td label] [:td input]])])
+
 (defn show-tokens
   ([account tokens jars groups]
    (show-tokens account tokens jars groups nil))
@@ -67,7 +73,27 @@
        [:li "any artifact you have access to ('*')"]
        [:li "any artifact within a group you have access to ('group-name/*')"]
        [:li "a particular artifact you have access to ('group-name/artifact-name')"]]]]
+    [:div.add-token.col-xs-12.col-sm-12
+     [:h2 "Create Deploy Token"]
+     [:p [:strong "Note:"]
+      " the token value will only be shown once after it is created, so be sure to copy it."]
+     (form-to
+      [:post "/tokens/"]
+      [:div.form-table
+       (form-table
+        [[(label :name "Token name")
+          (text-field {:placeholder "Laptop deploy token"
+                       :required true}
+                      :name)]
+         [(label :scope "Token scope")
+          (drop-down :scope (scope-options jars groups))]
+         [(label :single_use "Single use?")
+          (check-box :single_use)]
+         [(label :expires_in "Expires in")
+          (drop-down :expires_in expiry-options)]])
+       (submit-button "Create Token")])]
     [:div.token-table.col-xs-12.col-sm-12
+     [:h2 "Existing Deploy Tokens"]
      [:div
       [:span "Show: "]
       [:span "disabled tokens?" (check-box :show-disabled)]
@@ -104,20 +130,4 @@
           [:td.last-used (format-timestamp (:last_used token))]
           [:td.actions (when-not disabled?
                          (form-to [:delete (str "/tokens/" (:id token))]
-                                  [:input.button {:type "submit" :value "Disable Token"}]))]])]]]
-    [:div.add-token.small-section.col-xs-12.col-sm-6
-     [:h2 "Create Deploy Token"]
-     [:p [:strong "Note:"]
-      " the token value will only be shown once after it is created, so be sure to copy it."]
-     (form-to [:post "/tokens/"]
-              (label :name "Token name")
-              (text-field {:placeholder "Laptop deploy token"
-                           :required true}
-                          :name)
-              (label :scope "Token scope")
-              (drop-down :scope (scope-options jars groups))
-              (label :single_use "Single use?")
-              (check-box :single_use)
-              (label :expires_in "Expires in")
-              (drop-down :expires_in expiry-options)
-              (submit-button "Create Token"))])))
+                                  [:input.button {:type "submit" :value "Disable Token"}]))]])]]])))
