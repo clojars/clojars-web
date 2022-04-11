@@ -5,7 +5,6 @@
    [clojars.web.common :refer [audit-table html-doc html-doc-with-large-header
                                jar-link group-link tag
                                verified-group-badge verified-group-badge-small]]
-   [clojars.web.helpers :as helpers]
    [clojars.web.structured-data :as structured-data]
    [hiccup.element :refer [unordered-list link-to]]))
 
@@ -49,11 +48,10 @@
    structured-data/website
    structured-data/organisation
    [:article.row
-    (helpers/select-text-script)
     [:div.push-information.col-xs-12.col-sm-4
      [:h3.push-header "Push with "
       (link-to "http://leiningen.org/" "Leiningen")]
-     [:div#leiningen.push-example {:onClick "selectText('leiningen');"}
+     [:div#leiningen.push-example.select-text
       [:pre.push-example-leiningen
        (tag "$") " lein deploy clojars\n"]]]
     [:div.push-information.col-xs-12.col-sm-4
@@ -62,13 +60,13 @@
       " (using "
       (link-to "https://github.com/adzerk/bootlaces" "bootlaces")
       ")"]
-     [:div#boot.push-example {:onClick "selectText('boot');"}
+     [:div#boot.push-example.select-text
       [:pre.push-example-boot
        (tag "$") " boot build-jar push-snapshot\n"
        (tag "$") " boot build-jar push-release\n"]]]
     [:div.push-information.col-xs-12.col-sm-4
      [:h3.push-header "Maven Repository (running a " [:a {:href "https://github.com/clojars/clojars-web/wiki/Mirrors"} "mirror"] "?)"]
-     [:div#maven.push-example {:onClick "selectText('maven');"}
+     [:div#maven.push-example.select-text
       [:pre
        (tag "<repository>\n")
        (tag "  <id>") "clojars.org" (tag "</id>\n")

@@ -142,8 +142,7 @@
 (defn leiningen-coordinates [jar]
   (list
    [:h2 "Leiningen/Boot"]
-   [:div#leiningen-coordinates.package-config-example
-    {:onClick "selectText('leiningen-coordinates');"}
+   [:div#leiningen-coordinates.package-config-example.select-text
     [:pre
      (tag "[")
      (jar-name jar)
@@ -153,8 +152,7 @@
 (defn clojure-cli-coordinates [{:keys [group_name jar_name version]}]
   (list
    [:h2 "Clojure CLI/deps.edn"]
-   [:div#deps-coordinates.package-config-example
-    {:onClick "selectText('deps-coordinates');"}
+   [:div#deps-coordinates.package-config-example.select-text
     [:pre
      (str group_name "/" jar_name)
      \space
@@ -166,8 +164,7 @@
 (defn gradle-coordinates [{:keys [group_name jar_name version]}]
   (list
    [:h2 "Gradle"]
-   [:div#gradle-coordinates.package-config-example
-    {:onClick "selectText('gradle-coordinates');"}
+   [:div#gradle-coordinates.package-config-example.select-text
     [:pre
      "implementation("
      [:span.string \" group_name ":" jar_name ":" version \"]
@@ -176,8 +173,7 @@
 (defn maven-coordinates [{:keys [group_name jar_name version]}]
   (list
    [:h2 "Maven"]
-   [:div#maven-coordinates.package-config-example
-    {:onClick "selectText('maven-coordinates');"}
+   [:div#maven-coordinates.package-config-example.select-text
     [:pre
      (tag "<dependency>\n")
      (tag "  <groupId>") group_name (tag "</groupId>\n")
@@ -271,8 +267,8 @@
     "Want to display the "
     (link-to (version-badge-url jar) "latest version")
     " of your project on GitHub? Use the markdown code below!"]
-   [:textarea#version-badge
-    {:readonly "readonly" :rows 6 :onClick "selectText('version-badge')"}
+   [:textarea#version-badge.select-text
+    {:readonly "readonly" :rows 6}
     (badge-markdown jar)]))
 
 (defn show-jar [db stats account
@@ -296,7 +292,6 @@
       :data2       (format "[%s \"%s\"]" (jar-name jar) version)}
      [:div.light-article.row
       (breadcrumbs jar)
-      (helpers/select-text-script)
       [:div#jar-title.col-xs-12.col-sm-9
        [:div
         [:h1 (jar-link jar)]

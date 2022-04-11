@@ -108,6 +108,7 @@
                ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
           (raw (when-ie (include-js "/js/html5.js")))
           (include-js "/js/jquery-3.6.0.min.js")
+          (include-js "/js/selectText.js")
           (for [path (:extra-js ctx)]
             (include-js path))]
          [:body.container-fluid
