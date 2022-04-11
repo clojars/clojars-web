@@ -11,9 +11,6 @@
                      response
                      ))))
 
-(defn wrap-x-frame-options [f]
-  (fn [req] (update-in (f req) [:headers] assoc "X-Frame-Options" "DENY")))
-
 (defn https-request? [req]
   (or (= (:scheme req) :https)
       (= (get-in req [:headers "x-forwarded-proto"]) "https")))
