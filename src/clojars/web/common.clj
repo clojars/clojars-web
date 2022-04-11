@@ -83,9 +83,6 @@
                         [:img {:src "/images/clojurists-together-logo.png" :alt "Clojurists Together Foundation" :height "40"}])]]]]]
     [:footer.row]))
 
-(defn typekit-js []
-  [:script "try{Typekit.load({async:true});}catch(e){}"])
-
 (defn html-doc [title ctx & body]
   (html5 {:lang "en"}
          [:head
@@ -109,8 +106,6 @@
          ;; (then the default colors were removed)
          ;; more info: http://getbootstrap.com/css/#grid
                ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-          (include-js "https://use.typekit.net/zhw0tse.js")
-          (typekit-js)
           (raw (when-ie (include-js "/js/html5.js")))
           (include-js "/js/jquery-3.6.0.min.js")
           (for [path (:extra-js ctx)]
@@ -190,8 +185,6 @@
          ;; (then the default colors were removed)
          ;; more info: http://getbootstrap.com/css/#grid
                ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-          (include-js "https://use.typekit.net/zhw0tse.js")
-          (typekit-js)
           (raw (when-ie (include-js "/js/html5.js")))]
          [:body.container-fluid
           [:div.hero.row
