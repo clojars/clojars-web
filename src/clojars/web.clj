@@ -8,7 +8,7 @@
    [clojars.friend.oauth.github :as github]
    [clojars.friend.oauth.gitlab :as gitlab]
    [clojars.friend.registration :as registration]
-   [clojars.http-utils :refer [wrap-secure-session]]
+   [clojars.http-utils :refer [wrap-secure-session wrap-additional-security-headers]]
    [clojars.log :as log]
    [clojars.middleware :refer [wrap-ignore-trailing-slash]]
    [clojars.routes.api :as api]
@@ -142,6 +142,7 @@
          ;; ring-defaults' session support
          (wrap-flash)
          (ring-defaults/wrap-defaults defaults-config)
+         (wrap-additional-security-headers)
          (wrap-secure-session)
          (wrap-content-type)
          (wrap-not-modified)
