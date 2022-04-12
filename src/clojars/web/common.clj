@@ -2,7 +2,7 @@
   (:require
    [clojars.maven :as maven]
    [clojars.web.helpers :as helpers]
-   [clojars.web.safe-hiccup :refer [html5 raw]]
+   [clojars.web.safe-hiccup :refer [form-to html5 raw]]
    [clojars.web.structured-data :as structured-data]
    [clojars.db :as db]
    [clojure.edn :as edn]
@@ -429,3 +429,13 @@
         [:td (link-project audit)]
         [:td (linkify (:message audit))]
         [:td (:created audit)]])]])
+
+(defn form-table
+  [method-action label-input-pairs extra-inputs]
+  (form-to
+   method-action
+   [:div.form-table
+    [:table.form-table
+     (for [[label input] label-input-pairs]
+       [:tr [:td label] [:td input]])]
+    extra-inputs]))

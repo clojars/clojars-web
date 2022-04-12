@@ -1,6 +1,6 @@
 (ns clojars.web.token
   (:require
-   [clojars.web.common :refer [flash format-timestamp html-doc error-list]]
+   [clojars.web.common :refer [flash format-timestamp form-table html-doc error-list]]
    [clojars.web.safe-hiccup :refer [form-to]]
    [clojars.auth :as auth]
    [hiccup.form :refer [check-box drop-down label text-field submit-button]]
@@ -45,12 +45,6 @@
    ["30 days" "720"]
    ["90 days" "2160"]])
 
-(defn- form-table
-  [label-input-pairs]
-  [:table.form-table
-   (for [[label input] label-input-pairs]
-     [:tr [:td label] [:td input]])])
-
 (defn show-tokens
   ([account tokens jars groups]
    (show-tokens account tokens jars groups nil))
@@ -77,21 +71,19 @@
      [:h2 "Create Deploy Token"]
      [:p [:strong "Note:"]
       " the token value will only be shown once after it is created, so be sure to copy it."]
-     (form-to
+     (form-table
       [:post "/tokens/"]
-      [:div.form-table
-       (form-table
-        [[(label :name "Token name")
-          (text-field {:placeholder "Laptop deploy token"
-                       :required true}
-                      :name)]
-         [(label :scope "Token scope")
-          (drop-down :scope (scope-options jars groups))]
-         [(label :single_use "Single use?")
-          (check-box :single_use)]
-         [(label :expires_in "Expires in")
-          (drop-down :expires_in expiry-options)]])
-       (submit-button "Create Token")])]
+      [[(label :name "Token name")
+        (text-field {:placeholder "Laptop deploy token"
+                     :required true}
+                    :name)]
+       [(label :scope "Token scope")
+        (drop-down :scope (scope-options jars groups))]
+       [(label :single_use "Single use?")
+        (check-box :single_use)]
+       [(label :expires_in "Expires in")
+        (drop-down :expires_in expiry-options)]]
+      (submit-button "Create Token"))]
     [:div.token-table.col-xs-12.col-sm-12
      [:h2 "Existing Deploy Tokens"]
      [:div
