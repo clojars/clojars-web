@@ -2,7 +2,7 @@
   (:require
    [clojars.auth :refer [authorized-admin? authorized-member?]]
    [clojars.db :refer [find-group-verification jars-by-groupname]]
-   [clojars.web.common :refer [audit-table html-doc jar-link user-link error-list verified-group-badge-small]]
+   [clojars.web.common :refer [audit-table form-table html-doc jar-link user-link error-list verified-group-badge-small]]
    [clojars.web.safe-hiccup :refer [form-to]]
    [clojars.web.structured-data :as structured-data]
    [hiccup.element :refer [unordered-list]]
@@ -66,20 +66,16 @@
                (when admin?
                  [:div.add-member
                   [:h2 "Add member to group"]
-                  (form-to [:post (str "/groups/" groupname)]
-                           [:div
-                            [:label
-                             "Username "
-                             (text-field "username")]]
-                           [:div {:class "checkbox"}
-                            [:label
-                             "Admin? "
-                             [:input {:type "checkbox"
-                                      :name "admin"
-                                      :id "admin"
-                                      :value 1
-                                      :style "width:auto;margin-right:5px"
-                                      :checked false}]]]
-                           [:input.button {:type "submit" :value "Add Member"}])])
+                  (form-table
+                   [:post (str "/groups/" groupname)]
+                   [[[:label "Username "]
+                     (text-field "username")]
+                    [[:label "Admin? "]
+                     [:input {:type "checkbox"
+                              :name "admin"
+                              :id "admin"
+                              :value 1
+                              :checked false}]]]
+                   [:input.button {:type "submit" :value "Add Member"}])])
                (when show-membership-details?
                  (audit-table db groupname {:group-name groupname}))])))

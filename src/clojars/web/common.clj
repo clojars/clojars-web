@@ -2,7 +2,7 @@
   (:require
    [clojars.maven :as maven]
    [clojars.web.helpers :as helpers]
-   [clojars.web.safe-hiccup :refer [html5 raw]]
+   [clojars.web.safe-hiccup :refer [form-to html5 raw]]
    [clojars.web.structured-data :as structured-data]
    [clojars.db :as db]
    [clojure.edn :as edn]
@@ -83,9 +83,6 @@
                         [:img {:src "/images/clojurists-together-logo.png" :alt "Clojurists Together Foundation" :height "40"}])]]]]]
     [:footer.row]))
 
-(defn typekit-js []
-  [:script "try{Typekit.load({async:true});}catch(e){}"])
-
 (defn html-doc [title ctx & body]
   (html5 {:lang "en"}
          [:head
@@ -109,10 +106,9 @@
          ;; (then the default colors were removed)
          ;; more info: http://getbootstrap.com/css/#grid
                ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-          (include-js "https://use.typekit.net/zhw0tse.js")
-          (typekit-js)
           (raw (when-ie (include-js "/js/html5.js")))
           (include-js "/js/jquery-3.6.0.min.js")
+          (include-js "/js/selectText.js")
           (for [path (:extra-js ctx)]
             (include-js path))]
          [:body.container-fluid
@@ -190,8 +186,6 @@
          ;; (then the default colors were removed)
          ;; more info: http://getbootstrap.com/css/#grid
                ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-          (include-js "https://use.typekit.net/zhw0tse.js")
-          (typekit-js)
           (raw (when-ie (include-js "/js/html5.js")))]
          [:body.container-fluid
           [:div.hero.row
@@ -435,3 +429,13 @@
         [:td (link-project audit)]
         [:td (linkify (:message audit))]
         [:td (:created audit)]])]])
+
+(defn form-table
+  [method-action label-input-pairs extra-inputs]
+  (form-to
+   method-action
+   [:div.form-table
+    [:table.form-table
+     (for [[label input] label-input-pairs]
+       [:tr [:td label] [:td input]])]
+    extra-inputs]))

@@ -8,7 +8,7 @@
    [clojars.friend.oauth.github :as github]
    [clojars.friend.oauth.gitlab :as gitlab]
    [clojars.friend.registration :as registration]
-   [clojars.http-utils :refer [wrap-x-frame-options wrap-secure-session]]
+   [clojars.http-utils :refer [wrap-secure-session wrap-additional-security-headers]]
    [clojars.log :as log]
    [clojars.middleware :refer [wrap-ignore-trailing-slash]]
    [clojars.routes.api :as api]
@@ -27,14 +27,10 @@
    [clojure.java.io :as io]
    [compojure.core :refer [ANY context GET PUT routes]]
    [compojure.route :refer [not-found]]
-   [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
    [ring.middleware.content-type :refer [wrap-content-type]]
+   [ring.middleware.defaults :as ring-defaults]
    [ring.middleware.flash :refer [wrap-flash]]
-   [ring.middleware.keyword-params :refer [wrap-keyword-params]]
-   [ring.middleware.multipart-params :refer [wrap-multipart-params]]
-   [ring.middleware.not-modified :refer [wrap-not-modified]]
-   [ring.middleware.params :refer [wrap-params]]
-   [ring.middleware.resource :refer [wrap-resource]]))
+   [ring.middleware.not-modified :refer [wrap-not-modified]]))
 
 (defn try-parse-page
   "Will throw a targeted error if maybe-page doesn't parse as an integer."
@@ -94,6 +90,15 @@
                       [:h1 "Page not found"]
                       [:p "Thundering typhoons!  I think we lost it.  Sorry!"]]))))))
 
+(def ^:private defaults-config
+  (-> ring-defaults/secure-site-defaults
+      ;; Be more strict than the default; we never want to be frame-embedded
+      (assoc-in [:security :frame-options] :deny)
+      ;; we handle this in nginx
+      (update :security dissoc :ssl-redirect)
+      ;; We have our own session impl in http-utils
+      (dissoc :session)))
+
 (defn clojars-app
   [{:keys [db
            error-reporter
@@ -133,14 +138,12 @@
                        (gitlab/workflow gitlab http-client db)]})
          (wrap-exceptions error-reporter)
          (log/wrap-request-context)
-         (wrap-anti-forgery)
-         (wrap-x-frame-options)
-         (wrap-keyword-params)
-         (wrap-params)
-         (wrap-multipart-params)
+         ;; Use flash directly since we have custom session logic, so can't use
+         ;; ring-defaults' session support
          (wrap-flash)
+         (ring-defaults/wrap-defaults defaults-config)
+         (wrap-additional-security-headers)
          (wrap-secure-session)
-         (wrap-resource "public")
          (wrap-content-type)
          (wrap-not-modified)
          (wrap-ignore-trailing-slash)))))

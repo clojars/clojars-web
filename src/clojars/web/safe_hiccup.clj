@@ -41,11 +41,12 @@ does some monkey patching to automatically escape strings."
   "Create a form that points to a particular method and route.
 e.g. (form-to [:put \"/post\"]
 ...)"
-  [[method action] & body]
-  `(if (contains? #{:head :get} ~method)
-     (form/form-to [~method ~action] ~@body)
-     (form/form-to [~method ~action]
-                   (conj
-                    (form/hidden-field "__anti-forgery-token"
-                                       *anti-forgery-token*)
-                    ~@body))))
+  [method-action & body]
+  `(let [[method# action#] ~method-action]
+     (if (contains? #{:head :get} method#)
+       (form/form-to [method# action#] ~@body)
+       (form/form-to [method# action#]
+                     (conj
+                      (form/hidden-field "__anti-forgery-token"
+                                         *anti-forgery-token*)
+                      ~@body)))))

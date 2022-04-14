@@ -49,7 +49,7 @@
                  [cheshire "5.10.1"]
                  [clj-stacktrace "0.2.8"]
                  [clj-time "0.15.2"]
-                 [ring/ring-anti-forgery "1.3.0"
+                 [ring/ring-defaults "0.3.3"
                   :exclusions [commons-codec
                                ;; newer version brought in by ring/ring-core
                                crypto-random]]
