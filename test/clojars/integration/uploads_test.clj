@@ -434,7 +434,7 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
-                          #"Forbidden - Group 'new-group' doesn't exist \(see https://git.io/JOs8J\)"
+                          #"Forbidden - Group 'new-group' doesn't exist. See https://bit.ly/3MuKGXO"
                           (deploy
                            {:coordinates '[new-group/test "0.0.1"]
                             :jar-file (io/file (io/resource "test.jar"))
@@ -447,7 +447,7 @@
                        :group_name "new-group"
                        :jar_name "test"
                        :version "0.0.1"
-                       :message "Group 'new-group' doesn't exist (see https://git.io/JOs8J)"
+                       :message "Group 'new-group' doesn't exist. See https://bit.ly/3MuKGXO"
                        :tag "deploy-forbidden"})))
 
 (deftest user-can-deploy-a-new-version-to-an-existing-project-in-a-non-verified-group
@@ -494,7 +494,7 @@
     (db/add-admin help/*db* "legacy-group" "dantheman" "testing")
 
     (is (thrown-with-msg? DeploymentException
-                          #"Forbidden - Group 'legacy-group' isn't verified, so can't contain new projects \(see https://git.io/JOs8J\)"
+                          #"Forbidden - Group 'legacy-group' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"
                           (deploy
                            {:coordinates '[legacy-group/test "0.0.1"]
                             :jar-file (io/file (io/resource "test.jar"))
@@ -507,7 +507,7 @@
                        :group_name "legacy-group"
                        :jar_name "test"
                        :version "0.0.1"
-                       :message "Group 'legacy-group' isn't verified, so can't contain new projects (see https://git.io/JOs8J)"
+                       :message "Group 'legacy-group' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"
                        :tag "deploy-forbidden"})))
 
 (deftest user-cannot-redeploy
@@ -532,7 +532,7 @@
                        :group_name "org.clojars.dantheman"
                        :jar_name "test"
                        :version "0.0.1"
-                       :message "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)"
+                       :message "redeploying non-snapshots is not allowed. See https://bit.ly/3EYzhwT"
                        :tag "non-snapshot-redeploy"})))
 
 (deftest deploy-cannot-shadow-central
@@ -556,7 +556,7 @@
                        :group_name "org.tcrawley"
                        :jar_name "dynapath"
                        :version "0.0.1"
-                       :message "shadowing Maven Central artifacts is not allowed (see https://git.io/vMUHN)"
+                       :message "shadowing Maven Central artifacts is not allowed. See https://bit.ly/3rTLqxZ"
                        :tag "central-shadow"})))
 
 (deftest deploy-cannot-shadow-central-unless-allowlisted
@@ -742,12 +742,12 @@
         {:coordinates '[org.clojars.dantheman/test "1.0.0"]
          :jar-file (io/file (io/resource "test.jar"))
          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :password  "password"})
+         :password  "password"})))
 
-       (help/match-audit {:username "guest"}
-                         {:user    "guest"
-                          :message "a deploy token is required to deploy (see https://git.io/JfwjM)"
-                          :tag     "deploy-password-rejection"}))))
+  (help/match-audit {:username "dantheman"}
+                    {:user    "dantheman"
+                     :message "a deploy token is required to deploy. See https://bit.ly/3LmCclv"
+                     :tag     "deploy-password-rejection"}))
 
 (deftest deploy-requires-path-to-match-pom
   (-> (session (help/app-from-system))
@@ -822,7 +822,7 @@
                        :group_name "org.clojars.dantheman"
                        :jar_name "teST"
                        :version "0.0.1"
-                       :message "project names must consist solely of lowercase letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"
+                       :message "project names must consist solely of lowercase letters, numbers, hyphens and underscores. See https://bit.ly/3MuL20A"
                        :tag "regex-validation-failed"})))
 
 (deftest deploy-requires-ascii-version
@@ -843,7 +843,7 @@
                        :group_name "org.clojars.dantheman"
                        :jar_name "test"
                        :version "1.α.0"
-                       :message "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores (see https://git.io/v1IA2)"
+                       :message "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX"
                        :tag "regex-validation-failed"})))
 
 (deftest put-on-html-fails

@@ -201,7 +201,7 @@
   (when (and (not (maven/snapshot-version? version))
              (db/find-jar db group-id artifact-id version))
     (throw-invalid :non-snapshot-redeploy
-                   "redeploying non-snapshots is not allowed (see https://git.io/v1IAs)")))
+                   "redeploying non-snapshots is not allowed. See https://bit.ly/3EYzhwT")))
 
 (defn assert-non-central-shadow [group-id artifact-id]
   (when-not (maven/can-shadow-maven? group-id artifact-id)
@@ -212,10 +212,10 @@
                   :report? true}] 
         (if (= ret :failure)
           (throw-invalid :central-shadow-check-failure
-                         "failed to contact Maven Central to verify project name (see https://git.io/vMUHN)"
+                         "failed to contact Maven Central to verify project name. See https://bit.ly/3rTLqxZ"
             (assoc meta :status 503))
           (throw-invalid :central-shadow
-                         "shadowing Maven Central artifacts is not allowed (see https://git.io/vMUHN)"
+                         "shadowing Maven Central artifacts is not allowed. See https://bit.ly/3rTLqxZ"
             meta))))))
  
 (defn assert-jar-uploaded [artifacts pom]
@@ -258,7 +258,7 @@
   ;; OSes, URLs and tools.
   (validate-regex name #"^[a-z0-9_.-]+$"
                   (str "project names must consist solely of lowercase "
-                       "letters, numbers, hyphens and underscores (see https://git.io/v1IAl)"))
+                       "letters, numbers, hyphens and underscores. See https://bit.ly/3MuL20A"))
 
   ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
   ;; bar one broken non-ascii exception only these characters have been used.
@@ -267,7 +267,7 @@
   ;; compatible for everyone let's lock it down.
   (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
                   (str "version strings must consist solely of letters, "
-                       "numbers, dots, pluses, hyphens and underscores (see https://git.io/v1IA2)")))
+                       "numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX")))
 
 (defn validate-deploy [db dir pom {:keys [group name version]}]
   (validate-jar-name+version name version)
@@ -376,7 +376,7 @@
   [session group artifact]
   (when-not (token-session-matches-group-artifact? session group artifact)
     (throw-forbidden
-     "The provided token's scope doesn't allow deploying this artifact (see https://git.io/JfwjM)"
+     "The provided token's scope doesn't allow deploying this artifact. See https://bit.ly/3LmCclv"
      {:group group
       :artifact artifact})))
 
@@ -494,7 +494,7 @@
     (if (auth/unauthed-or-token-request? req)
       (f req)
       (let [{:keys [username]} (auth/parse-authorization-header (get-in req [:headers "authorization"]))
-            message "a deploy token is required to deploy (see https://git.io/JfwjM)"]
+            message "a deploy token is required to deploy. See https://bit.ly/3LmCclv"]
         (log/audit db {:tag :deploy-password-rejection
                        :message message
                        :username username})

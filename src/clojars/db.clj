@@ -557,11 +557,11 @@
 
       ;; group doesn't exist, reject since we no longer auto-create groups
       (empty? actives)
-      (err (format "Group '%s' doesn't exist (see https://git.io/JOs8J)" groupname))
+      (err (format "Group '%s' doesn't exist. See https://bit.ly/3MuKGXO" groupname))
 
       ;; group isn't verified, so new jars/projects can't be deployed to it
       (not (find-group-verification db groupname))
-      (err (format "Group '%s' isn't verified, so can't contain new projects (see https://git.io/JOs8J)" groupname)))))
+      (err (format "Group '%s' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO" groupname)))))
 
 (defn add-group
   "Adds a new group entry without any checks other than if it exists
