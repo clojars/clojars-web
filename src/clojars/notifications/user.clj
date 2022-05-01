@@ -1,4 +1,4 @@
-(ns clojars.notifications.mfa
+(ns clojars.notifications.user
   (:require
    [clojars.notifications :as notifications]))
 
@@ -7,7 +7,7 @@
   (notifications/send
    mailer email "Two-factor auth was enabled on your Clojars account"
    [(format
-     "Someone (hopefully you) has enabled two-factor authenication on your '%s' Clojars account."
+     "Someone (hopefully you) has enabled two-factor authentication on your '%s' Clojars account."
      username)
     "If you *didn't* take this action, please reply to this email to let the Clojars admins know that your account has potentially been compromised!"
     "To manage your two-factor settings, visit https://clojars.org/mfa"]))
@@ -19,7 +19,7 @@
   (notifications/send
    mailer email "Two-factor auth was disabled on your Clojars account"
    [(format
-     "Someone (hopefully you) has disabled two-factor authenication on your '%s' Clojars account."
+     "Someone (hopefully you) has disabled two-factor authentication on your '%s' Clojars account."
      username)
     (if (= :recovery-code source)
       "Your two-factor auth was disabled because you used your recovery code."

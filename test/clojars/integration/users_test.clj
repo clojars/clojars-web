@@ -3,7 +3,7 @@
    [clojars.email :as email]
    [clojars.integration.steps :refer [disable-mfa enable-mfa login-as register-as]]
    ;; for defmethods
-   [clojars.notifications.mfa]
+   [clojars.notifications.user]
    [clojars.test-helper :as help :refer [with-test-system]]
    [clojure.test :refer [deftest is testing use-fixtures]]
    [kerodon.core :refer [fill-in follow follow-redirect
