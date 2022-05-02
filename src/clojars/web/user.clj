@@ -12,6 +12,7 @@
                               reserved-names
                               update-user
                               update-user-notifications]]
+   [clojars.event :as event]
    [clojars.log :as log]
    [clojars.web.common :refer [html-doc error-list form-table jar-link
                                flash group-link verified-group-badge-small]]
@@ -120,7 +121,8 @@
                       (password-field :confirm)
                       (submit-button "Update"))]))
 
-(defn update-profile [db account {:keys [email current-password password confirm] :as params}]
+(defn update-profile
+  [db account {:keys [email current-password password confirm] :as params}]
   (let [email (and email (.trim email))]
     (log/with-context {:tag :update-profile
                        :username account}
@@ -137,9 +139,18 @@
           (log/info {:status :failed
                      :reason :validation-failed})
           (profile-form account params nil (apply concat (vals errors))))
-        (do
+        (let [old-email (:email (find-user-by-user-or-email db account))
+              email-changed? (not= old-email email)
+              password-changed? (some? password)]
           (update-user db account email account password)
           (log/info {:status :success})
+          (when email-changed?
+            (event/emit :email-changed
+                        {:username account
+                         :old-email old-email}))
+          (when password-changed?
+            (event/emit :password-changed
+                        {:username account}))
           (assoc (redirect "/profile")
                  :flash "Profile updated."))))))
 

@@ -93,28 +93,88 @@
               (has (text? "Username is already taken")))))
 
 (deftest user-can-update-info
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password")
-      (follow-redirect)
-      (follow "profile")
-      (fill-in "Email" "fixture2@example.org")
-      (fill-in "Current password" "password")
-      (fill-in "New password" "password2")
-      (fill-in "Confirm new password" "password2")
-      (press "Update")
-      (follow-redirect)
-      (within [:div#notice]
-              (has (text? "Profile updated.")))
-      (follow "logout")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:nav [:li enlive/first-child] :a]
-              (has (text? "login")))
-      (login-as "fixture" "password2")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:div.light-article :> :h1]
-              (has (text? "Dashboard (fixture)")))))
+  (with-test-system
+    (email/expect-mock-emails 3)
+    (-> (session (help/app))
+        (register-as "fixture" "fixture@example.org" "password")
+        (follow-redirect)
+        (follow "profile")
+        (fill-in "Email" "fixture2@example.org")
+        (fill-in "Current password" "password")
+        (fill-in "New password" "password2")
+        (fill-in "Confirm new password" "password2")
+        (press "Update")
+        (follow-redirect)
+        (within [:div#notice]
+                (has (text? "Profile updated.")))
+        (follow "logout")
+        (follow-redirect)
+        (has (status? 200))
+        (within [:nav [:li enlive/first-child] :a]
+                (has (text? "login")))
+        (login-as "fixture" "password2")
+        (follow-redirect)
+        (has (status? 200))
+        (within [:div.light-article :> :h1]
+                (has (text? "Dashboard (fixture)"))))
+    (is (true? (email/wait-for-mock-emails)))
+    (is (= #{"Your Clojars email was changed"
+             "Your Clojars password was changed"}
+           (into #{} (map second) @email/mock-emails)))))
+
+(deftest user-can-update-just-email
+  (with-test-system
+    (email/expect-mock-emails 2)
+    (-> (session (help/app))
+        (register-as "fixture" "fixture@example.org" "password")
+        (follow-redirect)
+        (follow "profile")
+        (fill-in "Email" "fixture2@example.org")
+        (fill-in "Current password" "password")
+        (press "Update")
+        (follow-redirect)
+        (within [:div#notice]
+                (has (text? "Profile updated."))))
+    (is (true? (email/wait-for-mock-emails)))
+    (let [[addresses titles bodies]
+          (reduce
+           #(map conj %1 %2)
+           [#{} #{} #{}]
+           @email/mock-emails)]
+      (is (= #{"fixture@example.org" "fixture2@example.org"} addresses))
+      (is (= #{"Your Clojars email was changed"} titles))
+      (doseq [body bodies]
+        (is (re-find #"from 'fixture@example.org' to 'fixture2@example.org'" body))))))
+
+(deftest user-can-update-just-password
+  (with-test-system
+    (email/expect-mock-emails 1)
+    (-> (session (help/app))
+        (register-as "fixture" "fixture@example.org" "password")
+        (follow-redirect)
+        (follow "profile")
+        (fill-in "Current password" "password")
+        (fill-in "New password" "password2")
+        (fill-in "Confirm new password" "password2")
+        (press "Update")
+        (follow-redirect)
+        (within [:div#notice]
+                (has (text? "Profile updated.")))
+        (follow "logout")
+        (follow-redirect)
+        (has (status? 200))
+        (within [:nav [:li enlive/first-child] :a]
+                (has (text? "login")))
+        (login-as "fixture" "password2")
+        (follow-redirect)
+        (has (status? 200))
+        (within [:div.light-article :> :h1]
+                (has (text? "Dashboard (fixture)"))))
+    (is (true? (email/wait-for-mock-emails)))
+    (let [[address title body] (first @email/mock-emails)]
+      (is (= "fixture@example.org" address))
+      (is (= "Your Clojars password was changed" title))
+      (is (re-find #"has changed the password on your 'fixture'" body)))))
 
 (deftest bad-update-info-should-show-error
   (-> (session (help/app))
@@ -271,7 +331,7 @@
       (testing "when manually disabled"
         (email/expect-mock-emails 1)
         (disable-mfa (session (help/app-from-system)) "fixture" "password" otp-secret)
-        _ (is (true? (email/wait-for-mock-emails)))
+        (is (true? (email/wait-for-mock-emails)))
         (let [[address title body] (first @email/mock-emails)]
           (is (= "fixture@example.org" address))
           (is (= "Two-factor auth was disabled on your Clojars account" title))

@@ -1,6 +1,7 @@
 (ns clojars.notifications.user
   (:require
-   [clojars.notifications :as notifications]))
+   [clojars.notifications :as notifications]
+   [clojars.notifications.common :as common]))
 
 (defmethod notifications/notification :mfa-activated
   [_type mailer {:as _user username :user email :email} _data]
@@ -9,7 +10,7 @@
    [(format
      "Someone (hopefully you) has enabled two-factor authentication on your '%s' Clojars account."
      username)
-    "If you *didn't* take this action, please reply to this email to let the Clojars admins know that your account has potentially been compromised!"
+    common/did-not-take-action
     "To manage your two-factor settings, visit https://clojars.org/mfa"]))
 
 (defmethod notifications/notification :mfa-deactivated
@@ -24,5 +25,28 @@
     (if (= :recovery-code source)
       "Your two-factor auth was disabled because you used your recovery code."
       "Your two-factor auth was manually disabled at https://clojars.org/mfa.")
-    "If you *didn't* take this action, please reply to this email to let the Clojars admins know that your account has potentially been compromised!"
+    common/did-not-take-action
     "To manage your two-factor settings, visit https://clojars.org/mfa"]))
+
+(defmethod notifications/notification :email-changed
+  [_type mailer {:as _user username :user email :email}
+   {:as _data :keys [old-email]}]
+  (let [subject "Your Clojars email was changed"
+        msg
+        [(format
+          "Someone (hopefully you) has changed the email on your '%s' Clojars account from '%s' to '%s'."
+          username
+          old-email
+          email)
+         common/did-not-take-action]]
+    (notifications/send mailer email subject msg)
+    (notifications/send mailer old-email subject msg)))
+
+(defmethod notifications/notification :password-changed
+  [_type mailer {:as _user username :user email :email} _data]
+  (notifications/send
+   mailer email "Your Clojars password was changed"
+   [(format
+     "Someone (hopefully you) has changed the password on your '%s' Clojars account."
+     username)
+    common/did-not-take-action]))
