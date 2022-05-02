@@ -14,6 +14,7 @@
                               update-user-notifications]]
    [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.notifications.common :as notif-common]
    [clojars.web.common :refer [html-doc error-list form-table jar-link
                                flash group-link verified-group-badge-small]]
    [clojars.web.safe-hiccup :refer [form-to]]
@@ -122,7 +123,7 @@
                       (submit-button "Update"))]))
 
 (defn update-profile
-  [db account {:keys [email current-password password confirm] :as params}]
+  [db account {:keys [email current-password password confirm] :as params} details]
   (let [email (and email (.trim email))]
     (log/with-context {:tag :update-profile
                        :username account}
@@ -146,11 +147,13 @@
           (log/info {:status :success})
           (when email-changed?
             (event/emit :email-changed
-                        {:username account
-                         :old-email old-email}))
+                        (merge {:username account
+                                :old-email old-email}
+                               details)))
           (when password-changed?
             (event/emit :password-changed
-                        {:username account}))
+                        (merge {:username account}
+                               details)))
           (assoc (redirect "/profile")
                  :flash "Profile updated."))))))
 
@@ -210,7 +213,7 @@
                                   :email-or-username)
                       (submit-button "Email me a password reset link"))]))
 
-(defn forgot-password [db mailer {:keys [email-or-username]}]
+(defn forgot-password [db mailer {:keys [email-or-username]} details]
   (log/with-context {:email-or-username email-or-username}
     (if-let [user (find-user-by-user-or-email db email-or-username)]
       (let [reset-code (db/set-password-reset-code! db (:user user))
@@ -224,6 +227,7 @@
                       "To contine with the reset password process, click on the following link:"
                       reset-password-url
                       "This link is valid for 24 hours, after which you will need to generate a new one."
+                      (notif-common/details-table details)
                       "If you didn't reset your password then you can ignore this email."]
                      (interpose "\n\n")
                      (apply str))))
@@ -263,7 +267,7 @@
                 [:h1 "Reset your password"]
                 [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"]))))
 
-(defn reset-password [db reset-code {:keys [password confirm]}]
+(defn reset-password [db reset-code {:keys [password confirm]} details]
   (log/with-context {:tag :reset-password
                      :reset-code reset-code}
     (if-let [errors (apply validate {:password password
@@ -273,10 +277,13 @@
         (log/info {:status :failed
                    :reason :validation-failed})
         (reset-password-form db reset-code (apply concat (vals errors))))
-      (let [user (db/find-user-by-password-reset-code db reset-code)]
-        (db/reset-user-password db (:user user) reset-code password)
+      (let [{username :user} (db/find-user-by-password-reset-code db reset-code)]
+        (db/reset-user-password db username reset-code password)
         (log/info {:status :success
-                   :username (:user user)})
+                   :username username})
+        (event/emit :password-changed
+                    (merge {:username username}
+                           details))
         (assoc (redirect "/login")
                :flash "Your password was updated.")))))
 
