@@ -4,8 +4,8 @@
    [clojars.notifications :as notifications]
    ;; for defmethods
    [clojars.notifications.deploys]
-   [clojars.notifications.mfa]
    [clojars.notifications.token]
+   [clojars.notifications.user]
    [clojars.oauth.github :as github]
    [clojars.oauth.gitlab :as gitlab]
    [clojars.remote-service :as remote-service]
