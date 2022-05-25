@@ -217,12 +217,6 @@
           (throw-invalid :central-shadow
                          "shadowing Maven Central artifacts is not allowed. See https://bit.ly/3rTLqxZ"
             meta))))))
- 
-(defn assert-jar-uploaded [artifacts pom]
-  (when (and (= :jar (:packaging pom))
-          (not (some (partial match-file-name #"\.jar$") artifacts)))
-    (throw-invalid :missing-jar-file
-                   "no jar file was uploaded")))
 
 (defn validate-checksums [artifacts]
   (doseq [f artifacts]
@@ -276,7 +270,6 @@
   (assert-non-central-shadow group name)
 
   (let [artifacts (find-artifacts dir)]
-    (assert-jar-uploaded artifacts pom)
     (validate-checksums artifacts)
     (assert-signatures (remove (partial match-file-name "maven-metadata.xml") artifacts))))
 
