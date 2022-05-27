@@ -993,3 +993,29 @@
       (is (= "[Clojars] dantheman deployed org.clojars.dantheman/test 0.0.1" title))
       (is (re-find #"User 'dantheman' just deployed org.clojars.dantheman/test 0.0.1" body))
       (is (re-find #"https://clojars.org/org.clojars.dantheman/test/versions/0.0.1" body)))))
+
+(deftest user-can-deploy-a-pom-only-release
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+    (deploy
+      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+       :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                   {:groupId "org.clojars.dantheman"})
+       :password  token})
+
+    (help/match-audit {:username "dantheman"}
+                      {:tag "deployed"
+                       :user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.1"})
+
+    (-> (session (help/app-from-system))
+        (visit "/")
+        (fill-in [:#search] "test")
+        (press [:#search-button])
+        (within [:div.result
+                 :div
+                 :div]
+          (has (text? "org.clojars.dantheman/test 0.0.1"))))))
