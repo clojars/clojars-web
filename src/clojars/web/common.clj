@@ -28,7 +28,7 @@
   (if footer-links?
     [:footer.row
      (link-to "https://github.com/clojars/clojars-web/wiki/About" "about")
-     (link-to "http://status.clojars.org" "status")
+     (link-to "https://clojars.statuspage.io" "status")
      (link-to "/projects" "projects")
      (link-to "https://github.com/clojars/clojars-web/wiki/Contributing" "contribute")
      (link-to "https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann" "news")
