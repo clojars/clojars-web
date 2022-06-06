@@ -26,7 +26,7 @@
   {:app {:middleware []}
    :http {:configurator patch/use-status-message-header}})
 
-(defrecord StorageComponent [delegate on-disk-repo repo-bucket cdn-token cdn-url]
+(defrecord StorageComponent [error-reporter delegate on-disk-repo repo-bucket cdn-token cdn-url]
   storage/Storage
   (-write-artifact [_ path file force-overwrite?]
     (storage/write-artifact delegate path file force-overwrite?))
@@ -44,7 +44,7 @@
     (if delegate
       t
       (assoc t
-             :delegate (storage/full-storage on-disk-repo repo-bucket
+             :delegate (storage/full-storage error-reporter on-disk-repo repo-bucket
                                              cdn-token cdn-url))))
   (stop [t]
     (assoc t :delegate nil)))
@@ -96,4 +96,4 @@
                           :mailer :stats :search :storage]
           :http          [:app]
           :notifications [:db :mailer]
-          :storage       [:repo-bucket]}))))
+          :storage       [:error-reporter :repo-bucket]}))))

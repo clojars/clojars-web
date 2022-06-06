@@ -1,8 +1,10 @@
 (ns clojars.storage
-  (:require [clojars.cdn :as cdn]
-            [clojars.file-utils :as fu]
-            [clojars.s3 :as s3]
-            [clojure.java.io :as io])
+  (:require
+   [clojars.cdn :as cdn]
+   [clojars.errors :as errors]
+   [clojars.file-utils :as fu]
+   [clojars.s3 :as s3]
+   [clojure.java.io :as io])
   (:import org.apache.commons.io.FileUtils))
 
 (defprotocol Storage
@@ -80,7 +82,7 @@
       (s3/object-exists? client path)))
   (path-seq [_ path]
     (s3/list-object-keys client path))
-  (artifact-url [_ path]
+  (artifact-url [_ _path]
     (throw (ex-info "Not implemented" {}))))
 
 (defn s3-storage
@@ -98,24 +100,28 @@
       (when (not= "ok" status)
         (throw (ex-info (format "Fastly purge failed for %s" path) resp))))))
 
-(defrecord CDNStorage [cdn-token cdn-url]
+(defrecord CDNStorage [error-reporter cdn-token cdn-url]
   Storage
   (-write-artifact [_ path _ _]
     ;; Purge any file in the deploy in case it has been requested in
     ;; the last 24 hours, since fastly will cache the 404.  Run in a
     ;; future so we don't have to wait for the request to finish to
     ;; complete the deploy.
-    (future (purge cdn-token cdn-url path)))
+    (future (try
+              (purge cdn-token cdn-url path)
+              (catch Throwable t
+                (errors/report-error error-reporter t)
+                (throw t)))))
   (remove-path [_ path]
     (purge cdn-token cdn-url path))
   (path-exists? [_ _])
   (artifact-url [_ _]))
 
-(defn cdn-storage [cdn-token cdn-url]
-  (->CDNStorage cdn-token cdn-url))
+(defn cdn-storage [error-reporter cdn-token cdn-url]
+  (->CDNStorage error-reporter cdn-token cdn-url))
 
-(defn full-storage [on-disk-repo repo-bucket cdn-token cdn-url]
+(defn full-storage [error-reporter on-disk-repo repo-bucket cdn-token cdn-url]
   (multi-storage
     (fs-storage on-disk-repo)
     (s3-storage repo-bucket)
-    (cdn-storage cdn-token cdn-url)))
+    (cdn-storage error-reporter cdn-token cdn-url)))
