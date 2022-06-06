@@ -63,7 +63,7 @@
                  [org.apache.lucene/lucene-queryparser "8.11.1"]
                  [org.clojure/tools.nrepl "0.2.11"]
                  [yesql "0.5.3"]
-                 [org.postgresql/postgresql "42.3.1"]
+                 [org.postgresql/postgresql "42.3.3"]
                  [duct/hikaricp-component "0.1.2"
                   :exclusions [com.stuartsierra/component
                                org.slf4j/slf4j-api]]
