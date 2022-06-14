@@ -40,8 +40,8 @@
    ";"
    ;; Load anything from the clojars domain
    ["default-src 'self'"
-    ;; Load images from clojars domain along with dnsimple's logo
-    "img-src 'self' https://cdn.dnsimple.com"]))
+    ;; Load images from clojars domain along with dnsimple's logo and badges from shields.io
+    "img-src 'self' https://cdn.dnsimple.com https://img.shields.io"]))
 
 (def ^:private permissions-policy
   ;; We need zero features

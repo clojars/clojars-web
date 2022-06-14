@@ -78,14 +78,21 @@
   [{:as dep :keys [version]}]
   (safe-link-to (jar-versioned-url dep) version))
 
-(defn version-badge-url [jar]
-  (format "https://img.shields.io/clojars/v%s.svg" (jar-url jar)))
+(defn version-badge-url [jar include-prereleases]
+  (str
+    (format "https://img.shields.io/clojars/v%s.svg" (jar-url jar))
+    (when include-prereleases
+      "?include_prereleases")))
 
-(defn badge-markdown [jar]
+(defn badge-markdown [jar include-prereleases]
   (format
    "[![Clojars Project](%s)](https://clojars.org%s)"
-   (version-badge-url jar)
+   (version-badge-url jar include-prereleases)
    (jar-url jar)))
+
+(defn badge-img [jar include-prereleases]
+  [:img
+   {:src (version-badge-url jar include-prereleases)}])
 
 (defn fork-notice [jar]
   (when (jar-fork? jar)
@@ -265,11 +272,18 @@
    [:h4 "Version Badge"]
    [:p
     "Want to display the "
-    (link-to (version-badge-url jar) "latest version")
+    (link-to (version-badge-url jar false) "latest version")
     " of your project on GitHub? Use the markdown code below!"]
+   (badge-img jar false)
    [:textarea#version-badge.select-text
-    {:readonly "readonly" :rows 6}
-    (badge-markdown jar)]))
+    {:readonly "readonly" :rows 4}
+    (badge-markdown jar false)]
+   [:p
+    "If you want to include pre-releases and snapshots, use the following markdown code:"]
+   (badge-img jar true)
+   [:textarea#version-badge.select-text
+    {:readonly "readonly" :rows 4}
+    (badge-markdown jar true)]))
 
 (defn show-jar [db stats account
                 {:keys [group_name jar_name verified-group? version] :as jar}
