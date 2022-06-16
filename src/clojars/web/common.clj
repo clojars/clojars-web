@@ -63,6 +63,9 @@
                  (image "/images/fastly-logo.png" "Fastly"))]]
       [:div.sponsors-group
        [:div.sponsor
+        (link-to "https://fastmail.com/"
+                 (image "/images/fastmail-logo.png" "Fastmail"))]
+       [:div.sponsor
         (link-to "https://pingometer.com/"
                  (image "/images/pingometer-logo.svg" "Pingometer"))]
        [:div.sponsor
