@@ -81,13 +81,11 @@
    (GET ["/:artifact-id/versions/:version"
          :artifact-id #"[^/]+" :version #"[^/]+"]
         [artifact-id version]
-        (with-shields-io-img-src
-          (show-version db stats artifact-id artifact-id version)))
+        (show-version db stats artifact-id artifact-id version))
    (GET ["/:group-id/:artifact-id/versions/:version"
          :group-id #"[^/]+" :artifact-id #"[^/]+" :version #"[^/]+"]
         [group-id artifact-id version]
-        (with-shields-io-img-src
-          (show-version db stats group-id artifact-id version)))
+        (show-version db stats group-id artifact-id version))
 
    (GET ["/:artifact-id/latest-version.:file-format"
          :artifact-id #"[^/]+"
