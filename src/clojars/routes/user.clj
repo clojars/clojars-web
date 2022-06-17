@@ -3,6 +3,7 @@
    [cemerick.friend.credentials :as creds]
    [clojars.auth :as auth]
    [clojars.db :as db]
+   [clojars.http-utils :as http-utils]
    [clojars.event :as event]
    [clojars.routes.common :as common]
    [clojars.web.user :as view]
@@ -14,6 +15,11 @@
   (when-let [user (db/find-user db username)]
     (auth/try-account
      #(view/show-user db % user))))
+
+(defn- with-data-img-src
+  "Allows data: badges to be shown on the mfa page to allow the qrcode to load."
+  [body]
+  (http-utils/with-extra-img-src ["data:"] body))
 
 (defn- create-mfa [db
                    account
@@ -33,7 +39,8 @@
       (do
         (db/set-otp-secret-key! db account)
         (log/info {:status :success})
-        (view/setup-mfa account (db/find-user db account) nil))
+        (with-data-img-src
+          (view/setup-mfa account (db/find-user db account) nil)))
 
       :else
       (do
@@ -68,7 +75,8 @@
       (do
         (log/info {:status :failed
                    :reason :otp-token-incorrect})
-        (view/setup-mfa account user "Two-factor token incorrect.")))))
+        (with-data-img-src
+          (view/setup-mfa account user "Two-factor token incorrect."))))))
 
 (defn- disable-mfa [db
                     account

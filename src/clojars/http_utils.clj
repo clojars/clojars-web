@@ -2,7 +2,8 @@
   (:require
    [clojure.string :as str]
    [ring.middleware.session :refer [wrap-session]]
-   [ring.middleware.session.memory :as mem]))
+   [ring.middleware.session.memory :as mem]
+   [ring.util.response :refer [content-type response]]))
 
 (defn wrap-cors-headers [handler]
   (fn [req]
@@ -35,13 +36,15 @@
         (secure-session req)
         (regular-session req)))))
 
-(def ^:private content-security-policy
+(defn- content-security-policy
+  [{:as _request ::keys [extra-csp-img-src]}]
   (str/join
    ";"
    ;; Load anything from the clojars domain
    ["default-src 'self'"
     ;; Load images from clojars domain along with dnsimple's logo and badges from shields.io
-    "img-src 'self' https://cdn.dnsimple.com https://img.shields.io"]))
+    (apply str "img-src 'self' https://cdn.dnsimple.com https://img.shields.io "
+           (interpose " " extra-csp-img-src))]))
 
 (def ^:private permissions-policy
   ;; We need zero features
@@ -50,14 +53,23 @@
 
 (defn wrap-additional-security-headers [f]
   (fn [req]
-    (-> (f req)
-        ;; Restrict content loading to help prevent xss
-        (assoc-in [:headers "Content-Security-Policy"] content-security-policy)
-        ;; Don't allow usage of any advanced js features
-        (assoc-in [:headers "Permissions-Policy"] permissions-policy)
-        ;; Clojars URLs don't have sensitive content, so we could get away with
-        ;; "unsafe-url" here. But that will give us a poorer score on
-        ;; https://securityheaders.com and lead to vulnerability reports from
-        ;; folks using automated tools, so we set this to just not share the
-        ;; referrer with non-secure sites.
-        (assoc-in [:headers "Referrer-Policy"] "no-referrer-when-downgrade"))))
+    (let [response (f req)]
+      (-> response
+          ;; Restrict content loading to help prevent xss
+          (assoc-in [:headers "Content-Security-Policy"] (content-security-policy response))
+          ;; Don't allow usage of any advanced js features
+          (assoc-in [:headers "Permissions-Policy"] permissions-policy)
+          ;; Clojars URLs don't have sensitive content, so we could get away with
+          ;; "unsafe-url" here. But that will give us a poorer score on
+          ;; https://securityheaders.com and lead to vulnerability reports from
+          ;; folks using automated tools, so we set this to just not share the
+          ;; referrer with non-secure sites.
+          (assoc-in [:headers "Referrer-Policy"] "no-referrer-when-downgrade")))))
+
+(defn with-extra-img-src
+  "Adds an additional img-src to our content-security-policy."
+  [src body]
+  (-> body
+      (response)
+      (content-type "text/html;charset=utf-8")
+      (assoc ::extra-csp-img-src src)))
