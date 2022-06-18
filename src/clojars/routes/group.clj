@@ -42,11 +42,12 @@
                                              (format "They're already an %s!" (if admin? "admin" "member"))))
 
                           (db/find-user db username)
-                          (do
-                            (db/add-admin db groupname username account)
+                          (let [add-fn (if admin? db/add-admin db/add-member)]
+                            (add-fn db groupname username account)
                             (log/info {:status :success})
                             (log/audit db {:tag :member-added
-                                           :message (format "user '%s' added" username)})
+                                           :message (format "user '%s' added as %s" username
+                                                            (if admin? "admin" "member"))})
                             (view/show-group db account groupname
                                              (into (remove (fn [active]
                                                              (= username (:user active))) actives)

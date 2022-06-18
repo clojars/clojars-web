@@ -1,12 +1,13 @@
 (ns clojars.integration.users-test
   (:require
+   [clojars.db :as db]
    [clojars.email :as email]
    [clojars.integration.steps :refer [disable-mfa enable-mfa login-as register-as]]
    ;; for defmethods
    [clojars.notifications.user]
    [clojars.test-helper :as help :refer [with-test-system]]
    [clojure.test :refer [deftest is testing use-fixtures]]
-   [kerodon.core :refer [fill-in follow follow-redirect
+   [kerodon.core :refer [check fill-in follow follow-redirect
                          press session visit within]]
    [kerodon.test :refer [has status? text? value?]]
    [net.cgrand.enlive-html :as enlive]))
@@ -276,7 +277,7 @@
       (within [:p]
         (has (text? "The reset code was not found. Please ask for a new code in the forgot password page")))))
 
-(deftest admin-can-add-user-to-group
+(deftest admin-can-add-member-to-group
   (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password"))
   (-> (session (help/app))
@@ -288,13 +289,46 @@
       (within [:table.group-member-list
                [:tr enlive/last-of-type]
                [:td enlive/first-of-type]]
-              (has (text? "fixture"))))
+              (has (text? "fixture")))
+      (within [:table.group-member-list
+               [:tr enlive/last-of-type]
+               [:td (enlive/nth-of-type 2)]]
+              (has (text? "No"))))
+
+  (is (some #{"fixture"} (db/group-membernames help/*db* "org.clojars.dantheman")))
+
   (help/match-audit {:username "dantheman"}
                     {:tag "member-added"
                      :user "dantheman"
                      :group_name "org.clojars.dantheman"
-                     :message "user 'fixture' added"}))
+                     :message "user 'fixture' added as member"}))
 
+(deftest admin-can-add-admin-to-group
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      (visit "/groups/org.clojars.dantheman")
+      (fill-in [:#username] "fixture")
+      (check [:#admin])
+      (press "Add Member")
+      ;;(follow-redirect)
+      (within [:table.group-member-list
+               [:tr enlive/last-of-type]
+               [:td enlive/first-of-type]]
+              (has (text? "fixture")))
+      (within [:table.group-member-list
+               [:tr enlive/last-of-type]
+               [:td (enlive/nth-of-type 2)]]
+              (has (text? "Yes"))))
+
+  (is (some #{"fixture"} (db/group-adminnames help/*db* "org.clojars.dantheman")))
+
+  (help/match-audit {:username "dantheman"}
+                    {:tag "member-added"
+                     :user "dantheman"
+                     :group_name "org.clojars.dantheman"
+                     :message "user 'fixture' added as admin"}))
 
 (deftest admin-can-remove-user-from-group
   (-> (session (help/app))
