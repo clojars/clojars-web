@@ -69,9 +69,6 @@
         (link-to "https://pingometer.com/"
                  (image "/images/pingometer-logo.svg" "Pingometer"))]
        [:div.sponsor
-        (link-to "http://sentry.io/"
-                 (image "/images/sentry-logo.png" "Sentry"))]
-       [:div.sponsor
         (link-to "https://www.statuspage.io"
                  (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]]]
      [:div.sponsors
