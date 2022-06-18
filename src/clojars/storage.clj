@@ -109,9 +109,9 @@
     (if (> i 0)
       (let [result (try
                      (f)
-                     (catch Throwable t
+                     (catch Exception t
                        t))]
-        (if (instance? Throwable result)
+        (if (instance? Exception result)
           (do (errors/report-error error-reporter result)
               (Thread/sleep (+ sleep (rand-int jitter)))
               (recur (dec i)))
