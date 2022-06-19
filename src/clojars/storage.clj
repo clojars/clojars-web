@@ -100,6 +100,24 @@
       (when (not= "ok" status)
         (throw (ex-info (format "Fastly purge failed for %s" path) resp))))))
 
+(defn- retry 
+  [f {:keys [n sleep jitter error-reporter]
+                 :or {sleep 1000
+                      jitter 20
+                      n 3}}] 
+  (loop [i n] 
+    (if (> i 0)
+      (let [result (try
+                     (f)
+                     (catch Exception t
+                       t))]
+        (if (instance? Exception result)
+          (do (errors/report-error error-reporter result)
+              (Thread/sleep (+ sleep (rand-int jitter)))
+              (recur (dec i)))
+          result))
+      (throw (ex-info (format "Retry limit %s has been reached" n) {:n n :sleep sleep :jitter jitter})))))
+
 (defrecord CDNStorage [error-reporter cdn-token cdn-url]
   Storage
   (-write-artifact [_ path _ _]
@@ -107,11 +125,9 @@
     ;; the last 24 hours, since fastly will cache the 404.  Run in a
     ;; future so we don't have to wait for the request to finish to
     ;; complete the deploy.
-    (future (try
-              (purge cdn-token cdn-url path)
-              (catch Throwable t
-                (errors/report-error error-reporter t)
-                (throw t)))))
+    (future (retry
+              #(purge cdn-token cdn-url path)
+              {:error-reporter error-reporter})))
   (remove-path [_ path]
     (purge cdn-token cdn-url path))
   (path-exists? [_ _])
