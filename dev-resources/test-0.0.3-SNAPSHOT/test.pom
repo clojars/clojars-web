@@ -6,14 +6,52 @@
   <artifactId>test</artifactId>
   <version>0.0.3-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <name>asdf</name>
 
+  <name>asdf</name>
   <description>TEST</description>
   <url>http://example.com</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+
+
+  <contributors>
+    <contributor>
+      <name>Noelle</name>
+      <email>some.name@gmail.com</email>
+      <url>http://noellemarie.com</url>
+      <organization>Noelle Marie</organization>
+      <organizationUrl>http://noellemarie.com</organizationUrl>
+      <roles>
+        <role>tester</role>
+      </roles>
+      <timezone>America/Vancouver</timezone>
+      <properties>
+        <gtalk>some.name@gmail.com</gtalk>
+      </properties>
+    </contributor>
+  </contributors>
+  <developers>
+    <developer>
+      <id>juherr</id>
+      <name>Julien Herr</name>
+      <email>julien@herr.fr</email>
+    </developer>
+    <developer>
+      <id>flgourie</id>
+      <name>Florian Gourier</name>
+      <email>florian.gourier@gmail.com</email>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
   <scm>
     <connection>scm:git:git://github.com/fake/test.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/fake/test.git</developerConnection>

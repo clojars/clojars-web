@@ -436,8 +436,16 @@ SET token_hash = :token_hash
 WHERE id = :token_id AND token_hash IS NULL
 
 --name: find-groups-jars-information
-SELECT j.jar_name, j.group_name, homepage, description, "user",
-       j.version AS latest_version, r2.version AS latest_release
+SELECT j.jar_name,
+       j.group_name,
+       j.scm,
+       j.authors,
+       licenses,
+       homepage,
+       description,
+       "user",
+       j.version AS latest_version,
+       r2.version AS latest_release
 FROM jars j
 -- Find the latest version
 JOIN (SELECT jar_name, group_name, MAX(created) AS created
@@ -466,8 +474,16 @@ WHERE j.group_name = :group_id
 ORDER BY j.group_name ASC, j.jar_name ASC;
 
 --name: find-jars-information
-SELECT j.jar_name, j.group_name, homepage, description, "user",
-       j.version AS latest_version, r2.version AS latest_release
+SELECT j.jar_name,
+       j.group_name,
+       j.scm,
+       j.authors,
+       licenses,
+       homepage,
+       description,
+       "user",
+       j.version AS latest_version,
+       r2.version AS latest_release
 FROM jars j
 -- Find the latest version
 JOIN (SELECT jar_name, group_name, MAX(created) AS created
