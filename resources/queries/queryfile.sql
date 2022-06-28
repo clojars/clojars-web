@@ -111,7 +111,7 @@ JOIN (
 ) g
 ON (
   u.user = g.user
-)
+);
 
 --name: group-allnames
 SELECT "user"
@@ -139,6 +139,24 @@ WHERE (
       inactive IS NOT true
       AND
       admin = true
+);
+
+--name: group-admin-emails
+SELECT u.email
+FROM users u
+JOIN (
+  SELECT "user"
+  FROM groups
+  WHERE (
+    name = :groupname
+    AND
+    inactive IS NOT true
+    AND
+    admin = true
+  )
+) g
+ON (
+  u.user = g.user
 );
 
 --name: inactivate-member!

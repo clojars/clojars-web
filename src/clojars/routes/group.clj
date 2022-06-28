@@ -2,9 +2,11 @@
   (:require
    [clojars.auth :as auth]
    [clojars.db :as db]
+   [clojars.event :as event]
+   [clojars.log :as log]
+   [clojars.routes.common :as common]
    [clojars.web.group :as view]
-   [compojure.core :as compojure :refer [GET POST DELETE]]
-   [clojars.log :as log]))
+   [compojure.core :as compojure :refer [GET POST DELETE]]))
 
 (defn- get-members [db groupname]
   (let [actives (seq (db/group-actives db groupname))]
@@ -12,7 +14,7 @@
       (auth/try-account
        #(view/show-group db % groupname actives)))))
 
-(defn- toggle-or-add-member [db groupname username make-admin?]
+(defn- toggle-or-add-member [db groupname username make-admin? details]
   (let [actives (seq (db/group-actives db groupname))
         membernames (->> actives
                          (filter (complement view/is-admin?))
@@ -20,6 +22,7 @@
         adminnames (->> actives
                         (filter view/is-admin?)
                         (map :user))
+        user-to-add (db/find-user db username)
         handler-fn (fn [account admin? group-users]
                      #(log/with-context {:tag :toggle-or-add-group-member
                                          :group groupname
@@ -41,9 +44,18 @@
                             (view/show-group db account groupname actives
                                              (format "They're already an %s!" (if admin? "admin" "member"))))
 
-                          (db/find-user db username)
+                          user-to-add
                           (let [add-fn (if admin? db/add-admin db/add-member)]
                             (add-fn db groupname username account)
+                            (event/emit :group-member-added
+                                        (merge
+                                         details
+                                         {:admin? admin?
+                                          :admin-emails (db/group-admin-emails db groupname)
+                                          :group groupname
+                                          :member username
+                                          :member-email (:email user-to-add)
+                                          :username account}))
                             (log/info {:status :success})
                             (log/audit db {:tag :member-added
                                            :message (format "user '%s' added as %s" username
@@ -71,7 +83,7 @@
                       make-admin?
                       (if make-admin? adminnames membernames))))))))
 
-(defn- remove-member [db groupname username]
+(defn- remove-member [db groupname username details]
   (let [actives (seq (db/group-actives db groupname))]
     (when (seq actives)
       (auth/try-account
@@ -95,6 +107,14 @@
                (some #{username} (map :user actives))
                (do
                  (db/inactivate-member db groupname username account)
+                 (event/emit :group-member-removed
+                             (merge
+                              details
+                              {:admin-emails (db/group-admin-emails db groupname)
+                               :group groupname
+                               :member username
+                               :member-email (:email (db/find-user db username))
+                               :username account}))
                  (log/info {:status :success})
                  (log/audit db {:tag :member-removed
                                 :message (format "user '%s' removed" username)})
@@ -113,7 +133,7 @@
   (compojure/routes
    (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
         (get-members db groupname))
-   (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username admin]
-         (toggle-or-add-member db groupname username (= "1" admin)))
-   (DELETE ["/groups/:groupname", :groupname #"[^/]+"] [groupname username]
-           (remove-member db groupname username))))
+   (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username admin :as request]
+         (toggle-or-add-member db groupname username (= "1" admin) (common/request-details request)))
+   (DELETE ["/groups/:groupname", :groupname #"[^/]+"] [groupname username :as request]
+           (remove-member db groupname username (common/request-details request)))))

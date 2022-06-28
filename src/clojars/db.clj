@@ -197,6 +197,11 @@
                         {:connection db
                          :row-fn :user}))
 
+(defn group-admin-emails [db groupname]
+  (sql/group-admin-emails {:groupname groupname}
+                        {:connection db
+                         :row-fn :email}))
+
 (defn group-activenames [db groupname]
   (sql/group-activenames {:groupname groupname}
                          {:connection db
