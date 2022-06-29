@@ -4,6 +4,7 @@
    [clojars.notifications :as notifications]
    ;; for defmethods
    [clojars.notifications.deploys]
+   [clojars.notifications.group]
    [clojars.notifications.token]
    [clojars.notifications.user]
    [clojars.oauth.github :as github]
