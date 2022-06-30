@@ -49,21 +49,21 @@
    structured-data/organisation
    [:article.row
     [:div.push-information.col-xs-12.col-sm-4
-     [:h3.push-header "Push with "
+     [:h3.push-header "Deploy with "
       (link-to "http://leiningen.org/" "Leiningen")]
      [:div#leiningen.push-example.select-text
       [:pre.push-example-leiningen
        (tag "$") " lein deploy clojars\n"]]]
     [:div.push-information.col-xs-12.col-sm-4
-     [:h3.push-header "Push with "
-      (link-to "https://boot-clj.github.io/" "Boot")
+     [:h3.push-header "Deploy with "
+      (link-to "https://clojure.org/guides/deps_and_cli" "Clojure CLI")
       " (using "
-      (link-to "https://github.com/adzerk/bootlaces" "bootlaces")
+      (link-to "https://github.com/slipset/deps-deploy" "deps-deploy")
       ")"]
-     [:div#boot.push-example.select-text
-      [:pre.push-example-boot
-       (tag "$") " boot build-jar push-snapshot\n"
-       (tag "$") " boot build-jar push-release\n"]]]
+     [:div#clojure-cli.push-example.select-text
+      [:pre.push-example-clojure-cli
+       (tag "$") " clojure -X:deps mvn-pom\n"
+       (tag "$") " clojure -X:deploy\n"]]]
     [:div.push-information.col-xs-12.col-sm-4
      [:h3.push-header "Maven Repository (running a " [:a {:href "https://github.com/clojars/clojars-web/wiki/Mirrors"} "mirror"] "?)"]
      [:div#maven.push-example.select-text
