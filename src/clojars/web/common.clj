@@ -63,7 +63,7 @@
                  (image "/images/fastly-logo.png" "Fastly"))]]
       [:div.sponsors-group
        [:div.sponsor
-        (link-to "https://fastmail.com/"
+        (link-to "https://www.fastmail.com/tryit-clojars/"
                  (image "/images/fastmail-logo.png" "Fastmail"))]
        [:div.sponsor
         (link-to "https://pingometer.com/"
