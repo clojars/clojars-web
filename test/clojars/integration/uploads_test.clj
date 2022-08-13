@@ -40,7 +40,7 @@
           help/test-port))
 
 (defn deploy
-  [{:keys [artifact-map coordinates jar-file password pom-file transfer-listener username]
+  [{:keys [artifact-map coordinates jar-file password pom-file module-file transfer-listener username]
     :or {transfer-listener (fn [])
          username "dantheman"}}]
   ;; HttpWagon uses a static, inaccessible http client that caches cookies, so
@@ -49,7 +49,9 @@
   (clear-sessions!)
   (aether/deploy
    :coordinates coordinates
-   :artifact-map artifact-map
+   :artifact-map (if module-file
+                   (merge artifact-map {[:extension "module"] module-file})
+                   artifact-map)
    :jar-file jar-file
    :pom-file pom-file
    :repository {"test" {:url (repo-url)
@@ -803,6 +805,64 @@
                        :version "1.0.0"
                        :message "the version in the pom (0.0.1) does not match the version you are deploying to (1.0.0)"
                        :tag "pom-entry-mismatch"})))
+
+(deftest deploy-requires-path-to-match-module
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+    (is (thrown-with-msg?
+         DeploymentException
+         #"Forbidden - the component group in the gradle module \(org.clojars.dantheman\) does not match the coordinate you are deploying to \(net.clojars.dantheman\)"
+         (deploy
+          {:coordinates '[net.clojars.dantheman/test "0.0.1"]
+           :jar-file (io/file (io/resource "test.jar"))
+           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+           :module-file (io/file (io/resource "test-0.0.1/test.module"))
+           :password  token})))
+
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "net.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.1"
+                       :message "the component group in the gradle module (org.clojars.dantheman) does not match the coordinate you are deploying to (net.clojars.dantheman)"
+                       :tag "module-entry-mismatch"})
+
+    (is (thrown-with-msg?
+         DeploymentException
+         #"Forbidden - the component module in the gradle module \(test\) does not match the coordinate you are deploying to \(toast\)"
+         (deploy
+          {:coordinates '[org.clojars.dantheman/toast "0.0.1"]
+           :jar-file (io/file (io/resource "test.jar"))
+           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+           :module-file (io/file (io/resource "test-0.0.1/test.module"))
+           :password  token})))
+
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "toast"
+                       :version "0.0.1"
+                       :message "the component module in the gradle module (test) does not match the coordinate you are deploying to (toast)"
+                       :tag "module-entry-mismatch"})
+
+    (is (thrown-with-msg?
+         DeploymentException
+         #"Forbidden - the component version in the gradle module \(0.0.1\) does not match the coordinate you are deploying to \(1.0.0\)"
+         (deploy
+          {:coordinates '[org.clojars.dantheman/test "1.0.0"]
+           :jar-file (io/file (io/resource "test.jar"))
+           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+           :module-file (io/file (io/resource "test-0.0.1/test.module"))
+           :password  token})))
+
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "1.0.0"
+                       :message "the component version in the gradle module (0.0.1) does not match the coordinate you are deploying to (1.0.0)"
+                       :tag "module-entry-mismatch"})))
 
 (deftest deploy-requires-lowercase-project
   (-> (session (help/app-from-system))

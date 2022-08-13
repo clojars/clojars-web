@@ -5,6 +5,7 @@
    [clojars.event :as event]
    [clojars.errors :refer [report-error]]
    [clojars.file-utils :as fu]
+   [clojars.gradle :as gradle]
    [clojars.util :as util]
    [clojars.log :as log]
    [clojars.maven :as maven]
@@ -38,6 +39,10 @@
 (defn- pom? [file]
   (let [filename (if (string? file) file (.getName file))]
     (.endsWith filename ".pom")))
+
+(defn- module? [file]
+  (let [filename (if (string? file) file (.getName file))]
+    (.endsWith filename ".module")))
 
 (def metadata-edn "_metadata.edn")
 
@@ -157,6 +162,9 @@
     (filter pom?)
     first))
 
+(defn find-module [dir]
+  (util/filter-some module? (file-seq dir)))
+
 (defn- match-file-name [match f]
   (let [name (.getName f)]
     (if (string? match)
@@ -196,6 +204,21 @@
   (validate-pom-entry pom :group group)
   (validate-pom-entry pom :name name)
   (validate-pom-entry pom :version version))
+
+(defn- validate-module-entry
+  "Validates a key in a Gradle module"
+  [module ks expected]
+  (let [actual (get-in module ks)]
+    (when-not (= actual expected)
+      (throw-invalid
+       :module-entry-mismatch
+       (format "the %s in the gradle module (%s) does not match the coordinate you are deploying to (%s)"
+               (str/join " " (map name ks)) actual expected)))))
+
+(defn- validate-module [module group name version]
+  (validate-module-entry module [:component :group] group)
+  (validate-module-entry module [:component :module] name)
+  (validate-module-entry module [:component :version] version))
 
 (defn assert-non-redeploy [db group-id artifact-id version]
   (when (and (not (maven/snapshot-version? version))
@@ -263,8 +286,10 @@
                   (str "version strings must consist solely of letters, "
                        "numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX")))
 
-(defn validate-deploy [db dir pom {:keys [group name version]}]
+(defn validate-deploy [db dir pom module {:keys [group name version]}]
   (validate-jar-name+version name version)
+  (when module
+    (validate-module module group name version))
   (validate-pom pom group name version)
   (assert-non-redeploy db group name version)
   (assert-non-central-shadow group name)
@@ -298,6 +323,16 @@
                                  (str "invalid pom file: " (.getMessage e))
                     {:file pom-file}
                     e)))
+
+          module-file (find-module dir)
+          module (try
+                   (when module-file
+                     (gradle/module-to-map module-file))
+                   (catch Exception e
+                     (throw-invalid :invalid-module-file
+                                    (str "invalid gradle module file: " (.getMessage e))
+                                    {:file module-file})))
+
           {:keys [group-path name version] :as posted-metadata}
           (read-metadata dir)
           
@@ -319,7 +354,7 @@
         (fu/create-checksum-file md-file :md5)
         (fu/create-checksum-file md-file :sha1)
 
-        (validate-deploy db dir pom posted-metadata)
+        (validate-deploy db dir pom module posted-metadata)
         (run! #(storage/write-artifact
                 storage
                 (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath %)) %)
@@ -461,7 +496,7 @@
                :body nil}))))
    (PUT ["/:group/:artifact/:version/:filename"
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
-         :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc)$"]
+         :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc|\.module)$"]
         {body :body session :session {:keys [group artifact version filename]} :params}
         (binding [*db* db]
           (handle-versioned-upload storage db body session group artifact version filename)))
