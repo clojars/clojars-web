@@ -157,10 +157,7 @@
            :body nil})))))
 
 (defn find-pom [dir]
-  (->> dir
-    file-seq
-    (filter pom?)
-    first))
+  (util/filter-some pom? (file-seq dir)))
 
 (defn find-module [dir]
   (util/filter-some module? (file-seq dir)))
