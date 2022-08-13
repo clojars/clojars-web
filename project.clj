@@ -66,7 +66,8 @@
                  [org.postgresql/postgresql "42.3.3"]
                  [duct/hikaricp-component "0.1.2"
                   :exclusions [com.stuartsierra/component
-                               org.slf4j/slf4j-api]]
+                               org.slf4j/slf4j-api
+                               org.slf4j/slf4j-nop]]
                  [duct "0.8.2"
                   :exclusions [org.clojure/tools.reader]]
                  [ring/ring-core "1.9.4"]
@@ -91,6 +92,8 @@
                  [org.clojure/tools.logging "1.2.3"]
                  [ch.qos.logback/logback-classic "1.3.0-alpha5"
                   :exclusions [com.sun.mail/javax.mail]]
+                 ;; Upgrading for compatibility with logback 1.3.x
+                 [org.slf4j/jcl-over-slf4j "2.0.0-alpha1"]
                  
                  ;; AWS
                  [com.cognitect.aws/api "0.8.539"]
@@ -135,6 +138,7 @@
                                   [net.polyc0l0r/bote "0.1.0"
                                    :exclusions [commons-codec
                                                 javax.mail/mail
+                                                org.clojars.kjw/slf4j
                                                 org.clojars.kjw/slf4j-simple]]
                                   [nubank/matcher-combinators "3.3.1"
                                    ;; we don't use midje, so excluding it to
