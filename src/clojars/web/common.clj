@@ -31,7 +31,7 @@
      (link-to "https://clojars.statuspage.io" "status")
      (link-to "/projects" "projects")
      (link-to "https://github.com/clojars/clojars-web/wiki/Contributing" "contribute")
-     (link-to "https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann" "news")
+     (link-to "https://github.com/clojars/clojars-web/blob/main/CHANGELOG.org" "changelog")
      (link-to "https://github.com/clojars/clojars-web/wiki/Contact" "contact")
      (link-to "https://github.com/clojars/clojars-web" "code")
      (link-to "/security" "security")

@@ -1,0 +1,857 @@
+
+* Changelog
+Newest items at the top. Note that updates before 2022-August were copied from
+[[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
+
+** 2022-June
+*** 167
+- [FEATURE]: Removing the requirement that every release includes a jar. This means we now support pom-only releases. https://github.com/clojars/clojars-web/pull/829 Thanks Kamil! (https://github.com/kamilwaheed)
+*** 168
+- [BUGFIX]: link to clojars.statuspage.io instead of status.clojars.org in the footer. We can't use the latter due to the SSL certificate presented by clojars.statuspage.io not including status.clojars.org. https://github.com/clojars/clojars-web/issues/830
+- [MAINT]: Upgrade postgresql lib to address CVEs
+- [BUGFIX]: Report CDN purge failures to Sentry https://github.com/clojars/clojars-web/issues/831
+*** 169
+- [FEATURE]: Add a shields.io badge url to the project pages to include SNAPSHOTs, and preview the badges on the page itself https://github.com/clojars/clojars-web/pull/836 Thanks Victor! (https://github.com/victorb)
+*** 170
+- [FEATURE]: Fastmail as sponsor. Fastmail (https://fastmail.com) is providing free email hosting for clojars.org. Thanks Fastmail!
+*** 171
+- [BUGFIX]: Fix OTP QRCode image loading
+*** 172
+- [BUGFIX]: Fix error introduced by OTP QRCode fix that prevented viewing specific versions of projects
+*** 173
+- [BUGFIX]: Allow user to be added to a group as a member (non-admin)
+*** 174
+- [BUGFIX]: Retry on CDN purge failure https://github.com/clojars/clojars-web/pull/837 Thanks Albert! (https://github.com/zerg000000)
+
+Changelog: https://github.com/clojars/clojars-web/compare/166...174
+
+** 2022-May
+*** 163
+- Linking to the API docs from the footer: https://github.com/clojars/clojars-web/commit/c6733177a4bae68f2537b34ddf09b17332c70ba7
+- Allowing deployment using the account email address as the username: https://github.com/clojars/clojars-web/commit/7c653935be1e106ca302fa732921715a961183ce
+- Improvements to the deploy token page: https://github.com/clojars/clojars-web/compare/7c653935be1e106ca302fa732921715a961183ce...0442818aaa186868ea8c4fde5100470988a73646
+*** 164
+- XSS and header security improvements: https://github.com/clojars/clojars-web/pull/825
+*** 165
+- Replacing git.io links with bit.ly links (git.io was shutdown): https://github.com/clojars/clojars-web/commit/7af70a698d45bb711a28952bc704353f7a4c08eb
+*** 166
+- Send notifications when email address or password changes: https://github.com/clojars/clojars-web/pull/827
+
+Changelog: https://github.com/clojars/clojars-web/compare/162...166
+
+** 2022-March
+*** 162
+We just released Clojars 162. It provides the option to receive an email when any deploy occurs in a group you are part of. See https://groups.google.com/g/clojure/c/WpYOu7IC9IY/m/tc_0r7PBCgAJ for more details.
+
+*** 160
+We just released Clojars 160. This includes:
+- Bug: A fix for the logic that handles reports from GitHub of deploy tokens found in repos to properly reject invalid requests (https://github.com/clojars/clojars-web/commit/ff31e4abd0db211f0e9da553fc235225d8bcb2d8)
+- Feature: You can now specify a deploy token as single-use, and it will only be valid for a single deploy. You can also now set a expiration time on deploy tokens. See https://github.com/clojars/clojars-web/issues/811 for details.
+** 2022-January
+*** 149 - 158
+This covers changes released in Clojars 149 through 158.
+
+- [[https://github.com/clojars/clojars-web/issues/812][Adding/removing members from a group now results in an entry in the audit log]]
+- The audit log is no longer truncated at all (it was truncated at 30 days)
+- [[https://github.com/clojars/clojars-web/issues/814][Dependents of a jar are now shown in the sidebar if they are on Clojars]]
+- Upgraded from Java 11 to Java 17
+- Many dependency upgrades to address CVEs
+- Search was rewritten to use Lucene 8 and retuned to address search quality issues ([[https://github.com/clojars/clojars-web/issues/806][#806]], [[https://github.com/clojars/clojars-web/issues/721][#721]], [[ https://github.com/clojars/clojars-web/issues/719 ][#719]])
+
+** 2021-September
+*** 148
+-  Verified groups no longer have a public ~Verified~ badge. Showing the badge publicly stigmatized legacy, non-verifiable groups. The ~Verified~ badge is still displayed for your own groups when logged in and looking at your dashboard.
+- Fixes for links to git repos/trees when the url was invalid
+*** 145
+We've had the following changes since Clojars 133:
+
+- Disabling group creation deploy and deploys of new projects to non-verified groups ([[https://groups.google.com/g/clojars-maintainers/c/6vO2MPkZCDA/m/HW2WWt6GAQAJ][announced here]])
+- A fix for when a github/gitlab username had uppercase characters. This manifested as default groups created with `com.github.UserName` instead of `com.github.username`
+- Updates to the [[ https://github.com/clojars/clojars-web/blob/main/SYSADMIN.md][SYSADMIN]] file to reflect the current state of Clojars
+- Modernization of the gradle coordinates (thanks [[https://github.com/JohnnyJayJay][JohnnyJayJay]]!)
+- Deploy tokens can now be created for a group that doesn't yet have any jars
+- New passwords are now limited to 256 characters to avoid a denial of service avenue
+- The Clubhouse sponsorship logo has been updated, since they [[https://shortcut.com/blog/clubhouse-changing-our-name-to-shortcut][changed their name]] (thanks [[https://github.com/timothypratley][Timothy Pratley]], and thanks to Shortcut for their continued sponsorship!)
+- We now link to the tree for a commit or tag instead of just the released commit to make it easier to browse changes in the release (note that this may be an invalid link to any provider other than GitHub or GitLab)
+- We now properly link the SCM URL to any VCS provider instead of just GitHub
+
+** 2021-April
+*** 133
+Clojars 133 was just released, and includes the following changes since 129:
+
+- You can now login via GitLab.com as long as the primary email address on your GitLab.com account matches your Clojars.org account email. This will automatically create two verified groups for you that you can use to deploy new projects if you like: com.gitlab.<clojars-username> and io.gitlab.<clojars-username>.
+- There is now a crude audit log of deploy activity that will show on your dashboard, group pages, and project pages. The dashboard will only show your activity, where the group and project pages will show all activity for that group or project version if you have deploy rights to the group. We only persist the logs for 30 days. The logs are useful to know why a deploy failed since we can no longer return useful context to the deploying client due to https://github.com/clojars/clojars-web/issues/774
+
+Note that on April 18th we will be *removing* the ability to create new, non-verified groups and the the ability to deploy a *new* project to a non-verified group. See https://github.com/clojars/clojars-web/wiki/Verified-Group-Names for more details.
+
+Changelogs:
+- clojars-web: https://github.com/clojars/clojars-web/compare/129...133
+- clojars-server-config: https://github.com/clojars/clojars-server-config/compare/67ebe3825f7ea89925a4c505bc3e2efa5f1d283e...8208ecac68018adcbc9219da9660b0279d947693
+
+
+** 2021-March
+*** 129
+
+- Feature: The deps.edn dependency instructions now show the group when the group and artifact names are the same (`foo/foo`, for example). Thanks [[https://github.com/SevereOverfl0w][Dominic]]!
+- Feature: Some UI cleanup around the log in with GitHub button. Thanks [[https://github.com/renatoalencar][Renato]]!
+- Bug: Deploy token generation now allows limiting to any group you have access to instead of just ones you have pushed to
+- Bug: The redeploy check now properly checks the canonical S3 repo instead of whatever happens to be cached on the filesystem
+- Feature: several bits of group verification have been implemented:
+- Each user now owns a `net.clojars.<username>` that is verified
+- `org.clojars.<username>` groups are verified
+- Logging in with GitHub gives you the `com.github.<gh-username>` and `io.github.<gh-username>` groups, and both are considered verified
+- Verified groups now have a badge in the UI
+
+For more information about verified groups and the plan for them, see https://github.com/clojars/clojars-web/wiki/Verified-Group-Names
+
+Changelogs:
+- clojars-web: https://github.com/clojars/clojars-web/compare/122...129
+- clojars-server-config:
+https://github.com/clojars/clojars-server-config/compare/968217483bd07e61d4515bd78b91d56c484b5c21...67ebe3825f7ea89925a4c505bc3e2efa5f1d283e
+
+** 2020-November
+*** 122
+We just released Clojars 122. Here is what changed since the last
+announcement (for 114):
+
+- A fix in the generate-feeds logic that allows for a version segment
+that is longer than an int
+- A fix for a possible XSS vulnerability via :licenses or :scm in the
+pom file (thanks to [[https://github.com/renatoalencar][Renato Alencar]] for the report)
+- A fix in the authentication flow that was rejecting unauthenticated
+deploy requests too early, preventing the "deploy token is required"
+message from being returned
+- GitHub will now report any deploy tokens found in public
+commits/comments. Clojars will disable the token and email the owner
+(this functionality existed pre-114, but the change on the GitHub side
+was deployed since)
+- You can now login via OAuth with your GitHub account (thanks again
+to Renato Alencar for adding this)
+
+Changelogs:
+- clojars-web: https://github.com/clojars/clojars-web/compare/114...122
+- clojars-server-config:
+https://github.com/clojars/clojars-server-config/compare/4e5de00fefc17846f8bd423b7f84ceb7a62042af...968217483bd07e61d4515bd78b91d56c484b5c21
+
+** 2020-June
+*** 114
+We just released Clojars 114. Here is what has changed since the last
+announcement (for 112):
+
+- Deploy tokens are now required to deploy. See
+https://groups.google.com/d/msg/clojure/UXx3ko0Ne-w/VnJA4eu6AQAJ for
+details
+- Requests to the password reset endpoint are now rate-limited to
+avoid it being used as a spam/annoyance vector
+
+Changelogs:
+- clojars-web: https://github.com/clojars/clojars-web/compare/112...114
+- clojars-server-config:
+https://github.com/clojars/clojars-server-config/compare/865b4409ecae07dfaab6b35927494021e573d67e...4e5de00fefc17846f8bd423b7f84ceb7a62042af
+
+*** 112
+We just released Clojars 112. Here is what has changed since the last
+announcement (for 109):
+
+- XML/JSON search responses now honor the page param and don't always
+just show you the first page of results. Thanks to Martin Klepsch
+(https://github.com/martinklepsch) for implementing this over two
+years ago (!), and my apologies for letting the PR sit for so long
+- The page footer has been updated to link to Clojurists Together
+instead of Software Freedom Conservancy since Clojars is now under the
+CT umbrella instead of SFC
+- The Clojars app has been updated to actually generate logs when
+certain actions occur to ease debugging and have a better
+understanding of how the app is used
+- The default branches of the clojars-web and clojars-server-config
+repos have been switched to `main`, and the `master` branches have
+been removed.
+
+Changelogs:
+- clojars-web: https://github.com/clojars/clojars-web/compare/109...112
+- clojars-server-config:
+https://github.com/clojars/clojars-server-config/commit/865b4409ecae07dfaab6b35927494021e573d67e
+
+*** 109
+We just released Clojars 109. The changes since 105 (the last version
+I announced here) are:
+
+- An endpoint to receive deploy token compromise reports from GitHub:
+this will disable the token and email the owner when GitHub finds a
+deploy token in a commit. This hasn't been fully implemented on their
+side, so isn't yet active.
+- Deploy tokens can now optionally be scoped to an artifact or group
+- Optional two-factor authentication support - see the wiki for
+details: https://github.com/clojars/clojars-web/wiki/Two-Factor-Auth
+
+A big thanks to André Eriksson (https://github.com/aeriksson) for
+fixing some visual issues with deploy tokens, and to Daniel Compton
+(https://github.com/danielcompton) and Paul Stadig
+(https://github.com/pjstadig) for reviewing the two-factor auth
+changes.
+
+Changelog: https://github.com/clojars/clojars-web/compare/105...109
+
+** 2020-May
+*** 105
+Since my last announcement, we have finished moving Clojars over to
+AWS. We've also fixed a couple of bugs and added a new feature.
+
+Bug fixes:
+
+- All artifacts in a deploy are now purged from fastly. This fixes an
+issue where an version could bed requested before it existed, causing
+fastly to cache the 404 for ~24 hours, making the new release
+unavailable to some users depending on geographic region
+(https://github.com/clojars/clojars-web/issues/746)
+- The group management page wasn't properly displaying admins since
+the switch to postgresql
+
+New features:
+
+Deploy tokens! You can now create deploy tokens and use them in place
+of passwords when deploying. The plan is to make these the only way to
+deploy some time in the future, but we want them to get a bit of use
+first. We also plan to add recognition of Clojars tokens to GitHub's
+token scanning system, and set up an endpoint where they can notify us
+of compromised tokens that will disable the token and notify you (if
+it was your token, of course). Please give them a try and provide any
+feedback at https://github.com/clojars/clojars-web/issues/726
+
+Lastly, the AWS transition is complete. You can see a diagram of the
+current architecture here:
+https://github.com/clojars/clojars-server-config#system-diagram
+
+Changelogs:
+- The clojars-web repo: https://github.com/clojars/clojars-web/compare/101...105
+- The server config repo:
+https://github.com/clojars/clojars-server-config/compare/a5cf78180f982197b88f09416476a081e75b1292...683e8ea9b51b24a2dc31f13ce742587ce2461ba1
+
+** 2020-March
+*** 101
+The work since the last announcement has solely been focused on the
+migration to AWS. The big highlight is we now have a beta server up on
+AWS for testing, and it is the last piece we need to move off of
+Rackspace and on to AWS!
+
+If you are interested in helping to exercise the beta server, please
+see the announcement on clojure@ (I would link to it here, but Google
+Groups is having trouble loading the clojure@ group ATM).
+
+Other highlights include:
+- Password reset emails now go through Amazon SES instead of through
+postfix on the clojars.org server
+- maven-metadata.xml files (and their checksums) are now purged from
+the Fastly CDN whenever they change on a deploy (this eliminates a
+wait of sometimes up to 15 minutes for newly released SNAPSHOTS to be
+available to build tools)
+
+Changelogs:
+- The clojars-web repo: https://github.com/clojars/clojars-web/compare/92...101
+- The server config repo:
+https://github.com/clojars/clojars-server-config/compare/e130b3e7b63baabf69cbca5b8529e473880efe14...a5cf78180f982197b88f09416476a081e75b1292
+
+** 2020-February
+*** 92
+We recently lost our sponsorship to host
+the server and repo from Rackspace (we are very grateful for the four+
+years of sponsorship we recieved from them), and have since been
+accepted in to [[https://aws.amazon.com/blogs/opensource/aws-promotional-credits-open-source-projects/][Amazon's AWS Open Source program]]. So we are now
+working on migrating off of Rackspace and on to AWS. The bulk of the
+work since the last [[https://groups.google.com/d/msg/clojars-maintainers/civ5d2NaA98/HaMKsSuVCgAJ ][release announcement]] has been moving data that
+was stored in Rackspace Cloudfiles (the repos, download stats, CDN
+logs) to S3. Most of that work is now done, and we will switch over to
+serving artifacts from S3 (via our CDN sponsored by Fastly) in the
+next few days. We are currently writing new artifacts to both
+Cloudfiles and S3, and have a little cleanup to complete before
+switching over.
+
+Once that is done, the next block of work will be to move the server
+from Rackspace to EC2.
+
+Changelogs:
+- The clojars-web repo: https://github.com/clojars/clojars-web/compare/82...92
+- The server config repo:
+https://github.com/clojars/clojars-server-config/compare/9eb028524ce2936248f622137767b380fff5f455...e130b3e7b63baabf69cbca5b8529e473880efe14
+
+** 2020-January
+*** 82
+The change in this release is we now
+store download stats on s3 and serve the stats from our Fastly CDN.
+This is a step towards making the server ephemeral to allow us to
+replace it easily for OS updates/upgrades, etc.
+
+The stats are now served from https://repo.clojars.org/stats/.
+Requests to https://clojars.org/stats/* will be redirected to the repo
+url.
+
+The changelog since the last release announcement for Clojars 80 is:
+https://github.com/clojars/clojars-web/compare/80...82
+
+This also included changes to the server configuration. The changelog
+for that repo is:
+https://github.com/clojars/clojars-server-config/compare/178476d2fdeaca19920a67f5a510c57da87d59e3...9eb028524ce2936248f622137767b380fff5f455
+
+** 2019-December
+*** 80
+We just released Clojars 80. This release improves the load time for
+the index and dashboard pages by (slightly) optimizing a few queries
+that are slower with postgres than they were with sqlite. It also
+introduces caching of the results used to show the recent jars on the
+index page to further improve load time.
+
+See https://github.com/clojars/clojars-web/compare/79...80 for the
+full list of commits in this release.
+
+*** 79
+We just released Clojars 79. The primary change in this release is
+switching from sqlite to postgres. There shouldn't be any user-facing
+changes with this - if you do see odd behavior, please let us know.
+
+Moving to postgres is a part of improving the security of Clojars, since it is a
+step on the path towards making the server itself ephemeral, allowing us to
+replace it frequently to include security updates. There is still a bit of work
+to do here (the largest tasks being removing the on-disk repo [[https://github.com/clojars/clojars-web/issues/734][(#734]], [[https://github.com/clojars/clojars-web/issues/735][#735]]) and
+reworking the maven indexer to [[https://github.com/clojars/clojars-web/issues/737][index the cloudfiles repo]]) which we hope to
+get to in the coming weeks.
+
+This release also includes an updated gpg key for reporting security
+issues (linked from https://clojars.org/security, the old one had
+expired).
+
+See https://github.com/clojars/clojars-web/compare/77...79 for the
+full list of commits in this release.
+
+*** 77
+- A styling fix on mobile
+(https://github.com/clojars/clojars-web/pull/733) - Lucio D'Alessandro
+- Artifacts are now synchronously uploaded to cloudfiles
+(https://github.com/clojars/clojars-web/issues/707) - Toby Crawley
+
+Prior to this last change, we were queuing up artifacts to upload to
+the cloudfiles repository during the deployment and uploading them
+after the deployment completed. That process would fail occasionally,
+leaving the cloudfiles repo out of sync with the on-disk repo. We will
+now upload the artifacts to cloudfiles during the deploy, and will
+report back to the user that the deploy failed if we weren't able to
+upload the artifacts.
+
+** 2018-January
+*** 71
++ You can now use human-readable datetimes as part of an ~at~ query when searching (Shaaz Ahmed)
+  This is an extension to the basic Lucene syntax for specifying time ranges. For a more detailed look at what advanced options are available when searching Clojars, please see [[https://github.com/clojars/clojars-web/wiki/Search-Query-Syntax][the wiki]].
++ Artifacts that shadow projects on Maven Central now [[https://clojars.org/org.tcrawley/dynapath][come with a warning]]
++ We now have a mechanism in place to support custom warning/deprecation messages on [[ https://clojars.org/postgresql/][specific artifacts]]. This was added because the presence of an old Postgresql driver on Clojars was causing confusion and delay for new users. This change allows us to point users at the correct group on Maven Central.
+
+** 2017-December
+*** 61-69
+We've been remiss in announcing releases, so this will cover some of the highlights of changes in v61-69:
+
++ Search results are now available as xml. This change supports simplifications in Leiningen's search logic (Phil Hagelberg)
++ Link to the repo directory listing for SNAPSHOTS. This makes it easier to see the timestamp version to aid pinning to a particular snapshot (Martin Klepsch)
++ References to the repo now use https and the CDN repo (Daniel Compton)
++ Gradle coordinates now use single quotes, as that is idiomatic (David Bürgin)
++ Provide coordinates for the Clojure CLI/deps.edn (David Bürgin)
++ Changing your password now requires providing your current password (Shafeeq K)
+
+** 2017-March
+
+*** 60(?)
+We've just deployed an update to Clojars that allows you to remove
+users from groups. Before now, doing so required having one of the
+Clojars administrators do it for you.
+
+It works like this:
+
++ Group membership now has an admin flag associated with it
++ Group admins can add members, promote members to admins, and demote
+admins to members
++ A user cannot alter his/her own admin status
+
+For existing groups, we tried to make sure at least one user had admin
+rights, but there are cases where more than one user was made admin,
+and possibly a few cases where no one was made admin. The algorithm we
+used to determine initial admin rights was based on the who added the
+user to the group - if that value was "clojars" (meaning the user
+created the group) or null (meaning the user was added to the group
+before January 2013, before we started tracking the provenance of
+membership, and therefore can't determine the creator), admin rights
+were given.
+
+We want to thank Marcelo Nomoto for implementing this feature, and
+seeing it to completion over several rounds of PR review.
+
+*** 59
+You can see all the changes at https://github.com/clojars/clojars-web/compare/58...59.
+
+The profile page has been [[https://github.com/clojars/clojars-web/pull/606][clarified]], some styling has been [[https://github.com/clojars/clojars-web/pull/603][cleaned up]], and some
+tests have been made more [[https://github.com/clojars/clojars-web/pull/630][robust]]. Thanks to all who contributed.
+
+We've also added a [[https://github.com/clojars/clojars-web/commit/b3a64aaebed643aae2fe9a344dd5005d408a5a21][DMCA page]] at https://clojars.org/dmca. This is on the advice
+of Software Freedom Conservancy's legal counsel, to protect us against copyright
+infringement suits, and to provide a way for parties to make copyright
+infringement claims.
+
+** 2016-December
+*** 55 - 58
++ [[https://groups.google.com/d/msg/clojure/Vy8p6J8gJUA/MvV03l7DFAAJ][deployments that shadow projects that already exist on Maven Central
+are no longer allowed]]
++ long group/artifact names should now properly wrap on small screens
+(thanks Karim Senhaji)
++ the [[https://github.com/clojars/clojars-web/wiki/Data#list-of-jars-and-versions-in-leiningen-syntax][jar list feed]] no longer has duplicate entries for SNAPSHOT releases
++ the [[https://github.com/clojars/clojars-web/wiki/Data#useful-extracts-from-the-poms ][versions feed]] will now be fully populated (we've been
+generating a truncated version since December 6th)
+
+** 2016-November
+*** 51
++ Clarification that Leiningen dep vector works for Boot as well
+(Marcelo Nomoto)
++ Instructions for deploying with Boot on the main page (Sasha Gerrand)
++ Show description from latest deploy in search results, even if it is
+a SNAPSHOT (Marcelo Nomoto)
++ Fix dependency list on release page sidebar to link to local
+artifacts where appropriate (Karim Senhaji)
++ Hint that org.clojure releases are in Maven Central from the search
+page (lfn3)
++ Make getting started instructions easier to read on a mobile device
+(Arron Mabrey)
++ Escape special characters in queries before passing them to lucene (lfn3)
++ Remove login-throttling code, since it was an avenue for DoS
+(Spencer Crissman)
++ Implement alternative login throttling at the Nginx level (Toby Crawley)
++ Provide search query documentation and link to it from search page
+(Oscar Rendón)
++ Implement Google-suggested HTML improvements to aid indexing (Diogo
+Souza da Silva)
++ Use juxt/aero to simplify configuration (Marcelo Nomoto)
++ Use Sentry instead of Yeller for error reporting (Alan Moore)
+
+** 2016-October
+
+
+*** 49
++ Deployments are now uploaded to Rackspace Cloud Files (to be served
+by the [[ https://groups.google.com/d/msg/clojure/WhBu4CB_ekg/YzE9e-iBAAAJ ][CDN repo]]) in the background after each deployment
++ We no longer use target="_blank" links due to security concerns:
+https://github.com/clojars/clojars-web/issues/558 - thanks to Liam
+(https://github.com/lfn3)
++ HTML markup has been cleaned up:
+https://github.com/clojars/clojars-web/issues/547 - also thanks to
+Liam
+
+** 2016-September
+
+Clojars infrastructure [[https://groups.google.com/g/clojars-maintainers/c/WIYy2nIrj-4][Migrated from Linode to Rackspace]].
+
+** 2016-July
+*** 46
+Clojars 46 was just released (45 had a build problem). It fixes some minor HTML validation bugs, and removes external links and images from the password reset page, to avoid leaking a password reset code in a referrer.
+
+*** 44
+The only change was to disable uploads
+to Rackspace cloudfiles as part of the deploy process, as this was
+causing aether clients to get a read timeout in some cases. The
+timeout made it appear to the user that the deploy failed, when it
+actually succeeded (see
+https://github.com/clojars/clojars-web/issues/546).
+
+We're not yet using the artifacts stored in cloudfiles, so not
+deploying new deployments there won't impact users.
+
+** 2016-June
+*** 42
+
++ fix for an issue that prevented multi-module deploys that share the
+same aether session from deploying successfully (should have only
+affected projects that use lein-modules or lein-sub)
+https://github.com/clojars/clojars-web/issues/541
+
++ a small visual change to make the badge textarea easier to use
+(thanks to https://github.com/skazhy)
+https://github.com/clojars/clojars-web/commit/b7631a150e642a8bb17173e030a4f80ebdb4c182
+
+*** 41
+This release has just one fix to allow projects that inherit
+dependency versions from a parent pom to successfully deploy (see
+https://github.com/clojars/clojars-web/issues/538).
+
+*** 39
++ deploys are now written to Rackspace Cloudfiles in addition to the
+on-disk repo. This is a step in the long journey to having the repo
+served by more resilient infrastructure.
+
++ metadata from pom files is now read at deploy time and stored in the
+database instead of the files being read on every request to the web
+ui/api for the relevant project. This is part of the changes needed to
+move the repo off disk, since once that happens, they won't be
+available locally for reading.
+
++ projects deployed via maven that have artifacts with classifiers
+will now make it to the repo
+(https://github.com/clojars/clojars-web/issues/515,
+https://github.com/clojars/clojars-web/issues/532). This was a bug
+that was introduced with the atomic deploy feature.
+
+** 2016-March
+*** 37
+Two fixes related to the atomic deploy changes:
+
++ a deployed SNAPSHOT wasn't visible to the user that pushed it
+https://github.com/clojars/clojars-web/issues/514
+
++ don't return 400s for maven-metadata.xml checksum file PUTs
+
+*** 36
+This release was just has a fix for artifacts with classifiers - they
+weren't being properly handled by the atomic deploy code:
+https://github.com/clojars/clojars-web/issues/511
+
+*** 34
+This release includes the following changes:
+
++ [[https://github.com/clojars/clojars-web/issues/226][Deploys are now atomic]] (Toby Crawley)
+
+We now [[https://github.com/clojars/clojars-web/wiki/Pushing#validations][reject any deployments that don't pass a set of
+validations]], without writing anything to the repository. This
+prevents broken deploys (where a network error interrupts/corrupts
+the deploy, or one or more artifacts have an invalid format) from
+reaching the repository.
+
+From a user perspective, deployment should behave the same for the
+most part - the only thing that would be different is we now
+validate after all of the artifacts are uploaded instead of applying
+some validations for each artifact. This means that if you try to
+redeploy a non-SNAPSHOT version, for example, it used to fail on the
+first artifact, but will now fail after the /last/ artifact has been
+uploaded.
+
++ [[https://github.com/clojars/clojars-web/issues/492][Return an error when the search page param isn't an integer]] (Tom Kidd)
+
++ Fix dev setup process to work on Windows (Tom Kidd)
+
++ [[ https://github.com/clojars/clojars-web/issues/491][Redirect trailing slash to page without trailing slash]] (Hamish Hutchings)
+
++ [[https://github.com/clojars/clojars-web/issues/496 ][Set typekit JS to HTTPS loading]] (Hamish Hutchings)
+
+** 2016-February
+*** 31, 32, 33
+The changes in Clojars 31 (and a hotfix in 32 and 33) are mostly under the hood.
+
++ A fix to the bootstrapping process from KimSnJ, Thanks! https://github.com/clojars/clojars-web/pull/485
++ Copy changes to the login page to put the hashed passwords being wiped into context (it happened in 2012), and to show a warning to the user if they try to login with their email. The error text is also now red. https://github.com/clojars/clojars-web/pull/486
++ Download numbers are now formatted with thousands separators
++ There are a number of improvements to the site's metadata to take advantage of cool Google features like site link search boxes, breadcrumbs, structured data, e.t.c. We've also added metadata for Facebook and Twitter (and by proxy Slack). https://github.com/clojars/clojars-web/pull/488
+
+See https://github.com/clojars/clojars-web/compare/30...33 for the full list of changes.
+
+
+*** 30
++ There is now a tool to repair broken maven metadata https://github.com/clojars/clojars-web/issues/455 (Toby)
++ Fixed a regression in the JAR versions page title (https://github.com/clojars/clojars-web/commit/f48121a70fd66be9acb5b3dc20e304b5a5fbcc8c) (Toby)
++ Added the logo of a new sponsor Pingometer. (Daniel)
+
+Thanks folks!
+
+See https://github.com/clojars/clojars-web/compare/29...30 for the full list of changes.
+
+** 2016-January
+*** 29
+The
+user-facing changes are:
+
++ You can now single-click the coordinates on an artifact page to
+select them (Daniel Compton)
+https://github.com/clojars/clojars-web/issues/276
+
++ Remove promotion and the releases repo (Toby Crawley)
+https://github.com/clojars/clojars-web/issues/415
+
+For rationale, see the issue.
+
++ Display a project's licences on the artifact page (Toby Crawley)
+https://github.com/clojars/clojars-web/issues/415
+
++ Only index artifacts where the g:a:v matches the deployed artifact
+(Toby Crawley)
+https://github.com/clojars/clojars-web/issues/360
+
+See https://github.com/clojars/clojars-web/compare/28...29 for the
+full list of changes in this release.
+
+*** 28
+The user-facing changes are:
+
++ Harden Clojars user management security (Daniel Compton)
+https://github.com/clojars/clojars-web/commit/e25c9bb13f7a9f320b409d266885e6ffba7146d5
+
+This is largest change in this release - read the commit message for
+the full details, but the summary is:
+
++ Users can no longer log in using their email address (username only)
++ New passwords must be at least 8 characters
++ Email addresses must look like email addresses (match #".+@.+", basically)
+
++ Show the users username when resetting their password (Daniel Compton)
+
++ Don't use stop words when generating the search index (John Wiseman)
+https://github.com/clojars/clojars-web/issues/243
+
++ Fill the query input box with the current query (John Wiseman)
+
++ Load typekit asynchronously (Toby Crawley)
+https://github.com/clojars/clojars-web/issues/463
+
++ Add StatusPage and Rackspace logos to footer (Daniel Compton)
+
+Both StatusPage and Rackspace are now sponsoring Clojars with free
+service. You can see the new status page at
+http://status.clojars.org/. We've yet to migrate anything to
+Rackspace, but plan to use their cloud files offering for the repo,
+and move the app itself to a server there in the not too distant
+future.
+
++ Serve retina assets where possible (Daniel Compton)
+https://github.com/clojars/clojars-web/issues/458
+
+See https://github.com/clojars/clojars-web/compare/26...28 for the
+full list of changes in this release.
+
+*** 26
++ The search box now receives focus on page load (Victor Gama)
+https://github.com/clojars/clojars-web/issues/437
+
++ Preserve inputs when registration reloads after validation failure
+(Andy Chambers)
+https://github.com/clojars/clojars-web/issues/427
+
++ Set permissive CORS header for the /api and /search routes (Victor Gama)
+https://github.com/clojars/clojars-web/issues/242
+
++ The clojars app only binds to localhost now (Александар Симић)
+https://github.com/clojars/clojars-web/issues/457
+
+Before this change, you could bypass nginx and access the app
+directly over http at port 8001.
+
++ The feed generation code (/repo/feed.clj.gz) has been moved in to
+the primary codebase (Toby Crawley)
+https://github.com/clojars/clojars-web/issues/456
+
+The feed was being generated by one-off clojure code that only
+existed on the server. If you use the feed and have any issues with
+the new one, please let us know.
+
++ DNSimple has been added to the footer as a sponsor (Toby Crawley)
+
+As part of our robustness improvements, we have moved the DNS off of
+linode to DNSimple, since it is a more stable service. They have
+graciously given us a free account!
+
+
+
+** 2015-December
+*** 25
++  shields.io is now the badge source recommended on the jar page (Toby Crawley)
+https://github.com/clojars/clojars-web/issues/438
+
+The `/artifact/latest-version.svg` route will continue to work.
+
++  Promotion has been disabled (Toby Crawley)
+https://github.com/clojars/clojars-web/issues/415
+https://github.com/clojars/clojars-web/issues/424
+
+This is the first step in removing promotion entirely.
+
+*** 24
+The only change in this release is a fix for json searches when the query string
+is invalid (https://github.com/clojars/clojars-web/issues/442). Before this fix,
+an invalid query returned an html response with the status of 500. Now, it will
+return a json response with a status of 400, and a body of the form:
+
+~{"error":"Invalid search syntax for query `foo AND`"}~
+
+This change shouldn't affect regular users, but may affect any tooling
+that uses the search api. If you know of any tools that do use the
+search api, please let the author know about this change.
+
+** 2015-November
+*** 23.0.0
+
+This release includes more component-based improvements from Nelson
+Morris, and a fix for the register page not working properly when
+validation failed from Jearvon Dharrie.
+
+Full diff: https://github.com/clojars/clojars-web/compare/22.0.0...23.0.0
+
+*** 22.0.0
+
+22.0.0 is live, with the following changes:
+
++ the promotion checking code will no longer throw if it encounters a
+GPG key type that BouncyCastle does not support (ed25519, for
+example). See [[https://github.com/clojars/clojars-web/issues/420][420]] for more details.
++ trying to repromote an artifact will no longer result in an exception [[https://github.com/clojars/clojars-web/issues/425][425]]
++ all references to github.com/ato/clojars-web have been updated to
+github.com/clojars/clojars-web
++ a link to the BountySource backers page has been added to the footer
+in the sponsorship section
+
+*** 21.0.0
+This fixes one regression that was introduced in the last release that
+prevented updating your profile unless you also provided a password
+(https://github.com/ato/clojars-web/issues/418).
+
+*** 20.0.0
+We just released version 20.0.0 of clojars. There are no real
+user-visible changes, but [[https://github.com/xeqi][Nelson Morris]] has been modernizing the
+codebase, so much has changed under the covers:
+
+- we now use [[https://github.com/lambdasierra][Alessandra Sierra]]'s component for parts of the system
+- all of the obsolete scp and eventlog code has been removed
+- we now use YeSQL instead of Korma
+- we now use HikariCP for connection pooling
+
+This is an ongoing process - Nelson has more modernization changes in the pipe.
+
+This release also includes a fix for throttling failed logins to
+discourage brute-force password attacks
+(https://github.com/ato/clojars-web/issues/401).
+
+** 2015-September
+*** 0.18.0
+We just released 0.18.0. The only change in this release is password
+resets now use a reset link instead of a new password emailed in
+cleartext. Big thanks to [[https://github.com/nberger][Nicolás Berger]] for the [[https://github.com/ato/clojars-web/issues/379][report]] and the
+fix!
+
+** 2015-August
+*** 0.17.1
+Previously, when you deploy an artifact that fails validation of its
+group name, artifact name, or version, or you reploy a non-snapshot
+version, you get a non-helpful message from Aether:
+
+Failed to deploy artifacts: Could not transfer artifact
+blahblah:blahblah:pom:0.1.0 from/to local (https://clojars.org/repo/):
+Access denied to:
+https://clojars.org/repo/blahblah/blahblah/0.1.0/blahblah-0.1.0.pom,
+ReasonPhrase: Forbidden
+
+which provides no indication as to why the request was forbidden. This
+message is printed by Aether, and the only part of it we can influence
+from the server is the ReasonPhrase - this is the status message sent
+from the server along with the status code of the response, which, in
+this case, is a 403:
+
+HTTP/1.1 403 Forbidden
+
+This release has changes to override the default status
+message with something more useful, so a redeploy results in:
+
+Failed to deploy artifacts: Could not transfer artifact
+blahblah:blahblah:pom:0.1.0 from/to local (https://clojars.org/repo/):
+Access denied to:
+https://clojars.org/repo/blahblah/blahblah/0.1.0/blahblah-0.1.0.pom,
+ReasonPhrase: Forbidden - redeploying non-snapshots is not allowed
+(see http://git.io/vO2Tg)
+
+with similar messages for name or version validation failures.
+
+** 2015-July
+*** 0.17.0
+
+We just pushed a new release to clojars.org - the only thing in this
+release is pagination of search results. Before this change, you only
+saw the first 25 results. A big thanks to [[https://github.com/beppu ][John Beppu]] for the
+implementation! You can see it in action at
+https://clojars.org/search?q=clojure, for example.
+
+*** 0.16.6
++ improvements to the favicon (https://github.com/ato/clojars-web/pull/361)
++ error reporting to yeller (https://github.com/ato/clojars-web/issues/351)
++ stack traces are no longer shown on the error page (https://github.com/ato/clojars-web/issues/348)
+
+In addition, the jdk on the server has been updated to openjdk 8 (from
+openjdk 6).
+
+** 2015-June
+
+*** 0.16.5
+
+The changes in this release are mostly visual:
+
++  ssh keys are now hidden from the register/profile pages, since scp is disabled
++  there is now a note on those same pages clarifying that pgp keys are optional
++  the favicon now matches the logo
++  added the Red Hat logo in the footer as a sponsor, since they are sponsoring Toby's time
+
+** 2015-May
+*** 0.16.3
+
+The only change in this release is a read-only API for retrieving
+information on users, groups, and artifacts. See
+https://github.com/ato/clojars-web/wiki/Data#api for details.
+
+The API was implemented by [[https://github.com/Deraen][Juho Teperi]], with input from [[https://github.com/dotemacs][Александар
+Симић]] and [[https://github.com/cddr ][Andy Chambers]]. Thanks to them for their hard work!
+
+** 2015-April
+
+*** 0.15.16
+
+The changes in this release are all behind the scenes, there are no
+new features.
+
+The important change is all writes to the sqlite db from the application now go
+through a single thread, which prevents failures caused by sqlite being unable
+to handle concurrent writes. This is hopefully a temporary fix until we can move
+away from sqlite altogether.
+
+*** 0.15.12, 0.15.13
+There have been two deploys this week (Monday and today). They
+included mostly bug fixes (the full list you can see via the milestone
+links below).
+
+The only new feature is you can now get the latest version for an
+artifact as json in addition to an svg. For example, visiting
+https://clojars.org/org.immutant/immutant/latest-version.json will
+return `{"version":"2.0.0-beta3"}`. This is useful for integration
+with services such as http://shields.io/.
+
+https://github.com/clojars/clojars-web/issues?q=milestone%3A0.15.12
+https://github.com/clojars/clojars-web/issues?q=milestone%3A0.15.13
+
+
+** 2014-June
+
++ Design, color scheme and typography revamp. #214
+
+** 2014-May
+
++ Improved search result quality. #210
+
+** 2013-February
+
++ Switch to Lucene-powered search. #23
++ De-emphasize forked artifacts. #77
++ Show notice when profile is updated. #102
+
+** 2012-August
+
++ Link to GitHub commits from jar pages. #88
++ Projects can now be browsed alphabetically. #86
++ Interrupted HTTPS uploads are cleaned up. #66
++ Multiple SSH keys are now accepted. #7
++ Dev depependencies are now listed separately. #65
++ Improved error messages. #60
+
+** 2012-July
+
++ Each jar page now lists project dependencies. #58
++ Improved contact link and documentation.
++ OpenSearch support for Chrome. #53
+
+** 2012-May
+
++ .asc files for PGP signing are now accepted.
++ Uploads are now accepted via HTTPS. #45
+
