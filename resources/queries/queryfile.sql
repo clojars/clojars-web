@@ -46,7 +46,8 @@ WHERE (
              FROM users
              WHERE "user" = :username
              LIMIT 1)
-);
+)
+ORDER BY last_used DESC, disabled DESC, created DESC;
 
 --name: find-token
 select *

@@ -103,7 +103,7 @@
         [:th "Last Used"]
         [:th "Actions"]]]
       [:tbody
-       (for [token (sort-by (juxt :disabled :name :created) tokens)
+       (for [token tokens
              :let [disabled? (:disabled token)
                    expired? (auth/token-expired? token)
                    used? (= :single-use-status/used (:single_use token))
