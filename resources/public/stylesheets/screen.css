@@ -110,7 +110,7 @@ hr {
 }
 
 /* FIXME: add active/hover states? */
-input[type=submit], a.login-button {
+input[type=submit], a.login-button, button {
   font-size: 1.2em;
   letter-spacing: 1px;
   font-weight: 300;
@@ -453,10 +453,21 @@ div.dependent-jar, div.dependent-versions {
   border-radius: 10px;
   padding: 15px 10px;
   overflow-x: auto;
+  position: relative;
 }
 
 .package-config-example:last-of-type {
   margin-bottom: 20px;
+}
+
+.package-config-copy {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+}
+
+.package-config-copy button {
+  font-size: 1em;
 }
 
 #notice, .help {

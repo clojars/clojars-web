@@ -146,47 +146,59 @@
            [:img {:src "/images/cljdoc-icon.svg" :alt "cljdoc documentation" :height "16"}]
            "cljdoc"))
 
+(defn- coord-div
+  [id content]
+  [:div.package-config-example
+   [:div.package-config-content.select-text {:id id}
+    content]
+   [:div.package-config-copy [:button.copy-coordinates "Copy"]]])
+
 (defn leiningen-coordinates [jar]
   (list
    [:h2 "Leiningen/Boot"]
-   [:div#leiningen-coordinates.package-config-example.select-text
+   (coord-div
+    "#leiningen-coordinates"
     [:pre
      (tag "[")
      (jar-name jar)
      [:span.string " \""
-      (:version jar) "\""] (tag "]")]]))
+      (:version jar) "\""] (tag "]")])))
 
 (defn clojure-cli-coordinates [{:keys [group_name jar_name version]}]
   (list
    [:h2 "Clojure CLI/deps.edn"]
-   [:div#deps-coordinates.package-config-example.select-text
+   (coord-div
+    "#deps-coordinates"
     [:pre
      (str group_name "/" jar_name)
      \space
      (tag "{")
      ":mvn/version "
      [:span.string \" version \"]
-     (tag "}")]]))
+     (tag "}")])))
 
 (defn gradle-coordinates [{:keys [group_name jar_name version]}]
   (list
    [:h2 "Gradle"]
-   [:div#gradle-coordinates.package-config-example.select-text
+   (coord-div
+    "#gradle-coordinates"
     [:pre
      "implementation("
      [:span.string \" group_name ":" jar_name ":" version \"]
-     \)]]))
+     \)])))
 
 (defn maven-coordinates [{:keys [group_name jar_name version]}]
   (list
    [:h2 "Maven"]
-   [:div#maven-coordinates.package-config-example.select-text
-    [:pre
-     (tag "<dependency>\n")
-     (tag "  <groupId>") group_name (tag "</groupId>\n")
-     (tag "  <artifactId>") jar_name (tag "</artifactId>\n")
-     (tag "  <version>") version (tag "</version>\n")
-     (tag "</dependency>")]]))
+   (coord-div
+    "#maven-coordinates"
+    [:div
+     [:pre
+      (tag "<dependency>\n")
+      (tag "  <groupId>") group_name (tag "</groupId>\n")
+      (tag "  <artifactId>") jar_name (tag "</artifactId>\n")
+      (tag "  <version>") version (tag "</version>\n")
+      (tag "</dependency>")]])))
 
 (defn coordinates [jar]
   (for [f [leiningen-coordinates

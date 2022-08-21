@@ -9,6 +9,16 @@ const selectText = (event) => {
   }
 };
 
+const copyCoordinates = (event) => {
+  const button = $(event['target']);
+  const container = button.parent().parent()[0];
+  const coords = $(container).children()[0];
+  navigator.clipboard.writeText(coords.innerText);
+  button.html('Copied!');
+  setTimeout(() => button.html('Copy'), 1000);
+};
+
 $(() => {
   $('.select-text').on('click', selectText);
+  $('button.copy-coordinates').on('click', copyCoordinates);
 });
