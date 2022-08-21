@@ -120,6 +120,8 @@
           [:td.created (format-timestamp (:created token))]
           [:td.updated (when disabled? (format-timestamp (:updated token)))]
           [:td.last-used (format-timestamp (:last_used token))]
-          [:td.actions (when-not disabled?
+          [:td.actions (when-not (or disabled?
+                                     expired?
+                                     used?)
                          (form-to [:delete (str "/tokens/" (:id token))]
                                   [:input.button {:type "submit" :value "Disable Token"}]))]])]]])))
