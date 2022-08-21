@@ -4,6 +4,11 @@ Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
 ** 2022-August
+*** [[https://github.com/clojars/clojars-web/commits/179][179]]
++ [[https://github.com/clojars/clojars-web/issues/844][Add copy buttons to jar coordinates]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/issues/845][Don't show disable token button for expired/used tokens]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/issues/846][Better sort for deploy tokens]] ([[https://github.com/tobias][Toby Crawley]])
+
 *** [[https://github.com/clojars/clojars-web/commits/178][178]]
 + [[https://github.com/clojars/clojars-web/commit/b9101853de61b62f573fe9d1747bba432083e588][Switch from linking news to the updated CHANGELOG file]] ([[https://github.com/tobias][Toby Crawley]])
 *** [[https://github.com/clojars/clojars-web/commits/177][177]]
