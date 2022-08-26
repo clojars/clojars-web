@@ -1,0 +1,4 @@
+contact_links:
+  - name: Administrative Requests
+    url: https://github.com/clojars/administration/issues/new/choose
+    about: Please create an admin request for group verification, jar deletion, or any other change to Clojars data.
