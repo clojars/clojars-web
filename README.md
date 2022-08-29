@@ -11,28 +11,26 @@ If you're looking for user documentation, try
 the [wiki](http://github.com/clojars/clojars-web/wiki/_pages). There is a
 also a [FAQ](https://github.com/clojars/clojars-web/wiki/About).
 
-See [release announcements on the mailing list](https://groups.google.com/forum/?fromgroups#!topicsearchin/clojars-maintainers/group:clojars-maintainers$20AND$20subject:ann) for recent user-facing changes.
+See [the CHANGELOG](CHANGELOG.org) for facing changes.
 
 Contributing
 ------------
 
-Please report bugs or problems with the repository on the
-[bug tracker](https://github.com/clojars/clojars-web/issues).
+Please report bugs/feature requests as an [issue on this
+repository](https://github.com/clojars/clojars-web/issues/new/choose). For
+issues with the repository or group name verification, please file an [issue on
+the administration repository](https://github.com/clojars/administration/issues/new/choose).
 
-Design discussions occur on the
-[clojars-maintainers list](http://groups.google.com/group/clojars-maintainers)
-and the #leiningen channel on irc.freenode.org.
-
-If you'd like contribute a change please send a GitHub pull request
-for a topic branch.  Feel free to open a pull request early with a
-"not ready for merging" note or ask on the mailing list or IRC to get
-feedback from other contributors. If you are looking for a task to
-work on, take a look at issues labeled
+If you'd like contribute a change please send a GitHub pull request for a topic
+branch. Feel free to open a draft pull request early with a in #clojars on the
+[Clojurians slack](https://clojurians.slack.com/messages) to get feedback from
+other contributors. If you are looking for a task to work on, take a look at
+issues labeled
 [ready-for-work](https://github.com/clojars/clojars-web/labels/ready-for-work).
 
-We try to make releases fairly soon after merging contributions,
-but post to the mailing list if it's been a week or two and you'd like
-something pushed to the production website.
+We try to make releases fairly soon after merging contributions, but ping us if
+it has been a week or two and you'd like something pushed to the production
+website.
 
 Development
 -----------
@@ -157,7 +155,7 @@ is used to provide isolation. It can be found in `test/clojars/test/test_helper.
 License
 -------
 
-Copyright © 2009-2020 Alex Osborne, Phil Hagelberg, Nelson Morris,
+Copyright © 2009-2022 Alex Osborne, Phil Hagelberg, Nelson Morris,
 Toby Crawley, Daniel Compton and
 [contributors](https://github.com/clojars/clojars-web/graphs/contributors).
 
