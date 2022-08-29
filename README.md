@@ -28,7 +28,7 @@ for a topic branch.  Feel free to open a pull request early with a
 "not ready for merging" note or ask on the mailing list or IRC to get
 feedback from other contributors. If you are looking for a task to
 work on, take a look at issues labeled
-[ready](https://github.com/clojars/clojars-web/labels/ready).
+[ready-for-work](https://github.com/clojars/clojars-web/labels/ready-for-work).
 
 We try to make releases fairly soon after merging contributions,
 but post to the mailing list if it's been a week or two and you'd like
