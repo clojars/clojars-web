@@ -62,9 +62,9 @@
 
 (def pom-to-map (comp model-to-map read-pom))
 
-(defn ^Metadata read-metadata
+(defn read-metadata
   "Reads a maven-metadata file returning a maven Metadata object."
-  [file]
+  ^Metadata [file]
   (with-open [reader (io/reader file)]
     (.read (MetadataXpp3Reader.) reader)))
 
