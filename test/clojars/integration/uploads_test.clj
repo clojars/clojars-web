@@ -40,13 +40,14 @@
           help/test-port))
 
 (defn deploy
-  [{:keys [artifact-map coordinates jar-file password pom-file module-file transfer-listener username]
+  [{:keys [artifact-map coordinates jar-file password pom-file module-file transfer-listener username retain-session?]
     :or {transfer-listener (fn [])
          username "dantheman"}}]
   ;; HttpWagon uses a static, inaccessible http client that caches cookies, so
-  ;; we have to clear sessions on each deploy to mimic having new prucesses
+  ;; we have to clear sessions on each deploy to mimic having new processes
   ;; deploying.
-  (clear-sessions!)
+  (when-not retain-session?
+    (clear-sessions!))
   (aether/deploy
    :coordinates coordinates
    :artifact-map (if module-file
@@ -573,6 +574,22 @@
                                   {:groupId "net.mikera"
                                    :artifactId "clojure-pom"})
       :password  token})))
+
+(deftest user-can-deploy-new-version-in-same-session
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+      :password  token})
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
+      :password  token
+      :retain-session? true})))
 
 (deftest user-can-redeploy-snapshots
   (-> (session (help/app-from-system))

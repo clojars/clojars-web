@@ -79,10 +79,23 @@
                                     (if= (:version metadata) version)
                                     (if= (:timestamp-version metadata) timestamp-version))
                            dir)))
-                 upload-dirs)]
+                     ;; We reverse sort the upload dirs to get the newer dirs
+                     ;; first (the dir name includes the creation time in
+                     ;; millis). This is a specific fix for #849 to allow
+                     ;; multiple deploys of different versions in the same
+                     ;; session to succeed.
+                     ;;
+                     ;; They would fail occassionaly depending on the natural
+                     ;; sort of the upload-dirs. When we are finalizing a
+                     ;; deploy, we don't have the version, since the finalize is
+                     ;; triggered by the maven-metadata.xml upload, which isn't
+                     ;; versioned. This means we use whatever dir for the
+                     ;; group+artifact that we find first, which may not be the
+                     ;; correct dir.
+                     (sort #(compare %2 %1) upload-dirs))]
     dir
     (doto (io/file (FileUtils/getTempDirectory)
-            (str "upload-" (UUID/randomUUID)))
+            (format "upload-%s-%s" (System/currentTimeMillis) (UUID/randomUUID)))
       (FileUtils/forceMkdir))))
 
 (def ^:private ^:dynamic *db*
