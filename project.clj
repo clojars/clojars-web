@@ -2,9 +2,11 @@
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/core.memoize "1.0.253"]
-                 ;; manage jetty dependency directly to make it easier to address CVEs
-                 ;; addresses CVE-2021-34429
-                 [org.eclipse.jetty/jetty-server "9.4.44.v20210927"]
+                 ;; manage jetty dependencies directly to make it easier to address CVEs
+                 [org.eclipse.jetty/jetty-client "9.4.49.v20220914"]
+                 [org.eclipse.jetty/jetty-server "9.4.49.v20220914"]
+                 ;; manage jackson-databind directly to make it easiser to address CVEs
+                 [com.fasterxml.jackson.core/jackson-databind "2.14.0-rc1"]
                  [raven-clj "1.6.0"
                   :exclusions [cheshire]]
                  [org.apache.maven/maven-model "3.8.4"]
@@ -18,8 +20,8 @@
                                ;; newer version brought in by com.cognitect.aws/api
                                org.clojure/tools.reader
                                org.yaml/snakeyaml]]
-                 ;; addresses CVE-2017-18640
-                 [org.yaml/snakeyaml "1.30"]
+                 ;; addresses CVEs
+                 [org.yaml/snakeyaml "1.33"]
                  [org.apache.commons/commons-email "1.5"]
                  [net.cgrand/regex "1.0.1"
                   :exclusions [org.clojure/clojure]]
@@ -63,7 +65,7 @@
                  [org.apache.lucene/lucene-queryparser "8.11.1"]
                  [org.clojure/tools.nrepl "0.2.11"]
                  [yesql "0.5.3"]
-                 [org.postgresql/postgresql "42.3.3"]
+                 [org.postgresql/postgresql "42.4.1"]
                  [duct/hikaricp-component "0.1.2"
                   :exclusions [com.stuartsierra/component
                                org.slf4j/slf4j-api
