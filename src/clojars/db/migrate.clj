@@ -102,6 +102,11 @@
   (sql/db-do-commands trans
                       "alter table users add send_deploy_emails boolean default false"))
 
+(defn- add-indexes-to-deps-table
+  [trans]
+  (sql/db-do-commands trans
+                      ["create index deps_idx0 on deps (dep_group_name, dep_jar_name)"
+                       "create index deps_idx1 on deps (group_name, jar_name, version)"]))
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -113,7 +118,8 @@
    #'add-audit-table
    #'add-single-use-to-tokens
    #'add-expires-at-to-tokens
-   #'add-send-deploy-emails-to-users])
+   #'add-send-deploy-emails-to-users
+   #'add-indexes-to-deps-table])
 
 (defn migrate [db]
   (sql/db-do-commands db
