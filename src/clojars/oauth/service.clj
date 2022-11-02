@@ -11,10 +11,10 @@
 (defrecord MockOauthService [provider config]
   OauthService
 
-  (authorization-url [this]
+  (authorization-url [_this]
     (:authorize-uri config))
 
-  (access-token [this code]
+  (access-token [_this _code]
     (:access-token config))
 
   (provider-name [_]

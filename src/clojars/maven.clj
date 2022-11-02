@@ -1,4 +1,5 @@
 (ns clojars.maven
+  (:refer-clojure :exclude [parse-long])
   (:require [clojars.file-utils :as fu]
             [clojure.edn :as edn]
             [clojure.java.io :as io])

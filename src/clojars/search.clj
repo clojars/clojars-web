@@ -66,10 +66,10 @@
    :created    :at
    :homepage   :url})
 
-(defn- ^String doc-id [group-id artifact-id]
+(defn- doc-id ^String [group-id artifact-id]
   (str group-id ":" artifact-id))
 
-(defn- ^String jar->id [{:keys [artifact-id group-id]}]
+(defn- jar->id ^String [{:keys [artifact-id group-id]}]
   (doc-id group-id artifact-id))
 
 (defn delete-from-index [^IndexWriter index-writer ^String group-id & [artifact-id]]
@@ -110,7 +110,7 @@
   []
   (BM25Similarity. 1.2 0))
 
-(defn- ^IndexWriter index-writer [index create?]
+(defn- index-writer ^IndexWriter [index create?]
   (IndexWriter.
    index
    (doto (IndexWriterConfig. (indexing-analyzer))
@@ -119,8 +119,8 @@
                      IndexWriterConfig$OpenMode/CREATE_OR_APPEND))
      (.setSimilarity (no-len-similarity)))))
 
-(defn- ^IndexReader index-reader
-  [^Directory index]
+(defn- index-reader
+  ^IndexReader [^Directory index]
   (DirectoryReader/open index))
 
 (defn- hyphen-remover
@@ -162,17 +162,17 @@
   [^String name ^String value]
   (TextField. name value Field$Store/YES))
 
-(defn ^Iterable jar->doc
-  [{:keys [at
-           artifact-id
-           group-id
-           description
-           licenses
-           url
-           version]
-    :or   {at (Date.)}
-    :as   jar}
-   download-boost]
+(defn jar->doc
+  ^Iterable [{:keys [at
+                     artifact-id
+                     group-id
+                     description
+                     licenses
+                     url
+                     version]
+              :or   {at (Date.)}
+              :as   jar}
+             download-boost]
   (doto (Document.)
     ;; id: We need a unique identifier for each doc so that we can use updateDocument
     (.add (string-field "id" (jar->id jar)))
@@ -272,9 +272,9 @@
           (date-in-epoch-ms start-time)
           (date-in-epoch-ms end-time)))
 
-(defn ^String replace-time-range
+(defn replace-time-range
   "Replaces human readable time range in query with epoch milliseconds"
-  [query]
+  ^String [query]
   (let [matches (re-find #"at:\[(.*) TO (.*)\]" query)]
     (if (or (nil? matches) (not= (count matches) 3))
       query

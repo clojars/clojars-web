@@ -32,7 +32,7 @@
        server
        (EasyAuthenticationHandlerFactory.
         (reify UsernamePasswordValidator
-          (login [t username password]
+          (login [_ username password]
             (when (or (not= username "username")
                       (not= password "password"))
               (throw (LoginFailedException.)))))))

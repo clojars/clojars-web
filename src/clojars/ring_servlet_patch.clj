@@ -11,7 +11,7 @@
         (.setStatus response (.getStatus response) value)
         (proxy-super setHeader name value)))))
 
-(defn ^AbstractHandler handler-wrapper [handler]
+(defn handler-wrapper ^AbstractHandler [handler]
   (proxy [AbstractHandler] []
     (handle [target ^Request base-request request response]
       (let [response (response-wrapper response)]

@@ -40,7 +40,7 @@
                          extra))
  
    Thread$UncaughtExceptionHandler
-   (uncaughtException [this thread throwable]
+   (uncaughtException [_this _thread throwable]
      (raven-error-report (:dsn raven-config)
                          nil
                          "UncaughtExceptionHandler capture"
@@ -77,7 +77,7 @@
 
 (defrecord MultiReporter [reporters]
   ErrorReporter
-  (-report-error [reporter e extra id]
+  (-report-error [_reporter e extra id]
     (run! #(-report-error % e extra id) reporters)))
 
 (defn multiple-reporters [& reporters]

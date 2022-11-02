@@ -11,7 +11,7 @@
 ;; TODO: (toby) logging
 (defrecord HttpRemoteService []
   RemoteService
-  (-remote-call [self request-info]
+  (-remote-call [_self request-info]
     (-> (http/request request-info)
         :body
         (json/parse-string true))))
@@ -21,7 +21,7 @@
 
 (defrecord MockRemoteService []
   RemoteService
-  (-remote-call [self request-info]
+  (-remote-call [_self request-info]
     (when *mock-calls*
       (swap! *mock-calls* conj request-info))
     (when-let [responder (and *mock-responders*
