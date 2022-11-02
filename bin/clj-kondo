@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CLJ_KONDO_VERSION="2020.09.09"
+CLJ_KONDO_VERSION="2022.10.14"
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
 
 function ensure_clj_kondo() {
