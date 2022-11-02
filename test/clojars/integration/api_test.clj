@@ -51,6 +51,7 @@
   (testing "list group artifacts"
     (let [resp (get-api [:groups "org.clojars.dantheman"] {:accept :json})
           body (json/parse-string (:body resp) true)]
+
       (is (= {:latest_version "0.0.3-SNAPSHOT"
               :latest_release "0.0.2"
               :jar_name "test"
@@ -70,6 +71,8 @@
       (is (= {:latest_version "0.0.3-SNAPSHOT"
               :latest_release "0.0.2"
               :jar_name "test"
+              :license ""
+              :scm_url ""
               :group_name "org.clojars.dantheman"
               :user "dantheman"
               :description "TEST"
