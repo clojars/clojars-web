@@ -17,6 +17,7 @@
    [clojars.web :as web]
    [clojure.java.io :as io]
    [clojure.java.jdbc :as jdbc]
+   [clojure.java.shell :as shell]
    [clojure.string :as str]
    [clojure.test :refer [is]]
    [com.stuartsierra.component :as component]
@@ -209,4 +210,16 @@
 (defmacro with-time
   [t & body]
   `(with-redefs [db/get-time (constantly ~t)]
+     ~@body))
+
+(defn TXT-vec->str
+  [txt-records]
+  (->> txt-records
+       (map #(format "\"%s\"" %))
+       (str/join "\n")))
+
+(defmacro with-TXT
+  [txt-records & body]
+    `(with-redefs [shell/sh (constantly {:out  (TXT-vec->str ~txt-records)
+                                         :exit 0})]
      ~@body))

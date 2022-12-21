@@ -86,6 +86,7 @@
     "upload"
     "user"
     "username"
+    "verify"
     "webmaster"
     "welcome"})
 

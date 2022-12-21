@@ -65,7 +65,7 @@
   * the group and domain correspond
   * the TXT record has a Clojars username
   * if the group exists, that username is an active member of the group"
-  [db {:as request :keys [account domain group]}]
+  [db {:as request :keys [username domain group]}]
   (let [domain (str/lower-case domain)
         group  (str/lower-case group)]
     (cond
@@ -87,16 +87,16 @@
       :else
       (let [txt                  (get-txt-records domain)
             request              (assoc request :txt-records txt)
-            username             (parse-text-records txt)
+            username-from-txt    (parse-text-records txt)
             group-active-members (db/group-activenames db group)
             group-verification   (db/find-group-verification db group)]
         (cond
-          (not username)
+          (not username-from-txt)
           (err request "No valid verification TXT record found.")
 
-          (not (= account username))
+          (not (= username username-from-txt))
           (err request (format "Validation TXT record is for user '%s', not '%s' (you)."
-                               username account))
+                               username-from-txt username))
 
           group-verification
           (err request (format "Group already verified by user '%s' on %s."
