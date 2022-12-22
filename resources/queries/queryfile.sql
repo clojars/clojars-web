@@ -64,6 +64,22 @@ SELECT *
 FROM group_verifications
 WHERE group_name = :group_name;
 
+--name: find-group-verifications-for-users-groups
+SELECT *
+FROM group_verifications gv
+JOIN (
+  SELECT name
+  FROM groups
+  WHERE (
+    "user" = :username
+    AND
+    inactive IS NOT true
+  )
+) g
+ON (
+  gv.group_name = g.name
+)
+
 --name: verify-group!
 INSERT INTO group_verifications (group_name, verified_by)
 VALUES (:group_name, :verifying_username);

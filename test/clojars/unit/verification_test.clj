@@ -134,3 +134,39 @@
                                                :domain  "foo.com"}))))
     (is (db/group-activenames help/*db* "com.foo"))
     (is (db/find-group-verification help/*db* "com.foo"))))
+
+(deftest verify-group-by-parent-group-with-invalid-group
+  (are [given] (= "The group name is not a valid reverse-domain name."
+                  (:error (nut/verify-group-by-parent-group help/*db* {:group given})))
+    "bar"
+    "com.bar;rm -rf /"
+    ".com"
+    "..com"))
+
+(deftest verify-group-by-parent-group-with-already-verified-group
+  (db/verify-group! help/*db* "dantheman" "com.foo.bar")
+  (is (match?
+       {:error (format "Group already verified by user 'dantheman' on %s."
+                       (common/format-date (Date.)))}
+       (nut/verify-group-by-parent-group help/*db* {:group "com.foo.bar"}))))
+
+(deftest verify-group-by-parent-group-with-non-subgroup
+  (db/add-group help/*db* "dantheman" "com.foo")
+  (db/verify-group! help/*db* "dantheman" "com.foo")
+  (is (match?
+       {:error "The group is not a subgroup of a verified group."}
+       (nut/verify-group-by-parent-group help/*db* {:group    "com.bar"
+                                                    :username "dantheman"})))
+  (is (match?
+       {:error "The group is not a subgroup of a verified group."}
+       (nut/verify-group-by-parent-group help/*db* {:group    "com.food"
+                                                    :username "dantheman"}))))
+
+(deftest verify-group-by-parent-group-that-is-subgroup
+  (db/add-group help/*db* "dantheman" "com.foo")
+  (db/verify-group! help/*db* "dantheman" "com.foo")
+  (is (match?
+       {:message      "The group 'com.foo.bar' has been verified."
+        :parent-group "com.foo"}
+       (nut/verify-group-by-parent-group help/*db* {:group    "com.foo.bar"
+                                                    :username "dantheman"}))))

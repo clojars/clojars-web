@@ -113,3 +113,26 @@
 
           :else
           (err request "You are not an active member of the group."))))))
+
+(defn verify-group-by-parent-group
+  "Verifies a group that is a subgroup of an already verified group."
+  [db {:as request :keys [username group]}]
+  (let [group              (str/lower-case group)
+        group-verification (db/find-group-verification db group)]
+    (cond
+      (not (valid-identifier? group))
+      (err request "The group name is not a valid reverse-domain name.")
+
+      group-verification
+      (err request (format "Group already verified by user '%s' on %s."
+                           (:verified_by group-verification)
+                           (common/format-date (:created group-verification))))
+
+      :else
+      (if-some [parent-group-name (some
+                                   (fn [{:keys [group_name]}]
+                                     (when (str/starts-with? group (str group_name "."))
+                                       group_name))
+                                   (db/find-group-verifications-for-users-groups db username))]
+        (verify-group db (assoc request :parent-group parent-group-name) username group)
+        (err request "The group is not a subgroup of a verified group.")))))
