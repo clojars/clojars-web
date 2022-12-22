@@ -1,5 +1,6 @@
 (ns clojars.unit.verification-test
   (:require
+   [clj-http.client :as http]
    [clojars.db :as db]
    [clojars.test-helper :as help]
    [clojars.verification :as nut]
@@ -70,7 +71,7 @@
     (help/with-TXT records
       (is (match?
            {:txt-records records
-            :error       "Validation TXT record is for user 'abc', not 'dantheman' (you)."}
+            :error       "The verification TXT record is for user 'abc', not 'dantheman' (you)."}
            (nut/verify-group-by-TXT help/*db* {:username "dantheman"
                                                :group   "com.foo"
                                                :domain  "foo.com"}))))))
@@ -170,3 +171,40 @@
         :parent-group "com.foo"}
        (nut/verify-group-by-parent-group help/*db* {:group    "com.foo.bar"
                                                     :username "dantheman"}))))
+
+(deftest verify-vcs-groups-with-invalid-url
+  (is (match?
+       {:error "The format of the URL is invalid."}
+       (nut/verify-vcs-groups help/*db* {:url "huh?"}))))
+
+(deftest verify-vcs-groups-with-url-not-matching-user
+  (is (match?
+       {:error "The verification repo is for user 'manthedan', not 'dantheman' (you)."}
+       (nut/verify-vcs-groups help/*db* {:url      "https://github.com/foo/clojars-manthedan"
+                                         :username "dantheman"}))))
+
+(deftest verify-vcs-groups-with-already-verified-groups
+  (db/verify-group! help/*db* "dantheman" "com.github.foo")
+  (db/verify-group! help/*db* "dantheman" "net.github.foo")
+  (is (match?
+       {:error (format "Groups already verified by user 'dantheman' on %s."
+                       (common/format-date (Date.)))}
+       (nut/verify-vcs-groups help/*db* {:url      "https://github.com/foo/clojars-dantheman"
+                                         :username "dantheman"}))))
+
+(deftest verify-vcs-groups-with-non-existent-repo
+  (doseq [responders [(constantly {:status 404})
+                      (constantly {:status 302})
+                      (fn [& _] (throw (ex-info "BOOM" {})))]]
+    (with-redefs [http/head responders]
+      (is (match?
+           {:error "The verification repo does not exist."}
+           (nut/verify-vcs-groups help/*db* {:url      "https://github.com/foo/clojars-dantheman"
+                                             :username "dantheman"}))))))
+
+(deftest verify-vcs-groups-when-the-repo-exists
+  (with-redefs [http/head (constantly {:status 200})]
+    (is (match?
+         {:message "The groups 'com.github.foo' & 'net.github.foo' have been verified."}
+         (nut/verify-vcs-groups help/*db* {:url      "https://github.com/foo/clojars-dantheman"
+                                           :username "dantheman"})))))
