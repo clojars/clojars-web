@@ -6,10 +6,13 @@
    [hiccup.form :refer [label submit-button text-field]]))
 
 (defn- flash-details
-  [{:keys [domain group txt-records]}]
+  [{:keys [domain group parent-group txt-records]}]
   [:div#details
    [:p "Group: " group]
-   [:p "Domain: " domain]
+   (when domain
+     [:p "Domain: " domain])
+   (when parent-group
+     [:p "Parent group: " parent-group])
    (when txt-records
      (list
       [:p "TXT records:"
@@ -53,6 +56,29 @@
                "an issue")
       " if you run in to any problems verifying your group name."])))
 
+(def ^:private parent-help
+  (list
+   [:p "A subgroup is based on a (potential) subdomain of another group. To
+  verify it, the parent group has to be verified."]
+   [:p "This will create the group if it doesn't already exist, and can also
+     be used to verify an existing group."]
+   [:p "For example, if you are trying to verify the subgroup "
+    [:code "com.example.ham"]
+    ", and you have already verified "
+    [:code "com.example"]
+    ", then you can use this verification option."]
+   [:p "If you haven't verified the parent group and don't need to, you can
+   verify the group using the TXT record method above, but note that the TXT
+   record will need to be on the corresponding subdomain."]
+   [:p "See "
+    (link-to "https://github.com/clojars/clojars-web/wiki/Verified-Group-Names"
+             "the wiki")
+    " for more details on verified group names."]
+   [:p "Please "
+    (link-to "https://github.com/clojars/administration/issues/new/choose"
+             "an issue")
+    " if you run in to any problems verifying your group name."]))
+
 (defn index
   [account flash-data]
   (html-doc
@@ -61,7 +87,7 @@
    [:div.col-xs-6
     [:h1 "Group Verification"]
     (format-flash flash-data)
-    [:div
+    [:div.via-txt
      [:h2 "Verification by TXT Record"]
      [:details.help
       [:summary "Help"]
@@ -75,4 +101,15 @@
               (text-field {:required    true
                            :placeholder "example.com"}
                           :domain)
+              (submit-button "Verify Group"))]
+    [:div.via-parent
+     [:h2 "Verification by Parent Group"]
+     [:details.help
+      [:summary "Help"]
+      parent-help]
+     (form-to [:post "/verify/group/parent"]
+              (label :group "Group name")
+              (text-field {:required    true
+                           :placeholder "com.example.ham"}
+                          :group)
               (submit-button "Verify Group"))]]))
