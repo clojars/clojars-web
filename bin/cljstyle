@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Self-extracting cljstyle shim. Sourced releases from GitHub.
+
+set -euo pipefail
+
+CLJSTYLE_VERSION="0.15.0"
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
+
+function ensure_cljstyle() {
+    # Doesn't take args, simply reads variables set above.
+    VERSION=$CLJSTYLE_VERSION
+    PLATFORM="$(uname -s)"
+
+    if [ "${PLATFORM}" == "Darwin" ]; then
+        ARCHIVE="cljstyle_${VERSION}_macos.zip"
+    elif [ "${PLATFORM}" == "Linux" ]; then
+        ARCHIVE="cljstyle_${VERSION}_linux.zip"
+    else
+        echo "Platform ${PLATFORM} is currently not supported" >&2 && exit 1
+    fi
+
+    if ! [ -f "$ROOT/bin/.cache/cljstyle-${VERSION}/BOOTSTRAPPED" ]; then
+        echo "Missing cljstyle binary for version [${VERSION}] -- will download." >&2
+        PACKAGE_FULL_URL="https://github.com/greglook/cljstyle/releases/download/${VERSION}/${ARCHIVE}"
+        mkdir -p "$ROOT/bin/.cache"
+        pushd "$ROOT/bin/.cache" >/dev/null 2>&1 || exit 1
+        echo "Downloading ${PACKAGE_FULL_URL}..." >&2
+        curl -#L -O "${PACKAGE_FULL_URL}" ||
+            (echo "Failed to download ${PACKAGE_FULL_URL}." && exit 1)
+
+        (rm -rf "cljstyle-${VERSION}" &&
+           mkdir "cljstyle-${VERSION}" && 
+           unzip "${ARCHIVE}" -d "cljstyle-${VERSION}") >&2 ||
+          (echo "Failed to extract ${PACKAGE_FULL_URL}." && exit 1)
+        rm -rf "${ARCHIVE}"
+        touch "cljstyle-${VERSION}/BOOTSTRAPPED"
+        popd >/dev/null 2>&1 || exit 2
+    fi
+}
+
+ensure_cljstyle
+exec "${ROOT}/bin/.cache/cljstyle-${VERSION}/cljstyle" "$@"
