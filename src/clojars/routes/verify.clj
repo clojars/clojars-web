@@ -4,44 +4,40 @@
    [clojars.log :as log]
    [clojars.verification :as verification]
    [clojars.web.group-verification :as view]
-   [ring.util.response :refer [redirect]]
-   [compojure.core :as compojure :refer [GET POST]]))
+   [compojure.core :as compojure :refer [GET POST]]
+   [ring.util.response :refer [redirect]]))
+
+(defn- handle-request
+  [db tag f request]
+  (log/with-context (assoc request :tag tag)
+    (let [result (f db request)]
+      (if-some [error (:error result)]
+        (log/info {:status :failed
+                   :error  error})
+        (do
+          (log/info {:status :succeeded})
+          (log/audit db {:tag     tag
+                         :message (:message result)})))
+      (-> (redirect "/verify/group")
+          (assoc :flash (merge request result))))))
 
 (defn verify-via-parent
   [db username params]
-  (let [request (merge {:username username}
-                       (select-keys params [:group]))]
-    (log/with-context (assoc request :tag :verify-group-via-parent-group)
-      (let [result (verification/verify-group-by-parent-group db request)]
-        (if-some [error (:error result)]
-          (log/info {:status :failed
-                     :error  error})
-          (do
-            (log/info {:status :succeeded})
-            (log/audit db {:tag     :group-verified-via-parent-group
-                           :message (format "group '%s' verified" (:group request))})))
-        (-> (redirect "/verify/group")
-            (assoc :flash (merge request result)))))))
+  (handle-request db :verify-group-via-parent-group
+                  verification/verify-group-by-parent-group
+                  (merge {:username username}
+                         (select-keys params [:group]))))
 
 (defn verify-via-TXT
   [db username params]
-  (let [request (merge {:username username}
-                       (select-keys params [:domain :group]))]
-    (log/with-context (assoc request :tag :verify-group-via-TXT)
-      (let [result (verification/verify-group-by-TXT db request)]
-        (if-some [error (:error result)]
-          (log/info {:status :failed
-                     :error  error})
-          (do
-            (log/info {:status :succeeded})
-            (log/audit db {:tag     :group-verified-via-TXT
-                           :message (format "group '%s' verified" (:group request))})))
-        (-> (redirect "/verify/group")
-            (assoc :flash (merge request result)))))))
+  (handle-request db :verify-group-via-TXT
+                  verification/verify-group-by-TXT
+                  (merge {:username username}
+                       (select-keys params [:domain :group]))))
 
 (defn routes [db]
   (compojure/routes
-      (POST "/verify/group/parent" {:keys [params]}
+   (POST "/verify/group/parent" {:keys [params]}
          (auth/with-account
            #(verify-via-parent db % params)))
    (POST "/verify/group/txt" {:keys [params]}
