@@ -33,14 +33,14 @@
   (handle-request db :verify-group-via-TXT
                   verification/verify-group-by-TXT
                   (merge {:username username}
-                       (select-keys params [:domain :group]))))
+                         (select-keys params [:domain :group]))))
 
 (defn verify-via-vcs
   [db username params]
   (handle-request db :verify-group-via-vcs
                   verification/verify-vcs-groups
                   (merge {:username username}
-                       (select-keys params [:url]))))
+                         (select-keys params [:url]))))
 
 (defn routes [db]
   (compojure/routes

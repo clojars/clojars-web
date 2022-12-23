@@ -220,6 +220,6 @@
 
 (defmacro with-TXT
   [txt-records & body]
-    `(with-redefs [shell/sh (constantly {:out  (TXT-vec->str ~txt-records)
-                                         :exit 0})]
+  `(with-redefs [shell/sh (constantly {:out  (TXT-vec->str ~txt-records)
+                                       :exit 0})]
      ~@body))
