@@ -5,7 +5,8 @@
    [clojure.test :refer [deftest use-fixtures]]
    [kerodon.core :refer [fill-in follow-redirect
                          press session visit within]]
-   [kerodon.test :refer [has some-text?]]))
+   [kerodon.test :refer [has some-text?]]
+   [clj-http.client :as http]))
 
 (use-fixtures :each
   help/default-fixture
@@ -71,3 +72,31 @@
       (follow-redirect)
       (within [:div.error]
               (has (some-text? "The group is not a subgroup of a verified group")))))
+
+(deftest user-can-verify-vcs-groups
+  (with-redefs [http/head (constantly {:status 200})]
+    (-> (session (help/app))
+        (register-as "dantheman" "test@example.org" "password")
+        (follow-redirect)
+        (visit "/verify/group")
+        (within [:div.via-vcs]
+         (fill-in "Verification Repository URL"
+                  "https://github.com/example/clojars-dantheman")
+         (press "Verify Groups"))
+        (follow-redirect)
+        (within [:div.info]
+                (has (some-text? "The groups 'com.github.example' & 'net.github.example' have been verified"))))))
+
+(deftest user-cannot-verify-vcs-groups-with-missing-repo
+  (with-redefs [http/head (constantly {:status 404})]
+    (-> (session (help/app))
+        (register-as "dantheman" "test@example.org" "password")
+        (follow-redirect)
+        (visit "/verify/group")
+        (within [:div.via-vcs]
+         (fill-in "Verification Repository URL"
+                  "https://github.com/example/clojars-dantheman")
+         (press "Verify Groups"))
+        (follow-redirect)
+        (within [:div.error]
+                (has (some-text? "The verification repo does not exist"))))))

@@ -35,6 +35,13 @@
                   (merge {:username username}
                        (select-keys params [:domain :group]))))
 
+(defn verify-via-vcs
+  [db username params]
+  (handle-request db :verify-group-via-vcs
+                  verification/verify-vcs-groups
+                  (merge {:username username}
+                       (select-keys params [:url]))))
+
 (defn routes [db]
   (compojure/routes
    (POST "/verify/group/parent" {:keys [params]}
@@ -43,6 +50,9 @@
    (POST "/verify/group/txt" {:keys [params]}
          (auth/with-account
            #(verify-via-TXT db % params)))
+   (POST "/verify/group/vcs" {:keys [params]}
+         (auth/with-account
+           #(verify-via-vcs db % params)))
    (GET "/verify/group" {:keys [flash]}
         (auth/with-account
           #(view/index % flash)))))
