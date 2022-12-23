@@ -11,4 +11,10 @@ if [ -n "${changed_clj}" ] ; then
   if ! ./bin/clj-kondo --lint $changed_clj; then
     exit 1
   fi
+
+  # Format any *.clj(s) files with cljstyle
+  for f in $changed_clj; do
+    "./bin/cljstyle" fix "$f"
+    git add "$f"
+  done
 fi
