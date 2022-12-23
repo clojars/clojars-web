@@ -34,17 +34,21 @@
        (finally
          (component/stop lc)))))
 
-(def lein-ring {:artifact-id "lein-ring"
-                :group-id "lein-ring"})
+(def lein-ring
+  {:artifact-id "lein-ring"
+   :group-id "lein-ring"})
 
-(def lein-modules {:artifact-id "lein-modules"
-                   :group-id "lein-modules"})
+(def lein-modules
+  {:artifact-id "lein-modules"
+   :group-id "lein-modules"})
 
-(def at-at {:artifact-id "at-at"
-            :group-id "at-at"})
+(def at-at
+  {:artifact-id "at-at"
+   :group-id "at-at"})
 
-(def c {:artifact-id "c"
-        :group-id "c"})
+(def c
+  {:artifact-id "c"
+   :group-id "c"})
 
 (deftest weight-by-downloads
   (let [dl-counts {["lein-ring" "lein-ring"] 2

@@ -1,10 +1,13 @@
 (ns clojars.stats
-  (:require [clojars.s3 :as s3]
-            [clojure.core.memoize :as memo]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io])
-  (:import java.io.PushbackReader
-           (java.text DecimalFormat)))
+  (:require
+   [clojars.s3 :as s3]
+   [clojure.core.memoize :as memo]
+   [clojure.edn :as edn]
+   [clojure.java.io :as io])
+  (:import
+   java.io.PushbackReader
+   (java.text
+    DecimalFormat)))
 
 (defprotocol Stats
   (download-count
@@ -30,10 +33,10 @@
 
 (defn- calc-total-downloads
   [s3-bucket]
-    (->> (all s3-bucket)
-         (vals)
-         (mapcat vals)
-         (reduce +)))
+  (->> (all s3-bucket)
+       (vals)
+       (mapcat vals)
+       (reduce +)))
 
 (def all-total-downloads (memo/ttl calc-total-downloads :ttl/threshold stats-cache-ttl))
 
@@ -42,7 +45,7 @@
   (download-count [_ group-id artifact-id]
     (->> (get (all stats-bucket) [group-id artifact-id])
          (vals)
-          (reduce +)))
+         (reduce +)))
   (download-count [_ group-id artifact-id version]
     (get-in (all stats-bucket) [[group-id artifact-id] version] 0))
   (total-downloads [_]
@@ -60,7 +63,7 @@
   (download-count [_ group-id artifact-id]
     (->> (get (read-all-stats (io/input-stream stats-file)) [group-id artifact-id])
          (vals)
-          (reduce +)))
+         (reduce +)))
   (download-count [_ group-id artifact-id version]
     (get-in (read-all-stats (io/input-stream stats-file))
             [[group-id artifact-id] version]

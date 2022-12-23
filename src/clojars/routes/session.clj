@@ -1,8 +1,9 @@
 (ns clojars.routes.session
-  (:require [compojure.core :refer [GET ANY defroutes]]
-            [ring.util.response :as response]
-            [cemerick.friend :as friend]
-            [clojars.web.login :as view]))
+  (:require
+   [cemerick.friend :as friend]
+   [clojars.web.login :as view]
+   [compojure.core :refer [GET ANY defroutes]]
+   [ring.util.response :as response]))
 
 (defroutes routes
   (GET "/login" {:keys [flash params]}

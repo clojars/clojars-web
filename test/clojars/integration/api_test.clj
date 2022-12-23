@@ -1,11 +1,12 @@
 (ns clojars.integration.api-test
-  (:require [cheshire.core :as json]
-            [clj-http.client :as client]
-            [clojars.integration.steps :refer [register-as inject-artifacts-into-repo!]]
-            [clojars.test-helper :as help]
-            [clojure.string :as str]
-            [clojure.test :refer [deftest is testing use-fixtures]]
-            [kerodon.core :refer [session]]))
+  (:require
+   [cheshire.core :as json]
+   [clj-http.client :as client]
+   [clojars.integration.steps :refer [register-as inject-artifacts-into-repo!]]
+   [clojars.test-helper :as help]
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing use-fixtures]]
+   [kerodon.core :refer [session]]))
 
 (use-fixtures :each
   help/default-fixture
@@ -78,7 +79,7 @@
               :recent_versions [{:downloads 0 :version "0.0.3-SNAPSHOT"}
                                 {:downloads 0 :version "0.0.2"}
                                 {:downloads 0 :version "0.0.1"}]}
-            body))))
+             body))))
 
   (testing "get non-existent artifact"
     (assert-404 [:artifacts "does-not-exist"])

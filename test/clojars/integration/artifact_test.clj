@@ -1,8 +1,9 @@
 (ns clojars.integration.artifact-test
-  (:require [clj-http.client :as client]
-            [clojars.test-helper :as help]
-            [clojure.string :as str]
-            [clojure.test :refer [deftest is testing use-fixtures]]))
+  (:require
+   [clj-http.client :as client]
+   [clojars.test-helper :as help]
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing use-fixtures]]))
 
 (use-fixtures :each
   help/default-fixture

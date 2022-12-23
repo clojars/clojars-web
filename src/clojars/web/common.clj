@@ -1,10 +1,10 @@
 (ns clojars.web.common
   (:require
+   [clojars.db :as db]
    [clojars.maven :as maven]
    [clojars.web.helpers :as helpers]
    [clojars.web.safe-hiccup :refer [form-to html5 raw]]
    [clojars.web.structured-data :as structured-data]
-   [clojars.db :as db]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.string :as str]
@@ -13,7 +13,8 @@
    [hiccup.page :refer [include-css include-js]]
    [ring.util.codec :refer [url-encode]])
   (:import
-   (java.text SimpleDateFormat)))
+   (java.text
+    SimpleDateFormat)))
 
 (defn when-ie [& contents]
   (str
@@ -102,9 +103,9 @@
              (str title " - "))
            "Clojars"]
           (map #(include-css (str "/stylesheets/" %))
-         ;; Bootstrap was customized to only include the 'grid' styles
-         ;; (then the default colors were removed)
-         ;; more info: http://getbootstrap.com/css/#grid
+               ;; Bootstrap was customized to only include the 'grid' styles
+               ;; (then the default colors were removed)
+               ;; more info: http://getbootstrap.com/css/#grid
                ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
           (raw (when-ie (include-js "/js/html5.js")))
           (include-js "/js/jquery-3.6.0.min.js")
@@ -182,9 +183,9 @@
              (str title " - "))
            "Clojars"]
           (map #(include-css (str "/stylesheets/" %))
-         ;; Bootstrap was customized to only include the 'grid' styles
-         ;; (then the default colors were removed)
-         ;; more info: http://getbootstrap.com/css/#grid
+               ;; Bootstrap was customized to only include the 'grid' styles
+               ;; (then the default colors were removed)
+               ;; more info: http://getbootstrap.com/css/#grid
                ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
           (raw (when-ie (include-js "/js/html5.js")))]
          [:body.container-fluid
@@ -415,20 +416,20 @@
   [db subject lookup]
   [:div
    [:h2 (format "Audit Log for %s" subject)]
-    [:table.audit
-     [:tr
-      [:th "Tag"]
-      [:th "User"]
-      [:th "Artifact"]
-      [:th "Message"]
-      [:th "Timestamp"]]
-     (for [audit (db/find-audit db lookup)]
-       [:tr
-        [:td [:pre (:tag audit)]]
-        [:td (when (:user audit) (user-link (:user audit)))]
-        [:td (link-project audit)]
-        [:td (linkify (:message audit))]
-        [:td (:created audit)]])]])
+   [:table.audit
+    [:tr
+     [:th "Tag"]
+     [:th "User"]
+     [:th "Artifact"]
+     [:th "Message"]
+     [:th "Timestamp"]]
+    (for [audit (db/find-audit db lookup)]
+      [:tr
+       [:td [:pre (:tag audit)]]
+       [:td (when (:user audit) (user-link (:user audit)))]
+       [:td (link-project audit)]
+       [:td (linkify (:message audit))]
+       [:td (:created audit)]])]])
 
 (defn form-table
   [method-action label-input-pairs extra-inputs]

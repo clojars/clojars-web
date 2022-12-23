@@ -1,6 +1,7 @@
 (ns clojars.gradle
-  (:require [cheshire.core :as json]
-            [clojure.java.io :as io]))
+  (:require
+   [cheshire.core :as json]
+   [clojure.java.io :as io]))
 
 (defn module-to-map
   "Reads a Gradle module file returning a map"

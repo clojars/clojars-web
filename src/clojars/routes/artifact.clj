@@ -1,10 +1,11 @@
 (ns clojars.routes.artifact
-  (:require [compojure.core :as compojure :refer [GET]]
-            [clojars.db :as db]
-            [clojars.auth :as auth]
-            [clojars.web.jar :as view]
-            [ring.util.response :as response]
-            [clojars.http-utils :as http-utils]))
+  (:require
+   [clojars.auth :as auth]
+   [clojars.db :as db]
+   [clojars.http-utils :as http-utils]
+   [clojars.web.jar :as view]
+   [compojure.core :as compojure :refer [GET]]
+   [ring.util.response :as response]))
 
 (defn- with-shields-io-img-src
   "Allows shields.io badges to be shown on artifact pages."
@@ -25,13 +26,13 @@
 (defn list-versions [db group-id artifact-id]
   (when-let [artifact (db/find-jar db group-id artifact-id)]
     (auth/try-account
-      #(view/show-versions % artifact
-         (db/recent-versions db group-id artifact-id)))))
+     #(view/show-versions % artifact
+                          (db/recent-versions db group-id artifact-id)))))
 
 (defn list-dependents [db group-id artifact-id]
   (when-let [artifact (db/find-jar db group-id artifact-id)]
     (auth/try-account
-      #(view/show-dependents db % artifact))))
+     #(view/show-dependents db % artifact))))
 
 (defn- show-version [db stats group-id artifact-id version]
   (when-some [artifact (db/find-jar db group-id artifact-id version)]
@@ -46,15 +47,15 @@
   JSON or SVG"
   [db file-format artifact-id & [group-id]]
   (let [group-id (or group-id artifact-id)]
-  (cond
-    (= file-format "json") (-> (response/response (view/make-latest-version-json db group-id artifact-id))
-                               (response/header "Cache-Control" "no-cache")
-                               (response/content-type "application/json; charset=UTF-8")
-                               (response/header "Access-Control-Allow-Origin" "*"))
-    (= file-format "svg") (-> (response/response (view/make-latest-version-svg db group-id artifact-id))
-                              (response/header "Cache-Control" "no-cache")
-                              (response/content-type "image/svg+xml")
-                              (response/header "Access-Control-Allow-Origin" "*")))))
+    (cond
+      (= file-format "json") (-> (response/response (view/make-latest-version-json db group-id artifact-id))
+                                 (response/header "Cache-Control" "no-cache")
+                                 (response/content-type "application/json; charset=UTF-8")
+                                 (response/header "Access-Control-Allow-Origin" "*"))
+      (= file-format "svg") (-> (response/response (view/make-latest-version-svg db group-id artifact-id))
+                                (response/header "Cache-Control" "no-cache")
+                                (response/content-type "image/svg+xml")
+                                (response/header "Access-Control-Allow-Origin" "*")))))
 
 (defn routes [db stats]
   (compojure/routes

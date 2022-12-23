@@ -1,7 +1,7 @@
 (ns clojars.web.error-api
   (:require
-   [clojars.web.common :refer [xml-escape]]
    [cheshire.core :as json]
+   [clojars.web.common :refer [xml-escape]]
    [clojure.xml :as xml]))
 
 (defn error-api-response [error-options error-id]

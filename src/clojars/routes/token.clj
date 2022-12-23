@@ -2,13 +2,14 @@
   (:require
    [clojars.auth :as auth]
    [clojars.db :as db]
+   [clojars.log :as log]
    [clojars.web.token :as view]
    [clojure.string :as str]
    [compojure.core :as compojure :refer [GET POST DELETE]]
-   [ring.util.response :refer [redirect]]
-   [clojars.log :as log])
+   [ring.util.response :refer [redirect]])
   (:import
-   (java.sql Timestamp)))
+   (java.sql
+    Timestamp)))
 
 (defn- get-tokens [db flash-msg]
   (auth/with-account

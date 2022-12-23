@@ -1,6 +1,7 @@
 (ns clojars.unit.config-test
-  (:require [clojars.config :as config]
-            [clojure.test :refer [deftest is]]))
+  (:require
+   [clojars.config :as config]
+   [clojure.test :refer [deftest is]]))
 
 (deftest merge-extra-config-does-a-deep-merge
   (let [base {:db {:username "a" :password "b"}}

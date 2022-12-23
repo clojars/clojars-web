@@ -1,7 +1,8 @@
 (ns clojars.unit.routes.api-test
-  (:require [clojars.db :as db]
-            [clojars.test-helper :as help]
-            [clojure.test :refer [deftest is use-fixtures]]))
+  (:require
+   [clojars.db :as db]
+   [clojars.test-helper :as help]
+   [clojure.test :refer [deftest is use-fixtures]]))
 
 (use-fixtures :each
   help/default-fixture
@@ -71,8 +72,8 @@
   (add-jar 0 "0.1.0")
   (add-jar 0 "0.1.0" :name "other")
   (let [jars (db/find-jars-information help/*db* jarname)]
-      (is (= 2 (count jars)))
-      (is (= #{jarname "other"} (set (map :jar_name jars)))))
+    (is (= 2 (count jars)))
+    (is (= #{jarname "other"} (set (map :jar_name jars)))))
   (let [jars (db/find-jars-information help/*db* jarname jarname)]
-      (is (= 1 (count jars)))
-      (is (= jarname (-> jars first :jar_name)))))
+    (is (= 1 (count jars)))
+    (is (= jarname (-> jars first :jar_name)))))

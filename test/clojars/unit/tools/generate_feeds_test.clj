@@ -1,14 +1,17 @@
 (ns clojars.unit.tools.generate-feeds-test
-  (:require [clojars.db :as db]
-            [clojars.file-utils :as fu]
-            [clojars.maven :as maven]
-            [clojars.s3 :as s3]
-            [clojars.test-helper :as help]
-            [clojars.tools.generate-feeds :as feeds]
-            [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clojure.test :refer [deftest is use-fixtures]])
-  (:import (java.util.zip GZIPInputStream)))
+  (:require
+   [clojars.db :as db]
+   [clojars.file-utils :as fu]
+   [clojars.maven :as maven]
+   [clojars.s3 :as s3]
+   [clojars.test-helper :as help]
+   [clojars.tools.generate-feeds :as feeds]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is use-fixtures]])
+  (:import
+   (java.util.zip
+    GZIPInputStream)))
 
 (defn setup-db [f]
   (doseq [name ["fake" "test"]
@@ -32,32 +35,35 @@
   setup-db
   setup-s3)
 
-(def expected-feed [{:description "FAKE"
-                     :group-id    "fake"
-                     :artifact-id "fake"
-                     :versions    ["0.0.3-SNAPSHOT" "0.0.2" "0.0.1"]}
+(def expected-feed
+  [{:description "FAKE"
+    :group-id    "fake"
+    :artifact-id "fake"
+    :versions    ["0.0.3-SNAPSHOT" "0.0.2" "0.0.1"]}
 
-                    {:description "TEST"
-                     :scm         {:connection           "scm:git:git://github.com/fake/test.git"
-                                   :developer-connection "scm:git:ssh://git@github.com/fake/test.git"
-                                   :tag                  "70470ff6ae74505bdbfe5955fca6797f613c113c"
-                                   :url                  "https://github.com/fake/test"}
-                     :group-id    "org.clojars.dantheman"
-                     :artifact-id "test"
-                     :url         "http://example.com"
-                     :homepage    "http://example.com"
-                     :versions    ["0.0.3-SNAPSHOT" "0.0.2" "0.0.1"]}])
+   {:description "TEST"
+    :scm         {:connection           "scm:git:git://github.com/fake/test.git"
+                  :developer-connection "scm:git:ssh://git@github.com/fake/test.git"
+                  :tag                  "70470ff6ae74505bdbfe5955fca6797f613c113c"
+                  :url                  "https://github.com/fake/test"}
+    :group-id    "org.clojars.dantheman"
+    :artifact-id "test"
+    :url         "http://example.com"
+    :homepage    "http://example.com"
+    :versions    ["0.0.3-SNAPSHOT" "0.0.2" "0.0.1"]}])
 
-(def expected-jar-list '[[fake "0.0.1"]
-                         [fake "0.0.2"]
-                         [fake "0.0.3-SNAPSHOT"]
-                         [org.clojars.dantheman/test "0.0.1"]
-                         [org.clojars.dantheman/test "0.0.2"]
-                         [org.clojars.dantheman/test "0.0.3-SNAPSHOT"]])
+(def expected-jar-list
+  '[[fake "0.0.1"]
+    [fake "0.0.2"]
+    [fake "0.0.3-SNAPSHOT"]
+    [org.clojars.dantheman/test "0.0.1"]
+    [org.clojars.dantheman/test "0.0.2"]
+    [org.clojars.dantheman/test "0.0.3-SNAPSHOT"]])
 
-(def expected-pom-list ["./fake/test/0.0.1/test.pom"
-                        "./fake/test/0.0.2/test.pom"
-                        "./test/test/0.0.1/test.pom"])
+(def expected-pom-list
+  ["./fake/test/0.0.1/test.pom"
+   "./fake/test/0.0.2/test.pom"
+   "./test/test/0.0.1/test.pom"])
 
 (deftest feed-generation-should-work
   (is (= expected-feed (feeds/full-feed help/*db*))))

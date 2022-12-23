@@ -5,8 +5,10 @@
    [cognitect.aws.client.api :as aws]
    [cognitect.aws.credentials :as credentials])
   (:import
-   (java.io ByteArrayInputStream)
-   (org.apache.commons.io IOUtils)))
+   (java.io
+    ByteArrayInputStream)
+   (org.apache.commons.io
+    IOUtils)))
 
 (defprotocol S3Bucket
   (-delete-object [client key])
@@ -27,9 +29,9 @@
                   prefix (assoc :Prefix prefix)
                   marker (assoc :Marker marker))]
     (throw-on-error
-      (aws/invoke client
-                  {:op :ListObjects
-                   :request request}))))
+     (aws/invoke client
+                 {:op :ListObjects
+                  :request request}))))
 
 (defn- list-objects-seq
   "Generates a lazy seq of objects, chunked by the API's paging."
@@ -38,9 +40,9 @@
         (list-objects-chunk client bucket-name prefix marker)]
     (if IsTruncated
       (lazy-seq
-        (concat Contents
-                (list-objects-seq client bucket-name prefix
-                                  (-> Contents last :Key))))
+       (concat Contents
+               (list-objects-seq client bucket-name prefix
+                                 (-> Contents last :Key))))
       Contents)))
 
 (defn- strip-etag
@@ -98,12 +100,12 @@
   {:pre [(not (str/blank? bucket))]}
   (let [client
         (doto
-            (aws/client
-              {:api :s3
-               :credentials-provider (credentials/basic-credentials-provider
-                                       {:access-key-id     access-key-id
-                                        :secret-access-key secret-access-key})
-               :region region})
+         (aws/client
+          {:api :s3
+           :credentials-provider (credentials/basic-credentials-provider
+                                  {:access-key-id     access-key-id
+                                   :secret-access-key secret-access-key})
+           :region region})
           (aws/validate-requests true))]
     (->S3Client client bucket)))
 

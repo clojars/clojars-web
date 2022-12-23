@@ -47,7 +47,7 @@
    api-key
    api-secret
    callback-uri
-  (gitlab-instance)))
+   (gitlab-instance)))
 
 (defn new-gitlab-service [api-key api-secret callback-uri]
   (->GitlabService (build-gitlab-service api-key api-secret callback-uri)))

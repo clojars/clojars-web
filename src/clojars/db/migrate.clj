@@ -1,9 +1,12 @@
 (ns clojars.db.migrate
-  (:require [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql]
-            [clojure.string :as str]
-            [clojars.db :as db])
-  (:import (java.io File)))
+  (:require
+   [clojars.db :as db]
+   [clojure.java.io :as io]
+   [clojure.java.jdbc :as sql]
+   [clojure.string :as str])
+  (:import
+   (java.io
+    File)))
 
 (defn initial-schema [trans]
   (doseq [cmd (map str/trim

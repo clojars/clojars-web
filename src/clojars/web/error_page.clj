@@ -1,7 +1,8 @@
 (ns clojars.web.error-page
-  (:require [clojars.web.common :refer [html-doc]]
-            [ring.util.response :refer [response status content-type]]
-            [hiccup.element :refer [link-to]]))
+  (:require
+   [clojars.web.common :refer [html-doc]]
+   [hiccup.element :refer [link-to]]
+   [ring.util.response :refer [response status content-type]]))
 
 (defn error-page-response [error-options error-id]
   (let [defaults {:title "Oops, we encountered an error"

@@ -1,10 +1,10 @@
 (ns clojars.tools.set-content-types-s3
   "A tool to repair invalid content-types on s3. Needed since the
   original artifacts were uploaded w/o content-types."
+  (:gen-class)
   (:require
    [clojars.s3 :as s3]
-   [cognitect.aws.client.api :as aws])
-  (:gen-class))
+   [cognitect.aws.client.api :as aws]))
 
 (defn print-status
   [{:keys [processed failed]}]
@@ -41,10 +41,10 @@
     (println "Starting content-type setting")
     (flush)
     (let [stats (reduce
-                  (partial set-content-type s3-client)
-                  {:processed 0
-                   :failed 0}
-                  keys)]
+                 (partial set-content-type s3-client)
+                 {:processed 0
+                  :failed 0}
+                 keys)]
       (print-status stats))))
 
 (defn -main [& args]

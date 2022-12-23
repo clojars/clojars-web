@@ -1,6 +1,7 @@
 (ns clojars.routes.common
   (:import
-   (java.util Date)))
+   (java.util
+    Date)))
 
 (defn request-details
   "Captures a map of audit details from the request."

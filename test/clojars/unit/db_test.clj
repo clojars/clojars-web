@@ -7,8 +7,10 @@
    [clojars.test-helper :as help]
    [clojure.test :refer [are deftest is use-fixtures]])
   (:import
-   (clojure.lang ExceptionInfo)
-   (java.sql Timestamp)))
+   (clojure.lang
+    ExceptionInfo)
+   (java.sql
+    Timestamp)))
 
 (use-fixtures :each
   help/with-clean-database)
@@ -25,13 +27,13 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"]
-      (db/add-user help/*db* email name password)
-      (are [x] (submap {:email email
-                        :user name}
-                       x)
-           (db/find-user help/*db* name)
-           (db/find-user-by-user-or-email help/*db* name)
-           (db/find-user-by-user-or-email help/*db* email))))
+    (db/add-user help/*db* email name password)
+    (are [x] (submap {:email email
+                      :user name}
+                     x)
+      (db/find-user help/*db* name)
+      (db/find-user-by-user-or-email help/*db* name)
+      (db/find-user-by-user-or-email help/*db* email))))
 
 (deftest user-does-not-exist
   (is (not (db/find-user-by-user-or-email help/*db* "test2@example.com"))))
@@ -40,15 +42,15 @@
   (let [email "test@example.com"
         name "testuser"
         password "password"]
-      (db/add-user help/*db* email name password)
-      (let [reset-code (db/set-password-reset-code! help/*db* "testuser")]
-        (is (submap {:email email
-                     :user name
-                     :password_reset_code reset-code}
-                    (db/find-user-by-password-reset-code help/*db* reset-code)))
+    (db/add-user help/*db* email name password)
+    (let [reset-code (db/set-password-reset-code! help/*db* "testuser")]
+      (is (submap {:email email
+                   :user name
+                   :password_reset_code reset-code}
+                  (db/find-user-by-password-reset-code help/*db* reset-code)))
 
-        (time/do-at (-> 2 time/days time/from-now)
-          (is (not (db/find-user-by-password-reset-code help/*db* reset-code)))))))
+      (time/do-at (-> 2 time/days time/from-now)
+                  (is (not (db/find-user-by-password-reset-code help/*db* reset-code)))))))
 
 (deftest updated-users-can-be-found
   (let [email "test@example.com"
@@ -66,9 +68,9 @@
                           :user name2
                           :created created-at}
                          x)
-             (db/find-user help/*db* name2)
-             (db/find-user-by-user-or-email help/*db* name2)
-             (db/find-user-by-user-or-email help/*db* email2)))
+          (db/find-user help/*db* name2)
+          (db/find-user-by-user-or-email help/*db* name2)
+          (db/find-user-by-user-or-email help/*db* email2)))
       (is (not (db/find-user help/*db* name))))))
 
 (deftest update-user-works-when-password-is-blank
@@ -121,9 +123,9 @@
     (is (= ["testadmin"] (db/group-adminnames help/*db* "test-group")))
     (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))
 
-;;TODO: Tests below should have the users added first.
-;;Currently user unenforced foreign keys are by name
-;;so these are faking relationships
+;; TODO: Tests below should have the users added first.
+;; Currently user unenforced foreign keys are by name
+;; so these are faking relationships
 
 (deftest added-jars-can-be-found
   (let [name "tester"
@@ -165,11 +167,11 @@
         jarmap {:name name :group name :version "1.0"
                 :licenses [{:name [:gotcha] :url "bar"}]}]
     (is (thrown? ExceptionInfo
-                 (db/add-jar help/*db* "test-user" jarmap)))
+          (db/add-jar help/*db* "test-user" jarmap)))
     (let [jarmap {:name name :group name :version "1.0"
                   :scm {:foo :bar}}]
       (is (thrown? ExceptionInfo
-                 (db/add-jar help/*db* "test-user" jarmap))))))
+            (db/add-jar help/*db* "test-user" jarmap))))))
 
 (deftest jars-with-improper-edn-values-are-properly-read
   ;; redef to allow us to put invalid data in the db
@@ -197,14 +199,14 @@
     (let [deps (db/find-dependencies help/*db* name name "1.0")]
       (is (= 1 (count deps)))
       (is (submap
-            {:jar_name       name
-             :group_name     name
-             :version        "1.0"
-             :dep_jar_name   "bar"
-             :dep_group_name "foo"
-             :dep_version    "1"
-             :dep_scope      "test"}
-            (first deps))))))
+           {:jar_name       name
+            :group_name     name
+            :version        "1.0"
+            :dep_jar_name   "bar"
+            :dep_group_name "foo"
+            :dep_version    "1"
+            :dep_scope      "test"}
+           (first deps))))))
 
 (deftest added-snapshot-jars-do-not-duplicate-dependencies
   (let [name "tester"
@@ -219,14 +221,14 @@
     (let [deps (db/find-dependencies help/*db* name name "1.0-SNAPSHOT")]
       (is (= 1 (count deps)))
       (is (submap
-            {:jar_name       name
-             :group_name     name
-             :version        "1.0-SNAPSHOT"
-             :dep_jar_name   "bar"
-             :dep_group_name "foo"
-             :dep_version    "1"
-             :dep_scope      "test"}
-            (first deps))))))
+           {:jar_name       name
+            :group_name     name
+            :version        "1.0-SNAPSHOT"
+            :dep_jar_name   "bar"
+            :dep_group_name "foo"
+            :dep_version    "1"
+            :dep_scope      "test"}
+           (first deps))))))
 
 (deftest jars-can-be-deleted-by-group
   (let [group "foo"
@@ -239,11 +241,11 @@
     (help/add-verified-group "test-user" "another")
     (db/add-jar help/*db* "test-user" jar)
     (db/add-jar help/*db* "test-user"
-      (assoc jar
-        :name "two"))
+                (assoc jar
+                       :name "two"))
     (db/add-jar help/*db* "test-user"
-      (assoc jar
-        :group "another"))
+                (assoc jar
+                       :group "another"))
     (is (= 2 (count (db/jars-by-groupname help/*db* group))))
     (db/delete-jars help/*db* group)
     (is (empty? (db/jars-by-groupname help/*db* group)))
@@ -260,8 +262,8 @@
     (help/add-verified-group "test-user" group)
     (db/add-jar help/*db* "test-user" jar)
     (db/add-jar help/*db* "test-user"
-      (assoc jar
-        :name "two"))
+                (assoc jar
+                       :name "two"))
     (is (= 2 (count (db/jars-by-groupname help/*db* group))))
     (db/delete-jars help/*db* group "one")
     (is (= 1 (count (db/jars-by-groupname help/*db* group))))
@@ -274,14 +276,14 @@
              :homepage "http://clojars.org/"
              :authors ["Alex Osborne" "a little fish"]
              :dependencies [{:group_name "foo" :jar_name "bar" :version "1" :scope "test"}]}]
-(help/add-verified-group "test-user" group)
+    (help/add-verified-group "test-user" group)
     (help/with-time (Timestamp. (long 0))
       (db/add-jar help/*db* "test-user" jar))
     (db/jars-by-groupname help/*db* group)
     (help/with-time (Timestamp. (long 1))
       (db/add-jar help/*db* "test-user"
-                            (assoc jar
-                                   :version "2.0")))
+                  (assoc jar
+                         :version "2.0")))
     (db/jars-by-groupname help/*db* group)
     (is (= "2.0" (-> (db/jars-by-groupname help/*db* group) first :version)))
     (db/delete-jars help/*db* group "one" "2.0")
@@ -290,7 +292,7 @@
 
 (deftest jars-by-group-only-returns-most-recent-version
   (let [name "tester"
-        jarmap {:name name :group name :version "1" }
+        jarmap {:name name :group name :version "1"}
         result {:jar_name name
                 :version "2"
                 :user "test-user"
@@ -306,7 +308,7 @@
 
 (deftest jars-with-multiple-versions
   (let [name "tester"
-        jarmap {:name name :group name :version "1" }]
+        jarmap {:name name :group name :version "1"}]
     (help/add-verified-group "test-user" name)
     (help/with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
@@ -391,9 +393,9 @@
       (is (= 3 (count jars))))))
 
 (deftest add-jar-validates-group-permissions
-    (let [jarmap {:name "jar-name" :version "1" :group "group-name"}]
-      (db/add-member help/*db* "group-name" "some-user" "some-dude")
-      (is (thrown? Exception (db/add-jar help/*db* "test-user" jarmap)))))
+  (let [jarmap {:name "jar-name" :version "1" :group "group-name"}]
+    (db/add-member help/*db* "group-name" "some-user" "some-dude")
+    (is (thrown? Exception (db/add-jar help/*db* "test-user" jarmap)))))
 
 (deftest recent-jars-returns-6-most-recent-jars-only-most-recent-version
   (let [name "tester"
@@ -444,21 +446,21 @@
     (db/add-jar help/*db* "test-user" {:name "paper" :group "tester" :version "0.1"}))
   (help/with-time (Timestamp. (long 2))
     (db/add-jar help/*db* "test-user" {:name "scissors" :group "tester" :version "0.1"}))
-    ; tests group_name and jar_name ordering
-    (is (=
-          '({:version "0.1", :jar_name "rock", :group_name "jester"}
-            {:version "0.1", :jar_name "paper", :group_name "tester"})
-          (->>
-            (db/browse-projects help/*db* 1 2)
-            (map #(select-keys % [:group_name :jar_name :version])))))
+  ;; tests group_name and jar_name ordering
+  (is (=
+       '({:version "0.1", :jar_name "rock", :group_name "jester"}
+         {:version "0.1", :jar_name "paper", :group_name "tester"})
+       (->>
+        (db/browse-projects help/*db* 1 2)
+        (map #(select-keys % [:group_name :jar_name :version])))))
 
-    ; tests version ordering and pagination
-    (is (=
-          '({:version "0.2", :jar_name "rock", :group_name "tester"}
-            {:version "0.1", :jar_name "scissors", :group_name "tester"})
-          (->>
-            (db/browse-projects help/*db* 2 2)
-            ( map #(select-keys % [:group_name :jar_name :version]))))))
+  ;; tests version ordering and pagination
+  (is (=
+       '({:version "0.2", :jar_name "rock", :group_name "tester"}
+         {:version "0.1", :jar_name "scissors", :group_name "tester"})
+       (->>
+        (db/browse-projects help/*db* 2 2)
+        (map #(select-keys % [:group_name :jar_name :version]))))))
 
 (deftest count-projects-works
   (help/add-verified-group "test-user" "jester")

@@ -68,9 +68,9 @@
        :index-factory #(search/disk-index (:index-path config))
        :stats         (artifact-stats)
        :stats-bucket  (s3-bucket (:s3 config) :stats-bucket))
-        (component/system-using
-         {:search [:index-factory :stats]
-          :stats  [:stats-bucket]})))
+      (component/system-using
+       {:search [:index-factory :stats]
+        :stats  [:stats-bucket]})))
 
 (defn new-system [config]
   (let [{:as config :keys [github-oauth gitlab-oauth]} (meta-merge base-env config)]

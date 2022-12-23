@@ -1,23 +1,23 @@
 (ns clojars.errors
   (:require
-   [raven-clj.core :as raven-clj]
-   [raven-clj.interfaces :as interfaces]
    [clj-stacktrace.repl :refer [pst]]
    [clojars.log :as log]
+   [clojars.web.error-api :as error-api]
    [clojars.web.error-page :as error-page]
-   [clojars.web.error-api :as error-api]))
+   [raven-clj.core :as raven-clj]
+   [raven-clj.interfaces :as interfaces]))
 
 (defn raven-extra-data [e extra]
   (-> (ex-data e)
-    (merge extra)
-    (dissoc :message)))
+      (merge extra)
+      (dissoc :message)))
 
 (defn raven-event-info [id message e extra]
   (cond-> {}
-          message (assoc :message message)
-          e (interfaces/stacktrace e ["clojars"])
-          (or e extra) (assoc :extra (raven-extra-data e extra))
-          id (assoc-in [:extra :error-id] (str id))))
+    message (assoc :message message)
+    e (interfaces/stacktrace e ["clojars"])
+    (or e extra) (assoc :extra (raven-extra-data e extra))
+    id (assoc-in [:extra :error-id] (str id))))
 
 (defn raven-error-report
   ([dsn id message e extra]
@@ -31,21 +31,21 @@
   (-report-error [reporter e extra id]))
 
 (defrecord RavenErrorReporter [raven-config]
-   ErrorReporter
-   (-report-error [_ e extra id]
-     (raven-error-report (:dsn raven-config)
-                         id
-                         (or (:message extra) "RavenErrorReporter capture")
-                         e
-                         extra))
- 
-   Thread$UncaughtExceptionHandler
-   (uncaughtException [_this _thread throwable]
-     (raven-error-report (:dsn raven-config)
-                         nil
-                         "UncaughtExceptionHandler capture"
-                         throwable)))
- 
+  ErrorReporter
+  (-report-error [_ e extra id]
+    (raven-error-report (:dsn raven-config)
+                        id
+                        (or (:message extra) "RavenErrorReporter capture")
+                        e
+                        extra))
+
+  Thread$UncaughtExceptionHandler
+  (uncaughtException [_this _thread throwable]
+    (raven-error-report (:dsn raven-config)
+                        nil
+                        "UncaughtExceptionHandler capture"
+                        throwable)))
+
 (defn raven-error-reporter [raven-config]
   (->RavenErrorReporter raven-config))
 
@@ -92,11 +92,11 @@
    id))
 
 (defn report-ring-error [reporter e request id]
- (report-error reporter
-   e
-   (-> {:message "Ring caught an exception"}
-       (interfaces/http request log/redact))
-   id))
+  (report-error reporter
+                e
+                (-> {:message "Ring caught an exception"}
+                    (interfaces/http request log/redact))
+                id))
 
 (defn wrap-exceptions [app reporter]
   (fn [req]

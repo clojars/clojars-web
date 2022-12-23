@@ -3,7 +3,8 @@
   (:require
    [clojars.db :as db]
    [clojure.tools.logging.readable :as log])
-  (:import java.util.UUID))
+  (:import
+   java.util.UUID))
 
 (set! *warn-on-reflection* true)
 

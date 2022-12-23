@@ -1,13 +1,14 @@
 (ns clojars.main
-  (:require [clojars
-             [admin :as admin]
-             [config :as config]
-             [errors :as err]
-             [system :as system]]
-            [com.stuartsierra.component :as component]
-            [meta-merge.core :refer [meta-merge]]
-            [raven-clj.core :as raven-clj])
-  (:gen-class))
+  (:gen-class)
+  (:require
+   [clojars
+    [admin :as admin]
+    [config :as config]
+    [errors :as err]
+    [system :as system]]
+   [com.stuartsierra.component :as component]
+   [meta-merge.core :refer [meta-merge]]
+   [raven-clj.core :as raven-clj]))
 
 (def prod-env
   {:app {:middleware []}})
@@ -22,20 +23,20 @@
   (-> (meta-merge config prod-env)
       system/new-system
       (assoc
-        :error-reporter (err/multiple-reporters
-                         (err/log-reporter)
-                         prod-reporter))))
+       :error-reporter (err/multiple-reporters
+                        (err/log-reporter)
+                        prod-reporter))))
 
 (defn error-reporter [config]
-    (let [dsn (:sentry-dsn config)]
-      (if (and dsn (not= "NOTSET" dsn))
-        (let [raven-reporter (err/raven-error-reporter {:dsn dsn})]
-          (info "enabling raven-clj client dsn:project-id:" (:project-id (raven-clj/parse-dsn dsn)))
-          (Thread/setDefaultUncaughtExceptionHandler raven-reporter)
-          raven-reporter)
-        (do
-          (warn "no :sentry-dsn set in config, errors won't be logged to Sentry")
-          (err/null-reporter)))))
+  (let [dsn (:sentry-dsn config)]
+    (if (and dsn (not= "NOTSET" dsn))
+      (let [raven-reporter (err/raven-error-reporter {:dsn dsn})]
+        (info "enabling raven-clj client dsn:project-id:" (:project-id (raven-clj/parse-dsn dsn)))
+        (Thread/setDefaultUncaughtExceptionHandler raven-reporter)
+        raven-reporter)
+      (do
+        (warn "no :sentry-dsn set in config, errors won't be logged to Sentry")
+        (err/null-reporter)))))
 
 (defn -main [& _args]
   (try

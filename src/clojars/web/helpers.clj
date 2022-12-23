@@ -1,6 +1,7 @@
 (ns clojars.web.helpers
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]))
+  (:require
+   [clojure.java.io :as io]
+   [clojure.string :as str]))
 
 (defn public-resource-exists?
   "Takes a path and checks whether the resource exists under the public directory

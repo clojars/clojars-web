@@ -1,9 +1,14 @@
 (ns clojars.unit.email-test
-  (:require [bote.core :refer [create-smtp-server]]
-            [clojars.email :as email]
-            [clojure.test :refer [deftest is]])
-  (:import org.apache.commons.mail.EmailException
-           [org.subethamail.smtp.auth EasyAuthenticationHandlerFactory LoginFailedException UsernamePasswordValidator]))
+  (:require
+   [bote.core :refer [create-smtp-server]]
+   [clojars.email :as email]
+   [clojure.test :refer [deftest is]])
+  (:import
+   org.apache.commons.mail.EmailException
+   (org.subethamail.smtp.auth
+    EasyAuthenticationHandlerFactory
+    LoginFailedException
+    UsernamePasswordValidator)))
 
 (deftest simple-mailer-sends-emails
   (let [transport (promise)
@@ -55,10 +60,10 @@
                                    :port 0)]
     (try
       (.start server)
-      ;;TODO actually setting up an ssl server
-      ;;and checking the message would be better
-      ;;but it looks like the tls stuff is a mess
-      ;;this sufficies to say it tried
+      ;; TODO actually setting up an ssl server
+      ;; and checking the message would be better
+      ;; but it looks like the tls stuff is a mess
+      ;; this sufficies to say it tried
       ((email/simple-mailer {:host "localhost"
                              :port (.getPort server)
                              :from "example@example.org"

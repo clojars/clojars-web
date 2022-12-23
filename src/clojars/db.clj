@@ -6,11 +6,11 @@
    [clj-time.coerce :as time.coerce]
    [clj-time.core :as time]
    [clojars.config :refer [config]]
-   [clojure.java.jdbc :as jdbc]
    [clojars.db.sql :as sql]
    [clojars.maven :as mvn]
    [clojars.util :refer [filter-some]]
    [clojure.edn :as edn]
+   [clojure.java.jdbc :as jdbc]
    [clojure.set :as set]
    [clojure.spec.alpha :as s]
    [clojure.string :as str]
@@ -96,8 +96,8 @@
 
 (defn- kw->pgenum [kw]
   (let [type (-> (namespace kw)
-         (str/replace "-" "_"))
-    value (name kw)]
+                 (str/replace "-" "_"))
+        value (name kw)]
     (doto (PGobject.)
       (.setType type)
       (.setValue value))))
@@ -199,8 +199,8 @@
 
 (defn group-admin-emails [db groupname]
   (sql/group-admin-emails {:groupname groupname}
-                        {:connection db
-                         :row-fn :email}))
+                          {:connection db
+                           :row-fn :email}))
 
 (defn group-activenames [db groupname]
   (sql/group-activenames {:groupname groupname}

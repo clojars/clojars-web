@@ -80,9 +80,9 @@
 
 (defn version-badge-url [jar include-prereleases]
   (str
-    (format "https://img.shields.io/clojars/v%s.svg" (jar-url jar))
-    (when include-prereleases
-      "?include_prereleases")))
+   (format "https://img.shields.io/clojars/v%s.svg" (jar-url jar))
+   (when include-prereleases
+     "?include_prereleases")))
 
 (defn badge-markdown [jar include-prereleases]
   (format

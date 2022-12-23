@@ -1,24 +1,27 @@
 (ns clojars.unit.tools.repair-metadata-test
-  (:require [clojars.file-utils :as futil]
-            [clojars.maven :as mvn]
-            [clojars.tools.repair-metadata :as rmd]
-            [clojure.java.io :as io]
-            [clojure.test :refer [deftest is testing use-fixtures]]
-            digest)
-  (:import (org.apache.commons.io FileUtils)))
+  (:require
+   [clojars.file-utils :as futil]
+   [clojars.maven :as mvn]
+   [clojars.tools.repair-metadata :as rmd]
+   [clojure.java.io :as io]
+   [clojure.test :refer [deftest is testing use-fixtures]]
+   [digest])
+  (:import
+   (org.apache.commons.io
+    FileUtils)))
 
 (def ^:dynamic *tmp-repo* nil)
 
 (use-fixtures :each
-              (fn [f]
-                (binding [*tmp-repo* (doto (io/file (FileUtils/getTempDirectory)
-                                                    (str "bad-metadata" (System/currentTimeMillis)))
-                                       .mkdirs)]
-                  (FileUtils/copyDirectory (io/file (io/resource "bad-metadata")) *tmp-repo*)
-                  (try
-                    (f)
-                    (finally
-                      (FileUtils/deleteDirectory *tmp-repo*))))))
+  (fn [f]
+    (binding [*tmp-repo* (doto (io/file (FileUtils/getTempDirectory)
+                                        (str "bad-metadata" (System/currentTimeMillis)))
+                           .mkdirs)]
+      (FileUtils/copyDirectory (io/file (io/resource "bad-metadata")) *tmp-repo*)
+      (try
+        (f)
+        (finally
+          (FileUtils/deleteDirectory *tmp-repo*))))))
 
 (defn metadata-for-artifact [mds artifact-id]
   (first (filter #(= artifact-id (:artifact-id %)) mds)))

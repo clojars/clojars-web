@@ -4,10 +4,11 @@
    [clj-http.client :as client]
    [clj-http.cookies :as http-cookies]
    [clj-http.core :as http-core]
-   [clojars.http-utils :refer [clear-sessions!]]
    [clojars.config :refer [config]]
    [clojars.db :as db]
+   [clojars.email :as email]
    [clojars.file-utils :as fu]
+   [clojars.http-utils :refer [clear-sessions!]]
    [clojars.integration.steps :refer [create-deploy-token login-as register-as]]
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
@@ -19,10 +20,10 @@
    [clojure.test :refer [are deftest is testing use-fixtures]]
    [kerodon.core :refer [fill-in follow press session uncheck visit within]]
    [kerodon.test :refer [has status? text?]]
-   [net.cgrand.enlive-html :as enlive]
-   [clojars.email :as email])
+   [net.cgrand.enlive-html :as enlive])
   (:import
-   (java.sql Timestamp)
+   (java.sql
+    Timestamp)
    (org.eclipse.aether.deployment
     DeploymentException)))
 
@@ -109,11 +110,11 @@
                  [:ul enlive/last-of-type]
                  [:li enlive/only-child]
                  :a]
-                (has (text? "dantheman")))
+          (has (text? "dantheman")))
         (follow "org.clojars.dantheman/test")
         (has (status? 200))
         (within [:#jar-sidebar :li.homepage :a]
-                (has (text? "https://example.org"))))
+          (has (text? "https://example.org"))))
     (-> (session (help/app-from-system))
         (visit "/")
         (fill-in [:#search] "test")
@@ -121,24 +122,24 @@
         (within [:div.result
                  :div
                  :div]
-                (has (text? "org.clojars.dantheman/test 0.0.1"))))
+          (has (text? "org.clojars.dantheman/test 0.0.1"))))
     (-> (session (help/app-from-system))
         (login-as "dantheman" "password")
         (visit "/tokens")
         (within [:td.last-used]
-                (has (text? (common/format-timestamp now)))))))
+          (has (text? (common/format-timestamp now)))))))
 
 (deftest user-can-deploy-using-email-address
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
-      (deploy
-       {:coordinates '[org.clojars.dantheman/test "0.0.1"]
-        :jar-file (io/file (io/resource "test.jar"))
-        :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                    {:groupId "org.clojars.dantheman"})
-        :username "test@example.org"
-        :password token})))
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                  {:groupId "org.clojars.dantheman"})
+      :username "test@example.org"
+      :password token})))
 
 (deftest deploying-with-a-scoped-token
   (-> (session (help/app-from-system))
@@ -184,13 +185,13 @@
         (is (thrown-with-msg?
              DeploymentException
              #"Forbidden - The provided token's scope doesn't allow deploying this artifact"
-             (deploy
-              {:coordinates '[org.dantheman/test "0.0.2"]
-               :jar-file (io/file (io/resource "test.jar"))
-               :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                           {:groupId "org.dantheman"
-                                            :version "0.0.2"})
-               :password  group-scoped-token})))))
+              (deploy
+               {:coordinates '[org.dantheman/test "0.0.2"]
+                :jar-file (io/file (io/resource "test.jar"))
+                :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                            {:groupId "org.dantheman"
+                                             :version "0.0.2"})
+                :password  group-scoped-token})))))
 
     (testing "with an artifact-scoped token"
       (let [artifact-scoped-token (create-deploy-token
@@ -210,13 +211,13 @@
         (is (thrown-with-msg?
              DeploymentException
              #"Forbidden - The provided token's scope doesn't allow deploying this artifact"
-             (deploy
-              {:coordinates '[org.clojars.dantheman/test2 "0.0.1"]
-               :jar-file (io/file (io/resource "test.jar"))
-               :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                           {:groupId "org.clojars.dantheman"
-                                            :artifactId "test2"})
-               :password  artifact-scoped-token})))))))
+              (deploy
+               {:coordinates '[org.clojars.dantheman/test2 "0.0.1"]
+                :jar-file (io/file (io/resource "test.jar"))
+                :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                            {:groupId "org.clojars.dantheman"
+                                             :artifactId "test2"})
+                :password  artifact-scoped-token})))))))
 
 (deftest deploying-with-a-single-use-token
   (-> (session (help/app-from-system))
@@ -239,13 +240,13 @@
       (is (thrown-with-msg?
            DeploymentException
            #"The provided single-use token has already been used"
-           (deploy
-            {:coordinates '[org.clojars.dantheman/test "0.0.2"]
-             :jar-file (io/file (io/resource "test.jar"))
-             :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                         {:groupId "org.clojars.dantheman"
-                                          :version "0.0.2"})
-             :password  token}))))))
+            (deploy
+             {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+              :jar-file (io/file (io/resource "test.jar"))
+              :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                          {:groupId "org.clojars.dantheman"
+                                           :version "0.0.2"})
+              :password  token}))))))
 
 (deftest deploying-with-an-expiring-token
   (-> (session (help/app-from-system))
@@ -268,13 +269,13 @@
         (is (thrown-with-msg?
              DeploymentException
              #"401 Unauthorized"
-             (deploy
-              {:coordinates '[org.clojars.dantheman/test "0.0.2"]
-               :jar-file (io/file (io/resource "test.jar"))
-               :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                           {:groupId "org.clojars.dantheman"
-                                            :version "0.0.2"})
-               :password  token})))
+              (deploy
+               {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+                :jar-file (io/file (io/resource "test.jar"))
+                :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                            {:groupId "org.clojars.dantheman"
+                                             :version "0.0.2"})
+                :password  token})))
 
         (help/match-audit {:username "dantheman"}
                           {:user "dantheman"
@@ -291,12 +292,12 @@
     (is (thrown-with-msg?
          DeploymentException
          #"401 Unauthorized"
-         (deploy
-          {:coordinates '[org.clojars.dantheman/test "0.0.1"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                       {:groupId "org.clojars.dantheman"})
-           :password  token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                        {:groupId "org.clojars.dantheman"})
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -403,11 +404,11 @@
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - You don't have access to the 'org\.clojars\.fixture' group"
-                          (deploy
-                           {:coordinates '[org.clojars.fixture/test "0.0.1"]
-                            :jar-file (io/file (io/resource "test.jar"))
-                            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-                            :password  token})))
+          (deploy
+           {:coordinates '[org.clojars.fixture/test "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+            :password  token})))
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
                        :tag "deploy-forbidden"
@@ -438,12 +439,12 @@
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - Group 'new-group' doesn't exist. See https://bit.ly/3MuKGXO"
-                          (deploy
-                           {:coordinates '[new-group/test "0.0.1"]
-                            :jar-file (io/file (io/resource "test.jar"))
-                            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                                        {:groupId "dashboard"})
-                            :password  token})))
+          (deploy
+           {:coordinates '[new-group/test "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                        {:groupId "dashboard"})
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -488,7 +489,7 @@
         (within [:div.result
                  :div
                  :div]
-                (has (text? "legacy-group/test 0.0.1"))))))
+          (has (text? "legacy-group/test 0.0.1"))))))
 
 (deftest user-cannot-deploy-new-project-to-non-verified-group
   (-> (session (help/app-from-system))
@@ -498,12 +499,12 @@
 
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - Group 'legacy-group' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"
-                          (deploy
-                           {:coordinates '[legacy-group/test "0.0.1"]
-                            :jar-file (io/file (io/resource "test.jar"))
-                            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                                        {:groupId "dashboard"})
-                            :password  token})))
+          (deploy
+           {:coordinates '[legacy-group/test "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                        {:groupId "dashboard"})
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -525,11 +526,11 @@
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - redeploying non-snapshots"
-         (deploy
-          {:coordinates '[org.clojars.dantheman/test "0.0.1"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-           :password  token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+            :password  token})))
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
                        :group_name "org.clojars.dantheman"
@@ -546,13 +547,13 @@
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - shadowing Maven Central"
-         (deploy
-          {:coordinates '[org.tcrawley/dynapath "0.0.1"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                       {:groupId "org.tcrawley"
-                                        :artifactId "dynapath"})
-           :password  token})))
+          (deploy
+           {:coordinates '[org.tcrawley/dynapath "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                        {:groupId "org.tcrawley"
+                                         :artifactId "dynapath"})
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -726,13 +727,13 @@
     (is (thrown-with-msg?
          DeploymentException
          #"test-0.0.1.pom has no signature"
-         (deploy
-          {:coordinates '[org.clojars.dantheman/test "0.0.1"]
-           :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
-                          [:extension "pom"] pom
-                          ;; any content will do since we don't validate signatures
-                          [:extension "jar.asc"] pom}
-           :password token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+            :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
+                           [:extension "pom"] pom
+                           ;; any content will do since we don't validate signatures
+                           [:extension "jar.asc"] pom}
+            :password token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -746,22 +747,22 @@
   (is (thrown-with-msg?
        DeploymentException
        #"Unauthorized"
-       (deploy
-        {:coordinates '[org.clojars.dantheman/test "1.0.0"]
-         :jar-file (io/file (io/resource "test.jar"))
-         :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :repository {"test" {:url (repo-url)}}
-         :local-repo help/local-repo}))))
+        (deploy
+         {:coordinates '[org.clojars.dantheman/test "1.0.0"]
+          :jar-file (io/file (io/resource "test.jar"))
+          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+          :repository {"test" {:url (repo-url)}}
+          :local-repo help/local-repo}))))
 
 (deftest bad-login-cannot-deploy
   (is (thrown-with-msg?
        DeploymentException
        #"Unauthorized - a deploy token is required to deploy"
-       (deploy
-        {:coordinates '[org.clojars.dantheman/test "1.0.0"]
-         :jar-file (io/file (io/resource "test.jar"))
-         :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-         :password  "password"})))
+        (deploy
+         {:coordinates '[org.clojars.dantheman/test "1.0.0"]
+          :jar-file (io/file (io/resource "test.jar"))
+          :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+          :password  "password"})))
 
   (help/match-audit {:username "dantheman"}
                     {:user    "dantheman"
@@ -775,11 +776,11 @@
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - the group in the pom \(org.clojars.dantheman\) does not match the group you are deploying to \(net.clojars.dantheman\)"
-         (deploy
-          {:coordinates '[net.clojars.dantheman/test "0.0.1"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-           :password  token})))
+          (deploy
+           {:coordinates '[net.clojars.dantheman/test "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -792,11 +793,11 @@
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - the name in the pom \(test\) does not match the name you are deploying to \(toast\)"
-         (deploy
-          {:coordinates '[org.clojars.dantheman/toast "0.0.1"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-           :password  token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/toast "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -809,11 +810,11 @@
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - the version in the pom \(0.0.1\) does not match the version you are deploying to \(1.0.0\)"
-         (deploy
-          {:coordinates '[org.clojars.dantheman/test "1.0.0"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-           :password  token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/test "1.0.0"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -830,12 +831,12 @@
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - the component group in the gradle module \(org.clojars.dantheman\) does not match the coordinate you are deploying to \(net.clojars.dantheman\)"
-         (deploy
-          {:coordinates '[net.clojars.dantheman/test "0.0.1"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-           :module-file (io/file (io/resource "test-0.0.1/test.module"))
-           :password  token})))
+          (deploy
+           {:coordinates '[net.clojars.dantheman/test "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+            :module-file (io/file (io/resource "test-0.0.1/test.module"))
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -848,12 +849,12 @@
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - the component module in the gradle module \(test\) does not match the coordinate you are deploying to \(toast\)"
-         (deploy
-          {:coordinates '[org.clojars.dantheman/toast "0.0.1"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-           :module-file (io/file (io/resource "test-0.0.1/test.module"))
-           :password  token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/toast "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+            :module-file (io/file (io/resource "test-0.0.1/test.module"))
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -866,12 +867,12 @@
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - the component version in the gradle module \(0.0.1\) does not match the coordinate you are deploying to \(1.0.0\)"
-         (deploy
-          {:coordinates '[org.clojars.dantheman/test "1.0.0"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
-           :module-file (io/file (io/resource "test-0.0.1/test.module"))
-           :password  token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/test "1.0.0"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+            :module-file (io/file (io/resource "test-0.0.1/test.module"))
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -887,12 +888,12 @@
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - project names must consist solely of lowercase"
-                          (deploy
-                           {:coordinates '[org.clojars.dantheman/teST "0.0.1"]
-                            :jar-file (io/file (io/resource "test.jar"))
-                            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                                        {:artifactId "teST"})
-                            :password  token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/teST "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                        {:artifactId "teST"})
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -908,12 +909,12 @@
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - version strings must consist solely of letters"
-                          (deploy
-                           {:coordinates '[org.clojars.dantheman/test "1.α.0"]
-                            :jar-file (io/file (io/resource "test.jar"))
-                            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                                        {:version "1.α.0"})
-                            :password  token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/test "1.α.0"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                        {:version "1.α.0"})
+            :password  token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -1076,10 +1077,10 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
     (deploy
-      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
-       :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                   {:groupId "org.clojars.dantheman"})
-       :password  token})
+     {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+      :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                  {:groupId "org.clojars.dantheman"})
+      :password  token})
 
     (help/match-audit {:username "dantheman"}
                       {:tag "deployed"

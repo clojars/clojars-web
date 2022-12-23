@@ -1,6 +1,7 @@
 (ns clojars.unit.web.structured-data-test
-  (:require [clojars.web.structured-data :as structured-data]
-            [clojure.test :refer [deftest is]]))
+  (:require
+   [clojars.web.structured-data :as structured-data]
+   [clojure.test :refer [deftest is]]))
 
 (deftest meta-name-test
   (is (nil? (structured-data/meta-name "description" "")))
@@ -15,7 +16,7 @@
 (deftest breadcrumbs-test
   (is (= "<script type=\"application/ld+json\">{\"@context\":\"http://schema.org\",\"@type\":\"BreadcrumbList\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"item\":{\"@id\":\"https://clojars.org/groups/sky\",\"name\":\"sky\"}},{\"@type\":\"ListItem\",\"position\":2,\"item\":{\"@id\":\"https://clojars.org/sky/high\",\"name\":\"high\"}}]}</script>"
          (.to-str (structured-data/breadcrumbs
-                    [{:url  "https://clojars.org/groups/sky"
-                      :name "sky"}
-                     {:url  "https://clojars.org/sky/high"
-                      :name "high"}])))))
+                   [{:url  "https://clojars.org/groups/sky"
+                     :name "sky"}
+                    {:url  "https://clojars.org/sky/high"
+                     :name "high"}])))))

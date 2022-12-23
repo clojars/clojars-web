@@ -1,10 +1,10 @@
 (ns clojars.friend.registration
   (:require
    [cemerick.friend.workflows :as workflow]
-   [ring.util.response :refer [response content-type]]
-   [clojars.web.user :refer [register-form new-user-validations]]
    [clojars.db :refer [add-user]]
    [clojars.log :as log]
+   [clojars.web.user :refer [register-form new-user-validations]]
+   [ring.util.response :refer [response content-type]]
    [valip.core :refer [validate]]))
 
 (defn register [db {:keys [email username password confirm]}]

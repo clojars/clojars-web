@@ -1,6 +1,7 @@
 (ns clojars.event
   "Rudimentary event emission and handling using tap>."
-  (:require [com.stuartsierra.component :as component]))
+  (:require
+   [com.stuartsierra.component :as component]))
 
 (defn emit
   "Emits an event of `type` with `data`. Returns true if the event was
@@ -28,7 +29,7 @@
   remove-tap)
 
 (defrecord EventHandler
-    [handler]
+           [handler]
   component/Lifecycle
   (start [this]
     (assoc this :f (add-handler (partial handler this))))

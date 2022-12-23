@@ -1,7 +1,8 @@
 (ns clojars.config
-  (:require [aero.core :as aero]
-            [clojure.java.io :as io]
-            [meta-merge.core :refer [meta-merge]]))
+  (:require
+   [aero.core :as aero]
+   [clojure.java.io :as io]
+   [meta-merge.core :refer [meta-merge]]))
 
 (defn get-extra-config-path
   []
@@ -12,9 +13,9 @@
 (defn merge-extra-config
   [default-config]
   (meta-merge
-    default-config
-    (when-let [extra-config (get-extra-config-path)]
-      (aero/read-config extra-config))))
+   default-config
+   (when-let [extra-config (get-extra-config-path)]
+     (aero/read-config extra-config))))
 
 (defn jdbc-url [db-config]
   (if (string? db-config)

@@ -97,7 +97,7 @@
     "clojure-contrib"})
 
 (def other-artifacts
-  ;eg {"simulant" "org.datomic"}
+  ;; eg {"simulant" "org.datomic"}
   {})
 
 (def artifact-id->group-id

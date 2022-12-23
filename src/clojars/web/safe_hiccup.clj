@@ -1,12 +1,13 @@
 (ns clojars.web.safe-hiccup
   "Hiccup requires explicit (h ..) calls in order to preven XSS.  This
 does some monkey patching to automatically escape strings."
-  (:require [hiccup.core :refer [html]]
-            [hiccup.page :refer [doctype]]
-            [hiccup.compiler :refer [HtmlRenderer]]
-            [hiccup.util :refer [escape-html ToString]]
-            [ring.middleware.anti-forgery :refer [ *anti-forgery-token*]]
-            [hiccup.form :as form]))
+  (:require
+   [hiccup.compiler :refer [HtmlRenderer]]
+   [hiccup.core :refer [html]]
+   [hiccup.form :as form]
+   [hiccup.page :refer [doctype]]
+   [hiccup.util :refer [escape-html ToString]]
+   [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]))
 
 (deftype RawString [s]
   HtmlRenderer
@@ -29,13 +30,13 @@ does some monkey patching to automatically escape strings."
     (if (options :xml?)
       `(let [options# ~options]
          (html {:mode :xml}
-           (raw (xml-declaration (options# :encoding "UTF-8")))
-           (raw (doctype :html5))
-           (xhtml-tag (options# :lang) ~@contents)))
+               (raw (xml-declaration (options# :encoding "UTF-8")))
+               (raw (doctype :html5))
+               (xhtml-tag (options# :lang) ~@contents)))
       `(let [options# ~options]
          (html {:mode :html}
-           (raw (doctype :html5))
-           [:html {:lang (options# :lang)} ~@contents])))))
+               (raw (doctype :html5))
+               [:html {:lang (options# :lang)} ~@contents])))))
 
 (defmacro form-to
   "Create a form that points to a particular method and route.

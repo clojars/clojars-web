@@ -13,22 +13,22 @@
 (defn select-all
   [db table]
   (jdbc/query
-    db
-    [(format "select * from %s" (name table))]))
+   db
+   [(format "select * from %s" (name table))]))
 
 (defn clear-psql-db
   [psql-db]
   (jdbc/db-do-commands
-    psql-db
-    (mapv
-      #(format "delete from %s" (name %))
-      tables)))
+   psql-db
+   (mapv
+    #(format "delete from %s" (name %))
+    tables)))
 
 (defn translate-date
-    [d]
-    (if (and d (int? d))
-      (java.sql.Timestamp. d)
-      d))
+  [d]
+  (if (and d (int? d))
+    (java.sql.Timestamp. d)
+    d))
 
 (def date-fields
   #{:created
@@ -66,10 +66,10 @@
 (defn translate-row
   [row]
   (-> (walk/postwalk
-        (comp convert-dates
-              convert-booleans
-              drop-fields)
-        row)
+       (comp convert-dates
+             convert-booleans
+             drop-fields)
+       row)
       (walk/stringify-keys)
       ;; user columns have to be quoted since user is a reserved word
       ;; in postgres
@@ -85,9 +85,9 @@
 (defn existing-ids
   [db table]
   (set
-    (jdbc/query db
-                [(format "select id from %s" (name table))]
-                {:row-fn :id})))
+   (jdbc/query db
+               [(format "select id from %s" (name table))]
+               {:row-fn :id})))
 
 (defn -main
   [& [sqlite-db-path pg-host pg-port pg-user pg-password :as args]]

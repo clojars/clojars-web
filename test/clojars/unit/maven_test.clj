@@ -1,16 +1,17 @@
 (ns clojars.unit.maven-test
-  (:require [clojars.config :refer [config]]
-            [clojars.maven :as maven]
-            [clojure.java.io :as io]
-            [clojure.test :refer [are deftest is]]))
+  (:require
+   [clojars.config :refer [config]]
+   [clojars.maven :as maven]
+   [clojure.java.io :as io]
+   [clojure.test :refer [are deftest is]]))
 
 (deftest pom-to-map-returns-correct-dependencies
   (is (=
-        [{:group_name "org.clojure", :jar_name "clojure", :version "1.3.0-beta1" :scope "compile"}
-         {:group_name "com.example", :jar_name "versionless", :version "" :scope "compile"}
-         {:group_name "org.clojurer", :jar_name "clojure", :version "1.6.0" :scope "provided"}
-         {:group_name "midje", :jar_name "midje", :version "1.3-alpha4", :scope "test"}]
-     (:dependencies (maven/pom-to-map (.toString (io/resource "test-maven/test-maven.pom")))))))
+       [{:group_name "org.clojure", :jar_name "clojure", :version "1.3.0-beta1" :scope "compile"}
+        {:group_name "com.example", :jar_name "versionless", :version "" :scope "compile"}
+        {:group_name "org.clojurer", :jar_name "clojure", :version "1.6.0" :scope "provided"}
+        {:group_name "midje", :jar_name "midje", :version "1.3-alpha4", :scope "test"}]
+       (:dependencies (maven/pom-to-map (.toString (io/resource "test-maven/test-maven.pom")))))))
 
 (deftest pom-to-map-handles-group-and-version-inheritance
   (let [m (maven/pom-to-map (.toString (io/resource "test-maven/test-maven-child.pom")))]
@@ -44,7 +45,7 @@
     > "0.0.1-alpha2"          "0.0.1-alpha1"
     < "0.0.1-alpha"           "0.0.1-alpha1"
     > "0.0.1-beta1"           "0.0.1-alpha2"
-    > "0.0.1-beta2"           "0.0.1-alpha" 
+    > "0.0.1-beta2"           "0.0.1-alpha"
     > "0.0.1-alpha22"         "0.0.1-alpha1"
     < "0.0.1-alpha2"          "0.0.1"
     < "0.0.1"                 "0.0.2"

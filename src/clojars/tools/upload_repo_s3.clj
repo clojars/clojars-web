@@ -1,9 +1,9 @@
 (ns clojars.tools.upload-repo-s3
+  (:gen-class)
   (:require
    [clojars.file-utils :as fu]
    [clojars.s3 :as s3]
-   [clojure.java.io :as io])
-  (:gen-class))
+   [clojure.java.io :as io]))
 
 (defn print-status
   [{:keys [changed new skipped]}]
@@ -17,8 +17,8 @@
 (defn maybe-upload-file
   [s3-client existing repo stats f]
   (let [path (fu/subpath
-               (.getAbsolutePath repo)
-               (.getAbsolutePath f))]
+              (.getAbsolutePath repo)
+              (.getAbsolutePath f))]
     ;; ETag from s3 is an md5 sum, but only for non-multipart
     ;; uploads. Luckily, we don't upload artifacts as multipart
     (when (= 0 (rem (apply + (vals stats)) 1000))
@@ -47,11 +47,11 @@
     (println "Starting upload")
     (flush)
     (let [stats (reduce
-                  (partial maybe-upload-file s3-client existing repo)
-                  {:skipped 0
-                   :changed 0
-                   :new 0}
-                  local-files)]
+                 (partial maybe-upload-file s3-client existing repo)
+                 {:skipped 0
+                  :changed 0
+                  :new 0}
+                 local-files)]
       (print-status stats))))
 
 (defn -main [& args]

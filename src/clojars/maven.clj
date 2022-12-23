@@ -1,13 +1,20 @@
 (ns clojars.maven
   (:refer-clojure :exclude [parse-long])
-  (:require [clojars.file-utils :as fu]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io])
-  (:import (org.apache.maven.artifact.repository.metadata Metadata)
-           (org.apache.maven.artifact.repository.metadata.io.xpp3 MetadataXpp3Writer)
-           org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
-           (org.apache.maven.model Scm Model License)
-           org.apache.maven.model.io.xpp3.MavenXpp3Reader))
+  (:require
+   [clojars.file-utils :as fu]
+   [clojure.edn :as edn]
+   [clojure.java.io :as io])
+  (:import
+   (org.apache.maven.artifact.repository.metadata
+    Metadata)
+   (org.apache.maven.artifact.repository.metadata.io.xpp3
+    MetadataXpp3Reader
+    MetadataXpp3Writer)
+   (org.apache.maven.model
+    License
+    Model
+    Scm)
+   org.apache.maven.model.io.xpp3.MavenXpp3Reader))
 
 (defn without-nil-values
   "Prunes a map of pairs that have nil values."
@@ -21,39 +28,39 @@
 (defn scm-to-map [^Scm scm]
   (when scm
     (without-nil-values
-      {:connection           (.getConnection scm)
-       :developer-connection (.getDeveloperConnection scm)
-       :tag                  (.getTag scm)
-       :url                  (.getUrl scm)})))
+     {:connection           (.getConnection scm)
+      :developer-connection (.getDeveloperConnection scm)
+      :tag                  (.getTag scm)
+      :url                  (.getUrl scm)})))
 
 (defn license-to-map [^License license]
   (without-nil-values
-    {:name         (.getName license)
-     :url          (.getUrl license)
-     :distribution (.getDistribution license)
-     :comments     (.getComments license)}))
+   {:name         (.getName license)
+    :url          (.getUrl license)
+    :distribution (.getDistribution license)
+    :comments     (.getComments license)}))
 
 (defn model-to-map [^Model model]
   (without-nil-values
-    {:name         (or (.getArtifactId model)
-                       (-> model .getParent .getArtifactId))
-     :group        (or (.getGroupId model)
-                       (-> model .getParent .getGroupId))
-     :version      (or (.getVersion model)
-                       (-> model .getParent .getVersion))
-     :description  (.getDescription model)
-     :homepage     (.getUrl model)
-     :url          (.getUrl model)
-     :licenses     (mapv license-to-map (.getLicenses model))
-     :scm          (scm-to-map (.getScm model))
-     :authors      (mapv #(.getName %) (.getContributors model))
-     :packaging    (keyword (.getPackaging model))
-     :dependencies (mapv
-                     (fn [d] {:group_name (.getGroupId d)
-                             :jar_name   (.getArtifactId d)
-                             :version    (or (.getVersion d) "")
-                             :scope      (or (.getScope d) "compile")})
-                     (.getDependencies model))}))
+   {:name         (or (.getArtifactId model)
+                      (-> model .getParent .getArtifactId))
+    :group        (or (.getGroupId model)
+                      (-> model .getParent .getGroupId))
+    :version      (or (.getVersion model)
+                      (-> model .getParent .getVersion))
+    :description  (.getDescription model)
+    :homepage     (.getUrl model)
+    :url          (.getUrl model)
+    :licenses     (mapv license-to-map (.getLicenses model))
+    :scm          (scm-to-map (.getScm model))
+    :authors      (mapv #(.getName %) (.getContributors model))
+    :packaging    (keyword (.getPackaging model))
+    :dependencies (mapv
+                   (fn [d] {:group_name (.getGroupId d)
+                            :jar_name   (.getArtifactId d)
+                            :version    (or (.getVersion d) "")
+                            :scope      (or (.getScope d) "compile")})
+                   (.getDependencies model))}))
 
 (defn read-pom
   "Reads a pom file returning a maven Model object."
@@ -97,11 +104,11 @@
         (re-matches #"(0|[1-9][0-9]*)(?:\.(0|[1-9][0-9]*)(?:\.(0|[1-9][0-9]*))?)?(?:(-|\.)((0|[1-9][0-9]*)|(.*)))?" s)]
     (try
       (without-nil-values
-        {:major        (parse-long major)
-         :minor        (parse-long minor)
-         :incremental  (parse-long incremental)
-         :build-number (parse-long build-number)
-         :qualifier    (if match qualifier s)})
+       {:major        (parse-long major)
+        :minor        (parse-long minor)
+        :incremental  (parse-long incremental)
+        :build-number (parse-long build-number)
+        :qualifier    (if match qualifier s)})
       (catch NumberFormatException _
         {:qualifier s}))))
 
@@ -120,13 +127,13 @@
       (let [to-lower (fn [s]
                        (when-not (empty? s) (.toLowerCase s)))]
         [(to-lower (if (and (empty? prefix)
-                          (empty? counter))
-                      suffix
-                      prefix))
+                            (empty? counter))
+                     suffix
+                     prefix))
          (when-not (empty? counter)
            (parse-long counter))
          (when-not (and (empty? prefix)
-                     (empty? counter))
+                        (empty? counter))
            (to-lower suffix))]))))
 
 (def common-qualifiers
@@ -137,11 +144,11 @@
   (let [x-value (when (some #{x} common-qualifiers) (.indexOf common-qualifiers x))
         y-value (when (some #{y} common-qualifiers) (.indexOf common-qualifiers y))]
     (cond
-      (not (or x-value y-value))   0 ; neither are common. no winner
-      (and x-value (not y-value)) -1 ; x is known, but y isn't. x wins
-      (and y-value (not x-value))  1 ; y is known, but x isn't. y wins
-      (< -1 x-value y-value)      -1 ; both fractions are common, x has a lower sort order
-      (< -1 y-value x-value)       1 ; both fractions are common, y has a lower sort order
+      (not (or x-value y-value))   0 ;; neither are common. no winner
+      (and x-value (not y-value)) -1 ;; x is known, but y isn't. x wins
+      (and y-value (not x-value))  1 ;; y is known, but x isn't. y wins
+      (< -1 x-value y-value)      -1 ;; both fractions are common, x has a lower sort order
+      (< -1 y-value x-value)       1 ;; both fractions are common, y has a lower sort order
       :else                        0)))
 
 (defn compare-qualifiers [qx qy]
@@ -152,17 +159,17 @@
     (if qx
       (if qy
         (numeric-or
-          (compare-qualifier-fraction qx-prefix qy-prefix)
-          (compare qx-counter qy-counter)
-          (compare-qualifier-fraction qx-suffix qy-suffix)
-          (cond
-            (and (> (count qx) (count qy)) (.startsWith qx qy)) -1 ; x is longer, it's older
-            (and (< (count qx) (count qy)) (.startsWith qy qx))  1 ; y is longer, it's older
-            :else (compare qx qy)))                                ; same length, so string compare
-        -1)                       ; y has no qualifier, it's younger
+         (compare-qualifier-fraction qx-prefix qy-prefix)
+         (compare qx-counter qy-counter)
+         (compare-qualifier-fraction qx-suffix qy-suffix)
+         (cond
+           (and (> (count qx) (count qy)) (.startsWith qx qy)) -1 ;; x is longer, it's older
+           (and (< (count qx) (count qy)) (.startsWith qy qx))  1 ;; y is longer, it's older
+           :else (compare qx qy)))                                ;; same length, so string compare
+        -1)                       ;; y has no qualifier, it's younger
       (if qy
-        1                         ; x has no qualifier, it's younger
-        0)))                      ; no qualifiers
+        1                         ;; x has no qualifier, it's younger
+        0)))                      ;; no qualifiers
   )
 
 (defn compare-versions
@@ -172,11 +179,11 @@
   (let [x (if (string? x) (parse-version x) x)
         y (if (string? y) (parse-version y) y)]
     (numeric-or
-      (compare (:major x 0) (:major y 0))
-      (compare (:minor x 0) (:minor y 0))
-      (compare (:incremental x 0) (:incremental y 0))
-      (compare-qualifiers (:qualifier x) (:qualifier y))
-      (compare (:build-number x 0) (:build-number y 0)))))
+     (compare (:major x 0) (:major y 0))
+     (compare (:minor x 0) (:minor y 0))
+     (compare (:incremental x 0) (:incremental y 0))
+     (compare-qualifiers (:qualifier x) (:qualifier y))
+     (compare (:build-number x 0) (:build-number y 0)))))
 
 (defn snapshot-version? [version]
   (.endsWith version "-SNAPSHOT"))
@@ -186,7 +193,7 @@
   [group name]
   (try
     (read-metadata
-      (format "https://repo1.maven.org/maven2/%s/%s/maven-metadata.xml" (fu/group->path group) name))
+     (format "https://repo1.maven.org/maven2/%s/%s/maven-metadata.xml" (fu/group->path group) name))
     (catch java.io.FileNotFoundException _)))
 
 (defn exists-on-central?*
@@ -198,8 +205,8 @@
                 (boolean (central-metadata group-id artifact-id))
                 (catch Exception _ :failure))]
       (if (and
-            (= ret :failure)
-            (< attempt 9))
+           (= ret :failure)
+           (< attempt 9))
         (do
           (Thread/sleep (bit-shift-left 1 (inc attempt)))
           (recur (inc attempt)))
@@ -215,5 +222,5 @@
 
 (defn can-shadow-maven? [group-id artifact-id]
   (contains? @shadow-allowlist
-    (symbol (format "%s/%s" group-id artifact-id))))
+             (symbol (format "%s/%s" group-id artifact-id))))
 

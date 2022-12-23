@@ -21,9 +21,10 @@
 
 (def privkey (keys/private-key (io/resource "ecdsa-key.pem")))
 (def pubkey-str (slurp (io/resource "ecdsa-key-pub.pem")))
-(def github-response {:public_keys [{:key_identifier "abcd"
-                                     :key pubkey-str
-                                     :is_current true}]})
+(def github-response
+  {:public_keys [{:key_identifier "abcd"
+                  :key pubkey-str
+                  :is_current true}]})
 
 (defn- build-breach-request
   [token-value]

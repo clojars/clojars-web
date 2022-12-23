@@ -1,18 +1,20 @@
 (ns user
   (:refer-clojure :exclude [test])
-  (:require [clojars
-             [config :as config]
-             [errors :as errors]
-             [system :as system]]
-            [clojars.db.migrate :as migrate]
-            [clojars.s3 :as s3]
-            [clojure.java.io :as io]
-            [clojure.tools.namespace.repl :refer [refresh]]
-            [eftest.runner :as eftest]
-            [meta-merge.core :refer [meta-merge]]
-            [reloaded.repl :refer [system init stop go clear]])
+  (:require
+   [clojars
+    [config :as config]
+    [errors :as errors]
+    [system :as system]]
+   [clojars.db.migrate :as migrate]
+   [clojars.s3 :as s3]
+   [clojure.java.io :as io]
+   [clojure.tools.namespace.repl :refer [refresh]]
+   [eftest.runner :as eftest]
+   [meta-merge.core :refer [meta-merge]]
+   [reloaded.repl :refer [system init stop go clear]])
   (:import
-   (java.io ByteArrayInputStream)))
+   (java.io
+    ByteArrayInputStream)))
 
 (def dev-env
   {:app {:middleware []}})
@@ -40,8 +42,8 @@
 
 (defn test [& tests]
   (let [tests (if (empty? tests)
-                  (eftest/find-tests "test")
-                  tests)]
+                (eftest/find-tests "test")
+                tests)]
     (binding [config/*profile* "test"]
       (eftest/run-tests tests {:report eftest.report.pretty/report
                                :multithread? false}))))

@@ -1,6 +1,7 @@
 (ns clojars.unit.middleware-test
-  (:require [clojars.middleware :as middleware]
-            [clojure.test :refer [deftest is]]))
+  (:require
+   [clojars.middleware :as middleware]
+   [clojure.test :refer [deftest is]]))
 
 (def trailing-slash (middleware/wrap-ignore-trailing-slash (fn [x] (get x :uri))))
 

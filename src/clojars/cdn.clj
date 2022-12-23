@@ -1,6 +1,7 @@
 (ns clojars.cdn
-  (:require [cheshire.core :as json]
-            [clj-http.client :as http]))
+  (:require
+   [cheshire.core :as json]
+   [clj-http.client :as http]))
 
 (defn purge [key cdn-url path]
   (let [res (http/request {:method "PURGE"

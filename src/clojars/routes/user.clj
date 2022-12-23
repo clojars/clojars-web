@@ -3,13 +3,13 @@
    [cemerick.friend.credentials :as creds]
    [clojars.auth :as auth]
    [clojars.db :as db]
-   [clojars.http-utils :as http-utils]
    [clojars.event :as event]
+   [clojars.http-utils :as http-utils]
+   [clojars.log :as log]
    [clojars.routes.common :as common]
    [clojars.web.user :as view]
    [compojure.core :as compojure :refer [DELETE GET POST PUT]]
-   [ring.util.response :refer [redirect]]
-   [clojars.log :as log]))
+   [ring.util.response :refer [redirect]]))
 
 (defn show [db username]
   (when-let [user (db/find-user db username)]
@@ -126,11 +126,11 @@
          (auth/with-account
            #(create-mfa db % (db/find-user db %) params)))
    (PUT "/mfa" {:as request :keys [params]}
-         (auth/with-account
-           #(confirm-mfa db % (db/find-user db %) params (common/request-details request))))
+        (auth/with-account
+          #(confirm-mfa db % (db/find-user db %) params (common/request-details request))))
    (DELETE "/mfa" {:as request :keys [params]}
-         (auth/with-account
-           #(disable-mfa db % (db/find-user db %) params (common/request-details request))))
+           (auth/with-account
+             #(disable-mfa db % (db/find-user db %) params (common/request-details request))))
 
    (GET "/notification-preferences" {:keys [flash]}
         (auth/with-account

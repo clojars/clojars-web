@@ -12,8 +12,6 @@
     Paths)
    (java.util
     Date)
-   (org.apache.lucene.search.similarities
-    BM25Similarity)
    (org.apache.lucene.analysis
     Analyzer
     Analyzer$TokenStreamComponents
@@ -45,6 +43,8 @@
     IndexSearcher
     ScoreDoc
     TopDocs)
+   (org.apache.lucene.search.similarities
+    BM25Similarity)
    (org.apache.lucene.store
     Directory
     NIOFSDirectory)))

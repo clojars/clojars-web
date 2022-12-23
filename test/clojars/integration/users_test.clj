@@ -24,7 +24,7 @@
       (follow-redirect)
       (has (status? 200))
       (within [:div.light-article :> :h1]
-              (has (text? "Dashboard (dantheman)")))))
+        (has (text? "Dashboard (dantheman)")))))
 
 (deftest bad-registration-info-should-show-error
   (-> (session (help/app))
@@ -34,14 +34,14 @@
       (follow "register")
       (has (status? 200))
       (within [:title]
-              (has (text? "Register - Clojars")))
+        (has (text? "Register - Clojars")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "dantheman")
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Password can't be blankPassword must be 8 characters or longer")))
+        (has (text? "Password can't be blankPassword must be 8 characters or longer")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "dantheman")
@@ -50,9 +50,9 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Password must be 256 or fewer characters")))
+        (has (text? "Password must be 256 or fewer characters")))
 
-       (fill-in "Password" "password")
+      (fill-in "Password" "password")
       (fill-in "Email" "test@example.com")
       (fill-in "Username" "dantheman")
       (press "Register")
@@ -60,7 +60,7 @@
       (has (value? [:input#username] "dantheman"))
       (has (value? [:input#email] "test@example.com"))
       (within [:div.error :ul :li]
-              (has (text? "Password and confirm password must match")))
+        (has (text? "Password and confirm password must match")))
 
       (fill-in "Email" "")
       (fill-in "Username" "dantheman")
@@ -69,7 +69,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Email can't be blankEmail must have an @ sign and a domain")))
+        (has (text? "Email can't be blankEmail must have an @ sign and a domain")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "")
@@ -78,14 +78,14 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.Username can't be blank")))
+        (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.Username can't be blank")))
       (fill-in "Username" "<script>")
       (fill-in "Password" "password")
       (fill-in "Confirm password" "password")
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.")))
+        (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.")))
 
       (fill-in "Username" "fixture")
       (fill-in "Password" "password")
@@ -93,7 +93,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Username is already taken")))))
+        (has (text? "Username is already taken")))))
 
 (deftest user-can-update-info
   (with-test-system
@@ -109,17 +109,17 @@
         (press "Update")
         (follow-redirect)
         (within [:div#notice]
-                (has (text? "Profile updated.")))
+          (has (text? "Profile updated.")))
         (follow "logout")
         (follow-redirect)
         (has (status? 200))
         (within [:nav [:li enlive/first-child] :a]
-                (has (text? "login")))
+          (has (text? "login")))
         (login-as "fixture" "password2")
         (follow-redirect)
         (has (status? 200))
         (within [:div.light-article :> :h1]
-                (has (text? "Dashboard (fixture)"))))
+          (has (text? "Dashboard (fixture)"))))
     (is (true? (email/wait-for-mock-emails)))
     (is (= #{"Your Clojars email was changed"
              "Your Clojars password was changed"}
@@ -137,7 +137,7 @@
         (press "Update")
         (follow-redirect)
         (within [:div#notice]
-                (has (text? "Profile updated."))))
+          (has (text? "Profile updated."))))
     (is (true? (email/wait-for-mock-emails)))
     (let [[addresses titles bodies]
           (reduce
@@ -163,17 +163,17 @@
         (press "Update")
         (follow-redirect)
         (within [:div#notice]
-                (has (text? "Profile updated.")))
+          (has (text? "Profile updated.")))
         (follow "logout")
         (follow-redirect)
         (has (status? 200))
         (within [:nav [:li enlive/first-child] :a]
-                (has (text? "login")))
+          (has (text? "login")))
         (login-as "fixture" "password2")
         (follow-redirect)
         (has (status? 200))
         (within [:div.light-article :> :h1]
-                (has (text? "Dashboard (fixture)"))))
+          (has (text? "Dashboard (fixture)"))))
     (is (true? (email/wait-for-mock-emails)))
     (let [[address title body] (first @email/mock-emails)]
       (is (= "fixture@example.org" address))
@@ -188,40 +188,40 @@
       (follow "profile")
       (has (status? 200))
       (within [:title]
-              (has (text? "Profile - Clojars")))
+        (has (text? "Profile - Clojars")))
 
       (fill-in "Current password" "")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Current password can't be blankCurrent password is incorrect")))
+        (has (text? "Current password can't be blankCurrent password is incorrect")))
 
       (fill-in "Current password" "wrong-password")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Current password is incorrect")))
+        (has (text? "Current password is incorrect")))
 
       (fill-in "New password" "newpassword")
       (fill-in "Confirm new password" "newpassword")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Current password can't be blankCurrent password is incorrect")))
+        (has (text? "Current password can't be blankCurrent password is incorrect")))
 
       (fill-in "Current password" "password")
       (fill-in "New password" "newpassword")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Password and confirm password must match")))
+        (has (text? "Password and confirm password must match")))
 
       (fill-in "Current password" "password")
       (fill-in "Email" "")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
-              (has (text? "Email can't be blankEmail must have an @ sign and a domain")))))
+        (has (text? "Email can't be blankEmail must have an @ sign and a domain")))))
 
 (deftest user-can-get-new-password
   (with-test-system
@@ -236,7 +236,7 @@
         (press "Email me a password reset link")
         (has (status? 200))
         (within [:p]
-                (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
+          (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
     (let [[to subject message :as email] (first @email/mock-emails)]
       (is email)
       (is (= to "fixture@example.org"))
@@ -258,13 +258,13 @@
             (follow-redirect)
             (has (status? 200))
             (within [:div.small-section :> :h1]
-                    (has (text? "Login")))
+              (has (text? "Login")))
             ;; can login with new password
             (login-as "fixture" password)
             (follow-redirect)
             (has (status? 200))
             (within [:div.light-article :> :h1]
-                    (has (text? "Dashboard (fixture)"))))))
+              (has (text? "Dashboard (fixture)"))))))
     (is (true? (email/wait-for-mock-emails)))
     (let [[address title body] (first @email/mock-emails)]
       (is (= "fixture@example.org" address))
@@ -289,15 +289,15 @@
         (visit "/groups/org.clojars.dantheman")
         (fill-in [:#username] "fixture")
         (press "Add Member")
-        ;;(follow-redirect)
+        ;; (follow-redirect)
         (within [:table.group-member-list
                  [:tr enlive/last-of-type]
                  [:td enlive/first-of-type]]
-                (has (text? "fixture")))
+          (has (text? "fixture")))
         (within [:table.group-member-list
                  [:tr enlive/last-of-type]
                  [:td (enlive/nth-of-type 2)]]
-                (has (text? "No"))))
+          (has (text? "No"))))
 
     (is (some #{"fixture"} (db/group-membernames help/*db* "org.clojars.dantheman")))
 
@@ -331,11 +331,11 @@
         (within [:table.group-member-list
                  [:tr enlive/last-of-type]
                  [:td enlive/first-of-type]]
-                (has (text? "fixture")))
+          (has (text? "fixture")))
         (within [:table.group-member-list
                  [:tr enlive/last-of-type]
                  [:td (enlive/nth-of-type 2)]]
-                (has (text? "Yes"))))
+          (has (text? "Yes"))))
 
     (is (some #{"fixture"} (db/group-adminnames help/*db* "org.clojars.dantheman")))
 
@@ -389,14 +389,14 @@
       (fill-in [:#username] "fixture")
       (press "Add Member")
       (within [:div.error :ul :li]
-              (has (text? "No such user: fixture")))))
+        (has (text? "No such user: fixture")))))
 
 (deftest users-can-be-viewed
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password")
       (visit "/users/dantheman")
       (within [:div.light-article :> :h1]
-              (has (text? "dantheman")))))
+        (has (text? "dantheman")))))
 
 (deftest user-is-emailed-when-activating-and-deactivating-mfa
   (with-test-system

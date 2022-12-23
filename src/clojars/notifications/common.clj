@@ -1,6 +1,7 @@
 (ns clojars.notifications.common
   (:import
-   (java.text SimpleDateFormat)))
+   (java.text
+    SimpleDateFormat)))
 
 (def did-not-take-action
   "If you *didn't* take this action, please reply to this email to let the Clojars admins know that your account has potentially been compromised!")

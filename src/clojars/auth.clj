@@ -6,12 +6,13 @@
    [cemerick.friend.workflows :as workflows]
    [clojars.db :as db]
    [clojars.event :as event]
+   [clojars.log :as log]
    [clojars.util :as util]
    [clojure.string :as str]
    [one-time.core :as ot]
-   [ring.util.request :as req]
-   [clojars.log :as log])
-  (:import org.apache.commons.codec.binary.Base64))
+   [ring.util.request :as req])
+  (:import
+   org.apache.commons.codec.binary.Base64))
 
 (defn try-account [f]
   (f (:username (friend/current-authentication))))
@@ -37,7 +38,7 @@
   (if (authorized-admin? db account group)
     (f)
     (friend/throw-unauthorized friend/*identity*
-      {:cemerick.friend/required-roles group})))
+                               {:cemerick.friend/required-roles group})))
 
 (defn- get-param
   [key form-params params]
@@ -174,9 +175,9 @@
       (if (not (str/blank? password))
         (let [{:as user :keys [otp_active]} (db/find-user db username)]
           (if (and (not (str/blank? (:password user)))
-                     (creds/bcrypt-verify password (:password user))
-                     (or (not otp_active)
-                         (validate-otp db user otp)))
+                   (creds/bcrypt-verify password (:password user))
+                   (or (not otp_active)
+                       (validate-otp db user otp)))
             (do
               (log/info {:status :success})
               {:username username})

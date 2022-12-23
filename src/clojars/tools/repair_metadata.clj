@@ -1,13 +1,21 @@
 (ns clojars.tools.repair-metadata
-  (:require [clojars.maven :as mvn]
-            [clojars.file-utils :as futil]
-            [clojure.java.io :as io])
-  (:import (java.io File)
-           (org.apache.commons.io FileUtils)
-           (org.apache.maven.artifact.repository.metadata Metadata Versioning)
-           (java.text SimpleDateFormat)
-           (java.util Date))
-  (:gen-class))
+  (:gen-class)
+  (:require
+   [clojars.file-utils :as futil]
+   [clojars.maven :as mvn]
+   [clojure.java.io :as io])
+  (:import
+   (java.io
+    File)
+   (java.text
+    SimpleDateFormat)
+   (java.util
+    Date)
+   (org.apache.commons.io
+    FileUtils)
+   (org.apache.maven.artifact.repository.metadata
+    Metadata
+    Versioning)))
 
 (defn get-versioning [metadata]
   (if-let [versioning (.getVersioning metadata)]
@@ -42,7 +50,7 @@
               versions (set (map (memfn getName) version-dirs))
               missing-versions? (not= versions (set (.getVersions (get-versioning metadata))))
               invalid-sums? (not (and (futil/valid-checksum-file? f :md5)
-                                   (futil/valid-checksum-file? f :sha1)))]
+                                      (futil/valid-checksum-file? f :sha1)))]
         :when (or missing-versions? invalid-sums?)]
     {:file              f
      :metadata          metadata

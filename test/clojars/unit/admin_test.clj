@@ -12,8 +12,8 @@
 
 (use-fixtures :each
   (join-fixtures
-    [help/default-fixture
-     help/with-clean-database]))
+   [help/default-fixture
+    help/with-clean-database]))
 
 (deftest segments->path-should-work
   (are [exp given] (= exp (admin/segments->path given))
@@ -119,7 +119,7 @@
     (is  (.exists (io/file (:repo (config)) "org/ham/biscuit/2/biscuit-2.pom")))
     (is  (.exists (io/file (:repo (config)) "org/ham/sandwich/1/sandwich-1.jar")))
     (is  (.exists (io/file (:repo (config)) "org/ham/sandwich/1/sandwich-1.pom")))
-    
+
     (is (not (db/find-jar admin/*db* "org.ham" "biscuit" "1")))
     (is (db/find-jar admin/*db* "org.ham" "biscuit" "2"))
     (is (db/find-jar admin/*db* "org.ham" "sandwich"))
@@ -141,6 +141,6 @@
 
     (testing "Can add and verify a new group"
       (is (match? {:group_name "org.hambiscuit"
-                 :verified_by "testuser"}
+                   :verified_by "testuser"}
                   (admin/verify-group! "testuser" "org.hambiscuit")))
       (is (some #{"testuser"} (db/group-activenames help/*db* "org.hambiscuit"))))))

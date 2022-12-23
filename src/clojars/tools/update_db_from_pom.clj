@@ -1,16 +1,17 @@
 (ns clojars.tools.update-db-from-pom
-  (:require [clojars.config :refer [config]]
-            [clojars.db :as db]
-            [clojars.file-utils :as fu]
-            [clojars.maven :as maven]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.java.jdbc :as jdbc]))
+  (:require
+   [clojars.config :refer [config]]
+   [clojars.db :as db]
+   [clojars.file-utils :as fu]
+   [clojars.maven :as maven]
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
+   [clojure.java.jdbc :as jdbc]))
 
 (defn pom-seq [repo known-paths]
   (for [f (file-seq repo)
         :when (and (not (re-matches #".*/\..*" (str f)))
-                (.endsWith (.getName f) ".pom"))
+                   (.endsWith (.getName f) ".pom"))
         :let [path (.getAbsolutePath f)]
         :when (not (some #{path} known-paths))
         :let [pom (try
@@ -19,7 +20,7 @@
         :when pom
         ;; we can't look these up, so strip them
         :when (not-any? #(re-find #"^\$" (name %))
-                ((juxt :packaging :group :name :version) pom))]
+                        ((juxt :packaging :group :name :version) pom))]
     (with-meta pom
       {:pom-path path
        :last-modified (.lastModified f)})))
@@ -30,19 +31,19 @@
   (jdbc/with-db-transaction
     [trans db]
     (jdbc/update! trans :jars
-      {:licenses  (when licenses (pr-str licenses))
-       :packaging (when packaging (name packaging))
-       :scm       (when scm (pr-str scm))}
-      ["group_name = ? AND jar_name = ? AND version = ?"
-       group_name jar_name version])
+                  {:licenses  (when licenses (pr-str licenses))
+                   :packaging (when packaging (name packaging))
+                   :scm       (when scm (pr-str scm))}
+                  ["group_name = ? AND jar_name = ? AND version = ?"
+                   group_name jar_name version])
     (when (seq dependencies)
       (apply jdbc/insert! trans :deps
-        [:group_name :jar_name :version :dep_group_name
-         :dep_jar_name :dep_version :dep_scope]
-        (map (fn [dep]
-               [group_name jar_name version (:group_name dep)
-                (:jar_name dep) (or (:version dep) "") (:scope dep)])
-          dependencies)))))
+             [:group_name :jar_name :version :dep_group_name
+              :dep_jar_name :dep_version :dep_scope]
+             (map (fn [dep]
+                    [group_name jar_name version (:group_name dep)
+                     (:jar_name dep) (or (:version dep) "") (:scope dep)])
+                  dependencies)))))
 
 (defn read-data [data-file]
   (if (.exists data-file)
@@ -67,15 +68,15 @@
     (if-not (seq poms)
       (persistent! data')
       (recur (inc n) (rest poms)
-        (let [pom (first poms)
-              id (discover-id repo pom)]
-          (when (= 0 (rem n 1000))
-            (println "Prepare: processed" n "poms"))
-          (if (or (not (data' id))
-                (< (-> id data' meta :last-modified)
-                  (-> pom meta :last-modified)))
-            (assoc! data' id pom)
-            data'))))))
+             (let [pom (first poms)
+                   id (discover-id repo pom)]
+               (when (= 0 (rem n 1000))
+                 (println "Prepare: processed" n "poms"))
+               (if (or (not (data' id))
+                       (< (-> id data' meta :last-modified)
+                          (-> pom meta :last-modified)))
+                 (assoc! data' id pom)
+                 data'))))))
 
 (defn perform [db data]
   (doseq [[n [[group name version] pom]] (map-indexed vector data)]

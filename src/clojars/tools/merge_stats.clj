@@ -1,12 +1,15 @@
 (ns clojars.tools.merge-stats
-  (:import (java.io FileReader PushbackReader))
-  (:gen-class))
+  (:gen-class)
+  (:import
+   (java.io
+    FileReader
+    PushbackReader)))
 
 (defn -main [& args]
   (let [stats (map (fn [filename]
-                     (try 
+                     (try
                        (read (PushbackReader. (FileReader.
-                                                filename)))
+                                               filename)))
                        (catch Exception e
                          (binding [*out* *err*]
                            (println (format "Failed to read %s: %s" filename (.getMessage e))))

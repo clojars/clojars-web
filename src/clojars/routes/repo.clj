@@ -1,16 +1,16 @@
 (ns clojars.routes.repo
-  (:require 
+  (:require
    [clojars.auth :as auth :refer [with-account]]
    [clojars.db :as db]
-   [clojars.event :as event]
    [clojars.errors :refer [report-error]]
+   [clojars.event :as event]
    [clojars.file-utils :as fu]
    [clojars.gradle :as gradle]
-   [clojars.util :as util]
    [clojars.log :as log]
    [clojars.maven :as maven]
    [clojars.search :as search]
    [clojars.storage :as storage]
+   [clojars.util :as util]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [compojure.core :as compojure :refer [PUT]]
@@ -18,8 +18,12 @@
    [ring.util.codec :as codec]
    [ring.util.response :as response])
   (:import
-   (java.io IOException File)
-   (java.util Date UUID)
+   (java.io
+    File
+    IOException)
+   (java.util
+    Date
+    UUID)
    org.apache.commons.io.FileUtils))
 
 (defn save-to-file [dest input]
@@ -95,7 +99,7 @@
                      (sort #(compare %2 %1) upload-dirs))]
     dir
     (doto (io/file (FileUtils/getTempDirectory)
-            (format "upload-%s-%s" (System/currentTimeMillis) (UUID/randomUUID)))
+                   (format "upload-%s-%s" (System/currentTimeMillis) (UUID/randomUUID)))
       (FileUtils/forceMkdir))))
 
 (def ^:private ^:dynamic *db*
@@ -144,8 +148,8 @@
     (db/check-group db account group artifact)
     (catch Exception e
       (throw-forbidden e
-        {:account account
-         :group group}))))
+                       {:account account
+                        :group group}))))
 
 (defn upload-request [db groupname artifact version timestamp-version session f]
   (with-account
@@ -186,15 +190,15 @@
    (find-artifacts dir true))
   ([dir remove-checksums?]
    (let [tx (comp
-              (filter (memfn isFile))
-              (remove (partial match-file-name metadata-edn)))]
+             (filter (memfn isFile))
+             (remove (partial match-file-name metadata-edn)))]
      (into []
-       (if remove-checksums?
-         (comp tx
-           (remove (partial match-file-name #".sha1$"))
-           (remove (partial match-file-name #".md5$")))
-         tx)
-       (file-seq dir)))))
+           (if remove-checksums?
+             (comp tx
+                   (remove (partial match-file-name #".sha1$"))
+                   (remove (partial match-file-name #".md5$")))
+             tx)
+           (file-seq dir)))))
 
 (defn- validate-regex [x re message]
   (when-not (re-matches re x)
@@ -205,10 +209,10 @@
 (defn- validate-pom-entry [pom-data key value]
   (when-not (= (key pom-data) value)
     (throw-invalid
-      :pom-entry-mismatch
-      (format "the %s in the pom (%s) does not match the %s you are deploying to (%s)"
-        (name key) (key pom-data) (name key) value)
-      {:pom pom-data})))
+     :pom-entry-mismatch
+     (format "the %s in the pom (%s) does not match the %s you are deploying to (%s)"
+             (name key) (key pom-data) (name key) value)
+     {:pom pom-data})))
 
 (defn- validate-pom [pom group name version]
   (validate-pom-entry pom :group group)
@@ -242,29 +246,29 @@
       (let [meta {:group-id group-id
                   :artifact-id artifact-id
                   ;; report both failures to reach central and shadow attempts to sentry
-                  :report? true}] 
+                  :report? true}]
         (if (= ret :failure)
           (throw-invalid :central-shadow-check-failure
                          "failed to contact Maven Central to verify project name. See https://bit.ly/3rTLqxZ"
-            (assoc meta :status 503))
+                         (assoc meta :status 503))
           (throw-invalid :central-shadow
                          "shadowing Maven Central artifacts is not allowed. See https://bit.ly/3rTLqxZ"
-            meta))))))
+                         meta))))))
 
 (defn validate-checksums [artifacts]
   (doseq [f artifacts]
     ;; verify that at least one type of checksum file exists
     (when (not (or (.exists (fu/checksum-file f :md5))
-                 (.exists (fu/checksum-file f :sha1))))
+                   (.exists (fu/checksum-file f :sha1))))
       (throw-invalid :file-missing-checksum
                      (format "no checksums provided for %s" (.getName f))
-        {:file f}))
+                     {:file f}))
     ;; verify provided checksums are valid
     (doseq [type [:md5 :sha1]]
       (when (not (fu/valid-checksum-file? f type false))
         (throw-invalid :file-invalid-checksum
                        (format "invalid %s checksum for %s" type (.getName f))
-          {:file f})))))
+                       {:file f})))))
 
 (defn assert-signatures [artifacts]
   ;; if any signatures exist, require them for every artifact
@@ -331,8 +335,8 @@
                 (catch Exception e
                   (throw-invalid :invalid-pom-file
                                  (str "invalid pom file: " (.getMessage e))
-                    {:file pom-file}
-                    e)))
+                                 {:file pom-file}
+                                 e)))
 
           module-file (find-module dir)
           module (try
@@ -345,7 +349,7 @@
 
           {:keys [group-path name version] :as posted-metadata}
           (read-metadata dir)
-          
+
           md-file (io/file dir group-path name "maven-metadata.xml")]
       (log/with-context {:version version}
         ;; since we trigger on maven-metadata.xml, we don't actually
@@ -389,7 +393,7 @@
 
 (defn- deploy-post-finalized-file [storage tmp-repo file]
   (storage/write-artifact storage
-    (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
+                          (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
 
 (defn- token-session-matches-group-artifact?
   [session group artifact]
@@ -397,11 +401,11 @@
     (or
      ;; not a token request
      (nil? token)
-     
+
      ;; token has no scope
      (and (nil? group_name)
           (nil? jar_name))
-     
+
      ;; token is scoped to this group/artifact
      (and (= group group_name)
           (= artifact jar_name))
@@ -427,31 +431,31 @@
     (when (and (= :single-use-status/used (:single_use token))
                (nil? (:token-id (read-metadata upload-dir))))
       (throw-forbidden
-           "The provided single-use token has already been used"
-           {}))))
+       "The provided single-use token has already been used"
+       {}))))
 
 (defn- handle-versioned-upload [storage db body session group artifact version filename]
   (let [groupname (fu/path->group group)
         timestamp-version (when (maven/snapshot-version? version) (maven/snapshot-timestamp-version filename))]
     (upload-request
-      db
-      groupname
-      artifact
-      version
-      timestamp-version
-      session
-      (fn [account upload-dir]
-        (maybe-assert-token-matches-group+artifact session groupname artifact)
-        (maybe-assert-single-use-token-unused session upload-dir)
-        (write-metadata session upload-dir groupname group artifact version timestamp-version)
-        (let [file (try-save-to-file (io/file upload-dir group artifact version filename) body)]
-          (when (deploy-finalized? upload-dir)
-            ;; a deploy should never get this far with a bad group,
-            ;; but since this includes the group authorization check,
-            ;; we do it here just in case. Will throw if there are any
-            ;; issues.
-            (check-group db account groupname artifact)
-            (deploy-post-finalized-file storage upload-dir file)))))))
+     db
+     groupname
+     artifact
+     version
+     timestamp-version
+     session
+     (fn [account upload-dir]
+       (maybe-assert-token-matches-group+artifact session groupname artifact)
+       (maybe-assert-single-use-token-unused session upload-dir)
+       (write-metadata session upload-dir groupname group artifact version timestamp-version)
+       (let [file (try-save-to-file (io/file upload-dir group artifact version filename) body)]
+         (when (deploy-finalized? upload-dir)
+           ;; a deploy should never get this far with a bad group,
+           ;; but since this includes the group authorization check,
+           ;; we do it here just in case. Will throw if there are any
+           ;; issues.
+           (check-group db account groupname artifact)
+           (deploy-post-finalized-file storage upload-dir file)))))))
 
 ;; web handlers
 (defn routes [storage db search]

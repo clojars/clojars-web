@@ -2,8 +2,11 @@
   (:require
    [clojars.log :as log])
   (:import
-   (java.util.concurrent CountDownLatch TimeUnit)
-   (org.apache.commons.mail SimpleEmail)))
+   (java.util.concurrent
+    CountDownLatch
+    TimeUnit)
+   (org.apache.commons.mail
+    SimpleEmail)))
 
 (defn simple-mailer [{:keys [hostname username password port tls? from]}]
   (fn [to subject message]

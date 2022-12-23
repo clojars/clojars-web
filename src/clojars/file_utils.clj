@@ -1,14 +1,15 @@
 (ns clojars.file-utils
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [digest :as d]))
+  (:require
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [digest :as d]))
 
 (defn checksum-file
   "Returns a file for the sum of `file` of type `type`"
   [file type]
   (let [file' (io/file file)]
     (io/file (.getParentFile file')
-      (format "%s.%s" (.getName file') (name type)))))
+             (format "%s.%s" (.getName file') (name type)))))
 
 (def ^:private sum-generators
   {:md5 d/md5

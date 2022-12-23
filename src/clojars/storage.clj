@@ -5,7 +5,8 @@
    [clojars.file-utils :as fu]
    [clojars.s3 :as s3]
    [clojure.java.io :as io])
-  (:import org.apache.commons.io.FileUtils))
+  (:import
+   org.apache.commons.io.FileUtils))
 
 (defprotocol Storage
   (-write-artifact [_ path file force-overwrite?])
@@ -43,8 +44,8 @@
   (-write-artifact [_ path file force-overwrite?]
     (let [dest (io/file base-dir path)]
       (when (or force-overwrite?
-              (not (.exists dest))
-              (not= (fu/checksum dest :md5) (fu/checksum file :md5)))
+                (not (.exists dest))
+                (not= (fu/checksum dest :md5) (fu/checksum file :md5)))
         (.mkdirs (.getParentFile dest))
         (io/copy file dest))))
   (remove-path [_ path]
@@ -58,9 +59,9 @@
   (path-seq [t path]
     (when (path-exists? t path)
       (->> (io/file base-dir path)
-        file-seq
-        (filter (memfn isFile))
-        (map #(fu/subpath (.getAbsolutePath base-dir) (.getAbsolutePath %))))))
+           file-seq
+           (filter (memfn isFile))
+           (map #(fu/subpath (.getAbsolutePath base-dir) (.getAbsolutePath %))))))
   (artifact-url [_ path]
     (->> path (io/file base-dir) .toURI .toURL)))
 
@@ -100,12 +101,12 @@
       (when (not= "ok" status)
         (throw (ex-info (format "Fastly purge failed for %s" path) resp))))))
 
-(defn- retry 
+(defn- retry
   [f {:keys [n sleep jitter error-reporter]
-                 :or {sleep 1000
-                      jitter 20
-                      n 3}}] 
-  (loop [i n] 
+      :or {sleep 1000
+           jitter 20
+           n 3}}]
+  (loop [i n]
     (if (> i 0)
       (let [result (try
                      (f)
@@ -126,8 +127,8 @@
     ;; future so we don't have to wait for the request to finish to
     ;; complete the deploy.
     (future (retry
-              #(purge cdn-token cdn-url path)
-              {:error-reporter error-reporter})))
+             #(purge cdn-token cdn-url path)
+             {:error-reporter error-reporter})))
   (remove-path [_ path]
     (purge cdn-token cdn-url path))
   (path-exists? [_ _])
@@ -138,6 +139,6 @@
 
 (defn full-storage [error-reporter on-disk-repo repo-bucket cdn-token cdn-url]
   (multi-storage
-    (fs-storage on-disk-repo)
-    (s3-storage repo-bucket)
-    (cdn-storage error-reporter cdn-token cdn-url)))
+   (fs-storage on-disk-repo)
+   (s3-storage repo-bucket)
+   (cdn-storage error-reporter cdn-token cdn-url)))

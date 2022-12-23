@@ -1,7 +1,8 @@
 (ns clojars.unit.web.jar-test
-  (:require [clojars.test-helper :as help]
-            [clojars.web.jar :as jar]
-            [clojure.test :refer [deftest is use-fixtures]]))
+  (:require
+   [clojars.test-helper :as help]
+   [clojars.web.jar :as jar]
+   [clojure.test :refer [deftest is use-fixtures]]))
 
 (use-fixtures :each
   help/default-fixture

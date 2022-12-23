@@ -1,8 +1,10 @@
 (ns clojars.tools.combine-cdn-logs
-  (:require [clojars.s3 :as s3]
-            [clojure.java.io :as io])
-  (:import java.io.FileOutputStream)
-  (:gen-class))
+  (:gen-class)
+  (:require
+   [clojars.s3 :as s3]
+   [clojure.java.io :as io])
+  (:import
+   java.io.FileOutputStream))
 
 ;; downloads and combines cdn log files from s3 for the
 ;; given date, then uploads the combined file to s3 bucket

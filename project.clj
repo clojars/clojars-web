@@ -96,7 +96,7 @@
                   :exclusions [com.sun.mail/javax.mail]]
                  ;; Upgrading for compatibility with logback 1.3.x
                  [org.slf4j/jcl-over-slf4j "2.0.0-alpha1"]
-                 
+
                  ;; AWS
                  [com.cognitect.aws/api "0.8.539"]
                  [com.cognitect.aws/endpoints "1.1.12.129"]

@@ -1,12 +1,13 @@
 (ns clojars.integration.search-test
-  (:require [cheshire.core :as json]
-            [clj-http.client :as client]
-            [clojars.search :as search]
-            [clojars.test-helper :as help]
-            [clojure.set :as set]
-            [clojure.test :refer [deftest is testing use-fixtures]]
-            [clojure.xml :as xml]
-            [matcher-combinators.test]))
+  (:require
+   [cheshire.core :as json]
+   [clj-http.client :as client]
+   [clojars.search :as search]
+   [clojars.test-helper :as help]
+   [clojure.set :as set]
+   [clojure.test :refer [deftest is testing use-fixtures]]
+   [clojure.xml :as xml]
+   [matcher-combinators.test]))
 
 (use-fixtures :each
   help/default-fixture
@@ -14,28 +15,28 @@
 
 (defn do-search [fmt query & [opts]]
   (-> (format "http://localhost:%s/search?q=%s&format=%s"
-        help/test-port
-        query
-        (name fmt))
-    (client/get opts)))
+              help/test-port
+              query
+              (name fmt))
+      (client/get opts)))
 
 (defn do-search-with-page [fmt query page & [opts]]
   (-> (format "http://localhost:%s/search?q=%s&format=%s&page=%s"
-        help/test-port
-        query
-        (name fmt)
-        page)
+              help/test-port
+              query
+              (name fmt)
+              page)
       (client/get opts)))
 
 (deftest search-test
   (let [base-data {:description "foo" :version "1.0"}
         search-data (map (partial merge base-data)
-                      [{:jar_name "test" :group_name "test"}
-                       {:jar_name "test" :group_name "testing"}])]
+                         [{:jar_name "test" :group_name "test"}
+                          {:jar_name "test" :group_name "testing"}])]
     (doseq [data search-data]
       (search/index! (:search help/system)
-        (set/rename-keys data {:jar_name :artifact-id
-                               :group_name :group-id})))
+                     (set/rename-keys data {:jar_name :artifact-id
+                                            :group_name :group-id})))
 
     (testing "json request returns json"
       (let [resp (do-search :json "test")]

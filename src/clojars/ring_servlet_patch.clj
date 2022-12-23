@@ -1,7 +1,11 @@
 (ns clojars.ring-servlet-patch
-  (:import [javax.servlet.http HttpServletResponseWrapper]
-           [org.eclipse.jetty.server Request]
-           [org.eclipse.jetty.server.handler AbstractHandler]))
+  (:import
+   (javax.servlet.http
+    HttpServletResponseWrapper)
+   (org.eclipse.jetty.server
+    Request)
+   (org.eclipse.jetty.server.handler
+    AbstractHandler)))
 
 
 (defn response-wrapper [response]

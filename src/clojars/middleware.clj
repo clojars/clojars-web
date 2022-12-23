@@ -1,6 +1,6 @@
 (ns clojars.middleware)
 
-; Adapted from https://gist.github.com/dannypurcell/8215411
+;; Adapted from https://gist.github.com/dannypurcell/8215411
 (defn wrap-ignore-trailing-slash
   "Modifies the request uri before calling the handler.
   Removes a single trailing slash from the end of the uri if present.

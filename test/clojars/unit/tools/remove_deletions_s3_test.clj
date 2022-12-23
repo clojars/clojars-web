@@ -1,10 +1,14 @@
 (ns clojars.unit.tools.remove-deletions-s3-test
-  (:require [clojars.s3 :as s3]
-            [clojars.tools.remove-deletions-s3 :as remove-deletions-s3]
-            [clojure.java.io :as io]
-            [clojure.test :refer [deftest is]])
-  (:import (java.nio.file Files)
-           (java.nio.file.attribute FileAttribute)))
+  (:require
+   [clojars.s3 :as s3]
+   [clojars.tools.remove-deletions-s3 :as remove-deletions-s3]
+   [clojure.java.io :as io]
+   [clojure.test :refer [deftest is]])
+  (:import
+   (java.nio.file
+    Files)
+   (java.nio.file.attribute
+    FileAttribute)))
 
 (deftest improper-args-should-print
   (let [str (with-out-str (remove-deletions-s3/-main))]

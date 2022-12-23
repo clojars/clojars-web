@@ -1,13 +1,15 @@
 (ns clojars.tools.process-stats
   "generate usage statistics from web log"
-  (:require [clj-time.format :as timef]
-            [clojars.file-utils :as fu]
-            [clojars.util :as util]
-            [clojure.java.io :as io]
-            [net.cgrand.regex :as re])
-  (:import java.io.BufferedReader
-           java.util.regex.Pattern)
-  (:gen-class))
+  (:gen-class)
+  (:require
+   [clj-time.format :as timef]
+   [clojars.file-utils :as fu]
+   [clojars.util :as util]
+   [clojure.java.io :as io]
+   [net.cgrand.regex :as re])
+  (:import
+   java.io.BufferedReader
+   java.util.regex.Pattern))
 
 (def time-clf (timef/formatter "dd/MMM/YYYY:HH:mm:ss Z"))
 (def time-cdn (timef/formatters :date-time-no-ms))
@@ -46,14 +48,14 @@
                       [nonquote :as :path] \space
                       [nonquote :as :http-version])]
     (re/regex \< #"\d+" \>
-      [field :as :time] \space
-      [field :as :cache-host] \space
-      [field :as :endpoint] \: \space
-      [field :as :host] \space
-      \" reqline \" \space
-      [field :as :status] \space
-      [field :as :size]
-      #".*")))
+              [field :as :time] \space
+              [field :as :cache-host] \space
+              [field :as :endpoint] \: \space
+              [field :as :host] \space
+              \" reqline \" \space
+              [field :as :status] \space
+              [field :as :size]
+              #".*")))
 
 (def re-path
   (let [segment #"[^/]+"

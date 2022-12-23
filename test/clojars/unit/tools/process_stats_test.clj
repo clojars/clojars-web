@@ -1,20 +1,21 @@
 (ns clojars.unit.tools.process-stats-test
-  (:require [clj-time.core :as time]
-            [clojars.tools.process-stats :as stats]
-            [clojure.java.io :as io]
-            [clojure.test :refer [deftest is]]))
+  (:require
+   [clj-time.core :as time]
+   [clojars.tools.process-stats :as stats]
+   [clojure.java.io :as io]
+   [clojure.test :refer [deftest is]]))
 
 (deftest parse-path
   (is (= {:name "haddock"
           :group "captain.archibald"
           :version "0.1.0"
           :ext "jar"}
-        (stats/parse-path "/repo/captain/archibald/haddock/0.1.0/haddock-0.1.0.jar")))
+         (stats/parse-path "/repo/captain/archibald/haddock/0.1.0/haddock-0.1.0.jar")))
   (is (= {:name "haddock"
           :group "captain.archibald"
           :version "0.1.0"
           :ext "jar"}
-        (stats/parse-path "/captain/archibald/haddock/0.1.0/haddock-0.1.0.jar"))))
+         (stats/parse-path "/captain/archibald/haddock/0.1.0/haddock-0.1.0.jar"))))
 
 (def formats
   {:legacy-cdn-format "<134>2012-04-14T06:40:59Z cache-ord1741 cloudfiles-endpoint[82344]: 66.249.69.238 \"-\" \"GET /captain/archibald/haddock/0.1.0/haddock-0.1.0.jar\" 200 2377 \"(null)\" \"Java/1.6.0_30\""

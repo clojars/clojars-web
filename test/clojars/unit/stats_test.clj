@@ -1,8 +1,9 @@
 (ns clojars.unit.stats-test
-  (:require [clojars.s3 :as s3]
-            [clojars.stats :as stats]
-            [clojure.java.io :as io]
-            [clojure.test :refer [deftest is]]))
+  (:require
+   [clojars.s3 :as s3]
+   [clojars.stats :as stats]
+   [clojure.java.io :as io]
+   [clojure.test :refer [deftest is]]))
 
 (def download-counts
   {["a" "x"] {"1" 1
