@@ -3,6 +3,7 @@
    [clojars.email :refer [simple-mailer]]
    [clojars.notifications :as notifications]
    ;; for defmethods
+   [clojars.notifications.admin]
    [clojars.notifications.deploys]
    [clojars.notifications.group]
    [clojars.notifications.token]

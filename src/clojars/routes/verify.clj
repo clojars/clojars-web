@@ -1,6 +1,7 @@
 (ns clojars.routes.verify
   (:require
    [clojars.auth :as auth]
+   [clojars.event :as event]
    [clojars.log :as log]
    [clojars.verification :as verification]
    [clojars.web.group-verification :as view]
@@ -10,7 +11,9 @@
 (defn- handle-request
   [db tag f request]
   (log/with-context (assoc request :tag tag)
-    (let [result (f db request)]
+    (let [result (f db request)
+          request+result (merge request result)]
+      (event/emit :group-verification-request request+result)
       (if-some [error (:error result)]
         (log/info {:status :failed
                    :error  error})
@@ -19,7 +22,7 @@
           (log/audit db {:tag     tag
                          :message (:message result)})))
       (-> (redirect "/verify/group")
-          (assoc :flash (merge request result))))))
+          (assoc :flash request+result)))))
 
 (defn verify-via-parent
   [db username params]
