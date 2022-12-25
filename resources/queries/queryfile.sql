@@ -589,13 +589,3 @@ version = :version
 --name: delete-group!
 DELETE FROM groups
 WHERE name = :group_id;
-
---name: clear-groups!
-DELETE FROM groups;
-
---name: clear-jars!
-DELETE FROM jars;
-
---name: clear-users!
-DELETE FROM users;
-

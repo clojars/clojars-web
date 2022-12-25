@@ -3,10 +3,10 @@
   (:require
    [clojars.config :refer [config]]
    [clojars.db :as db]
-   [clojars.db.sql :as sql]
    [clojars.file-utils :as fu]
    [clojars.search :as search]
    [clojars.stats :as stats]
+   [clojars.test-helper :as help]
    [clojure.java.io :as io]
    [clojure.string :as str])
   (:import
@@ -16,11 +16,6 @@
    (org.apache.maven.artifact.repository.metadata.io.xpp3
     MetadataXpp3Reader
     MetadataXpp3Writer)))
-
-(defn reset-db! [db]
-  (sql/clear-jars! {} {:connection db})
-  (sql/clear-groups! {} {:connection db})
-  (sql/clear-users! {} {:connection db}))
 
 (defn add-test-users
   "Adds n test users of the form test0/test0."
@@ -119,7 +114,7 @@
       (println "Aborting.")
       (System/exit 1))
     (println "==> Clearing the" db "db...")
-    (reset-db! db)
+    (help/clear-database db)
     (println "==> Creating 10 test users...")
     (let [test-users (add-test-users db 10)]
       (println "==> Importing" repo "into the db...")
