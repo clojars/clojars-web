@@ -36,11 +36,7 @@
   (and (some? group)
        (some? domain)
        (let [group-parts (str/split group #"\.")
-             domain-parts (reverse (str/split domain #"\."))
-             ;; Some folks put the TXT record on a clojars subdomain, so we allow for that
-             domain-parts (if (contains? #{"clojars" "_clojars"} (last domain-parts))
-                            (butlast domain-parts)
-                            domain-parts)]
+             domain-parts (reverse (str/split domain #"\."))]
          (and
           (<= 2 (count group-parts))
           (<= 2 (count domain-parts))
