@@ -25,6 +25,7 @@
           (assoc :flash request+result)))))
 
 (defn verify-via-parent
+  "Verifies a group via ownership of a parent group."
   [db username params]
   (handle-request db :verify-group-via-parent-group
                   verification/verify-group-by-parent-group
@@ -32,6 +33,7 @@
                          (select-keys params [:group]))))
 
 (defn verify-via-TXT
+  "Verifies a group via a DNS TXT record."
   [db username params]
   (handle-request db :verify-group-via-TXT
                   verification/verify-group-by-TXT
@@ -39,6 +41,8 @@
                          (select-keys params [:domain :group]))))
 
 (defn verify-via-vcs
+  "Verifies a group via the existence of a GitHub or Gitlab repository to prove
+  organization ownership."
   [db username params]
   (handle-request db :verify-group-via-vcs
                   verification/verify-vcs-groups
