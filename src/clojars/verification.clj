@@ -9,7 +9,8 @@
 
 (defn- get-txt-records
   [domain]
-  (let [{:keys [err exit out]} (shell/sh "dig" "txt" "+short" domain)]
+  (let [{:keys [err exit out]} (shell/sh "dig" "+short" "-t" "txt" "-q" domain
+                                         :env nil)]
     (if (= 0 exit)
       (-> out
           (str/replace "\"" "")
