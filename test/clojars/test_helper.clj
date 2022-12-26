@@ -4,6 +4,7 @@
    [clojars.config :as config]
    [clojars.db :as db]
    [clojars.db.migrate :as migrate]
+   [clojars.dev.setup :as setup]
    [clojars.email :as email]
    [clojars.errors :as errors]
    [clojars.oauth.service :as oauth-service]
@@ -69,17 +70,7 @@
 
 (declare ^:dynamic *db*)
 
-(defn clear-database [db]
-  (try
-    (jdbc/db-do-commands
-     db
-     ["delete from deps"
-      "delete from groups"
-      "delete from jars"
-      "delete from users"
-      "delete from group_verifications"
-      "delete from audit"])
-    (catch Exception _)))
+(def clear-database setup/clear-database!)
 
 (defn with-clean-database [f]
   (binding [config/*profile* "test"]

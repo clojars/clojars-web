@@ -6,8 +6,8 @@
    [clojars.file-utils :as fu]
    [clojars.search :as search]
    [clojars.stats :as stats]
-   [clojars.test-helper :as help]
    [clojure.java.io :as io]
+   [clojure.java.jdbc :as jdbc]
    [clojure.string :as str])
   (:import
    (org.apache.maven.artifact.repository.metadata
@@ -16,6 +16,18 @@
    (org.apache.maven.artifact.repository.metadata.io.xpp3
     MetadataXpp3Reader
     MetadataXpp3Writer)))
+
+(defn clear-database! [db]
+  (try
+    (jdbc/db-do-commands
+     db
+     ["delete from deps"
+      "delete from groups"
+      "delete from jars"
+      "delete from users"
+      "delete from group_verifications"
+      "delete from audit"])
+    (catch Exception _)))
 
 (defn add-test-users
   "Adds n test users of the form test0/test0."
@@ -114,7 +126,7 @@
       (println "Aborting.")
       (System/exit 1))
     (println "==> Clearing the" db "db...")
-    (help/clear-database db)
+    (clear-database! db)
     (println "==> Creating 10 test users...")
     (let [test-users (add-test-users db 10)]
       (println "==> Importing" repo "into the db...")
