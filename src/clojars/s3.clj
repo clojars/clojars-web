@@ -2,8 +2,7 @@
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [cognitect.aws.client.api :as aws]
-   [cognitect.aws.credentials :as credentials])
+   [cognitect.aws.client.api :as aws])
   (:import
    (java.io
     ByteArrayInputStream)
@@ -96,18 +95,13 @@
          (throw-on-error))))
 
 (defn s3-client
-  [access-key-id secret-access-key region bucket]
+  [bucket]
   {:pre [(not (str/blank? bucket))]}
-  (let [client
-        (doto
-         (aws/client
-          {:api :s3
-           :credentials-provider (credentials/basic-credentials-provider
-                                  {:access-key-id     access-key-id
-                                   :secret-access-key secret-access-key})
-           :region region})
-          (aws/validate-requests true))]
-    (->S3Client client bucket)))
+  ;; Credentials are derived from the instance's role and region comes from the
+  ;; aws.region property, so we don't have to set either here.
+  (->S3Client (doto (aws/client {:api :s3})
+                (aws/validate-requests true))
+              bucket))
 
 (defrecord MockS3Client [state]
   S3Bucket

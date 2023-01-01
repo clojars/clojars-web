@@ -1,9 +1,9 @@
 #!/bin/bash
 # Usage:
-# AWS_ACCESS_KEY_ID=foo AWS_SECRET_ACCESS_KEY=bar update-pom-list releases/clojars-web-current.jar
+# update-pom-list releases/clojars-web-current.jar
 
 set -e
 
 clojars_jar=$1
 
-java -cp $clojars_jar clojure.main -m clojars.tools.generate-feeds $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY 2> /dev/null
+java -cp $clojars_jar clojure.main -m clojars.tools.generate-feeds 2> /dev/null

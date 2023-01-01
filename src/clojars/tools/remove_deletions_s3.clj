@@ -17,13 +17,13 @@
            (s3/delete-object s3-bucket %))
         (get-existing s3-bucket subpath)))
 
-(defn create-s3-bucket [access-key-id secret-access-key region bucket]
-  (s3/s3-client access-key-id secret-access-key region bucket))
+(defn create-s3-bucket [bucket]
+  (s3/s3-client bucket))
 
 (defn -main [& args]
-  (if (< (count args) 5)
-    (println "Usage: repo-path bucket-name region key secret [subpath]")
-    (let [[repo bucket region key secret subpath] args]
+  (if (< (count args) 2)
+    (println "Usage: repo-path bucket-name [subpath]")
+    (let [[repo bucket subpath] args]
       (prn [repo subpath])
-      (remove-deletions (create-s3-bucket key secret region bucket)
+      (remove-deletions (create-s3-bucket bucket)
                         (io/file repo) subpath))))

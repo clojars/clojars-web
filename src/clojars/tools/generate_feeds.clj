@@ -102,14 +102,8 @@
             (write-sums jar-file)
             (write-sums gz-file)))))
 
-(defn -main [& args]
-  (if (not= 2 (count args))
-    (println "args: aws-key aws-secret")
-    (let [[key secret] args
-          {:keys [db s3]} (config)]
-      (generate-feeds "/tmp"
-                      db
-                      (s3/s3-client key secret
-                                    (:region s3)
-                                    (:repo-bucket s3))))))
-
+(defn -main [& _args]
+  (let [{:keys [db s3]} (config)]
+    (generate-feeds "/tmp"
+                    db
+                    (s3/s3-client (:repo-bucket s3)))))

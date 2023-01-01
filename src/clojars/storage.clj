@@ -87,10 +87,8 @@
     (throw (ex-info "Not implemented" {}))))
 
 (defn s3-storage
-  ([key token region bucket-name]
-   (s3-storage (s3/s3-client key token region bucket-name)))
-  ([client]
-   (->S3Storage client)))
+  [client]
+  (->S3Storage client))
 
 (defn- purge
   [cdn-token cdn-url path]

@@ -55,9 +55,9 @@
       (print-status stats))))
 
 (defn -main [& args]
-  (if (< (count args) 5)
-    (println "Usage: repo-path bucket-name region key secret [subpath]")
-    (let [[repo bucket region key secret subpath] args]
-      (upload-repo (s3/s3-client key secret region bucket)
+  (if (< (count args) 2)
+    (println "Usage: repo-path bucket-name [subpath]")
+    (let [[repo bucket subpath] args]
+      (upload-repo (s3/s3-client bucket)
                    (io/file repo)
                    subpath))))

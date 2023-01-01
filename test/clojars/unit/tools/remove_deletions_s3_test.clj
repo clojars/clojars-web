@@ -25,7 +25,7 @@
     (io/copy file local-file)
     (with-redefs [remove-deletions-s3/create-s3-bucket (constantly s3-client)]
       (with-out-str
-        (remove-deletions-s3/-main (.getAbsolutePath repo) "bucket" "region" "key" "secret")))
+        (remove-deletions-s3/-main (.getAbsolutePath repo) "bucket")))
     (is (s3/object-exists? s3-client "foo/bar/baz.jar"))
     (is (not (s3/object-exists? s3-client "boo/far/baz.jar")))))
 
@@ -41,7 +41,7 @@
     (io/copy file local-file)
     (with-redefs [remove-deletions-s3/create-s3-bucket (constantly s3-client)]
       (with-out-str
-        (remove-deletions-s3/-main (.getAbsolutePath repo) "bucket" "region" "key" "secret" "foo")))
+        (remove-deletions-s3/-main (.getAbsolutePath repo) "bucket" "foo")))
     (is (s3/object-exists? s3-client "foo/bar/baz.jar"))
     (is (s3/object-exists? s3-client "boo/far/baz.jar"))
     (is (not (s3/object-exists? s3-client "foo/far/baz.jar")))))

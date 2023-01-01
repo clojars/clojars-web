@@ -55,10 +55,6 @@
                           :cdn-token cdn-token
                           :cdn-url cdn-url}))
 
-(defn s3-bucket
-  [{:keys [access-key-id secret-access-key region] :as cfg} bucket-key]
-  (s3/s3-client access-key-id secret-access-key region (get cfg bucket-key)))
-
 (defn base-system
   "Enough of the system for use in scripts."
   [config]
@@ -67,7 +63,7 @@
        :search        (search/lucene-component)
        :index-factory #(search/disk-index (:index-path config))
        :stats         (artifact-stats)
-       :stats-bucket  (s3-bucket (:s3 config) :stats-bucket))
+       :stats-bucket  (s3/s3-client (get-in config [:s3 :stats-bucket])))
       (component/system-using
        {:search [:index-factory :stats]
         :stats  [:stats-bucket]})))
@@ -89,7 +85,7 @@
           :http-client   (remote-service/new-http-remote-service)
           :mailer        (simple-mailer (:mail config))
           :notifications (notifications/notification-component)
-          :repo-bucket   (s3-bucket (:s3 config) :repo-bucket)
+          :repo-bucket   (s3/s3-client (get-in config [:s3 :repo-bucket]))
           :storage       (storage-component (:repo config) (:cdn-token config) (:cdn-url config))))
         (component/system-using
          {:app           [:clojars-app]

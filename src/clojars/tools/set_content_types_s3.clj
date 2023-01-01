@@ -48,7 +48,7 @@
       (print-status stats))))
 
 (defn -main [& args]
-  (if (not= (count args) 4)
-    (println "Usage: bucket-name region key secret")
-    (let [[bucket region key secret] args]
-      (process-objects (s3/s3-client key secret region bucket)))))
+  (if (not= (count args) 1)
+    (println "Usage: bucket-name")
+    (let [[bucket] args]
+      (process-objects (s3/s3-client bucket)))))

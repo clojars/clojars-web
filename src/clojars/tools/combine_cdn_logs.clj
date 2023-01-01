@@ -12,15 +12,15 @@
 (def domap (comp dorun map))
 
 (defn -main [& args]
-  (if (not= 6 (count args))
-    (println "Usage: s3-log-bucket aws-region aws-key aws-secret date output-file")
-    (let [[s3-bucket aws-region aws-key aws-secret
-           date output-file] args
-          date               (apply format "%s-%s-%s"
-                                    (rest (re-find #"(\d{4})(\d{2})(\d{2})" date)))
-          dest-file          (io/file output-file)
-          s3                 (s3/s3-client aws-key aws-secret aws-region s3-bucket)
-          s3-log-files       (s3/list-object-keys s3 date)]
+  (if (not= 3 (count args))
+    (println "Usage: s3-log-bucket date output-file")
+    (let [[s3-bucket date output-file] args
+
+          date         (apply format "%s-%s-%s"
+                              (rest (re-find #"(\d{4})(\d{2})(\d{2})" date)))
+          dest-file    (io/file output-file)
+          s3           (s3/s3-client s3-bucket)
+          s3-log-files (s3/list-object-keys s3 date)]
       (with-open [fos (FileOutputStream. dest-file)]
         ;; download and combine s3 logs
         (domap #(with-open [in (s3/get-object-stream s3 %)]
