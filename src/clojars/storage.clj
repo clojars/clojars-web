@@ -92,9 +92,7 @@
 
 (defn- purge
   [cdn-token cdn-url path]
-  (when (and cdn-token
-             cdn-url
-             (not= "NOTSET" cdn-token))
+  (when (and cdn-token cdn-url)
     (let [{:keys [status] :as resp} (cdn/purge cdn-token cdn-url path)]
       (when (not= "ok" status)
         (throw (ex-info (format "Fastly purge failed for %s" path) resp))))))

@@ -91,16 +91,17 @@
                                org.apache.xmlgraphics/batik-svggen]]
 
                  ;; logging
-                 [org.clojure/tools.logging "1.2.3"]
+                 [org.clojure/tools.logging "1.2.4"]
                  [ch.qos.logback/logback-classic "1.3.0-alpha5"
                   :exclusions [com.sun.mail/javax.mail]]
                  ;; Upgrading for compatibility with logback 1.3.x
                  [org.slf4j/jcl-over-slf4j "2.0.0-alpha1"]
 
                  ;; AWS
-                 [com.cognitect.aws/api "0.8.539"]
-                 [com.cognitect.aws/endpoints "1.1.12.129"]
-                 [com.cognitect.aws/s3 "814.2.991.0"]]
+                 [com.cognitect.aws/api "0.8.635"]
+                 [com.cognitect.aws/endpoints "1.1.12.373"]
+                 [com.cognitect.aws/s3 "825.2.1250.0"]
+                 [com.cognitect.aws/ssm "825.2.1283.0"]]
   :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"

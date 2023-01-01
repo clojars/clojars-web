@@ -1,0 +1,46 @@
+{:base-url            "https://clojars.org"
+ :bcrypt-work-factor  12
+ :bind                "127.0.0.1"
+ :cdn-token           #profile {:production #ssm-parameter "/clojars/production/cdn_token"
+                                :default    nil}
+ :cdn-url             "https://repo.clojars.org"
+ :db                  {:dbtype   "postgresql"
+                       :dbname   "clojars"
+                       :host     #profile {:production #ssm-parameter "/clojars/production/db_host"
+                                           :default    "localhost"}
+                       :port     #profile {:default    55432
+                                           :test       #or [#env DB_PORT 55433]
+                                           :production 5432}
+                       :user     "clojars"
+                       :password #profile {:production #ssm-parameter "/clojars/production/db_user"
+                                           :default    "clojars"}}
+ :deletion-backup-dir #profile {:production "/home/clojars/repo-deleted"
+                                :default    "data/test/repo-backup"}
+ :github-oauth        {:client-id     #profile {:production #ssm-parameter "/clojars/production/github_oauth_client_id"
+                                                :default    "testing"}
+                       :client-secret #profile {:production #ssm-parameter "/clojars/production/github_oauth_client_secret"
+                                                :default    "testing"}
+                       :callback-uri  "https://clojars.org/oauth/github/callback"}
+ :gitlab-oauth        {:client-id     #profile {:production #ssm-parameter "/clojars/production/gitlab_oauth_client_id"
+                                                :default    "testing"}
+                       :client-secret #profile {:production #ssm-parameter "/clojars/production/gitlab_oauth_client_secret"
+                                                :default    "testing"}
+                       :callback-uri  "https://clojars.org/oauth/gitlab/callback"}
+ :index-path          "data/index"
+ :mail                {:from     "contact@clojars.org"
+                       :hostname "127.0.0.1"
+                       :tls?     false}
+ :nrepl-port          7991
+ :port                #profile {:default    8080
+                                :test       0
+                                :production 8001}
+ :repo                #profile {:production "repo"
+                                :test       "data/test/repo"
+                                :default    "data/dev_repo"}
+ :s3                  {:repo-bucket  #profile {:production "clojars-repo-production"
+                                               :default    "clojars-repo-development"}
+                       :stats-bucket #profile {:production "clojars-stats-production"
+                                               :default    "clojars-stats-development"}}
+ :sentry-dsn          #profile {:production #ssm-parameter "/clojars/production/sentry_dsn"
+                                :default nil}
+ :stats-dir           "data/stats"}

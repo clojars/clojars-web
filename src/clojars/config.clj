@@ -2,20 +2,35 @@
   (:require
    [aero.core :as aero]
    [clojure.java.io :as io]
-   [meta-merge.core :refer [meta-merge]]))
+   [cognitect.aws.client.api :as aws]))
 
-(defn get-extra-config-path
+(defn- ssm-client
   []
-  (System/getenv "CLOJARS_EXTRA_CONFIG"))
+  (aws/client {:api :ssm}))
 
-;; We attempt to read a file defined by the CLOJARS_EXTRA_CONFIG env
-;; var at load time. This is used to load production configuration.
-(defn merge-extra-config
-  [default-config]
-  (meta-merge
-   default-config
-   (when-let [extra-config (get-extra-config-path)]
-     (aero/read-config extra-config))))
+(defn- throw-on-error
+  [v]
+  (if (some? (:cognitect.anomalies/category v))
+    (throw (ex-info "SSM request failed" v))
+    v))
+
+(defn- get-parameter-value
+  [param-name]
+  (->> {:op :GetParameter
+        :request {:Name param-name
+                  :WithDecryption true}}
+       (aws/invoke (ssm-client))
+       (throw-on-error)
+       (:Parameter)
+       (:Value)))
+
+(def ^:dynamic *profile* "development")
+
+(defmethod aero/reader 'ssm-parameter
+  [_opts _tag value]
+  (if (= :production *profile*)
+    (get-parameter-value value)
+    ""))
 
 (defn jdbc-url [db-config]
   (if (string? db-config)
@@ -34,12 +49,9 @@
 
 (defn- load-config
   [profile]
-  (-> (io/resource "default_config.edn")
+  (-> (io/resource "config.edn")
       (aero/read-config {:profile profile})
-      (merge-extra-config)
       (translate)))
-
-(def ^:dynamic *profile* "development")
 
 (def config*
   (memoize load-config))
@@ -51,6 +63,7 @@
   - CLOJARS_ENVIRONMENT environment variable
   - *profile* dynamic var (defaults to \"development\")"
   []
-  (let [env (keyword (or (System/getenv "CLOJARS_ENVIRONMENT")
-                         *profile*))]
-    (config* env)))
+  (let [profile (keyword (or (System/getenv "CLOJARS_ENVIRONMENT")
+                             *profile*))]
+    (binding [*profile* profile]
+      (config* profile))))

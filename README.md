@@ -136,18 +136,15 @@ configuration. This can be done by `lein run`.
 Deployment
 ----------
 
-See the [Deployment instructions](https://github.com/clojars/clojars-server-config#deployment) in the 
-[clojars-server-config repo](https://github.com/clojars/clojars-server-config).
+See the [Deployment instructions](https://github.com/clojars/infrastructure#deployment) in the 
+[infrastructure repo](https://github.com/clojars/infrastructure).
 
 Also see [Configuration](#configuration).
 
 Configuration
 -------------
 
-The default configuration is loaded from
-`resources/default_config.edn`. To override values from the default
-config, place them in map in an edn file, and specify the path to that
-file via the `CLOJARS_EXTRA_CONFIG` environment variable.
+The configuration is loaded from `resources/config.edn`.
 
 When running automated tests at the repl, or with `lein test`, a test environment
 is used to provide isolation. It can be found in `test/clojars/test/test_helper.clj`.
@@ -155,7 +152,7 @@ is used to provide isolation. It can be found in `test/clojars/test/test_helper.
 License
 -------
 
-Copyright © 2009-2022 Alex Osborne, Phil Hagelberg, Nelson Morris,
+Copyright © 2009-2023 Alex Osborne, Phil Hagelberg, Nelson Morris,
 Toby Crawley, Daniel Compton and
 [contributors](https://github.com/clojars/clojars-web/graphs/contributors).
 

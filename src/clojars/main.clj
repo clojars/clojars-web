@@ -29,7 +29,7 @@
 
 (defn error-reporter [config]
   (let [dsn (:sentry-dsn config)]
-    (if (and dsn (not= "NOTSET" dsn))
+    (if dsn
       (let [raven-reporter (err/raven-error-reporter {:dsn dsn})]
         (info "enabling raven-clj client dsn:project-id:" (:project-id (raven-clj/parse-dsn dsn)))
         (Thread/setDefaultUncaughtExceptionHandler raven-reporter)
