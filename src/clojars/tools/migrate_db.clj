@@ -6,8 +6,8 @@
 
 (defn -main [& [env]]
   (binding [config/*profile* (if env
-                               (keyword env)
-                               :development)]
+                               env
+                               "development")]
     (let [db (:db (config/config))]
       (printf "=> Migrating %s db\n" config/*profile*)
       (migrate db))))
