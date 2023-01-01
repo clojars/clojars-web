@@ -11,6 +11,8 @@ if [ -z "$DATE" ]; then
     DATE=$(date --date='1 day ago' +%Y%m%d)
 fi
 
+S3_LOG_BUCKET=clojars-fastly-logs
+
 java -cp "$clojars_jar" clojure.main -m clojars.tools.combine-cdn-logs \
      "$S3_LOG_BUCKET" "$DATE" "$output_file"
 

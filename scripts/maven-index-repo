@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage:
-# S3_REPO_BUCKET=clojars-repo-production maven-index-repo releases/clojars-web-current.jar indexer/indexer-core-4.1.2-cli.jar indexer/index-4.1.2 repo
+# maven-index-repo releases/clojars-web-current.jar indexer/indexer-core-4.1.2-cli.jar indexer/index-4.1.2 repo
 
 set -e
 
@@ -8,6 +8,8 @@ clojars_jar=$1
 indexer_jar=$2
 index_dir=$3
 repo=$4
+
+S3_REPO_BUCKET=clojars-repo-production
 
 # synchronize the repo bucket locally
 # we only need the existing index, the poms, and maven-metadata.xml files

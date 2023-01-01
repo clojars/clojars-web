@@ -1,7 +1,7 @@
 #!/bin/bash
 # Rebuilds the search index, then uploads it to s3
 # Usage:
-# S3_INDEX_BUCKET=baz rebuild-search-index releases/clojars-web-current.jar
+# rebuild-search-index releases/clojars-web-current.jar
 
 set -e
 
@@ -18,5 +18,4 @@ index_path=$(grep "index-path:" /tmp/index-out.txt | sed -n 's/index-path: \(.*\
 # upload the new index the s3 bucket
 tar czf /tmp/artifact-index.tgz "$index_path"
 
-aws s3 cp --no-progress --content-type 'application/gzip' /tmp/artifact-index.tgz "s3://${S3_INDEX_BUCKET}/"
-
+aws s3 cp --no-progress --content-type 'application/gzip' /tmp/artifact-index.tgz "s3://clojars-artifact-index/"
