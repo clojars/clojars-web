@@ -6,6 +6,6 @@
    [clojars.system :as system]
    [com.stuartsierra.component :as component]))
 
-(defn -main []
-  (let [system (component/start (system/base-system (config)))]
+(defn -main [env]
+  (let [system (component/start (system/base-system (config (keyword env))))]
     (search/generate-index (:db system) (:stats system))))

@@ -6,4 +6,4 @@ set -e
 
 clojars_jar=$1
 
-java -cp $clojars_jar clojure.main -m clojars.tools.generate-feeds 2> /dev/null
+java -cp $clojars_jar clojure.main -m clojars.tools.generate-feeds production 2> /dev/null

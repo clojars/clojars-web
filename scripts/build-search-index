@@ -1,7 +1,7 @@
 #!/bin/bash
 # Rebuilds the search index, then uploads it to s3
 # Usage:
-# AWS_ACCESS_KEY_ID=foo AWS_SECRET_ACCESS_KEY=bar S3_INDEX_BUCKET=baz rebuild-search-index releases/clojars-web-current.jar
+# S3_INDEX_BUCKET=baz rebuild-search-index releases/clojars-web-current.jar
 
 set -e
 
@@ -11,7 +11,7 @@ cd "$dir/.."
 
 clojars_jar=$1
 
-java -cp "$clojars_jar" clojure.main -m clojars.tools.build-search-index | tee /tmp/index-out.txt
+java -cp "$clojars_jar" clojure.main -m clojars.tools.build-search-index production | tee /tmp/index-out.txt
 
 index_path=$(grep "index-path:" /tmp/index-out.txt | sed -n 's/index-path: \(.*\)/\1/p')
 

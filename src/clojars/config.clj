@@ -56,14 +56,17 @@
 (def config*
   (memoize load-config))
 
+;; TODO: (toby) make this less terrible
 (defn config
   "Loads the config based on the profile that is provided by one
   of (tried in order, and one of: \"development\", \"production\", or
   \"test\"):
   - CLOJARS_ENVIRONMENT environment variable
   - *profile* dynamic var (defaults to \"development\")"
-  []
-  (let [profile (keyword (or (System/getenv "CLOJARS_ENVIRONMENT")
-                             *profile*))]
-    (binding [*profile* profile]
-      (config* profile))))
+  ([]
+   (let [profile (keyword (or (System/getenv "CLOJARS_ENVIRONMENT")
+                              *profile*))]
+     (config profile)))
+  ([profile]
+   (binding [*profile* profile]
+     (config* profile))))
