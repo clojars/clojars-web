@@ -11,8 +11,9 @@
                        :port     #profile {:default    55432
                                            :test       #or [#env DB_PORT 55433]
                                            :production 5432}
-                       :user     "clojars"
-                       :password #profile {:production #ssm-parameter "/clojars/production/db_user"
+                       :user     #profile {:production #ssm-parameter "/clojars/production/db_user"
+                                           :default    "clojars"}
+                       :password #profile {:production #ssm-parameter "/clojars/production/db_password"
                                            :default    "clojars"}}
  :deletion-backup-dir #profile {:production "/home/clojars/repo-deleted"
                                 :default    "data/test/repo-backup"}
@@ -42,5 +43,5 @@
                        :stats-bucket #profile {:production "clojars-stats-production"
                                                :default    "clojars-stats-development"}}
  :sentry-dsn          #profile {:production #ssm-parameter "/clojars/production/sentry_dsn"
-                                :default nil}
+                                :default    nil}
  :stats-dir           "data/stats"}
