@@ -4,10 +4,9 @@
    [clojars.config :as config]
    [clojars.db.migrate :refer [migrate]]))
 
-(defn -main [& [env]]
-  (binding [config/*profile* (if env
-                               env
-                               "development")]
+(defn -main [env]
+  (binding [config/*profile* env]
+    (printf "=> Migrating %s db\n" env)
+    (flush)
     (let [db (:db (config/config))]
-      (printf "=> Migrating %s db\n" config/*profile*)
       (migrate db))))

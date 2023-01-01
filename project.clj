@@ -112,7 +112,7 @@
                   ["change" "version" "super.sport/bump-version"]
                   ["vcs" "commit"]
                   ["vcs" "push"]]
-  :aliases {"migrate" ["run" "-m" "clojars.tools.migrate-db"]}
+  :aliases {"migrate" ["run" "-m" "clojars.tools.migrate-db" "development"]}
   :pedantic? :warn
   :profiles
   {:dev  [:project/dev :profiles/dev]

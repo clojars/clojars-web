@@ -62,7 +62,7 @@ user=> (migrate)
 or alternatively, from the command line.
 
 ```sh
-$ lein run -m user/migrate
+$ lein migrate
 ```
 
 Run `go` to initiate and start the system.
