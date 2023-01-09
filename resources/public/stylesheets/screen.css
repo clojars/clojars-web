@@ -12,6 +12,12 @@ a:hover {
   text-decoration: underline;
 }
 
+
+details > summary {
+  display: list-item;
+  cursor: pointer;
+}
+
 h1, h2, h3, h4 {
   color: #393536;
 }
@@ -471,10 +477,25 @@ div.dependent-jar, div.dependent-versions {
 }
 
 #notice, .help {
-  font-weight: bold;
   padding: 10px;
   margin: 10px 0;
   border-radius: 10px;
+}
+
+#notice {
+  font-weight: bold;
+}
+
+details.help {
+  background-color: #f4f4f4;
+}
+
+details.help > summary {
+  font-weight: bold;
+}
+
+#notice h2 {
+  margin-top: 0px;
 }
 
 #notice.info {
@@ -486,11 +507,11 @@ div.dependent-jar, div.dependent-versions {
 }
 
 #notice.error {
-  background-color: #ff2929;
+  background-color: #ffff66;
   color: #393536;
 }
 
-.error ul {
+#notice ul {
    list-style-type: disc;
    list-style-position: inside;
 }
@@ -502,6 +523,10 @@ div.dependent-jar, div.dependent-versions {
 
 .help ul {
     list-style: inside;
+}
+
+.help p {
+  padding-top: 5px;
 }
 
 #jar-title h1 a {

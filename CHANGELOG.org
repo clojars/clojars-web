@@ -7,6 +7,9 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/commits/189][189]]
 + Consolidate configuration; use SSM parameters for sensitive values ([[https://github.com/tobias][Toby Crawley]])
 
+*** [[https://github.com/clojars/clojars-web/commits/190][190]]
++ [[https://github.com/clojars/clojars-web/issues/853][Allow self-service group verification]] ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2022-October
 *** [[https://github.com/clojars/clojars-web/commits/180][180]]
 + [[https://github.com/clojars/clojars-web/issues/849][Allow multiple artifact version deploys in same session]] ([[https://github.com/tobias][Toby Crawley]])

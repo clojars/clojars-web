@@ -139,7 +139,8 @@
              [:div.row
               [:nav.navigation.secondary-navigation.col-xs-24.col-sm-12
                (unordered-list
-                [(link-to "/notification-preferences" "notification prefs")
+                [(link-to "/verify/group" "group verification")
+                 (link-to "/notification-preferences" "notification prefs")
                  (link-to "/mfa" "two-factor auth")
                  (link-to "/profile" "profile")
                  (link-to "/tokens" "deploy tokens")])]])
@@ -238,9 +239,14 @@
           body
           (footer (get ctx :footer-links? true))]))
 
-(defn flash [& msg]
-  (when (some some? msg)
-    (into [:div#notice.info] msg)))
+(defn- flash*
+  [class & msgs]
+  (when (some some? msgs)
+    (into [:div#notice {:class class}] msgs)))
+
+(def flash (partial flash* "info"))
+
+(def error-flash (partial flash* "error"))
 
 (defn error-list [errors]
   (when errors

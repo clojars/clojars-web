@@ -86,6 +86,7 @@
     "upload"
     "user"
     "username"
+    "verify"
     "webmaster"
     "welcome"})
 
@@ -175,6 +176,10 @@
   (sql/find-group-verification {:group_name group-name}
                                {:connection db
                                 :result-set-fn first}))
+
+(defn find-group-verifications-for-users-groups [db username]
+  (sql/find-group-verifications-for-users-groups {:username username}
+                                                 {:connection db}))
 
 (defn verify-group! [db username group-name]
   (when-not (find-group-verification db group-name)

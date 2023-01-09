@@ -19,6 +19,7 @@
    [clojars.routes.token :as token]
    [clojars.routes.token-breach :as token-breach]
    [clojars.routes.user :as user]
+   [clojars.routes.verify :as verify]
    [clojars.web.browse :refer [browse]]
    [clojars.web.common :refer [html-doc]]
    [clojars.web.dashboard :refer [dashboard index-page]]
@@ -78,6 +79,7 @@
    ;; user routes must go after artifact routes
    ;; since they both catch /:identifier
    (user/routes db mailer)
+   (verify/routes db)
    (token/routes db)
    (api/routes db stats)
    (GET "/error" _ (throw (Exception. "What!? You really want an error?")))

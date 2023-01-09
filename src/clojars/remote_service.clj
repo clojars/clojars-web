@@ -1,5 +1,5 @@
 (ns clojars.remote-service
-  "A remote service abstraction to consilidate http request handing and
+  "A remote service abstraction to consolidate http request handing and
   to ease testing."
   (:require
    [cheshire.core :as json]
