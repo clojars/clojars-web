@@ -28,9 +28,15 @@
                                                 :default    "testing"}
                        :callback-uri  "https://clojars.org/oauth/gitlab/callback"}
  :index-path          "data/index"
- :mail                {:from     "contact@clojars.org"
-                       :hostname "127.0.0.1"
-                       :tls?     false}
+ :mail                #profile {:production {:from     "contact@clojars.org"
+                                             :hostname "email-smtp.us-east-1.amazonaws.com"
+                                             :port     587
+                                             :tls?     true
+                                             :username #ssm-parameter "/clojars/production/ses_username"
+                                             :password #ssm-parameter "/clojars/production/ses_password"}
+                                :default    {:from     "contact@clojars.org"
+                                             :hostname "127.0.0.1"
+                                             :tls?     false}}
  :nrepl-port          7991
  :port                #profile {:default    8080
                                 :test       0
