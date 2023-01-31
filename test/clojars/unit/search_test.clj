@@ -148,7 +148,7 @@
       (is (match? [(help/at-as-time-str lein-ring-new)]
                   (search/search lc (str "lein AND " (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z")) 1)))
       (is (match? []
-                  (search/search lc (format "at:[%s TO %s]" "2014-01-01" "2016-FOO/BAR") 1))))))
+                  (search/search lc (format "at:[%s TO %s]" "2014-01-01" "2016-FOO") 1))))))
 
 (deftest deleting-by-group-id
   (let [lein-ring {:group-id "lein-ring"
