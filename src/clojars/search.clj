@@ -291,17 +291,37 @@
    :version     (.get doc "version")
    :score       score})
 
+(defn- expand-group+artifact
+  "Converts 'foo/bar' into 'group-id:foo AND artifact-id:bar'. \"foo/bar\" (a phrase instead of a term) is left alone."
+  [query]
+  ;; This isn't perfect, it will collapse " foo " to " foo ", but
+  ;; leading/trailing whitespace likely won't be used in search phrases. This
+  ;; will also convert " foo/bar" into " group-id:foo AND artifact-id:bar",
+  ;; which won't match anything.
+  (->> (str/split query #"\s+")
+       (map #(if-some [[_ group artifact] (re-find #"^([^\"\s]+)/([^\"\s]+)$" %)]
+               (format "group-id:%s AND artifact-id:%s" group artifact)
+               %))
+       (str/join " ")))
+
+(def ^:private adjust-query
+  (comp
+   replace-time-range
+   expand-group+artifact))
+
 (defn -search*
   [^IndexReader index-reader query limit]
-  (let [searcher (doto (IndexSearcher. index-reader)
-                   (.setSimilarity (no-len-similarity)))
-        parser   (StandardQueryParser. (whitespace+lowercase-analyzer))
-        query    (.parse parser (replace-time-range query) content-field-name)
-        query    (FunctionScoreQuery/boostByValue query (DoubleValuesSource/fromDoubleField boost-field-name))
-        hits     (.search searcher query ^long limit)]
+  (let [searcher      (doto (IndexSearcher. index-reader)
+                        (.setSimilarity (no-len-similarity)))
+        parser        (StandardQueryParser. (whitespace+lowercase-analyzer))
+        parsed-query  (.parse parser ^String (adjust-query query) content-field-name)
+        boosted-query (FunctionScoreQuery/boostByValue
+                       parsed-query
+                       (DoubleValuesSource/fromDoubleField boost-field-name))
+        hits          (.search searcher boosted-query ^long limit)]
     {:hits     hits
      :searcher searcher
-     :query    query}))
+     :query    boosted-query}))
 
 ;; http://stackoverflow.com/questions/963781/how-to-achieve-pagination-in-lucene
 (defn -search
