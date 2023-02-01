@@ -83,14 +83,16 @@
       (is (match? [at-at]     (search/search lc "at-at" 1))))))
 
 (deftest search-by-group+artifact-id-as-single-term
-  (with-lucene-search-component [lein-ring
-                                 at-at
-                                 c]
-    (is (match? [lein-ring] (search/search lc "lein-ring/lein-ring" 1)))
-    (is (match? [at-at]     (search/search lc "at-at/at-at" 1)))
-    (is (empty? (search/search lc "lein-ring/nope" 1)))
-    (is (empty? (search/search lc "nope/lein-ring" 1)))
-    (is (empty? (search/search lc "\"lein-ring/lein-ring\"" 1)))))
+  (let [at-at (assoc at-at :description "similar to lein-ring/at-at.")]
+    (with-lucene-search-component [lein-ring
+                                   at-at
+                                   c]
+      (is (match? [lein-ring] (search/search lc "lein-ring/lein-ring" 1)))
+      (is (match? [at-at]     (search/search lc "at-at/at-at" 1)))
+      (is (match? [at-at]     (search/search lc "lein-ring/at-at" 1)))
+      (is (empty? (search/search lc "lein-ring/nope" 1)))
+      (is (empty? (search/search lc "nope/lein-ring" 1)))
+      (is (empty? (search/search lc "\"lein-ring/lein-ring\"" 1))))))
 
 (deftest search-by-description
   (let [lein-ring (merge lein-ring

@@ -292,7 +292,8 @@
    :score       score})
 
 (defn- expand-group+artifact
-  "Converts 'foo/bar' into 'group-id:foo AND artifact-id:bar'. \"foo/bar\" (a phrase instead of a term) is left alone."
+  "Converts 'foo/bar' into an additional clause for group & artifact exactly.
+  \"foo/bar\" (a phrase instead of a term) is left alone."
   [query]
   ;; This isn't perfect, it will collapse " foo " to " foo ", but
   ;; leading/trailing whitespace likely won't be used in search phrases. This
@@ -300,7 +301,7 @@
   ;; which won't match anything.
   (->> (str/split query #"\s+")
        (map #(if-some [[_ group artifact] (re-find #"^([^\"\s]+)/([^\"\s]+)$" %)]
-               (format "group-id:%s AND artifact-id:%s" group artifact)
+               (format "((group-id:%s AND artifact-id:%s) OR \"%s/%s\")" group artifact group artifact)
                %))
        (str/join " ")))
 
