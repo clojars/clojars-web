@@ -124,27 +124,44 @@
   (DirectoryReader/open index))
 
 (defn- hyphen-remover
-  "Replaces hyphens. This is used to expand a token into its components for use in
-  the full content string. Should be used alongside the unexpanded token so it
-  is still searchable."
-  [kw]
+  "Replaces hyphens with spaces. This is used to expand a token into its
+  components for use in the full content string. Should be used alongside the
+  unexpanded token so it is still searchable."
+  [f]
   (fn [m]
-    (when-some [v (get m kw)]
+    (when-some [v (f m)]
       (str/replace v #"[-]" " "))))
 
 (defn- period-remover
-  "Removes periods at the end of sentences since the whitespace tokenizer won't."
-  [kw]
+  "Replaces periods with spaces. This is used to expand a token into its
+  components for use in the full content string. Should be used alongside the
+  unexpanded token so it is still searchable."
+  [f]
   (fn [m]
-    (when-some [v (get m kw)]
+    (when-some [v (f m)]
+      (str/replace v #"[.]" " "))))
+
+(defn- sentence-period-remover
+  "Removes periods at the end of sentences since the whitespace tokenizer won't."
+  [f]
+  (fn [m]
+    (when-some [v (f m)]
       (str/replace v #"\.(\s|$)" " "))))
 
-(def ^:private content-fields
+(def ^:private content-items
   [:artifact-id
    (hyphen-remover :artifact-id)
    :group-id
    (hyphen-remover :group-id)
-   (period-remover :description)
+   ;; Include 'group name' & 'group name/artifact-name' in content (for a
+   ;; group-id of group.name) to aid in searching for things where new projects
+   ;; had to be deployed under a domain-based group
+   (period-remover :group-id)
+   (period-remover #(->> % ((juxt :group-id :artifact-id)) (str/join "/")))
+   ;; Include 'group-name/artifact-name' in content to allow
+   ;; the "group-name/artifact-name" phrase to find it
+   #(->> % ((juxt :group-id :artifact-id)) (str/join "/"))
+   (sentence-period-remover :description)
    :url
    :version
    #(->> % :authors (str/join " "))])
@@ -191,7 +208,7 @@
       (.add (string-field "version" version)))
     ;; content field containing all values to use as the default search field
     (.add (text-field content-field-name
-                      (str/join " " ((apply juxt content-fields) jar))))
+                      (str/join " " ((apply juxt content-items) jar))))
     ;; adds a boost field based on the ratio of downloads of the jar to the
     ;; total number of downloads. This is then applied to the query below.
     (.add (DoubleDocValuesField. boost-field-name download-boost))))
