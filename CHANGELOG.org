@@ -16,6 +16,8 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/commits/192][192]]
 + [[https://github.com/clojars/clojars-web/issues/856][Fix searching with group/artifact]] ([[https://github.com/tobias][Toby Crawley]])
 
+*** [[https://github.com/clojars/clojars-web/commits/193][193]]
++ [[https://github.com/clojars/clojars-web/issues/856][Further search improvements]] ([[https://github.com/tobias][Toby Crawley]])
 
 ** 2022-October
 *** [[https://github.com/clojars/clojars-web/commits/180][180]]
