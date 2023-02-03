@@ -79,7 +79,7 @@
       (err request "The domain name is not a valid domain name.")
 
       (not (group+domain-correspond? group domain))
-      (err request "Group and domain do not correspond with each other.")
+      (err request "Group and domain do not correspond with each other. Example: if your domain is 'example.com', your group must be (or start with) 'com.example'.")
 
       ;; This should never be hit currently, since we have no reverse-domain
       ;; groups in the reserved list. It is here in case we add one in the
@@ -175,7 +175,8 @@
         groups-to-verify (set/difference candidate-groups group-verifications)]
     (cond
       (not provider)
-      (err request "The format of the URL is invalid.")
+      (err request (format "The format of the URL is invalid. It must be of the form 'https://<vcs-host>.com/<org>/clojars-%s', where '<vcs-host>' is either 'github' or 'gitlab'."
+                           username))
 
       (= candidate-groups group-verification-names)
       (let [{:keys [created verified_by]} (first group-verifications)]

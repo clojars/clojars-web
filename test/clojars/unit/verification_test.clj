@@ -46,7 +46,7 @@
     "..com"))
 
 (deftest verify-group-by-TXT-with-no-correspondence
-  (is (= "Group and domain do not correspond with each other."
+  (is (= "Group and domain do not correspond with each other. Example: if your domain is 'example.com', your group must be (or start with) 'com.example'."
          (:error (nut/verify-group-by-TXT help/*db* {:group "com.foo" :domain "bar.com"})))))
 
 (deftest verify-group-by-TXT-with-invalid-TXT
@@ -168,8 +168,9 @@
 
 (deftest verify-vcs-groups-with-invalid-url
   (is (match?
-       {:error "The format of the URL is invalid."}
-       (nut/verify-vcs-groups help/*db* {:url "huh?"}))))
+       {:error "The format of the URL is invalid. It must be of the form 'https://<vcs-host>.com/<org>/clojars-dantheman', where '<vcs-host>' is either 'github' or 'gitlab'."}
+       (nut/verify-vcs-groups help/*db* {:url "huh?"
+                                         :username "dantheman"}))))
 
 (deftest verify-vcs-groups-with-url-not-matching-user
   (is (match?
