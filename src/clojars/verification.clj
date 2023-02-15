@@ -53,8 +53,9 @@
 (defn- verify-group*
   [db username group]
   ;; will only create the group if it doesn't already exist
-  (db/add-group db username group)
-  (db/verify-group! db username group))
+  (let [group (str/lower-case group)]
+    (db/add-group db username group)
+    (db/verify-group! db username group)))
 
 (defn- verify-group
   [db request username group]
@@ -166,11 +167,15 @@
   "Verifies the net. and com. groups for a github/gitlab organization based on url."
   [db {:as request :keys [username url]}]
   (let [[provider org username-from-url] (parse-url url)
-        candidate-groups (set (for [tld ["com" "net"]] (format "%s.%s.%s" tld provider org)))
-        group-verifications (set (map
-                                  (fn [group-name]
-                                    (db/find-group-verification db group-name))
-                                  candidate-groups))
+        candidate-groups (when org
+                           (set
+                            (for [tld ["com" "net"]]
+                              (str/lower-case (format "%s.%s.%s" tld provider org)))))
+        group-verifications (into #{}
+                                  (map
+                                   (fn [group-name]
+                                     (db/find-group-verification db group-name)))
+                                  candidate-groups)
         group-verification-names (set (map :group_name group-verifications))
         groups-to-verify (set/difference candidate-groups group-verifications)]
     (cond
