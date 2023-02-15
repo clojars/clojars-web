@@ -6,6 +6,8 @@ Newest items at the top. Note that updates before 2022-August were copied from
 ** 2023-February
 *** [[https://github.com/clojars/clojars-web/commits/194][194]]
 + Improve verification error messages to reduce confusion ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/195][195]]
++ Ensure group names are lowercased ([[https://github.com/tobias][Toby Crawley]])
 
 ** 2023-January
 *** [[https://github.com/clojars/clojars-web/commits/189][189]]
