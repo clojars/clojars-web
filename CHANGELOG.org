@@ -3,6 +3,9 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** 2023-March
+*** [[https://github.com/clojars/clojars-web/commits/196][196]]
++ Update DMCA contact information ([[https://github.com/danielcompton][Daniel Compton]])
 ** 2023-February
 *** [[https://github.com/clojars/clojars-web/commits/194][194]]
 + Improve verification error messages to reduce confusion ([[https://github.com/tobias][Toby Crawley]])
