@@ -258,8 +258,11 @@
 (defn validate-checksums [artifacts]
   (doseq [f artifacts]
     ;; verify that at least one type of checksum file exists
-    (when (not (or (.exists (fu/checksum-file f :md5))
-                   (.exists (fu/checksum-file f :sha1))))
+    (when (and (not (or (.exists (fu/checksum-file f :md5))
+                        (.exists (fu/checksum-file f :sha1))))
+               ;; Aether by default no longer checksums signature files, so we don't
+               ;; throw if it is missing
+               (not (match-file-name #"\.asc$" f)))
       (throw-invalid :file-missing-checksum
                      (format "no checksums provided for %s" (.getName f))
                      {:file f}))

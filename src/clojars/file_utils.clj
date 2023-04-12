@@ -37,9 +37,9 @@
   ([file type]
    (valid-checksum-file? file type true))
   ([file type fail-if-missing?]
-   (let [sig-file (checksum-file file type)]
-     (if (.exists sig-file)
-       (valid-checksum? (slurp sig-file) file type)
+   (let [sum-file (checksum-file file type)]
+     (if (.exists sum-file)
+       (valid-checksum? (slurp sum-file) file type)
        (not fail-if-missing?)))))
 
 (defn group->path [group]
