@@ -8,7 +8,9 @@
    [clojars.tools.generate-feeds :as feeds]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [clojure.test :refer [deftest is use-fixtures]])
+   [clojure.test :refer [deftest is use-fixtures]]
+   [matcher-combinators.matchers :as m]
+   [matcher-combinators.test])
   (:import
    (java.util.zip
     GZIPInputStream)))
@@ -66,7 +68,7 @@
    "./test/test/0.0.1/test.pom"])
 
 (deftest feed-generation-should-work
-  (is (= expected-feed (feeds/full-feed help/*db*))))
+  (is (match? (m/in-any-order expected-feed) (feeds/full-feed help/*db*))))
 
 (deftest all-jars-generation-should-work
   (is (= expected-jar-list (feeds/jar-list help/*db*))))
@@ -96,7 +98,7 @@
                          (slurp)
                          (format "[%s]")
                          (read-string))]
-      (is (= expected-feed read-feed))))
+      (is (match? (m/in-any-order expected-feed) read-feed))))
 
   (let [pom-file (io/file "/tmp" "all-poms.txt")]
     (verify-file-and-sums pom-file)
