@@ -295,7 +295,7 @@ ORDER BY l.created DESC
 LIMIT 6;
 
 --name: all-jars
-SELECT * FROM jars;
+SELECT * FROM jars order by id;
 
 --name: jar-exists
 SELECT EXISTS(

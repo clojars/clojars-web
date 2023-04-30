@@ -3,6 +3,7 @@
   (:require
    [clojars.config :refer [config]]
    [clojars.db :as db]
+   [clojars.maven :as maven]
    [clojars.stats :as stats]
    [clojure.set :as set]
    [clojure.string :as str]
@@ -270,7 +271,7 @@
              {:indexed 0
               :last-time (System/currentTimeMillis)
               :start-time (System/currentTimeMillis)}
-             (db/all-jars db))
+             (maven/sort-by-version (db/all-jars db)))
             seconds (float (/ (- (System/currentTimeMillis) start-time) 1000))]
         (printf "Indexing complete. Indexed %s jars in %f seconds (%f/second)\n"
                 indexed seconds (/ indexed seconds))

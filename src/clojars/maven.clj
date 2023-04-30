@@ -185,6 +185,11 @@
      (compare-qualifiers (:qualifier x) (:qualifier y))
      (compare (:build-number x 0) (:build-number y 0)))))
 
+(defn sort-by-version
+  "Sorts a sequence of jar maps by maven version ordering."
+  [jars]
+  (sort-by :version #(compare-versions %2 %1) jars))
+
 (defn snapshot-version? [version]
   (.endsWith version "-SNAPSHOT"))
 
