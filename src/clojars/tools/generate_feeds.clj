@@ -17,6 +17,7 @@
 (defn full-feed [db]
   (let [grouped-jars (->> (db/all-jars db)
                           (maven/sort-by-version)
+                          (reverse) ;; We want the most recent version first
                           (map (comp #(assoc % :url (:homepage %))
                                      #(select-keys % [:group-id :artifact-id :version
                                                       :description :scm :homepage])
