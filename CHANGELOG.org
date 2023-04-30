@@ -6,6 +6,8 @@ Newest items at the top. Note that updates before 2022-August were copied from
 ** 2023-April
 *** [[https://github.com/clojars/clojars-web/commits/197][197]]
 + [[https://github.com/clojars/clojars-web/issues/859][Stop requiring checksums for signature files]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/199][199]]
++ [[https://github.com/clojars/clojars-web/issues/861][Sort versions before indexing]] ([[https://github.com/tobias][Toby Crawley]])
 ** 2023-March
 *** [[https://github.com/clojars/clojars-web/commits/196][196]]
 + Update DMCA contact information ([[https://github.com/danielcompton][Daniel Compton]])
