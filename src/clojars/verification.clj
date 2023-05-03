@@ -161,20 +161,24 @@
       (doseq [group groups]
         (verify-group* db username group))
       ;; We will only have two groups here, so this format string should be fine
-      (assoc request :message (apply format "The groups '%s' & '%s' have been verified." groups)))))
+      (assoc request
+             :message (apply format "The groups '%s' & '%s' have been verified."
+                             (sort groups))))))
 
 (defn verify-vcs-groups
-  "Verifies the net. and com. groups for a github/gitlab organization based on url."
+  "Verifies the io. and com. groups for a github/gitlab organization based on url."
   [db {:as request :keys [username url]}]
   (let [[provider org username-from-url] (parse-url url)
         candidate-groups (when org
                            (set
-                            (for [tld ["com" "net"]]
+                            (for [tld ["com" "io"]]
                               (str/lower-case (format "%s.%s.%s" tld provider org)))))
         group-verifications (into #{}
-                                  (map
-                                   (fn [group-name]
-                                     (db/find-group-verification db group-name)))
+                                  (comp
+                                   (map
+                                    (fn [group-name]
+                                      (db/find-group-verification db group-name)))
+                                   (remove nil?))
                                   candidate-groups)
         group-verification-names (set (map :group_name group-verifications))
         groups-to-verify (set/difference candidate-groups group-verifications)]

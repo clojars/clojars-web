@@ -59,23 +59,23 @@
 (deftest user-can-verify-sub-group
   (help/with-TXT ["clojars dantheman"]
     (let [sess (-> (session)
-                  (visit "/verify/group")
-                  (within [:div.via-txt]
-                          (fill-in "Group name" "com.example")
-                          (fill-in "Domain with TXT record" "example.com")
-                          (press "Verify Group"))
-                  (follow-redirect)
-                  (within [:div.info]
-                          (has (some-text? "The group 'com.example' has been verified"))))]
+                   (visit "/verify/group")
+                   (within [:div.via-txt]
+                     (fill-in "Group name" "com.example")
+                     (fill-in "Domain with TXT record" "example.com")
+                     (press "Verify Group"))
+                   (follow-redirect)
+                   (within [:div.info]
+                     (has (some-text? "The group 'com.example' has been verified"))))]
       (assert-admin-email :success)
       (email/expect-mock-emails 1)
       (-> sess
           (within [:div.via-parent]
-                  (fill-in "Group name" "com.example.ham")
-                  (press "Verify Group"))
+            (fill-in "Group name" "com.example.ham")
+            (press "Verify Group"))
           (follow-redirect)
           (within [:div.info]
-                  (has (some-text? "The group 'com.example.ham' has been verified"))))
+            (has (some-text? "The group 'com.example.ham' has been verified"))))
       (assert-admin-email :success))))
 
 (deftest user-cannot-verify-subgroup-with-non-verified-parent
@@ -99,7 +99,7 @@
           (press "Verify Groups"))
         (follow-redirect)
         (within [:div.info]
-          (has (some-text? "The groups 'com.github.example' & 'net.github.example' have been verified"))))
+          (has (some-text? "The groups 'com.github.example' & 'io.github.example' have been verified"))))
     (assert-admin-email :success)))
 
 (deftest user-cannot-verify-vcs-groups-with-missing-repo

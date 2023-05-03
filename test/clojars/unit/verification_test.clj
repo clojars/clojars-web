@@ -180,7 +180,7 @@
 
 (deftest verify-vcs-groups-with-already-verified-groups
   (db/verify-group! help/*db* "dantheman" "com.github.foo")
-  (db/verify-group! help/*db* "dantheman" "net.github.foo")
+  (db/verify-group! help/*db* "dantheman" "io.github.foo")
   (is (match?
        {:error (format "Groups already verified by user 'dantheman' on %s."
                        (common/format-date (Date.)))}
@@ -188,10 +188,10 @@
                                          :username "dantheman"}))))
 
 (deftest verify-vcs-groups-with-non-existent-repo
-  (doseq [responders [(constantly {:status 404})
-                      (constantly {:status 302})
-                      (fn [& _] (throw (ex-info "BOOM" {})))]]
-    (with-redefs [http/head responders]
+  (doseq [responder [(constantly {:status 404})
+                     (constantly {:status 302})
+                     (fn [& _] (throw (ex-info "BOOM" {})))]]
+    (with-redefs [http/head responder]
       (is (match?
            {:error "The verification repo does not exist."}
            (nut/verify-vcs-groups help/*db* {:url      "https://github.com/foo/clojars-dantheman"
@@ -200,6 +200,6 @@
 (deftest verify-vcs-groups-when-the-repo-exists
   (with-redefs [http/head (constantly {:status 200})]
     (is (match?
-         {:message "The groups 'com.github.foo' & 'net.github.foo' have been verified."}
+         {:message "The groups 'com.github.foo' & 'io.github.foo' have been verified."}
          (nut/verify-vcs-groups help/*db* {:url      "https://github.com/foo/clojars-dantheman"
                                            :username "dantheman"})))))
