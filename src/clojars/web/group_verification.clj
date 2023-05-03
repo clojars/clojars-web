@@ -71,9 +71,9 @@
       [:code "https://github.com/example-org/"] " or "
       [:code "https://gitlab.com/example-org/"] ", you can have the groups "
       [:code "com.github.example-org"] " & "
-      [:code "net.github.example-org"] " or "
+      [:code "io.github.example-org"] " or "
       [:code "com.gitlab.example-org"] " & "
-      [:code "net.gitlab.example-org"] ", respectively."]
+      [:code "io.gitlab.example-org"] ", respectively."]
      [:p
       " You can verify ownership of the organization by creating
       a " [:strong "public"] " repo named "
