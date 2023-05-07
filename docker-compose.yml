@@ -20,3 +20,12 @@ services:
       - POSTGRES_DB=clojars
     volumes:
       - ./data/test-postgres:/var/lib/postgresql/data
+  minio:
+    image: minio/minio:RELEASE.2023-04-20T17-56-55Z
+    command: server /data --console-address ":9090"
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: fake-access-key
+      MINIO_ROOT_PASSWORD: fake-secret-key
