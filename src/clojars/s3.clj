@@ -7,6 +7,8 @@
   (:import
    (java.io
     ByteArrayInputStream)
+   (java.util
+    Date)
    (org.apache.commons.io
     IOUtils)))
 
@@ -14,6 +16,7 @@
   (-delete-object [client key])
   (-get-object-details [client key])
   (-get-object-stream [client key])
+  (-list-entries [client prefix])
   (-list-objects [client prefix])
   (-put-object [client key stream opts]))
 
@@ -24,10 +27,11 @@
     v))
 
 (defn- list-objects-chunk
-  [client bucket-name prefix continuation-token]
+  [client bucket-name prefix delimeter continuation-token]
   (let [request (cond-> {:Bucket bucket-name}
-                  prefix (assoc :Prefix prefix)
-                  continuation-token (assoc :ContinuationToken continuation-token))]
+                  continuation-token (assoc :ContinuationToken continuation-token)
+                  delimeter          (assoc :Delimiter delimeter)
+                  prefix             (assoc :Prefix prefix))]
     (throw-on-error
      (aws/invoke client
                  {:op :ListObjectsV2
@@ -35,13 +39,14 @@
 
 (defn- list-objects-seq
   "Generates a lazy seq of list-objects results, chunked by the API's paging."
-  [client bucket-name prefix continuation-token]
+  [client bucket-name {:as opts :keys [continuation-token delimeter prefix]}]
   (let [{:as result :keys [IsTruncated NextContinuationToken]}
-        (list-objects-chunk client bucket-name prefix continuation-token)]
+        (list-objects-chunk client bucket-name prefix delimeter continuation-token)]
     (if IsTruncated
       (lazy-seq
        (cons result
-             (list-objects-seq client bucket-name prefix NextContinuationToken)))
+             (list-objects-seq client bucket-name
+                               (assoc opts :continuation-token NextContinuationToken))))
       [result])))
 
 (defn- strip-etag
@@ -82,12 +87,18 @@
          (throw-on-error)
          :Body))
 
+  (-list-entries [_ prefix]
+    (sequence
+     (mapcat #(concat (:CommonPrefixes %) (map strip-etag (:Contents %))))
+     (list-objects-seq s3 bucket-name {:delimeter "/"
+                                       :prefix prefix})))
+
   (-list-objects [_ prefix]
     (sequence
      (comp
       (mapcat :Contents)
       (map strip-etag))
-     (list-objects-seq s3 bucket-name prefix nil)))
+     (list-objects-seq s3 bucket-name {:prefix prefix})))
 
   (-put-object [_ key stream opts]
     (->> {:op :PutObject
@@ -117,6 +128,12 @@
       (aws/validate-requests true))
     bucket)))
 
+(defn- mock-object-entry
+  [k bytes]
+  {:Key          k
+   :Size         (count bytes)
+   :LastModified (Date.)})
+
 (defrecord MockS3Client [state]
   S3Bucket
   (-delete-object [_ key]
@@ -127,10 +144,27 @@
   (-get-object-stream [_ key]
     (when-let [data (get @state key)]
       (ByteArrayInputStream. data)))
-  (-list-objects [_ prefix]
+  (-list-entries [_ prefix]
     (->> (keys @state)
-         (filter (fn [k] (if prefix (.startsWith k prefix) true)))
-         (map (fn [k] {:Key k}))))
+         (filter (fn [k]
+                   (if prefix
+                     (.startsWith k prefix)
+                     true)))
+         (map (fn [k]
+                (let [k-sans-prefix (if prefix
+                                      (subs k (count prefix))
+                                      k)
+                      [k-segment & more] (str/split k-sans-prefix #"/")]
+                  (if more
+                    {:Prefix (format "%s%s/" prefix k-segment)}
+                    (mock-object-entry k (get @state k))))))
+         (distinct)))
+  (-list-objects [_ prefix]
+    (into []
+          (comp
+           (filter (fn [k] (if prefix (.startsWith k prefix) true)))
+           (map (fn [k] (mock-object-entry k (get @state k)))))
+          (keys @state)))
   (-put-object [_ key stream _opts]
     (swap! state assoc key (IOUtils/toByteArray stream))))
 
@@ -152,6 +186,17 @@
 (defn get-object-stream
   [s3 key]
   (-get-object-stream s3 key))
+
+(defn list-entries
+  "Lists the entries in the bucket at the level defined by prefix.
+
+  Returns a sequence of intermixed prefix maps (of the form {:Prefix \"some/string/\"})
+  and object list maps (of the form {:Key \"a-key\", :Size 123, ...}, same as
+  `list-objects`).
+
+  This is used to generate directory listings."
+  [s3 prefix]
+  (-list-entries s3 prefix))
 
 (defn list-objects
   ([s3]
