@@ -16,6 +16,8 @@
    (java.text
     SimpleDateFormat)))
 
+(set! *warn-on-reflection* true)
+
 (defn when-ie [& contents]
   (str
    "<!--[if lt IE 9]>"
@@ -335,17 +337,19 @@
 (defn group-link [groupname]
   (link-to (str "/groups/" groupname) groupname))
 
-(defn format-date [d]
-  (when d
-    (.format (SimpleDateFormat. "yyyy-MM-dd") d)))
+(defn- format-date*
+  [^SimpleDateFormat formatter v]
+  (when v
+    (.format formatter v)))
 
-(defn simple-date [d]
-  (when d
-    (.format (SimpleDateFormat. "MMM d, yyyy") d)))
+(def format-date
+  (partial format-date* (SimpleDateFormat. "yyyy-MM-dd")))
 
-(defn format-timestamp [t]
-  (when t
-    (.format (SimpleDateFormat. "MMM d, yyyy HH:mm:ss Z") t)))
+(def simple-date
+  (partial format-date* (SimpleDateFormat. "MMM d, yyyy")))
+
+(def format-timestamp
+  (partial format-date* (SimpleDateFormat. "MMM d, yyyy HH:mm:ss Z")))
 
 (defn page-nav [current-page total-pages & {:keys [base-path] :or {base-path "/projects?page="}}]
   (let [previous-text (raw "&#8592; Previous")
@@ -380,7 +384,7 @@
      (concat main-div previous-page before-current current after-current next-page))))
 
 (defn page-description [current-page per-page total]
-  (let [total-pages (-> (/ total per-page) Math/ceil .intValue)
+  (let [total-pages (-> (/ total per-page) Math/ceil int)
         current-page (-> current-page (max 1) (min total-pages))
         upper (* per-page current-page)]
     [:div {:class "page-description"}
