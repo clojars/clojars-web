@@ -156,7 +156,7 @@
                                       k)
                       [k-segment & more] (str/split k-sans-prefix #"/")]
                   (if more
-                    {:Prefix (format "%s%s/" prefix k-segment)}
+                    {:Prefix (format "%s%s/" (or prefix "") k-segment)}
                     (mock-object-entry k (get @state k))))))
          (distinct)))
   (-list-objects [_ prefix]

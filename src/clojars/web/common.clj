@@ -351,6 +351,9 @@
 (def format-timestamp
   (partial format-date* (SimpleDateFormat. "MMM d, yyyy HH:mm:ss Z")))
 
+(def format-date-with-time
+  (partial format-date* (SimpleDateFormat. "yyyy-MM-dd HH:mm")))
+
 (defn page-nav [current-page total-pages & {:keys [base-path] :or {base-path "/projects?page="}}]
   (let [previous-text (raw "&#8592; Previous")
         next-text (raw "Next &#8594;")

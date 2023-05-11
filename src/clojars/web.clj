@@ -15,6 +15,7 @@
    [clojars.routes.artifact :as artifact]
    [clojars.routes.group :as group]
    [clojars.routes.repo :as repo]
+   [clojars.routes.repo-listing :as repo-listing]
    [clojars.routes.session :as session]
    [clojars.routes.token :as token]
    [clojars.routes.token-breach :as token-breach]
@@ -24,7 +25,7 @@
    [clojars.web.common :refer [html-doc]]
    [clojars.web.dashboard :refer [dashboard index-page]]
    [clojars.web.safe-hiccup :refer [raw]]
-   [clojars.web.search :refer [search]]
+   [clojars.web.search :as search]
    [clojure.java.io :as io]
    [compojure.core :refer [ANY context GET PUT routes]]
    [compojure.route :refer [not-found]]
@@ -46,51 +47,54 @@
                :error-message "The page query parameter must be an integer."
                :status 400})))))
 
-(defn- main-routes [db stats search-obj mailer]
-  (routes
-   (GET "/" _
-        (try-account
-         #(if %
-            (dashboard db %)
-            (index-page db stats %))))
-   (GET "/search" {:keys [params]}
-        (try-account
-         #(let [validated-params (if (:page params)
-                                   (assoc params :page (try-parse-page (:page params)))
-                                   params)]
-            (search search-obj % validated-params))))
-   (GET "/projects" {:keys [params]}
-        (try-account
-         #(let [validated-params (if (:page params)
-                                   (assoc params :page (try-parse-page (:page params)))
-                                   params)]
-            (browse db % validated-params))))
-   (GET "/security" []
-        (try-account
-         #(html-doc "Security" {:account %}
-                    (raw (slurp (io/resource "security.html"))))))
-   (GET "/dmca" []
-        (try-account
-         #(html-doc "DMCA" {:account %}
-                    (raw (slurp (io/resource "dmca.html"))))))
-   session/routes
-   (group/routes db)
-   (artifact/routes db stats)
-   ;; user routes must go after artifact routes
-   ;; since they both catch /:identifier
-   (user/routes db mailer)
-   (verify/routes db)
-   (token/routes db)
-   (api/routes db stats)
-   (GET "/error" _ (throw (Exception. "What!? You really want an error?")))
-   (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
-   (ANY "*" _
-        (try-account
-         #(not-found
-           (html-doc "Page not found" {:account %}
-                     [:div.small-section
-                      [:h1 "Page not found"]
-                      [:p "Thundering typhoons!  I think we lost it.  Sorry!"]]))))))
+(defn- main-routes
+  [{:as _system :keys [db mailer repo-bucket search stats]}]
+  (let [db (:spec db)]
+    (routes
+     (GET "/" _
+          (try-account
+           #(if %
+              (dashboard db %)
+              (index-page db stats %))))
+     (GET "/search" {:keys [params]}
+          (try-account
+           #(let [validated-params (if (:page params)
+                                     (assoc params :page (try-parse-page (:page params)))
+                                     params)]
+              (search/search search % validated-params))))
+     (GET "/projects" {:keys [params]}
+          (try-account
+           #(let [validated-params (if (:page params)
+                                     (assoc params :page (try-parse-page (:page params)))
+                                     params)]
+              (browse db % validated-params))))
+     (GET "/security" []
+          (try-account
+           #(html-doc "Security" {:account %}
+                      (raw (slurp (io/resource "security.html"))))))
+     (GET "/dmca" []
+          (try-account
+           #(html-doc "DMCA" {:account %}
+                      (raw (slurp (io/resource "dmca.html"))))))
+     session/routes
+     (repo-listing/routes repo-bucket)
+     (group/routes db)
+     (artifact/routes db stats)
+     ;; user routes must go after artifact routes
+     ;; since they both catch /:identifier
+     (user/routes db mailer)
+     (verify/routes db)
+     (token/routes db)
+     (api/routes db stats)
+     (GET "/error" _ (throw (Exception. "What!? You really want an error?")))
+     (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
+     (ANY "*" _
+          (try-account
+           #(not-found
+             (html-doc "Page not found" {:account %}
+                       [:div.small-section
+                        [:h1 "Page not found"]
+                        [:p "Thundering typhoons!  I think we lost it.  Sorry!"]])))))))
 
 (def ^:private defaults-config
   (-> ring-defaults/secure-site-defaults
@@ -102,14 +106,13 @@
       (dissoc :session)))
 
 (defn clojars-app
-  [{:keys [db
+  [{:as system
+    :keys [db
            error-reporter
            http-client
            github
            gitlab
-           mailer
            search
-           stats
            storage]}]
   (let [db (:spec db)]
     (routes
@@ -131,7 +134,7 @@
      (-> (token-breach/routes db)
          (wrap-exceptions error-reporter)
          (log/wrap-request-context))
-     (-> (main-routes db stats search mailer)
+     (-> (main-routes system)
          (friend/authenticate
           {:credential-fn (auth/password-credential-fn db)
            :workflows [(auth/interactive-form-with-mfa-workflow)
