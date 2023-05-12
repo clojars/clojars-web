@@ -91,7 +91,7 @@
         (component/system-using
          {:app           [:clojars-app]
           :clojars-app   [:db :github :gitlab :error-reporter :http-client
-                          :mailer :stats :search :storage]
+                          :mailer :repo-bucket :stats :search :storage]
           :http          [:app]
           :notifications [:db :mailer]
           :storage       [:error-reporter :repo-bucket]}))))
