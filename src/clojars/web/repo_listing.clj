@@ -53,9 +53,9 @@
      "\n")))
 
 (defmethod entry-line :file
-  [{:keys [ContentLength Key LastModified]}]
+  [{:keys [Key LastModified Size]}]
   (let [file-name (last-segment Key)
-        size (str ContentLength)]
+        size (str Size)]
     (list
      (el/link-to {:title file-name} file-name file-name)
      (blanks name-col-width file-name)
