@@ -15,9 +15,9 @@
 (defn routes
   [repo-bucket]
   (compojure/routes
-   (GET ["/repo-listing"]
+   (GET ["/list-repo"]
         {{:keys [path]} :params}
         (repo-listing repo-bucket path))
-   (HEAD ["/repo-listing"]
+   (HEAD ["/list-repo"]
          {{:keys [path]} :params}
          (repo-listing repo-bucket path))))
