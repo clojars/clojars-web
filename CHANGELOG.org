@@ -4,7 +4,7 @@ Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
 * 2023-May
-*** [[https://github.com/clojars/clojars-web/commits/202][202]]
+*** [[https://github.com/clojars/clojars-web/commits/203][203]]
 + [[https://github.com/clojars/clojars-web/issues/860][Return html repo indexes instead of building it in js]] ([[https://github.com/tobias][Toby Crawley]])
 
 *** [[https://github.com/clojars/clojars-web/commits/200][200]]
