@@ -69,11 +69,11 @@
         (link-to "https://www.fastmail.com/tryit-clojars/"
                  (image "/images/fastmail-logo.png" "Fastmail"))]
        [:div.sponsor
-        (link-to "https://pingometer.com/"
-                 (image "/images/pingometer-logo.svg" "Pingometer"))]
-       [:div.sponsor
         (link-to "https://www.statuspage.io"
-                 (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]]]
+                 (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]
+       [:div.sponsor
+        (link-to "https://uptime.com/"
+                 (image "/images/uptime-logo.svg" "Uptime.com"))]]]
      [:div.sponsors
       [:div.sponsors-group
        [:div.sponsor
