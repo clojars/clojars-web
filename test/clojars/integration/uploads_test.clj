@@ -705,7 +705,7 @@
                 (filter #(re-find #"(pom|jar|-test\.jar)$" (.getName %)))
                 count))))
 
-(deftest user-can-deploy-with-signatures
+(deftest user-can-deploy-with-gpg-signatures
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
@@ -719,21 +719,37 @@
                      [:extension "pom.asc"] pom}
       :password token})))
 
+(deftest user-can-deploy-with-ssh-signatures
+  (-> (session (help/app-from-system))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+        pom (io/file (io/resource "test-0.0.1/test.pom"))]
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+      :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
+                     [:extension "pom"] pom
+                     ;; any content will do since we don't validate signatures
+                     [:extension "jar.sig"] pom
+                     [:extension "pom.sig"] pom}
+      :password token})))
+
 (deftest missing-signature-fails-the-deploy
   (-> (session (help/app-from-system))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
         pom (io/file (io/resource "test-0.0.1/test.pom"))]
-    (is (thrown-with-msg?
-         DeploymentException
-         #"test-0.0.1.pom has no signature"
-          (deploy
-           {:coordinates '[org.clojars.dantheman/test "0.0.1"]
-            :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
-                           [:extension "pom"] pom
-                           ;; any content will do since we don't validate signatures
-                           [:extension "jar.asc"] pom}
-            :password token})))
+    (doseq [suffix ["asc" "sig"]]
+      (testing (format "with a suffix of .%s" suffix)
+        (is (thrown-with-msg?
+             DeploymentException
+             #"test-0.0.1.pom has no signature"
+              (deploy
+               {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+                :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
+                               [:extension "pom"] pom
+                               ;; any content will do since we don't validate signatures
+                               [:extension (format "jar.%s" suffix)] pom}
+                :password token})))))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"

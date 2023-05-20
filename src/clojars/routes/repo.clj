@@ -262,7 +262,9 @@
                         (.exists (fu/checksum-file f :sha1))))
                ;; Aether by default no longer checksums signature files, so we don't
                ;; throw if it is missing
-               (not (match-file-name #"\.asc$" f)))
+               (not (match-file-name #"\.asc$" f))
+               ;; Same for SSH signed files
+               (not (match-file-name #"\.sig$" f)))
       (throw-invalid :file-missing-checksum
                      (format "no checksums provided for %s" (.getName f))
                      {:file f}))
@@ -273,13 +275,13 @@
                        (format "invalid %s checksum for %s" type (.getName f))
                        {:file f})))))
 
-(defn assert-signatures [artifacts]
+(defn- assert-signatures [suffix artifacts]
   ;; if any signatures exist, require them for every artifact
-  (let [asc-matcher (partial match-file-name #"\.asc$")]
-    (when (some asc-matcher artifacts)
+  (let [suffix-matcher (partial match-file-name (re-pattern (format "\\%s$" suffix)))]
+    (when (some suffix-matcher artifacts)
       (doseq [f artifacts
-              :when (not (asc-matcher f))
-              :when (not (.exists (io/file (str (.getAbsolutePath f) ".asc"))))]
+              :when (not (suffix-matcher f))
+              :when (not (.exists (io/file (str (.getAbsolutePath f) suffix))))]
         (throw-invalid :file-missing-signature
                        (format "%s has no signature" (.getName f)) {:file f})))))
 
@@ -313,7 +315,8 @@
 
   (let [artifacts (find-artifacts dir)]
     (validate-checksums artifacts)
-    (assert-signatures (remove (partial match-file-name "maven-metadata.xml") artifacts))))
+    (assert-signatures ".asc" (remove (partial match-file-name "maven-metadata.xml") artifacts))
+    (assert-signatures ".sig" (remove (partial match-file-name "maven-metadata.xml") artifacts))))
 
 (defmacro profile [meta & body]
   `(let [start# (System/currentTimeMillis)]
@@ -513,7 +516,7 @@
                :body nil}))))
    (PUT ["/:group/:artifact/:version/:filename"
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
-         :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc|\.module)$"]
+         :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc|\.module|\.sig)$"]
         {body :body session :session {:keys [group artifact version filename]} :params}
         (binding [*db* db]
           (handle-versioned-upload storage db body session group artifact version filename)))
