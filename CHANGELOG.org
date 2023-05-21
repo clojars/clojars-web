@@ -5,8 +5,7 @@ Newest items at the top. Note that updates before 2022-August were copied from
 
 * 2023-May
 *** [[https://github.com/clojars/clojars-web/commits/205][205]]
-+ [[https://github.com/clojars/clojars-web/issues/863
-][Support SSH signing]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/issues/863][Support SSH signing]] ([[https://github.com/tobias][Toby Crawley]])
 
 *** [[https://github.com/clojars/clojars-web/commits/204][204]]
 + [[https://github.com/clojars/clojars-web/commit/571a948e90c393d296ed9c820da7ecb42b465ef1][Replace pingometer logo with uptime.com]] ([[https://github.com/tobias][Toby Crawley]])
