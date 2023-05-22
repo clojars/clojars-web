@@ -9,8 +9,8 @@
   (-> (repo-listing/index repo-bucket path)
       (ring.response/response)
       (ring.response/content-type "text/html;charset=utf-8")
-      ;; Instruct fastly to cache this result for 15 minutes
-      (ring.response/header "Cache-Control" "s-maxage=900")))
+      ;; Instruct fastly to cache this result for 12 hours
+      (ring.response/header "Cache-Control" "s-maxage=43200")))
 
 (defn routes
   [repo-bucket]
