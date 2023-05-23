@@ -8,7 +8,7 @@
   (compojure/routes
    (GET ["/list-repo"]
         {{:keys [path]} :params}
-        (repo-listing/response repo-lister path))
+        (repo-listing/index-for-path repo-lister path))
    (HEAD ["/list-repo"]
          {{:keys [path]} :params}
-         (repo-listing/response repo-lister path))))
+         (repo-listing/index-for-path repo-lister path))))

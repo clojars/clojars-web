@@ -127,48 +127,47 @@
       (/ 1000)
       (long)))
 
-(defn- cached-response
-  [cache-path requested-path]
-  (let [cached-file (cache-file cache-path requested-path)]
-    (when (.exists cached-file)
-      (let [age (file-age cached-file)]
-        (when-not (> age max-age)
-          [(edn/read-string (slurp cached-file)) age])))))
-
-(defn- cache-response
-  [cache-path requested-path response]
-  (spit (cache-file cache-path requested-path)
-        (binding [*print-length* nil]
-          (pr-str response)))
-  response)
-
-(defn- with-maxage
-  [r curr-age-in-seconds]
-  (ring.response/header r "Cache-Control" (format "s-maxage=%s" (- max-age curr-age-in-seconds))))
-
-(def ^:private not-found
+(def ^:private not-found-response
   (-> (safe-hiccup/html5
        {:lang "en"}
        [:head [:title "404 Not Found"]]
        [:body [:h1 "404 Not Found"]])
       (ring.response/not-found)
-      (ring.response/content-type "text/html;charset=utf-8")
-      (with-maxage 0)))
+      (ring.response/content-type "text/html;charset=utf-8")))
 
-(defn response
+(defn- get-cached-response
+  [cache-path requested-path]
+  (let [cached-file (cache-file cache-path requested-path)]
+    (when (.exists cached-file)
+      (let [age (file-age cached-file)]
+        (when-not (> age max-age)
+          (let [response (edn/read-string (slurp cached-file))]
+            ;; We don't cache the full :not-found response since it is static to
+            ;; save disk space
+            [(if (= :not-found response) not-found-response response) age]))))))
+
+(defn- cache-response
+  [cache-path requested-path response]
+  (spit (cache-file cache-path requested-path)
+        (binding [*print-length* nil]
+          (pr-str (if (= not-found-response response) :not-found response))))
+  [response 0])
+
+(defn- response
+  [repo-bucket path]
+  (if-some [entries (seq (sort-entries (s3/list-entries repo-bucket path)))]
+    (-> (index path entries)
+        (ring.response/response)
+        (ring.response/content-type "text/html;charset=utf-8"))
+    not-found-response))
+
+(defn index-for-path
   [{:keys [cache-path repo-bucket]} path]
-  (let [path (normalize-path path)]
-    (if-some [[response age] (cached-response cache-path path)]
-      (with-maxage response age)
-      (cache-response
-       cache-path
-       path
-       (if-some [entries (seq (sort-entries (s3/list-entries repo-bucket path)))]
-         (-> (index path entries)
-             (ring.response/response)
-             (ring.response/content-type "text/html;charset=utf-8")
-             (with-maxage 0))
-         not-found)))))
+  (let [path (normalize-path path)
+        [response age] (or (get-cached-response cache-path path)
+                           (cache-response cache-path path (response repo-bucket path)))]
+    (ring.response/header response
+                          "Cache-Control" (format "s-maxage=%s" (- max-age age)))))
 
 (defn repo-lister
   [cache-path]
