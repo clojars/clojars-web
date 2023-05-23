@@ -3,9 +3,18 @@
    [clojars.s3 :as s3]
    [clojars.web.common :as common]
    [clojars.web.safe-hiccup :as safe-hiccup]
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
    [clojure.string :as str]
    [hiccup.element :as el]
-   [ring.util.response :as ring.response]))
+   [ring.util.response :as ring.response])
+  (:import
+   (java.io
+    File)
+   (java.util
+    Date)))
+
+(set! *warn-on-reflection* true)
 
 (defn- sort-entries
   [entries]
@@ -98,10 +107,44 @@
       (mapcat entry-line entries)]]
     [:hr]]))
 
+(def ^:private max-age 43200) ;; 12 hours
+
+(defn- cache-file
+  ^File
+  [cache-path path]
+  ;; assumes path has gone through normalize-path already
+  (let [path (if path
+               ;; strip trailing /
+               (subs path 0 (dec (count path)))
+               "root")
+        f (io/file (format "%s/%s.edn" cache-path path))]
+    (io/make-parents f)
+    f))
+
+(defn- file-age
+  [^File f]
+  (-> (- (.getTime (Date.)) (.lastModified f))
+      (/ 1000)
+      (long)))
+
+(defn- cached-response
+  [cache-path requested-path]
+  (let [cached-file (cache-file cache-path requested-path)]
+    (when (.exists cached-file)
+      (let [age (file-age cached-file)]
+        (when-not (> age max-age)
+          [(edn/read-string (slurp cached-file)) age])))))
+
+(defn- cache-response
+  [cache-path requested-path response]
+  (spit (cache-file cache-path requested-path)
+        (binding [*print-length* nil]
+          (pr-str response)))
+  response)
+
 (defn- with-maxage
-  [r]
-  ;; Instruct fastly to cache this result for 12 hours
-  (ring.response/header r "Cache-Control" "s-maxage=43200"))
+  [r curr-age-in-seconds]
+  (ring.response/header r "Cache-Control" (format "s-maxage=%s" (- max-age curr-age-in-seconds))))
 
 (def ^:private not-found
   (-> (safe-hiccup/html5
@@ -110,15 +153,24 @@
        [:body [:h1 "404 Not Found"]])
       (ring.response/not-found)
       (ring.response/content-type "text/html;charset=utf-8")
-      (with-maxage)))
+      (with-maxage 0)))
 
 (defn response
-  [s3 path]
-  (let [path (normalize-path path)
-        entries (sort-entries (s3/list-entries s3 path))]
-    (if (seq entries)
-      (-> (index path entries)
-          (ring.response/response)
-          (ring.response/content-type "text/html;charset=utf-8")
-          (with-maxage))
-      not-found)))
+  [{:keys [cache-path repo-bucket]} path]
+  (let [path (normalize-path path)]
+    (if-some [[response age] (cached-response cache-path path)]
+      (with-maxage response age)
+      (cache-response
+       cache-path
+       path
+       (if-some [entries (seq (sort-entries (s3/list-entries repo-bucket path)))]
+         (-> (index path entries)
+             (ring.response/response)
+             (ring.response/content-type "text/html;charset=utf-8")
+             (with-maxage 0))
+         not-found)))))
+
+(defn repo-lister
+  [cache-path]
+  ;; :repo-bucket gets assoc'ed on to this by component
+  {:cache-path cache-path})

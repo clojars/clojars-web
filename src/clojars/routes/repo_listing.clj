@@ -4,11 +4,11 @@
    [compojure.core :as compojure :refer [GET HEAD]]))
 
 (defn routes
-  [repo-bucket]
+  [repo-lister]
   (compojure/routes
    (GET ["/list-repo"]
         {{:keys [path]} :params}
-        (repo-listing/response repo-bucket path))
+        (repo-listing/response repo-lister path))
    (HEAD ["/list-repo"]
          {{:keys [path]} :params}
-         (repo-listing/response repo-bucket path))))
+         (repo-listing/response repo-lister path))))

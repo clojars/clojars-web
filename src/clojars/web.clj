@@ -48,7 +48,7 @@
                :status 400})))))
 
 (defn- main-routes
-  [{:as _system :keys [db mailer repo-bucket search stats]}]
+  [{:as _system :keys [db mailer repo-lister search stats]}]
   (let [db (:spec db)]
     (routes
      (GET "/" _
@@ -77,7 +77,7 @@
            #(html-doc "DMCA" {:account %}
                       (raw (slurp (io/resource "dmca.html"))))))
      session/routes
-     (repo-listing/routes repo-bucket)
+     (repo-listing/routes repo-lister)
      (group/routes db)
      (artifact/routes db stats)
      ;; user routes must go after artifact routes
