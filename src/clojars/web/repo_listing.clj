@@ -36,7 +36,7 @@
 
 (defn- blanks
   [max-len content-str]
-  (safe-hiccup/raw (apply str (repeat (- max-len (count content-str)) "&nbsp;"))))
+  (apply str (repeat (- max-len (count content-str)) " ")))
 
 (def ^:private dash "-")
 
