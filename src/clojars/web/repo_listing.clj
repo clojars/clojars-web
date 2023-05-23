@@ -4,7 +4,8 @@
    [clojars.web.common :as common]
    [clojars.web.safe-hiccup :as safe-hiccup]
    [clojure.string :as str]
-   [hiccup.element :as el]))
+   [hiccup.element :as el]
+   [ring.util.response :as ring.response]))
 
 (defn- sort-entries
   [entries]
@@ -76,25 +77,48 @@
       (str path "/")
       path)))
 
-(defn index
+(defn- index
+  [path entries]
+  (safe-hiccup/html5
+   {:lang "en"}
+   [:head
+    [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+    [:title (format "Clojars Repository: %s" path)]]
+   [:body
+    [:header
+     [:h1 (or path "/")]]
+    [:hr]
+    [:main
+     [:pre#contents
+      (when (some? path)
+        (list
+         (el/link-to "../" "../")
+         "\n"))
+      (mapcat entry-line entries)]]
+    [:hr]]))
+
+(defn- with-maxage
+  [r]
+  ;; Instruct fastly to cache this result for 12 hours
+  (ring.response/header r "Cache-Control" "s-maxage=43200"))
+
+(def ^:private not-found
+  (-> (safe-hiccup/html5
+       {:lang "en"}
+       [:head [:title "404 Not Found"]]
+       [:body [:h1 "404 Not Found"]])
+      (ring.response/not-found)
+      (ring.response/content-type "text/html;charset=utf-8")
+      (with-maxage)))
+
+(defn response
   [s3 path]
   (let [path (normalize-path path)
         entries (sort-entries (s3/list-entries s3 path))]
-    (safe-hiccup/html5
-     {:lang "en"}
-     [:head
-      [:meta {:charset "utf-8"}]
-      [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
-      [:title (format "Clojars Repository: %s" path)]]
-     [:body
-      [:header
-       [:h1 (or path "/")]]
-      [:hr]
-      [:main
-       [:pre#contents
-        (when (some? path)
-          (list
-           (el/link-to "../" "../")
-           "\n"))
-        (mapcat entry-line entries)]]
-      [:hr]])))
+    (if (seq entries)
+      (-> (index path entries)
+          (ring.response/response)
+          (ring.response/content-type "text/html;charset=utf-8")
+          (with-maxage))
+      not-found)))
