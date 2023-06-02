@@ -139,14 +139,16 @@
 
 (defn- get-cached-response
   [cache-path requested-path]
-  (let [cached-file (cache-file cache-path requested-path)]
-    (when (.exists cached-file)
-      (let [age (file-age cached-file)]
-        (when-not (> age max-age)
-          (let [response (edn/read-string (slurp cached-file))]
-            ;; We don't cache the full :not-found response since it is static to
-            ;; save disk space
-            [(if (= :not-found response) not-found-response response) age]))))))
+  (try
+    (let [cached-file (cache-file cache-path requested-path)]
+      (when (.exists cached-file)
+        (let [age (file-age cached-file)]
+          (when-not (> age max-age)
+            (let [response (edn/read-string (slurp cached-file))]
+              ;; We don't cache the full :not-found response since it is static to
+              ;; save disk space
+              [(if (= :not-found response) not-found-response response) age])))))
+    (catch Exception _)))
 
 (defn- cache-response
   [cache-path requested-path response]
