@@ -337,22 +337,26 @@
 (defn group-link [groupname]
   (link-to (str "/groups/" groupname) groupname))
 
+;; Note: this uses a function to generate the formatter instead of using a
+;; static formatter object because SimpleDateFormat objects can't be shared
+;; across threads!
 (defn- format-date*
-  [^SimpleDateFormat formatter v]
+  [make-formatter v]
   (when v
-    (.format formatter v)))
+    (let [^SimpleDateFormat formatter (make-formatter)]
+      (.format formatter v))))
 
 (def format-date
-  (partial format-date* (SimpleDateFormat. "yyyy-MM-dd")))
+  (partial format-date* #(SimpleDateFormat. "yyyy-MM-dd")))
 
 (def simple-date
-  (partial format-date* (SimpleDateFormat. "MMM d, yyyy")))
+  (partial format-date* #(SimpleDateFormat. "MMM d, yyyy")))
 
 (def format-timestamp
-  (partial format-date* (SimpleDateFormat. "MMM d, yyyy HH:mm:ss Z")))
+  (partial format-date* #(SimpleDateFormat. "MMM d, yyyy HH:mm:ss Z")))
 
 (def format-date-with-time
-  (partial format-date* (SimpleDateFormat. "yyyy-MM-dd HH:mm")))
+  (partial format-date* #(SimpleDateFormat. "yyyy-MM-dd HH:mm")))
 
 (defn page-nav [current-page total-pages & {:keys [base-path] :or {base-path "/projects?page="}}]
   (let [previous-text (raw "&#8592; Previous")
