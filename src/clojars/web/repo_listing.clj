@@ -1,5 +1,6 @@
 (ns clojars.web.repo-listing
   (:require
+   [clojars.maven :as maven]
    [clojars.s3 :as s3]
    [clojars.web.common :as common]
    [clojars.web.safe-hiccup :as safe-hiccup]
@@ -109,7 +110,8 @@
 
 (def ^:private max-age 43200) ;; 12 hours
 
-(defn- cache-file
+;; Public for use in tests
+(defn cache-file
   ^File
   [cache-path path]
   ;; assumes path has gone through normalize-path already
@@ -161,10 +163,19 @@
         (ring.response/content-type "text/html;charset=utf-8"))
     not-found-response))
 
+(defn- validate-path
+  "Checks path to see if it is one we would even have in s3, returning a 404 w/o
+  calling s3 or caching if not. This is to reduce the work we do & disk space we
+  use for caching."
+  [path]
+  (when (and path (not (re-find maven/repo-path-regex path)))
+    [not-found-response 0]))
+
 (defn index-for-path
   [{:keys [cache-path repo-bucket]} path]
   (let [path (normalize-path path)
-        [response age] (or (get-cached-response cache-path path)
+        [response age] (or (validate-path path)
+                           (get-cached-response cache-path path)
                            (cache-response cache-path path (response repo-bucket path)))]
     (ring.response/header response
                           "Cache-Control" (format "s-maxage=%s" (- max-age age)))))

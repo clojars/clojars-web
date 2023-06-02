@@ -134,42 +134,58 @@
    :Size         (count bytes)
    :LastModified (Date.)})
 
-(defrecord MockS3Client [state]
+(defn- record-call
+  [calls call & params]
+  (swap! calls conj [call params]))
+
+(defrecord MockS3Client [state calls]
   S3Bucket
   (-delete-object [_ key]
+    (record-call calls '-delete-object key)
     (swap! state dissoc key))
   (-get-object-details [_ key]
+    (record-call calls '-get-object-details key)
     (when (get @state key)
       {:Key key}))
   (-get-object-stream [_ key]
+    (record-call calls '-get-object-stream key)
     (when-let [data (get @state key)]
       (ByteArrayInputStream. data)))
   (-list-entries [_ prefix]
-    (->> (keys @state)
-         (filter (fn [k]
-                   (if prefix
-                     (.startsWith k prefix)
-                     true)))
-         (map (fn [k]
-                (let [k-sans-prefix (if prefix
-                                      (subs k (count prefix))
-                                      k)
-                      [k-segment & more] (str/split k-sans-prefix #"/")]
-                  (if more
-                    {:Prefix (format "%s%s/" (or prefix "") k-segment)}
-                    (mock-object-entry k (get @state k))))))
-         (distinct)))
+    (record-call calls '-list-entries prefix)
+    (into []
+          (comp
+           (filter (fn [k]
+                     (if prefix
+                       (.startsWith k prefix)
+                       true)))
+           (map (fn [k]
+                  (let [k-sans-prefix (if prefix
+                                        (subs k (count prefix))
+                                        k)
+                        [k-segment & more] (str/split k-sans-prefix #"/")]
+                    (if more
+                      {:Prefix (format "%s%s/" (or prefix "") k-segment)}
+                      (mock-object-entry k (get @state k))))))
+           (distinct))
+          (keys @state)))
   (-list-objects [_ prefix]
+    (record-call calls '-list-objects prefix)
     (into []
           (comp
            (filter (fn [k] (if prefix (.startsWith k prefix) true)))
            (map (fn [k] (mock-object-entry k (get @state k)))))
           (keys @state)))
   (-put-object [_ key stream _opts]
+    (record-call calls '-put-object key)
     (swap! state assoc key (IOUtils/toByteArray stream))))
 
 (defn mock-s3-client []
-  (->MockS3Client (atom {})))
+  (->MockS3Client (atom {}) (atom [])))
+
+(defn get-mock-calls
+  [{:keys [calls]}]
+  @calls)
 
 (defn delete-object
   [s3 key]

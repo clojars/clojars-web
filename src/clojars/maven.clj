@@ -16,6 +16,10 @@
     Scm)
    org.apache.maven.model.io.xpp3.MavenXpp3Reader))
 
+(def group+jar-name-regex #"^[a-z0-9_.-]+$")
+(def version-regex #"^[a-zA-Z0-9_.+-]+$")
+(def repo-path-regex #"^([a-z0-9_-]+/)+([a-zA-Z0-9_.+-]+/)?$")
+
 (defn without-nil-values
   "Prunes a map of pairs that have nil values."
   [m]
@@ -228,4 +232,3 @@
 (defn can-shadow-maven? [group-id artifact-id]
   (contains? @shadow-allowlist
              (symbol (format "%s/%s" group-id artifact-id))))
-

@@ -292,7 +292,7 @@
   ;; If you want loosen these please include in your proposal the
   ;; ramifications on usability, security and compatiblity with filesystems,
   ;; OSes, URLs and tools.
-  (validate-regex name #"^[a-z0-9_.-]+$"
+  (validate-regex name maven/group+jar-name-regex
                   (str "project names must consist solely of lowercase "
                        "letters, numbers, hyphens and underscores. See https://bit.ly/3MuL20A"))
 
@@ -301,7 +301,7 @@
   ;; Even if we manage to support obscure characters some filesystems do not
   ;; and some tools fail to escape URLs properly.  So to keep things nice and
   ;; compatible for everyone let's lock it down.
-  (validate-regex version #"^[a-zA-Z0-9_.+-]+$"
+  (validate-regex version maven/version-regex
                   (str "version strings must consist solely of letters, "
                        "numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX")))
 
