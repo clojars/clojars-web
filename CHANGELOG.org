@@ -4,6 +4,19 @@ Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
 * 2023-May
+*** [[https://github.com/clojars/clojars-web/commits/209][209]]
++ [[https://github.com/clojars/clojars-web/commit/d991781f5b28297b2c07153325484c975cb50c2e][Don't cache full not-found responses locally]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/commits/208][208]]
++ [[https://github.com/clojars/clojars-web/commit/be2816e5b3b4408a9f2bdcb1bd44ad923c85f896][Cache repo listings locally on disk to reduce s3 calls]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/commits/207][207]]
++ [[https://github.com/clojars/clojars-web/commit/1395b24be573eac01655e5f124dcbc279462a450][Return 404s for not found repo paths]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/289171e16cbd76dc3a90dbd8bfb565916ba91b3d][Use spaces instead of nbsp in repo listing to reduce file size]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/commits/206][206]]
++ [[https://github.com/clojars/clojars-web/commit/e33ca29d83a18bfe9a51867a66876f4cd064f10f][Instruct fastly to cache repo listings for 12 hours intead of 15 minutes]] ([[https://github.com/tobias][Toby Crawley]])
+
 *** [[https://github.com/clojars/clojars-web/commits/205][205]]
 + [[https://github.com/clojars/clojars-web/issues/863][Support SSH signing]] ([[https://github.com/tobias][Toby Crawley]])
 
