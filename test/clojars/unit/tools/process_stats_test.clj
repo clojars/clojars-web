@@ -34,6 +34,14 @@
       (is (= "0.1.0" (:version m)))
       (is (= "jar" (:ext m))))))
 
+(def skipped-lines
+  ["<134>2023-06-04T23:04:45Z cache-bos4631 s3-bucket[170864]: 71.184.230.157 \"GET /?prefix=downloads-&marker=downloads-20230514.edn HTTP/1.1\" 200 4682 (null) Java/17.0.5"
+   "<134>2023-06-04T23:04:45Z cache-bos4631 s3-bucket[170864]: 71.184.230.157 \"GET /?prefix=/com/foo/bar/1.0/bar.jar HTTP/1.1\" 200 4682 (null) Java/17.0.5"])
+
+(deftest parse-line-does-not-parse-paths-for-lines-we-do-not-want-stats-for
+  (doseq [line skipped-lines]
+    (is (nil? (:group (stats/parse-line line))))))
+
 (deftest compute-stats
   (let [stats (stats/process-log (io/resource "fake.access.log"))]
     (is (= 2 (get-in stats [["snowy" "snowy"] "0.3.0"])))

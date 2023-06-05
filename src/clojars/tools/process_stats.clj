@@ -58,7 +58,7 @@
               #".*")))
 
 (def re-path
-  (let [segment #"[^/]+"
+  (let [segment #"[^/?]+"
         sep #"/+"]
     (re/regex (re/? sep "repo") sep
               [(re/* segment sep) segment :as :group] sep
