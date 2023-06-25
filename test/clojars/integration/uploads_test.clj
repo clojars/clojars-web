@@ -73,9 +73,9 @@
     .deleteOnExit))
 
 (deftest user-can-register-and-deploy
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         now (db/get-time)]
     (with-redefs [db/get-time (constantly now)]
       (deploy
@@ -103,7 +103,7 @@
                        :jar_name "test"
                        :version "0.0.1"})
 
-    (-> (session (help/app-from-system))
+    (-> (session (help/app))
         (visit "/groups/org.clojars.dantheman")
         (has (status? 200))
         (within [:#content-wrapper
@@ -115,7 +115,7 @@
         (has (status? 200))
         (within [:#jar-sidebar :li.homepage :a]
           (has (text? "https://example.org"))))
-    (-> (session (help/app-from-system))
+    (-> (session (help/app))
         (visit "/")
         (fill-in [:#search] "test")
         (press [:#search-button])
@@ -123,16 +123,16 @@
                  :div
                  :div]
           (has (text? "org.clojars.dantheman/test 0.0.1"))))
-    (-> (session (help/app-from-system))
+    (-> (session (help/app))
         (login-as "dantheman" "password")
         (visit "/tokens")
         (within [:td.last-used]
           (has (text? (common/format-timestamp now)))))))
 
 (deftest user-can-deploy-using-email-address
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
       :jar-file (io/file (io/resource "test.jar"))
@@ -142,11 +142,11 @@
       :password token})))
 
 (deftest deploying-with-a-scoped-token
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
 
   (let [unscoped-token (create-deploy-token
-                        (session (help/app-from-system)) "dantheman" "password" "unscoped")
+                        (session (help/app)) "dantheman" "password" "unscoped")
         base-path      "org/clojars/dantheman/test/"
         repo           (:repo (config))]
 
@@ -169,7 +169,7 @@
 
     (testing "with a group-scoped token"
       (let [group-scoped-token (create-deploy-token
-                                (session (help/app-from-system)) "dantheman" "password" "group-scoped"
+                                (session (help/app)) "dantheman" "password" "group-scoped"
                                 {:scope "org.clojars.dantheman"})]
 
         (deploy
@@ -195,7 +195,7 @@
 
     (testing "with an artifact-scoped token"
       (let [artifact-scoped-token (create-deploy-token
-                                   (session (help/app-from-system)) "dantheman" "password" "artifact-scoped"
+                                   (session (help/app)) "dantheman" "password" "artifact-scoped"
                                    {:scope "org.clojars.dantheman/test"})]
 
         (deploy
@@ -220,11 +220,11 @@
                 :password  artifact-scoped-token})))))))
 
 (deftest deploying-with-a-single-use-token
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
 
   (let [token (create-deploy-token
-               (session (help/app-from-system))
+               (session (help/app))
                "dantheman" "password" "single-use" {:single-use? true})]
 
 
@@ -249,11 +249,11 @@
               :password  token}))))))
 
 (deftest deploying-with-an-expiring-token
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
 
   (let [token (create-deploy-token
-               (session (help/app-from-system))
+               (session (help/app))
                "dantheman" "password" "single-use" {:expires-in "1 Hour"})]
 
     (testing "deploy before token expires works"
@@ -283,9 +283,9 @@
                            :message "The given token is expired"})))))
 
 (deftest user-cannot-deploy-with-disabled-token
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         db (:db (config))
         db-token (first (db/find-user-tokens-by-username db "dantheman"))]
     (db/disable-deploy-token db (:id db-token))
@@ -305,9 +305,9 @@
                        :message "The given token either doesn't exist, isn't yours, or is disabled"})))
 
 (deftest user-can-deploy-artifacts-after-maven-metadata
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         add-checksums (partial mapcat (fn [[f no-version?]]
                                         [[f no-version?]
                                          [(tmp-checksum-file f :md5) no-version?]
@@ -351,9 +351,9 @@
           (is (s3/object-exists? repo-bucket (str base-path' fname))))))))
 
 (deftest user-can-deploy-artifacts-after-maven-metadata-using-single-use-token
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing" {:single-use? true})
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing" {:single-use? true})
         add-checksums (partial mapcat (fn [[f no-version?]]
                                         [[f no-version?]
                                          [(tmp-checksum-file f :md5) no-version?]
@@ -397,11 +397,11 @@
           (is (s3/object-exists? repo-bucket (str base-path' fname))))))))
 
 (deftest user-cannot-deploy-to-groups-without-permission
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - You don't have access to the 'org\.clojars\.fixture' group"
           (deploy
@@ -418,14 +418,14 @@
                        :message "You don't have access to the 'org.clojars.fixture' group"})))
 
 (deftest user-can-deploy-to-group-when-not-admin
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password")
       (visit "/groups/org.clojars.fixture")
       (fill-in [:#username] "dantheman")
       (press "Add Member"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.fixture/test "0.0.1"]
       :jar-file (io/file (io/resource "test.jar"))
@@ -434,9 +434,9 @@
       :password  token})))
 
 (deftest user-cannot-deploy-to-a-non-existent-group
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - Group 'new-group' doesn't exist. See https://bit.ly/3MuKGXO"
           (deploy
@@ -455,9 +455,9 @@
                        :tag "deploy-forbidden"})))
 
 (deftest user-can-deploy-a-new-version-to-an-existing-project-in-a-non-verified-group
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
 
     ;; create a prior version in a non-verified group - we have to do
     ;; this directly and prevent a verified group check since we can
@@ -482,7 +482,7 @@
                        :jar_name "test"
                        :version "0.0.1"})
 
-    (-> (session (help/app-from-system))
+    (-> (session (help/app))
         (visit "/")
         (fill-in [:#search] "test")
         (press [:#search-button])
@@ -492,9 +492,9 @@
           (has (text? "legacy-group/test 0.0.1"))))))
 
 (deftest user-cannot-deploy-new-project-to-non-verified-group
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (db/add-admin help/*db* "legacy-group" "dantheman" "testing")
 
     (is (thrown-with-msg? DeploymentException
@@ -515,9 +515,9 @@
                        :tag "deploy-forbidden"})))
 
 (deftest user-cannot-redeploy
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
       :jar-file (io/file (io/resource "test.jar"))
@@ -540,9 +540,9 @@
                        :tag "non-snapshot-redeploy"})))
 
 (deftest deploy-cannot-shadow-central
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (help/add-verified-group "dantheman" "org.tcrawley")
     (is (thrown-with-msg?
          DeploymentException
@@ -564,9 +564,9 @@
                        :tag "central-shadow"})))
 
 (deftest deploy-cannot-shadow-central-unless-allowlisted
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (help/add-verified-group "dantheman" "net.mikera")
     (deploy
      {:coordinates '[net.mikera/clojure-pom "0.0.1"]
@@ -577,9 +577,9 @@
       :password  token})))
 
 (deftest user-can-deploy-new-version-in-same-session
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
       :jar-file (io/file (io/resource "test.jar"))
@@ -593,9 +593,9 @@
       :retain-session? true})))
 
 (deftest user-can-redeploy-snapshots
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
       :jar-file (io/file (io/resource "test.jar"))
@@ -608,9 +608,9 @@
       :password  token})))
 
 (deftest user-can-deploy-snapshot-with-dot
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.dantheman/test.thing "0.0.3-SNAPSHOT"]
       :jar-file (io/file (io/resource "test.jar"))
@@ -620,9 +620,9 @@
       :password  token})))
 
 (deftest snapshot-deploys-preserve-timestamp-version
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         timestamped-jar (atom nil)]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
@@ -636,9 +636,9 @@
     (is (.exists (io/file (:repo (config)) @timestamped-jar)))))
 
 (deftest deploys-sharing-the-same-session-work
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         add-checksums (partial mapcat (fn [[f no-version?]]
                                         [[f no-version?]
                                          [(tmp-checksum-file f :md5) no-version?]
@@ -676,9 +676,9 @@
                      :basic-auth ["dantheman" token]})))))
 
 (deftest user-can-deploy-with-classifiers
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
       :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
@@ -690,9 +690,9 @@
     ".pom" ".jar" "-test.jar"))
 
 (deftest user-can-deploy-snapshot-with-classifiers
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
       :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
@@ -706,9 +706,9 @@
                 count))))
 
 (deftest user-can-deploy-with-gpg-signatures
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         pom (io/file (io/resource "test-0.0.1/test.pom"))]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
@@ -720,9 +720,9 @@
       :password token})))
 
 (deftest user-can-deploy-with-ssh-signatures
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         pom (io/file (io/resource "test-0.0.1/test.pom"))]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
@@ -734,9 +734,9 @@
       :password token})))
 
 (deftest missing-signature-fails-the-deploy
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         pom (io/file (io/resource "test-0.0.1/test.pom"))]
     (doseq [suffix ["asc" "sig"]]
       (testing (format "with a suffix of .%s" suffix)
@@ -786,9 +786,9 @@
                      :tag     "deploy-password-rejection"}))
 
 (deftest deploy-requires-path-to-match-pom
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - the group in the pom \(org.clojars.dantheman\) does not match the group you are deploying to \(net.clojars.dantheman\)"
@@ -841,9 +841,9 @@
                        :tag "pom-entry-mismatch"})))
 
 (deftest deploy-requires-path-to-match-module
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - the component group in the gradle module \(org.clojars.dantheman\) does not match the coordinate you are deploying to \(net.clojars.dantheman\)"
@@ -899,9 +899,9 @@
                        :tag "module-entry-mismatch"})))
 
 (deftest deploy-requires-lowercase-project
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - project names must consist solely of lowercase"
           (deploy
@@ -920,9 +920,9 @@
                        :tag "regex-validation-failed"})))
 
 (deftest deploy-requires-ascii-version
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - version strings must consist solely of letters"
           (deploy
@@ -941,9 +941,9 @@
                        :tag "regex-validation-failed"})))
 
 (deftest put-on-html-fails
-  (let [sess (-> (session (help/app-from-system))
+  (let [sess (-> (session (help/app))
                  (register-as "dantheman" "test@example.org" "password"))
-        token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+        token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (-> sess
         (visit "/repo/group/artifact/1.0.0/injection.html"
                :request-method :put
@@ -957,9 +957,9 @@
         (has (status? 400)))))
 
 (deftest put-using-dotdot-fails
-  (let [sess (-> (session (help/app-from-system))
+  (let [sess (-> (session (help/app))
                  (register-as "dantheman" "test@example.org" "password"))
-        token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+        token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         headers {"authorization"
                  (str "Basic "
                       (String. (base64/encode
@@ -987,11 +987,11 @@
         (has (status? 400)))))
 
 (deftest does-not-write-incomplete-file
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (with-out-str
-      (-> (session (help/app-from-system))
+      (-> (session (help/app))
           (visit "/repo/group3/artifact3/1.0.0/test.jar"
                  :body (proxy [java.io.InputStream] []
                          (read
@@ -1012,9 +1012,9 @@
   (is (not (.exists (io/file (:repo (config)) "group3/artifact3/1.0.0/test.jar")))))
 
 (deftest deploy-with-unhashed-token-writes-a-hash
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         db (:db (config))
         {token-id :id} (db/find-token-by-value db token)
         _ (sql/update! db :deploy_tokens {:token_hash nil} ["id = ?" token-id])]
@@ -1030,14 +1030,14 @@
              token_hash)))))
 
 (deftest deploy-sends-notification-emails
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "donthemon" "test2@example.org" "password"))
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "donthemon")
       (press "Add Member"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (email/expect-mock-emails 2)
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
@@ -1060,17 +1060,17 @@
                   bodies)))))
 
 (deftest deploy-sends-notification-emails-only-when-enabled
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "donthemon" "test2@example.org" "password")
       (visit "/notification-preferences")
       (uncheck "Receive deploy notification emails?")
       (press "Update"))
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "donthemon")
       (press "Add Member"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (email/expect-mock-emails 1)
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
@@ -1089,9 +1089,9 @@
       (is (re-find #"https://clojars.org/org.clojars.dantheman/test/versions/0.0.1" body)))))
 
 (deftest user-can-deploy-a-pom-only-release
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app-from-system)) "dantheman" "password" "testing")]
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
       :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
@@ -1105,7 +1105,7 @@
                        :jar_name "test"
                        :version "0.0.1"})
 
-    (-> (session (help/app-from-system))
+    (-> (session (help/app))
         (visit "/")
         (fill-in [:#search] "test")
         (press [:#search-button])

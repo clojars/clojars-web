@@ -8,11 +8,9 @@
    [clojars.email :as email]
    [clojars.errors :as errors]
    [clojars.oauth.service :as oauth-service]
-   [clojars.remote-service :as remote-service]
    [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.stats :as stats]
-   [clojars.storage :as storage]
    [clojars.system :as system]
    [clojars.web :as web]
    [clojure.java.io :as io]
@@ -108,32 +106,12 @@
 (defn memory-index []
   (RAMDirectory.))
 
-(defn app
-  ([] (app {}))
-  ([{:keys [storage db error-reporter http-client stats search mailer github]
-     :or {db {:spec *db*}
-          storage (storage/fs-storage (:repo (config/config)))
-          error-reporter (quiet-reporter)
-          http-client (remote-service/new-mock-remote-service)
-          stats (no-stats)
-          search (no-search)
-          mailer nil}}]
-   (web/clojars-app
-    {:db db
-     :error-reporter error-reporter
-     :http-client http-client
-     :github github
-     :mailer mailer
-     :search search
-     :stats stats
-     :storage storage})))
-
 (declare ^:dynamic system)
 
-(defn app-from-system []
+(defn app []
   (web/clojars-app system))
 
-(defn with-test-system*
+(defn- with-test-system*
   [f]
   (binding [config/*profile* "test"]
     ;; double binding since ^ needs to be bound for config to load
@@ -153,10 +131,6 @@
           (f)
           (finally
             (component/stop system)))))))
-
-(defmacro with-test-system
-  [& body]
-  `(with-test-system* #(do ~@body)))
 
 (defn run-test-app
   [f]

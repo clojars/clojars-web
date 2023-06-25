@@ -10,7 +10,8 @@
 
 (use-fixtures :each
   help/default-fixture
-  help/with-clean-database)
+  help/with-clean-database
+  help/run-test-app)
 
 (deftest jars-can-be-viewed
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.1/test.pom")

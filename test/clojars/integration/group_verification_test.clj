@@ -10,11 +10,11 @@
    [kerodon.test :refer [has some-text?]]))
 
 (use-fixtures :each
-  help/with-test-system*)
+  help/run-test-app)
 
 (defn session
   []
-  (let [session (-> (kerodon/session (help/app-from-system))
+  (let [session (-> (kerodon/session (help/app))
                     (register-as "dantheman" "test@example.org" "password"))]
     (email/expect-mock-emails 1)
     session))
