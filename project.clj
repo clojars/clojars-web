@@ -3,8 +3,8 @@
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/core.memoize "1.0.253"]
                  ;; manage jetty dependencies directly to make it easier to address CVEs
-                 [org.eclipse.jetty/jetty-client "9.4.49.v20220914"]
-                 [org.eclipse.jetty/jetty-server "9.4.49.v20220914"]
+                 [org.eclipse.jetty/jetty-client "9.4.51.v20230217"]
+                 [org.eclipse.jetty/jetty-server "9.4.51.v20230217"]
                  ;; manage jackson-databind directly to make it easiser to address CVEs
                  [com.fasterxml.jackson.core/jackson-databind "2.14.0-rc1"]
                  [raven-clj "1.6.0"
@@ -98,10 +98,11 @@
                  [org.slf4j/jcl-over-slf4j "2.0.0-alpha1"]
 
                  ;; AWS
-                 [com.cognitect.aws/api "0.8.635"]
-                 [com.cognitect.aws/endpoints "1.1.12.373"]
-                 [com.cognitect.aws/s3 "825.2.1250.0"]
-                 [com.cognitect.aws/ssm "825.2.1283.0"]]
+                 [com.cognitect.aws/api "0.8.681"]
+                 [com.cognitect.aws/endpoints "1.1.12.489"]
+                 [com.cognitect.aws/s3 "847.2.1398.0"]
+                 [com.cognitect.aws/sqs "847.2.1398.0"]
+                 [com.cognitect.aws/ssm "847.2.1365.0"]]
   :plugins [[supersport "1"]]
   :main ^:skip-aot clojars.main
   :target-path "target/%s/"
