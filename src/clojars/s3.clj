@@ -1,5 +1,6 @@
 (ns clojars.s3
   (:require
+   [clojars.aws-util :as aws-util]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [cognitect.aws.client.api :as aws]
@@ -20,22 +21,13 @@
   (-list-objects [client prefix])
   (-put-object [client key stream opts]))
 
-(defn- throw-on-error
-  [v]
-  (if (some? (:cognitect.anomalies/category v))
-    (throw (ex-info "S3 request failed" v))
-    v))
-
 (defn- list-objects-chunk
   [client bucket-name prefix delimeter continuation-token]
   (let [request (cond-> {:Bucket bucket-name}
                   continuation-token (assoc :ContinuationToken continuation-token)
                   delimeter          (assoc :Delimiter delimeter)
                   prefix             (assoc :Prefix prefix))]
-    (throw-on-error
-     (aws/invoke client
-                 {:op :ListObjectsV2
-                  :request request}))))
+    (aws-util/invoke client :ListObjectsV2 request)))
 
 (defn- list-objects-seq
   "Generates a lazy seq of list-objects results, chunked by the API's paging."
@@ -55,37 +47,23 @@
   (when m
     (update m :ETag #(str/replace % "\"" ""))))
 
-(defn- not-found->nil
-  [v]
-  (when (not= :cognitect.anomalies/not-found (:cognitect.anomalies/category v))
-    v))
-
 (defrecord S3Client [s3 bucket-name]
   S3Bucket
   (-delete-object [_ key]
-    (->> {:op :DeleteObject
-          :request {:Bucket bucket-name
-                    :Key key}}
-         (aws/invoke s3)
-         (throw-on-error)))
+    (aws-util/invoke s3 :DeleteObject {:Bucket bucket-name
+                                       :Key key}))
 
   (-get-object-details [_ key]
-    (->> {:op :HeadObject
-          :request {:Bucket bucket-name
-                    :Key key}}
-         (aws/invoke s3)
-         (not-found->nil)
-         (throw-on-error)
-         (strip-etag)))
+    (-> (aws-util/invoke s3 :HeadObject {:Bucket bucket-name
+                                         :Key key})
+        (aws-util/not-found->nil)
+        (strip-etag)))
 
   (-get-object-stream [_ key]
-    (->> {:op :GetObject
-          :request {:Bucket bucket-name
-                    :Key key}}
-         (aws/invoke s3)
-         (not-found->nil)
-         (throw-on-error)
-         :Body))
+    (-> (aws-util/invoke s3 :GetObject {:Bucket bucket-name
+                                        :Key key})
+        (aws-util/not-found->nil)
+        :Body))
 
   (-list-entries [_ prefix]
     (sequence
@@ -101,13 +79,11 @@
      (list-objects-seq s3 bucket-name {:prefix prefix})))
 
   (-put-object [_ key stream opts]
-    (->> {:op :PutObject
-          :request (merge {:Bucket bucket-name
-                           :Key key
-                           :Body stream}
-                          opts)}
-         (aws/invoke s3)
-         (throw-on-error))))
+    (aws-util/invoke s3 :PutObject
+                     (merge {:Bucket bucket-name
+                             :Key key
+                             :Body stream}
+                            opts))))
 
 (defn s3-client
   ;; Credentials are derived from the instance's role when running in
