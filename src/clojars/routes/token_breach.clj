@@ -40,7 +40,7 @@
 ;; - add timing logs
 
 (defn- handle-github-token-breach
-  [db {:as _request :keys [headers body]}]
+  [db event-emitter {:as _request :keys [headers body]}]
   (let [body-str (slurp body)]
     (if (valid-github-request? headers body-str)
       (let [data (json/parse-string body-str true)]
@@ -49,14 +49,15 @@
                      (db/find-token-by-value db token)]
             (when (not disabled)
               (db/disable-deploy-token db id))
-            (event/emit :token-breached {:user-id user_id
-                                         :token-disabled? disabled
-                                         :token-name (:name db-token)
-                                         :commit-url url})))
+            (event/emit event-emitter :token-breached
+                        {:user-id user_id
+                         :token-disabled? disabled
+                         :token-name (:name db-token)
+                         :commit-url url})))
         (response/status 200))
       (response/status 422))))
 
-(defn routes [db]
+(defn routes [db event-emitter]
   (compojure/routes
    (POST "/token-breach/github" request
-         (handle-github-token-breach db request))))
+         (handle-github-token-breach db event-emitter request))))

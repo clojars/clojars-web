@@ -330,11 +330,12 @@
       (db/consume-deploy-token db (:id token)))))
 
 (defn- emit-deploy-events
-  [db {:as version-data :keys [group]}]
+  [db event-emitter {:as version-data :keys [group]}]
   (doseq [user (db/group-active-users db group)]
-    (event/emit :version-deployed (assoc version-data :user user))))
+    (event/emit event-emitter :version-deployed (assoc version-data :user user))))
 
-(defn finalize-deploy [storage db search session account ^File dir]
+(defn- finalize-deploy
+  [storage db event-emitter search session account ^File dir]
   (if-let [pom-file (find-pom dir)]
     (let [pom (try
                 (maven/pom-to-map pom-file)
@@ -391,7 +392,7 @@
                                        :at (Date. (.lastModified pom-file))))
           (log/info {:tag :deploy-indexed}))
         (spit (io/file dir ".finalized") "")
-        (emit-deploy-events db (assoc posted-metadata :deployer-username account))))
+        (emit-deploy-events db event-emitter (assoc posted-metadata :deployer-username account))))
     (throw-invalid :missing-pom-file "no pom file was uploaded")))
 
 (defn- deploy-finalized? [dir]
@@ -464,7 +465,7 @@
            (deploy-post-finalized-file storage upload-dir file)))))))
 
 ;; web handlers
-(defn routes [storage db search]
+(defn routes [storage db event-emitter search]
   (compojure/routes
    (PUT ["/:group/:artifact/:file"
          :group #".+" :artifact #"[^/]+" :file #"maven-metadata\.xml[^/]*"]
@@ -501,8 +502,8 @@
                      (when-not (or (deploy-finalized? upload-dir)
                                    (= (fu/checksum file :sha1) existing-sum))
                        (try
-                         (finalize-deploy storage db search session
-                                          account upload-dir)
+                         (finalize-deploy storage db event-emitter search
+                                          session account upload-dir)
                          (catch Exception e
                            ;; FIXME: we may have already thrown-invalid here
                            ;; - should we check for that and only

@@ -48,7 +48,7 @@
                :status 400})))))
 
 (defn- main-routes
-  [{:as _system :keys [db mailer repo-lister search stats]}]
+  [{:as _system :keys [db event-emitter mailer repo-lister search stats]}]
   (let [db (:spec db)]
     (routes
      (GET "/" _
@@ -78,12 +78,12 @@
                       (raw (slurp (io/resource "dmca.html"))))))
      session/routes
      (repo-listing/routes repo-lister)
-     (group/routes db)
+     (group/routes db event-emitter)
      (artifact/routes db stats)
      ;; user routes must go after artifact routes
      ;; since they both catch /:identifier
-     (user/routes db mailer)
-     (verify/routes db)
+     (user/routes db event-emitter mailer)
+     (verify/routes db event-emitter)
      (token/routes db)
      (api/routes db stats)
      (GET "/error" _ (throw (Exception. "What!? You really want an error?")))
@@ -109,6 +109,7 @@
   [{:as system
     :keys [db
            error-reporter
+           event-emitter
            http-client
            github
            gitlab
@@ -118,7 +119,7 @@
     (routes
      (-> (context
           "/repo" _
-          (-> (repo/routes storage db search)
+          (-> (repo/routes storage db event-emitter search)
               (friend/authenticate
                {:credential-fn (auth/token-credential-fn db)
                 :workflows [(workflows/http-basic :realm "clojars")]
@@ -131,12 +132,12 @@
               (log/wrap-request-context)
               (repo/wrap-reject-double-dot)))
          (wrap-secure-session))
-     (-> (token-breach/routes db)
+     (-> (token-breach/routes db event-emitter)
          (wrap-exceptions error-reporter)
          (log/wrap-request-context))
      (-> (main-routes system)
          (friend/authenticate
-          {:credential-fn (auth/password-credential-fn db)
+          {:credential-fn (auth/password-credential-fn db event-emitter)
            :workflows [(auth/interactive-form-with-mfa-workflow)
                        (registration/workflow db)
                        (github/workflow github http-client db)

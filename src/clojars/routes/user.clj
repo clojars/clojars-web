@@ -50,6 +50,7 @@
                :flash "Password incorrect.")))))
 
 (defn- confirm-mfa [db
+                    event-emitter
                     account
                     {:as user :keys [otp_active]}
                     {:keys [otp]}
@@ -68,7 +69,8 @@
       (let [recovery-code (db/enable-otp! db account)
             user (db/find-user db account)]
         (log/info {:status :success})
-        (event/emit :mfa-activated (merge {:username account} details))
+        (event/emit event-emitter :mfa-activated
+                    (merge {:username account} details))
         (view/mfa account user (view/recovery-code-message recovery-code)))
 
       :else
@@ -79,6 +81,7 @@
           (view/setup-mfa account user "Two-factor token incorrect."))))))
 
 (defn- disable-mfa [db
+                    event-emitter
                     account
                     {:as user :keys [otp_active]}
                     {:keys [password]}
@@ -97,9 +100,11 @@
       (do
         (db/disable-otp! db account)
         (log/info {:status :success})
-        (event/emit :mfa-deactivated (merge {:username account
-                                             :source :user}
-                                            details))
+        (event/emit event-emitter
+                    :mfa-deactivated
+                    (merge {:username account
+                            :source :user}
+                           details))
         (assoc (redirect "/mfa")
                :flash "Two-factor auth disabled."))
 
@@ -110,14 +115,14 @@
         (assoc (redirect "/mfa")
                :flash "Password incorrect.")))))
 
-(defn routes [db mailer]
+(defn routes [db event-emitter mailer]
   (compojure/routes
    (GET "/profile" {:keys [flash]}
         (auth/with-account
           #(view/profile-form % (db/find-user db %) flash)))
    (POST "/profile" {:as request :keys [params]}
          (auth/with-account
-           #(view/update-profile db % params (common/request-details request))))
+           #(view/update-profile db event-emitter % params (common/request-details request))))
 
    (GET "/mfa" {:keys [flash]}
         (auth/with-account
@@ -127,10 +132,11 @@
            #(create-mfa db % (db/find-user db %) params)))
    (PUT "/mfa" {:as request :keys [params]}
         (auth/with-account
-          #(confirm-mfa db % (db/find-user db %) params (common/request-details request))))
+          #(confirm-mfa db event-emitter %
+                        (db/find-user db %) params (common/request-details request))))
    (DELETE "/mfa" {:as request :keys [params]}
            (auth/with-account
-             #(disable-mfa db % (db/find-user db %) params (common/request-details request))))
+             #(disable-mfa db event-emitter % (db/find-user db %) params (common/request-details request))))
 
    (GET "/notification-preferences" {:keys [flash]}
         (auth/with-account
@@ -151,7 +157,7 @@
         (view/reset-password-form db reset-code))
 
    (POST "/password-resets/:reset-code" {:as request {:keys [reset-code password confirm]} :params}
-         (view/reset-password db reset-code {:password password :confirm confirm} (common/request-details request)))
+         (view/reset-password db event-emitter reset-code {:password password :confirm confirm} (common/request-details request)))
 
    (GET "/users/:username" [username]
         (show db username))

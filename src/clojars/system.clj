@@ -1,6 +1,7 @@
 (ns clojars.system
   (:require
    [clojars.email :refer [simple-mailer]]
+   [clojars.event :as event]
    [clojars.notifications :as notifications]
    ;; for defmethods
    [clojars.notifications.admin]
@@ -75,26 +76,30 @@
     (-> (merge
          (base-system config)
          (component/system-map
-          :app           (handler-component (:app config))
-          :clojars-app   (endpoint-component web/clojars-app)
-          :github        (github/new-github-service (:client-id github-oauth)
-                                                    (:client-secret github-oauth)
-                                                    (:callback-uri github-oauth))
-          :gitlab        (gitlab/new-gitlab-service (:client-id gitlab-oauth)
-                                                    (:client-secret gitlab-oauth)
-                                                    (:callback-uri gitlab-oauth))
-          :http          (jetty-server (:http config))
-          :http-client   (remote-service/new-http-remote-service)
-          :mailer        (simple-mailer (:mail config))
-          :notifications (notifications/notification-component)
-          :repo-bucket   (s3/s3-client (get-in config [:s3 :repo-bucket]))
-          :repo-lister   (repo-listing/repo-lister (:cache-path config))
-          :storage       (storage-component (:repo config) (:cdn-token config) (:cdn-url config))))
+          :app            (handler-component (:app config))
+          :clojars-app    (endpoint-component web/clojars-app)
+          :github         (github/new-github-service (:client-id github-oauth)
+                                                     (:client-secret github-oauth)
+                                                     (:callback-uri github-oauth))
+          :gitlab         (gitlab/new-gitlab-service (:client-id gitlab-oauth)
+                                                     (:client-secret gitlab-oauth)
+                                                     (:callback-uri gitlab-oauth))
+          :event-emitter  (event/new-sqs-emitter (:event-queue config))
+          :event-receiver (event/new-sqs-receiver (:event-queue config))
+          :http           (jetty-server (:http config))
+          :http-client    (remote-service/new-http-remote-service)
+          :mailer         (simple-mailer (:mail config))
+          :notifications  (notifications/notification-component)
+          :repo-bucket    (s3/s3-client (get-in config [:s3 :repo-bucket]))
+          :repo-lister    (repo-listing/repo-lister (:cache-path config))
+          :storage        (storage-component (:repo config) (:cdn-token config) (:cdn-url config))))
         (component/system-using
-         {:app           [:clojars-app]
-          :clojars-app   [:db :github :gitlab :error-reporter :http-client
-                          :mailer :repo-lister :stats :search :storage]
-          :http          [:app]
-          :notifications [:db :mailer]
-          :repo-lister   [:repo-bucket]
-          :storage       [:error-reporter :repo-bucket]}))))
+         {:app            [:clojars-app]
+          :clojars-app    [:db :github :gitlab :error-reporter :event-emitter :http-client
+                           :mailer :repo-lister :stats :search :storage]
+          :event-emitter  [:error-reporter]
+          :http           [:app]
+          :notifications  [:db :mailer]
+          :repo-lister    [:repo-bucket]
+          :event-receiver [:error-reporter]
+          :storage        [:error-reporter :repo-bucket]}))))

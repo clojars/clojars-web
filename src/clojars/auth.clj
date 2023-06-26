@@ -152,8 +152,9 @@
                        (util/parse-long))]
     (ot/is-valid-totp-token? otp-n otp_secret_key)))
 
-(defn validate-otp
+(defn- validate-otp
   [db
+   event-emitter
    {:as user
     recovery-code :otp_recovery_code
     username :user}
@@ -161,12 +162,13 @@
   (if (creds/bcrypt-verify otp recovery-code)
     (do
       (db/disable-otp! db username)
-      (event/emit :mfa-deactivated {:username username
-                                    :source :recovery-code})
+      (event/emit event-emitter :mfa-deactivated
+                  {:username username
+                   :source :recovery-code})
       true)
     (valid-totp-token? otp user)))
 
-(defn password-credential-fn [db]
+(defn password-credential-fn [db event-emitter]
   (fn [{:keys [username password otp]}]
     (log/with-context {:tag :authentication
                        :username username
@@ -177,7 +179,7 @@
           (if (and (not (str/blank? (:password user)))
                    (creds/bcrypt-verify password (:password user))
                    (or (not otp_active)
-                       (validate-otp db user otp)))
+                       (validate-otp db event-emitter user otp)))
             (do
               (log/info {:status :success})
               {:username username})
