@@ -6,7 +6,8 @@
    [kerodon.test :refer [has status? text?]]))
 
 (use-fixtures :each
-  help/with-clean-database)
+  help/with-clean-database
+  help/run-test-app)
 
 (deftest respond-404
   (-> (session (help/app))

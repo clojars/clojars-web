@@ -123,7 +123,7 @@
                       (submit-button "Update"))]))
 
 (defn update-profile
-  [db account {:keys [email current-password password confirm] :as params} details]
+  [db event-emitter account {:keys [email current-password password confirm] :as params} details]
   (let [email (and email (.trim email))]
     (log/with-context {:tag :update-profile
                        :username account}
@@ -146,12 +146,12 @@
           (update-user db account email account password)
           (log/info {:status :success})
           (when email-changed?
-            (event/emit :email-changed
+            (event/emit event-emitter :email-changed
                         (merge {:username account
                                 :old-email old-email}
                                details)))
           (when password-changed?
-            (event/emit :password-changed
+            (event/emit event-emitter :password-changed
                         (merge {:username account}
                                details)))
           (assoc (redirect "/profile")
@@ -267,7 +267,7 @@
                 [:h1 "Reset your password"]
                 [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"]))))
 
-(defn reset-password [db reset-code {:keys [password confirm]} details]
+(defn reset-password [db event-emitter reset-code {:keys [password confirm]} details]
   (log/with-context {:tag :reset-password
                      :reset-code reset-code}
     (if-let [errors (apply validate {:password password
@@ -281,7 +281,7 @@
         (db/reset-user-password db username reset-code password)
         (log/info {:status :success
                    :username username})
-        (event/emit :password-changed
+        (event/emit event-emitter :password-changed
                     (merge {:username username}
                            details))
         (assoc (redirect "/login")

@@ -14,7 +14,7 @@
       (auth/try-account
        #(view/show-group db % groupname actives)))))
 
-(defn- toggle-or-add-member [db groupname username make-admin? details]
+(defn- toggle-or-add-member [db event-emitter groupname username make-admin? details]
   (let [actives (seq (db/group-actives db groupname))
         membernames (->> actives
                          (filter (complement view/is-admin?))
@@ -47,7 +47,8 @@
                           user-to-add
                           (let [add-fn (if admin? db/add-admin db/add-member)]
                             (add-fn db groupname username account)
-                            (event/emit :group-member-added
+                            (event/emit event-emitter
+                                        :group-member-added
                                         (merge
                                          details
                                          {:admin? admin?
@@ -83,7 +84,7 @@
                       make-admin?
                       (if make-admin? adminnames membernames))))))))
 
-(defn- remove-member [db groupname username details]
+(defn- remove-member [db event-emitter groupname username details]
   (let [actives (seq (db/group-actives db groupname))]
     (when (seq actives)
       (auth/try-account
@@ -107,7 +108,8 @@
                (some #{username} (map :user actives))
                (do
                  (db/inactivate-member db groupname username account)
-                 (event/emit :group-member-removed
+                 (event/emit event-emitter
+                             :group-member-removed
                              (merge
                               details
                               {:admin-emails (db/group-admin-emails db groupname)
@@ -129,11 +131,11 @@
                                   (str "No such member: "
                                        username)))))))))))
 
-(defn routes [db]
+(defn routes [db event-emitter]
   (compojure/routes
    (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
         (get-members db groupname))
    (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username admin :as request]
-         (toggle-or-add-member db groupname username (= "1" admin) (common/request-details request)))
+         (toggle-or-add-member db event-emitter groupname username (= "1" admin) (common/request-details request)))
    (DELETE ["/groups/:groupname", :groupname #"[^/]+"] [groupname username :as request]
-           (remove-member db groupname username (common/request-details request)))))
+           (remove-member db event-emitter groupname username (common/request-details request)))))

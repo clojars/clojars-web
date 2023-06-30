@@ -12,7 +12,8 @@
 
 (use-fixtures :each
   help/default-fixture
-  help/with-clean-database)
+  help/with-clean-database
+  help/run-test-app)
 
 (deftest server-errors-display-error-page
   (with-out-str (-> (session (help/app))

@@ -18,6 +18,14 @@
                                            :default    "clojars"}}
  :deletion-backup-dir #profile {:production "/home/clojars/repo-deleted"
                                 :default    "data/test/repo-backup"}
+ :event-queue         #profile {:production {:queue-url "https://sqs.us-east-2.amazonaws.com/825662292780/clojars-events"}
+                                :default    {:credentials {:access-key-id     "fake-access-key"
+                                                           :secret-access-key "fake-secret-key"}
+                                             :endpoint {:protocol "http"
+                                                        :hostname "localhost"
+                                                        :port     9324}
+                                             :region "us-east-1"
+                                             :queue-url "http://localhost:9324/000000000000/clojars-events"}}
  :github-oauth        {:client-id     #profile {:production #ssm-parameter "/clojars/production/github_oauth_client_id"
                                                 :default    "testing"}
                        :client-secret #profile {:production #ssm-parameter "/clojars/production/github_oauth_client_secret"

@@ -17,7 +17,8 @@
 
 (use-fixtures :each
   help/default-fixture
-  help/with-clean-database)
+  help/with-clean-database
+  help/run-test-app)
 
 (def privkey (keys/private-key (io/resource "ecdsa-key.pem")))
 (def pubkey-str (slurp (io/resource "ecdsa-key-pub.pem")))
@@ -45,44 +46,42 @@
                (db/find-user-tokens-by-username help/*db* username)))
 
 (deftest test-github-token-breach-request-with-invalid-identifier
-  (help/with-test-system
-    (with-redefs [client/get (constantly {:body github-response})]
-      (let [app (help/app-from-system)
-            request (-> (build-breach-request "whatever")
-                        (header "GITHUB-PUBLIC-KEY-IDENTIFIER" "bad"))
-            res (app request)]
-        (is (= 422 (:status res)))))))
+  (with-redefs [client/get (constantly {:body github-response})]
+    (let [app (help/app)
+          request (-> (build-breach-request "whatever")
+                      (header "GITHUB-PUBLIC-KEY-IDENTIFIER" "bad"))
+          res (app request)]
+      (is (= 422 (:status res))))))
 
 (deftest test-github-token-breach-reporting-works
-  (help/with-test-system
-    (let [_user (db/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
-          app (help/app-from-system)]
-      (with-redefs [client/get (constantly {:body github-response})]
-        (testing "when token is enabled"
-          (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
-                res (app (build-breach-request (:token token)))
-                db-token (find-token "ham" "a token")
-                _ (is (true? (email/wait-for-mock-emails)))
-                [to subject message] (first @email/mock-emails)]
-            (is (= 200 (:status res)))
-            (is (:disabled db-token))
-            (is (= "ham@biscuit.co" to))
-            (is (= "Deploy token found on GitHub" subject))
-            (is (re-find #"'a token'" message))
-            (is (re-find #"https://github.com/foo/bar" message))
-            (is (re-find #"has been disabled" message))))
+  (let [_user (db/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
+        app (help/app)]
+    (with-redefs [client/get (constantly {:body github-response})]
+      (testing "when token is enabled"
+        (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
+              res (app (build-breach-request (:token token)))
+              db-token (find-token "ham" "a token")
+              _ (is (true? (email/wait-for-mock-emails)))
+              [to subject message] (first @email/mock-emails)]
+          (is (= 200 (:status res)))
+          (is (:disabled db-token))
+          (is (= "ham@biscuit.co" to))
+          (is (= "Deploy token found on GitHub" subject))
+          (is (re-find #"'a token'" message))
+          (is (re-find #"https://github.com/foo/bar" message))
+          (is (re-find #"has been disabled" message))))
 
-        (testing "when token is disabled"
-          (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil false nil)
-                db-token (find-token "ham" "another token")
-                _ (db/disable-deploy-token help/*db* (:id db-token))
-                _ (email/expect-mock-emails 1)
-                res (app (build-breach-request (:token token)))
-                _ (is (true? (email/wait-for-mock-emails)))
-                [to subject message] (first @email/mock-emails)]
-            (is (= 200 (:status res)))
-            (is (= "ham@biscuit.co" to))
-            (is (= "Deploy token found on GitHub" subject))
-            (is (re-find #"'another token'" message))
-            (is (re-find #"https://github.com/foo/bar" message))
-            (is (re-find #"was already disabled" message))))))))
+      (testing "when token is disabled"
+        (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil false nil)
+              db-token (find-token "ham" "another token")
+              _ (db/disable-deploy-token help/*db* (:id db-token))
+              _ (email/expect-mock-emails 1)
+              res (app (build-breach-request (:token token)))
+              _ (is (true? (email/wait-for-mock-emails)))
+              [to subject message] (first @email/mock-emails)]
+          (is (= 200 (:status res)))
+          (is (= "ham@biscuit.co" to))
+          (is (= "Deploy token found on GitHub" subject))
+          (is (re-find #"'another token'" message))
+          (is (re-find #"https://github.com/foo/bar" message))
+          (is (re-find #"was already disabled" message)))))))

@@ -28,6 +28,13 @@ jobs:
             - $HOME/.m2
             - $HOME/.lein
           key: clojars-{{ checksum "project.clj" }}
+      - run:
+          name: Download ElasticMQ
+          command: wget https://s3-eu-west-1.amazonaws.com/softwaremill-public/elasticmq-server-1.4.2.jar -O elasticmq.jar
+      - run:
+          name: Run ElasticMQ
+          command: java -Dconfig.file=dev-resources/elasticmq.conf -jar elasticmq.jar
+          background: true
       - run: lein do run -m user/migrate, test, uberjar
       - run: ./bin/clj-kondo --lint src test
       - store_test_results:

@@ -14,7 +14,8 @@
 
 (use-fixtures :each
   help/default-fixture
-  help/with-clean-database)
+  help/with-clean-database
+  help/run-test-app)
 
 (deftest user-cant-login-with-bad-user-pass-combo
   (-> (session (help/app))

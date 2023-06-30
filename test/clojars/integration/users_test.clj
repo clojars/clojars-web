@@ -6,7 +6,7 @@
    ;; for defmethods
    [clojars.notifications.group]
    [clojars.notifications.user]
-   [clojars.test-helper :as help :refer [with-test-system]]
+   [clojars.test-helper :as help]
    [clojure.string :as str]
    [clojure.test :refer [deftest is testing use-fixtures]]
    [kerodon.core :refer [check fill-in follow follow-redirect
@@ -16,7 +16,8 @@
 
 (use-fixtures :each
   help/default-fixture
-  help/with-clean-database)
+  help/with-clean-database
+  help/run-test-app)
 
 (deftest user-can-register
   (-> (session (help/app))
@@ -96,90 +97,87 @@
         (has (text? "Username is already taken")))))
 
 (deftest user-can-update-info
-  (with-test-system
-    (email/expect-mock-emails 3)
-    (-> (session (help/app))
-        (register-as "fixture" "fixture@example.org" "password")
-        (follow-redirect)
-        (follow "profile")
-        (fill-in "Email" "fixture2@example.org")
-        (fill-in "Current password" "password")
-        (fill-in "New password" "password2")
-        (fill-in "Confirm new password" "password2")
-        (press "Update")
-        (follow-redirect)
-        (within [:div#notice]
-          (has (text? "Profile updated.")))
-        (follow "logout")
-        (follow-redirect)
-        (has (status? 200))
-        (within [:nav [:li enlive/first-child] :a]
-          (has (text? "login")))
-        (login-as "fixture" "password2")
-        (follow-redirect)
-        (has (status? 200))
-        (within [:div.light-article :> :h1]
-          (has (text? "Dashboard (fixture)"))))
-    (is (true? (email/wait-for-mock-emails)))
-    (is (= #{"Your Clojars email was changed"
-             "Your Clojars password was changed"}
-           (into #{} (map second) @email/mock-emails)))))
+  (email/expect-mock-emails 3)
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password")
+      (follow-redirect)
+      (follow "profile")
+      (fill-in "Email" "fixture2@example.org")
+      (fill-in "Current password" "password")
+      (fill-in "New password" "password2")
+      (fill-in "Confirm new password" "password2")
+      (press "Update")
+      (follow-redirect)
+      (within [:div#notice]
+        (has (text? "Profile updated.")))
+      (follow "logout")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:nav [:li enlive/first-child] :a]
+        (has (text? "login")))
+      (login-as "fixture" "password2")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (fixture)"))))
+  (is (true? (email/wait-for-mock-emails)))
+  (is (= #{"Your Clojars email was changed"
+           "Your Clojars password was changed"}
+         (into #{} (map second) @email/mock-emails))))
 
 (deftest user-can-update-just-email
-  (with-test-system
-    (email/expect-mock-emails 2)
-    (-> (session (help/app))
-        (register-as "fixture" "fixture@example.org" "password")
-        (follow-redirect)
-        (follow "profile")
-        (fill-in "Email" "fixture2@example.org")
-        (fill-in "Current password" "password")
-        (press "Update")
-        (follow-redirect)
-        (within [:div#notice]
-          (has (text? "Profile updated."))))
-    (is (true? (email/wait-for-mock-emails)))
-    (let [[addresses titles bodies]
-          (reduce
-           #(map conj %1 %2)
-           [#{} #{} #{}]
-           @email/mock-emails)]
-      (is (= #{"fixture@example.org" "fixture2@example.org"} addresses))
-      (is (= #{"Your Clojars email was changed"} titles))
-      (doseq [body bodies]
-        (is (re-find #"from 'fixture@example.org' to 'fixture2@example.org'" body))
-        (is (re-find #"Client IP" body))))))
+  (email/expect-mock-emails 2)
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password")
+      (follow-redirect)
+      (follow "profile")
+      (fill-in "Email" "fixture2@example.org")
+      (fill-in "Current password" "password")
+      (press "Update")
+      (follow-redirect)
+      (within [:div#notice]
+        (has (text? "Profile updated."))))
+  (is (true? (email/wait-for-mock-emails)))
+  (let [[addresses titles bodies]
+        (reduce
+         #(map conj %1 %2)
+         [#{} #{} #{}]
+         @email/mock-emails)]
+    (is (= #{"fixture@example.org" "fixture2@example.org"} addresses))
+    (is (= #{"Your Clojars email was changed"} titles))
+    (doseq [body bodies]
+      (is (re-find #"from 'fixture@example.org' to 'fixture2@example.org'" body))
+      (is (re-find #"Client IP" body)))))
 
 (deftest user-can-update-just-password
-  (with-test-system
-    (email/expect-mock-emails 1)
-    (-> (session (help/app))
-        (register-as "fixture" "fixture@example.org" "password")
-        (follow-redirect)
-        (follow "profile")
-        (fill-in "Current password" "password")
-        (fill-in "New password" "password2")
-        (fill-in "Confirm new password" "password2")
-        (press "Update")
-        (follow-redirect)
-        (within [:div#notice]
-          (has (text? "Profile updated.")))
-        (follow "logout")
-        (follow-redirect)
-        (has (status? 200))
-        (within [:nav [:li enlive/first-child] :a]
-          (has (text? "login")))
-        (login-as "fixture" "password2")
-        (follow-redirect)
-        (has (status? 200))
-        (within [:div.light-article :> :h1]
-          (has (text? "Dashboard (fixture)"))))
-    (is (true? (email/wait-for-mock-emails)))
-    (let [[address title body] (first @email/mock-emails)]
-      (is (= "fixture@example.org" address))
-      (is (= "Your Clojars password was changed" title))
-      (is (re-find #"has changed the password on your 'fixture'" body))
-      (is (re-find #"Client IP" body)))))
+  (email/expect-mock-emails 1)
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password")
+      (follow-redirect)
+      (follow "profile")
+      (fill-in "Current password" "password")
+      (fill-in "New password" "password2")
+      (fill-in "Confirm new password" "password2")
+      (press "Update")
+      (follow-redirect)
+      (within [:div#notice]
+        (has (text? "Profile updated.")))
+      (follow "logout")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:nav [:li enlive/first-child] :a]
+        (has (text? "login")))
+      (login-as "fixture" "password2")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (fixture)"))))
+  (is (true? (email/wait-for-mock-emails)))
+  (let [[address title body] (first @email/mock-emails)]
+    (is (= "fixture@example.org" address))
+    (is (= "Your Clojars password was changed" title))
+    (is (re-find #"has changed the password on your 'fixture'" body))
+    (is (re-find #"Client IP" body))))
 
 (deftest bad-update-info-should-show-error
   (-> (session (help/app))
@@ -224,53 +222,52 @@
         (has (text? "Email can't be blankEmail must have an @ sign and a domain")))))
 
 (deftest user-can-get-new-password
-  (with-test-system
-    (email/expect-mock-emails 1)
-    (-> (session (help/app-from-system))
-        (register-as "fixture" "fixture@example.org" "password"))
-    (-> (session (help/app-from-system))
-        (visit "/")
-        (follow "login")
-        (follow "Forgot your username or password?")
-        (fill-in "Email or Username" "fixture")
-        (press "Email me a password reset link")
-        (has (status? 200))
-        (within [:p]
-          (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
-    (let [[to subject message :as email] (first @email/mock-emails)]
-      (is email)
-      (is (= to "fixture@example.org"))
-      (is (= subject "Password reset for Clojars"))
-      (let [password "some-secret!"
-            [_ reset-password-link]
-            (re-find
-             #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of the clojars user: fixture.\n\nTo contine with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
-             message)]
-        (is (re-find #"Client IP" message))
-        (is (string? reset-password-link))
-        (email/expect-mock-emails 1)
-        (-> (session (help/app))
-            (visit reset-password-link)
-            (has (status? 200))
-            (fill-in "New password" password)
-            (fill-in "Confirm new password" password)
-            (press "Update my password")
-            (follow-redirect)
-            (has (status? 200))
-            (within [:div.small-section :> :h1]
-              (has (text? "Login")))
-            ;; can login with new password
-            (login-as "fixture" password)
-            (follow-redirect)
-            (has (status? 200))
-            (within [:div.light-article :> :h1]
-              (has (text? "Dashboard (fixture)"))))))
-    (is (true? (email/wait-for-mock-emails)))
-    (let [[address title body] (first @email/mock-emails)]
-      (is (= "fixture@example.org" address))
-      (is (= "Your Clojars password was changed" title))
-      (is (re-find #"has changed the password on your 'fixture'" body))
-      (is (re-find #"Client IP" body)))))
+  (email/expect-mock-emails 1)
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  (-> (session (help/app))
+      (visit "/")
+      (follow "login")
+      (follow "Forgot your username or password?")
+      (fill-in "Email or Username" "fixture")
+      (press "Email me a password reset link")
+      (has (status? 200))
+      (within [:p]
+        (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
+  (let [[to subject message :as email] (first @email/mock-emails)]
+    (is email)
+    (is (= to "fixture@example.org"))
+    (is (= subject "Password reset for Clojars"))
+    (let [password "some-secret!"
+          [_ reset-password-link]
+          (re-find
+           #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of the clojars user: fixture.\n\nTo contine with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
+           message)]
+      (is (re-find #"Client IP" message))
+      (is (string? reset-password-link))
+      (email/expect-mock-emails 1)
+      (-> (session (help/app))
+          (visit reset-password-link)
+          (has (status? 200))
+          (fill-in "New password" password)
+          (fill-in "Confirm new password" password)
+          (press "Update my password")
+          (follow-redirect)
+          (has (status? 200))
+          (within [:div.small-section :> :h1]
+            (has (text? "Login")))
+          ;; can login with new password
+          (login-as "fixture" password)
+          (follow-redirect)
+          (has (status? 200))
+          (within [:div.light-article :> :h1]
+            (has (text? "Dashboard (fixture)"))))))
+  (is (true? (email/wait-for-mock-emails)))
+  (let [[address title body] (first @email/mock-emails)]
+    (is (= "fixture@example.org" address))
+    (is (= "Your Clojars password was changed" title))
+    (is (re-find #"has changed the password on your 'fixture'" body))
+    (is (re-find #"Client IP" body))))
 
 (deftest bad-reset-code-shows-message
   (-> (session (help/app))
@@ -280,107 +277,104 @@
         (has (text? "The reset code was not found. Please ask for a new code in the forgot password page")))))
 
 (deftest admin-can-add-member-to-group
-  (with-test-system
-    (-> (session (help/app))
-        (register-as "fixture" "fixture@example.org" "password"))
-    (-> (session (help/app))
-        (register-as "dantheman" "test@example.org" "password")
-        ((fn [session] (email/expect-mock-emails 2) session))
-        (visit "/groups/org.clojars.dantheman")
-        (fill-in [:#username] "fixture")
-        (press "Add Member")
-        ;; (follow-redirect)
-        (within [:table.group-member-list
-                 [:tr enlive/last-of-type]
-                 [:td enlive/first-of-type]]
-          (has (text? "fixture")))
-        (within [:table.group-member-list
-                 [:tr enlive/last-of-type]
-                 [:td (enlive/nth-of-type 2)]]
-          (has (text? "No"))))
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      ((fn [session] (email/expect-mock-emails 2) session))
+      (visit "/groups/org.clojars.dantheman")
+      (fill-in [:#username] "fixture")
+      (press "Add Member")
+      ;; (follow-redirect)
+      (within [:table.group-member-list
+               [:tr enlive/last-of-type]
+               [:td enlive/first-of-type]]
+        (has (text? "fixture")))
+      (within [:table.group-member-list
+               [:tr enlive/last-of-type]
+               [:td (enlive/nth-of-type 2)]]
+        (has (text? "No"))))
 
-    (is (some #{"fixture"} (db/group-membernames help/*db* "org.clojars.dantheman")))
+  (is (some #{"fixture"} (db/group-membernames help/*db* "org.clojars.dantheman")))
 
-    (help/match-audit {:username "dantheman"}
-                      {:tag "member-added"
-                       :user "dantheman"
-                       :group_name "org.clojars.dantheman"
-                       :message "user 'fixture' added as member"})
+  (help/match-audit {:username "dantheman"}
+                    {:tag "member-added"
+                     :user "dantheman"
+                     :group_name "org.clojars.dantheman"
+                     :message "user 'fixture' added as member"})
 
-    (is (true? (email/wait-for-mock-emails)))
-    (is (= 2 (count @email/mock-emails)))
-    (is (= #{"fixture@example.org" "test@example.org"}
-           (into #{} (map first) @email/mock-emails)))
-    (is (every? #(= "A member was added to the group org.clojars.dantheman"
-                    %)
-                (into [] (map second) @email/mock-emails)))
-    (is (every? #(str/starts-with? % "User 'fixture' was added to the org.clojars.dantheman group by dantheman.\n\n")
-                (into [] (map #(nth % 2)) @email/mock-emails)))))
+  (is (true? (email/wait-for-mock-emails)))
+  (is (= 2 (count @email/mock-emails)))
+  (is (= #{"fixture@example.org" "test@example.org"}
+         (into #{} (map first) @email/mock-emails)))
+  (is (every? #(= "A member was added to the group org.clojars.dantheman"
+                  %)
+              (into [] (map second) @email/mock-emails)))
+  (is (every? #(str/starts-with? % "User 'fixture' was added to the org.clojars.dantheman group by dantheman.\n\n")
+              (into [] (map #(nth % 2)) @email/mock-emails))))
 
 (deftest admin-can-add-admin-to-group
-  (with-test-system
-    (-> (session (help/app))
-        (register-as "fixture" "fixture@example.org" "password"))
-    (-> (session (help/app))
-        (register-as "dantheman" "test@example.org" "password")
-        ((fn [session] (email/expect-mock-emails 2) session))
-        (visit "/groups/org.clojars.dantheman")
-        (fill-in [:#username] "fixture")
-        (check [:#admin])
-        (press "Add Member")
-        (within [:table.group-member-list
-                 [:tr enlive/last-of-type]
-                 [:td enlive/first-of-type]]
-          (has (text? "fixture")))
-        (within [:table.group-member-list
-                 [:tr enlive/last-of-type]
-                 [:td (enlive/nth-of-type 2)]]
-          (has (text? "Yes"))))
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      ((fn [session] (email/expect-mock-emails 2) session))
+      (visit "/groups/org.clojars.dantheman")
+      (fill-in [:#username] "fixture")
+      (check [:#admin])
+      (press "Add Member")
+      (within [:table.group-member-list
+               [:tr enlive/last-of-type]
+               [:td enlive/first-of-type]]
+        (has (text? "fixture")))
+      (within [:table.group-member-list
+               [:tr enlive/last-of-type]
+               [:td (enlive/nth-of-type 2)]]
+        (has (text? "Yes"))))
 
-    (is (some #{"fixture"} (db/group-adminnames help/*db* "org.clojars.dantheman")))
+  (is (some #{"fixture"} (db/group-adminnames help/*db* "org.clojars.dantheman")))
 
-    (help/match-audit {:username "dantheman"}
-                      {:tag "member-added"
-                       :user "dantheman"
-                       :group_name "org.clojars.dantheman"
-                       :message "user 'fixture' added as admin"})
+  (help/match-audit {:username "dantheman"}
+                    {:tag "member-added"
+                     :user "dantheman"
+                     :group_name "org.clojars.dantheman"
+                     :message "user 'fixture' added as admin"})
 
-    (is (true? (email/wait-for-mock-emails)))
-    (is (= 2 (count @email/mock-emails)))
-    (is (= #{"fixture@example.org" "test@example.org"}
-           (into #{} (map first) @email/mock-emails)))
-    (is (every? #(= "An admin member was added to the group org.clojars.dantheman"
-                    %)
-                (into [] (map second) @email/mock-emails)))
-    (is (every? #(str/starts-with? % "User 'fixture' was added as an admin to the org.clojars.dantheman group by dantheman.\n\n")
-                (into [] (map #(nth % 2)) @email/mock-emails)))))
+  (is (true? (email/wait-for-mock-emails)))
+  (is (= 2 (count @email/mock-emails)))
+  (is (= #{"fixture@example.org" "test@example.org"}
+         (into #{} (map first) @email/mock-emails)))
+  (is (every? #(= "An admin member was added to the group org.clojars.dantheman"
+                  %)
+              (into [] (map second) @email/mock-emails)))
+  (is (every? #(str/starts-with? % "User 'fixture' was added as an admin to the org.clojars.dantheman group by dantheman.\n\n")
+              (into [] (map #(nth % 2)) @email/mock-emails))))
 
 (deftest admin-can-remove-user-from-group
-  (with-test-system
-    (-> (session (help/app))
-        (register-as "fixture" "fixture@example.org" "password"))
-    (-> (session (help/app))
-        (register-as "dantheman" "test@example.org" "password")
-        (visit "/groups/org.clojars.dantheman")
-        (fill-in [:#username] "fixture")
-        (press "Add Member")
-        ((fn [session] (email/expect-mock-emails 2) session))
-        (press "Remove Member"))
-    (help/match-audit {:username "dantheman"}
-                      {:tag "member-removed"
-                       :user "dantheman"
-                       :group_name "org.clojars.dantheman"
-                       :message "user 'fixture' removed"})
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      (visit "/groups/org.clojars.dantheman")
+      (fill-in [:#username] "fixture")
+      (press "Add Member")
+      ((fn [session] (email/expect-mock-emails 2) session))
+      (press "Remove Member"))
+  (help/match-audit {:username "dantheman"}
+                    {:tag "member-removed"
+                     :user "dantheman"
+                     :group_name "org.clojars.dantheman"
+                     :message "user 'fixture' removed"})
 
-    (is (true? (email/wait-for-mock-emails)))
-    (is (= 2 (count @email/mock-emails)))
-    (is (= #{"fixture@example.org" "test@example.org"}
-           (into #{} (map first) @email/mock-emails)))
-    (is (every? #(= "A member was removed from the group org.clojars.dantheman"
-                    %)
-                (into [] (map second) @email/mock-emails)))
-    (is (every? #(str/starts-with? % "User 'fixture' was removed from the org.clojars.dantheman group by dantheman.\n\n")
-                (into [] (map #(nth % 2)) @email/mock-emails)))))
+  (is (true? (email/wait-for-mock-emails)))
+  (is (= 2 (count @email/mock-emails)))
+  (is (= #{"fixture@example.org" "test@example.org"}
+         (into #{} (map first) @email/mock-emails)))
+  (is (every? #(= "A member was removed from the group org.clojars.dantheman"
+                  %)
+              (into [] (map second) @email/mock-emails)))
+  (is (every? #(str/starts-with? % "User 'fixture' was removed from the org.clojars.dantheman group by dantheman.\n\n")
+              (into [] (map #(nth % 2)) @email/mock-emails))))
 
 (deftest user-must-exist-to-be-added-to-group
   (-> (session (help/app))
@@ -399,35 +393,34 @@
         (has (text? "dantheman")))))
 
 (deftest user-is-emailed-when-activating-and-deactivating-mfa
-  (with-test-system
-    (-> (session (help/app-from-system))
-        (register-as "fixture" "fixture@example.org" "password"))
-    (let [[otp-secret] (enable-mfa (session (help/app-from-system)) "fixture" "password")
-          _ (is (true? (email/wait-for-mock-emails)))
-          [address title body] (first @email/mock-emails)]
-      (is (= "fixture@example.org" address))
-      (is (= "Two-factor auth was enabled on your Clojars account" title))
-      (is (re-find #"'fixture'" body))
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  (let [[otp-secret] (enable-mfa (session (help/app)) "fixture" "password")
+        _ (is (true? (email/wait-for-mock-emails)))
+        [address title body] (first @email/mock-emails)]
+    (is (= "fixture@example.org" address))
+    (is (= "Two-factor auth was enabled on your Clojars account" title))
+    (is (re-find #"'fixture'" body))
 
-      (testing "when manually disabled"
-        (email/expect-mock-emails 1)
-        (disable-mfa (session (help/app-from-system)) "fixture" "password" otp-secret)
+    (testing "when manually disabled"
+      (email/expect-mock-emails 1)
+      (disable-mfa (session (help/app)) "fixture" "password" otp-secret)
+      (is (true? (email/wait-for-mock-emails)))
+      (let [[address title body] (first @email/mock-emails)]
+        (is (= "fixture@example.org" address))
+        (is (= "Two-factor auth was disabled on your Clojars account" title))
+        (is (re-find #"'fixture'" body))
+        (is (re-find #"manually disabled" body))
+        (is (re-find #"Client IP" body))))
+
+    (testing "when recovery code used"
+      (email/expect-mock-emails 2)
+      (let [[_otp-secret recovery-code] (enable-mfa (session (help/app)) "fixture" "password")]
+        (login-as (session (help/app)) "fixture" "password" recovery-code)
+        ;; wait for the enable then recovery emails to be sent
         (is (true? (email/wait-for-mock-emails)))
-        (let [[address title body] (first @email/mock-emails)]
+        (let [[address title body] (second @email/mock-emails)]
           (is (= "fixture@example.org" address))
           (is (= "Two-factor auth was disabled on your Clojars account" title))
           (is (re-find #"'fixture'" body))
-          (is (re-find #"manually disabled" body))
-          (is (re-find #"Client IP" body))))
-
-      (testing "when recovery code used"
-        (email/expect-mock-emails 2)
-        (let [[_otp-secret recovery-code] (enable-mfa (session (help/app-from-system)) "fixture" "password")]
-          (login-as (session (help/app-from-system)) "fixture" "password" recovery-code)
-          ;; wait for the enable then recovery emails to be sent
-          (is (true? (email/wait-for-mock-emails)))
-          (let [[address title body] (second @email/mock-emails)]
-            (is (= "fixture@example.org" address))
-            (is (= "Two-factor auth was disabled on your Clojars account" title))
-            (is (re-find #"'fixture'" body))
-            (is (re-find #"your recovery code" body))))))))
+          (is (re-find #"your recovery code" body)))))))

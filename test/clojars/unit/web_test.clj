@@ -6,7 +6,8 @@
 
 (use-fixtures :each
   help/default-fixture
-  help/with-clean-database)
+  help/with-clean-database
+  help/run-test-app)
 
 (defn cookies [res]
   (flatten [(get-in res [:headers "Set-Cookie"])]))

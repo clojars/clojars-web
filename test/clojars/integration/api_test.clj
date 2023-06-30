@@ -32,7 +32,7 @@
   (is (= (help/get-content-type {:headers {"content-type" "application/json;charset=utf-8"}}) "application/json")))
 
 (deftest an-api-test
-  (-> (session (help/app-from-system))
+  (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
   (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.1/test.pom")
   (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.2/test.pom")
