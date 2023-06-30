@@ -9,6 +9,12 @@ Newest items at the top. Note that updates before 2022-August were copied from
 + [[https://github.com/clojars/clojars-web/commit/df306df0f74ce4a0873be135077c999571bf1d53][Don't call s3 or cache for invalid repo paths]] ([[https://github.com/tobias][Toby Crawley]])
 + [[https://github.com/clojars/clojars-web/commit/362232007c94de9cf34913982c90f3bbe7e6305b][Don't throw if we can't load the cache file]] ([[https://github.com/tobias][Toby Crawley]])
 
+*** [[https://github.com/clojars/clojars-web/commits/211][211]]
++ [[https://github.com/clojars/clojars-web/issues/867][Skip log lines for s3 bucket listings when calculating download stats]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/commits/212][212]]
++ [[https://github.com/clojars/clojars-web/pull/868][Use SQS for async processing instead of the tap queue]] ([[https://github.com/tobias][Toby Crawley]])
+
 * 2023-May
 *** [[https://github.com/clojars/clojars-web/commits/209][209]]
 + [[https://github.com/clojars/clojars-web/commit/d991781f5b28297b2c07153325484c975cb50c2e][Don't cache full not-found responses locally]] ([[https://github.com/tobias][Toby Crawley]])
