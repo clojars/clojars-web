@@ -214,6 +214,7 @@
        :clj            :txt
        :eclipse-plugin :zip
        :gz             "application/gzip"
+       :html           "text/html"
        :jar            "application/x-java-archive"
        :md5            :txt
        :pom            :xml

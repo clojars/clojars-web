@@ -1,10 +1,18 @@
 (ns clojars.repo-indexing
   (:require
+   [clojars.event :as event]
+   [clojars.retry :as retry]
    [clojars.s3 :as s3]
    [clojars.web.common :as common]
    [clojars.web.safe-hiccup :as safe-hiccup]
+   [clojure.java.io :as io]
    [clojure.string :as str]
-   [hiccup.element :as el]))
+   [hiccup.element :as el])
+  (:import
+   (java.io
+    ByteArrayInputStream)))
+
+(set! *warn-on-reflection* true)
 
 (defn- last-segment
   [path]
@@ -54,6 +62,7 @@
      "\n")))
 
 (defn generate-index
+  ^String
   [path entries]
   (safe-hiccup/html5
    {:lang "en"}
@@ -85,13 +94,15 @@
        :else                           (compare (:Key e1) (:Key e2))))
    entries))
 
+(def ^:private index-file-name "index.html")
+
 (defn get-path-entries
   [repo-bucket path]
   (->> (s3/list-entries repo-bucket path)
        ;; filter out index files
        (remove (fn [{:keys [Key]}]
                  (and Key
-                      (str/ends-with? Key "index.html"))))
+                      (str/ends-with? Key index-file-name))))
        (sort-entries)))
 
 (defn normalize-path
@@ -105,3 +116,23 @@
              (not (str/ends-with? path "/")))
       (str path "/")
       path)))
+
+(defn handler
+  [{:keys [error-reporter repo-bucket]} type {:as _data :keys [path]}]
+  (when (= :repo-path-needs-index type)
+    (let [path (normalize-path path)]
+      (retry/retry {:error-reporter error-reporter}
+                   (when-some [entries (get-path-entries repo-bucket path)]
+                     (let [key (if path
+                                 (format "%s%s" path index-file-name)
+                                 index-file-name)
+                           index (generate-index path entries)]
+                       (s3/put-object repo-bucket
+                                      key
+                                      (io/input-stream (ByteArrayInputStream. (.getBytes index)))
+                                      {:ContentType (s3/content-type key)})))))))
+
+(defn repo-indexing-component
+  "Handles async repo-indexing for a path. Needs the error-reporter & repo-bucket components."
+  []
+  (event/handler-component #'handler))
