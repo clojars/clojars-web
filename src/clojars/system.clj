@@ -12,6 +12,7 @@
    [clojars.oauth.github :as github]
    [clojars.oauth.gitlab :as gitlab]
    [clojars.remote-service :as remote-service]
+   [clojars.repo-indexing :as repo-indexing]
    [clojars.ring-servlet-patch :as patch]
    [clojars.s3 :as s3]
    [clojars.search :as search]
@@ -91,6 +92,7 @@
           :mailer         (simple-mailer (:mail config))
           :notifications  (notifications/notification-component)
           :repo-bucket    (s3/s3-client (get-in config [:s3 :repo-bucket]))
+          :repo-indexer   (repo-indexing/repo-indexing-component)
           :repo-lister    (repo-listing/repo-lister (:cache-path config))
           :storage        (storage-component (:repo config) (:cdn-token config) (:cdn-url config))))
         (component/system-using
@@ -100,6 +102,7 @@
           :event-emitter  [:error-reporter]
           :http           [:app]
           :notifications  [:db :mailer]
+          :repo-indexer   [:error-reporter :repo-bucket]
           :repo-lister    [:repo-bucket]
           :event-receiver [:error-reporter]
           :storage        [:error-reporter :repo-bucket]}))))

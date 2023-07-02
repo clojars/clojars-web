@@ -329,8 +329,23 @@
     (when (= :single-use-status/yes (:single_use token))
       (db/consume-deploy-token db (:id token)))))
 
+(defn- gen-repo-paths
+  [{:as _version-data :keys [group-path name version]}]
+  (let [parts (conj (str/split group-path #"/")
+                    name version)]
+    (reduce
+     (fn [acc part]
+       (conj acc
+             (if (str/blank? (peek acc))
+               part
+               (format "%s/%s" (peek acc) part))))
+     [""]
+     parts)))
+
 (defn- emit-deploy-events
   [db event-emitter {:as version-data :keys [group]}]
+  (doseq [path (gen-repo-paths version-data)]
+    (event/emit event-emitter :repo-path-needs-index {:path path}))
   (doseq [user (db/group-active-users db group)]
     (event/emit event-emitter :version-deployed (assoc version-data :user user))))
 

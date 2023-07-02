@@ -1059,6 +1059,29 @@
       (is (every? #(re-find #"https://clojars.org/org.clojars.dantheman/test/versions/0.0.1" %)
                   bodies)))))
 
+(deftest deploy-generates-repo-indexes
+  (-> (session (help/app))
+      (register-as "donthemon" "test2@example.org" "password"))
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      (visit "/groups/org.clojars.dantheman")
+      (fill-in [:#username] "donthemon")
+      (press "Add Member"))
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                  {:groupId "org.clojars.dantheman"})
+      :password token})
+    (let [{:keys [repo-bucket]} help/system
+          paths ["" "org/" "org/clojars/" "org/clojars/dantheman/"
+                 "org/clojars/dantheman/test/" "org/clojars/dantheman/test/0.0.1/"]]
+      (is (help/wait-for-s3-key repo-bucket (format "%sindex.html" (peek paths))))
+      (doseq [path paths]
+        (testing (format "with a path of '%s'" path)
+          (is (s3/object-exists? repo-bucket (format "%sindex.html" path))))))))
+
 (deftest deploy-sends-notification-emails-only-when-enabled
   (-> (session (help/app))
       (register-as "donthemon" "test2@example.org" "password")

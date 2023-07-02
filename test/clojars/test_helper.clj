@@ -197,3 +197,14 @@
   `(with-redefs [shell/sh (constantly {:out  (TXT-vec->str ~txt-records)
                                        :exit 0})]
      ~@body))
+
+(defn wait-for-s3-key
+  [bucket key]
+  (loop [attempt 0]
+    (if (s3/object-exists? bucket key)
+      true
+      (if (< attempt 10)
+        (do
+          (Thread/sleep 1000)
+          (recur (inc attempt)))
+        false))))
