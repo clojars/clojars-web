@@ -130,7 +130,8 @@
                        (s3/put-object repo-bucket
                                       key
                                       (io/input-stream (ByteArrayInputStream. (.getBytes index)))
-                                      {:ContentType (s3/content-type key)})))))))
+                                      {:ACL "public-read"
+                                       :ContentType (s3/content-type key)})))))))
 
 (defn repo-indexing-component
   "Handles async repo-indexing for a path. Needs the error-reporter & repo-bucket components."
