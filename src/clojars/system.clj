@@ -19,7 +19,6 @@
    [clojars.stats :refer [artifact-stats]]
    [clojars.storage :as storage]
    [clojars.web :as web]
-   [clojars.web.repo-listing :as repo-listing]
    [com.stuartsierra.component :as component]
    [duct.component.endpoint :refer [endpoint-component]]
    [duct.component.handler :refer [handler-component]]
@@ -93,16 +92,14 @@
           :notifications  (notifications/notification-component)
           :repo-bucket    (s3/s3-client (get-in config [:s3 :repo-bucket]))
           :repo-indexer   (repo-indexing/repo-indexing-component)
-          :repo-lister    (repo-listing/repo-lister (:cache-path config))
           :storage        (storage-component (:repo config) (:cdn-token config) (:cdn-url config))))
         (component/system-using
          {:app            [:clojars-app]
           :clojars-app    [:db :github :gitlab :error-reporter :event-emitter :http-client
-                           :mailer :repo-lister :stats :search :storage]
+                           :mailer :stats :search :storage]
           :event-emitter  [:error-reporter]
           :http           [:app]
           :notifications  [:db :mailer]
           :repo-indexer   [:error-reporter :repo-bucket]
-          :repo-lister    [:repo-bucket]
           :event-receiver [:error-reporter]
           :storage        [:error-reporter :repo-bucket]}))))

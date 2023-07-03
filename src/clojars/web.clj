@@ -15,7 +15,6 @@
    [clojars.routes.artifact :as artifact]
    [clojars.routes.group :as group]
    [clojars.routes.repo :as repo]
-   [clojars.routes.repo-listing :as repo-listing]
    [clojars.routes.session :as session]
    [clojars.routes.token :as token]
    [clojars.routes.token-breach :as token-breach]
@@ -48,7 +47,7 @@
                :status 400})))))
 
 (defn- main-routes
-  [{:as _system :keys [db event-emitter mailer repo-lister search stats]}]
+  [{:as _system :keys [db event-emitter mailer search stats]}]
   (let [db (:spec db)]
     (routes
      (GET "/" _
@@ -77,7 +76,6 @@
            #(html-doc "DMCA" {:account %}
                       (raw (slurp (io/resource "dmca.html"))))))
      session/routes
-     (repo-listing/routes repo-lister)
      (group/routes db event-emitter)
      (artifact/routes db stats)
      ;; user routes must go after artifact routes

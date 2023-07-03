@@ -61,7 +61,7 @@
      size
      "\n")))
 
-(defn generate-index
+(defn- generate-index
   ^String
   [path entries]
   (safe-hiccup/html5
@@ -96,7 +96,7 @@
 
 (def ^:private index-file-name "index.html")
 
-(defn get-path-entries
+(defn- get-path-entries
   [repo-bucket path]
   (->> (s3/list-entries repo-bucket path)
        ;; filter out index files
@@ -105,7 +105,7 @@
                       (str/ends-with? Key index-file-name))))
        (sort-entries)))
 
-(defn normalize-path
+(defn- normalize-path
   [path]
   (let [path (cond
                (str/blank? path)           nil
@@ -117,7 +117,7 @@
       (str path "/")
       path)))
 
-(defn handler
+(defn- handler
   [{:keys [error-reporter repo-bucket]} type {:as _data :keys [path]}]
   (when (= :repo-path-needs-index type)
     (let [path (normalize-path path)]
