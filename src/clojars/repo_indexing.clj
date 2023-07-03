@@ -69,7 +69,7 @@
    [:head
     [:meta {:charset "utf-8"}]
     [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
-    [:title (format "Clojars Repository: %s" path)]]
+    [:title (format "Clojars Repository: %s" (or path "/"))]]
    [:body
     [:header
      [:h1 (or path "/")]]
