@@ -9,6 +9,7 @@ indexer_jar=$2
 index_dir=$3
 repo=$4
 
+CLOJARS_ENVIRONMENT=production
 S3_REPO_BUCKET=clojars-repo-production
 
 # synchronize the repo bucket locally
@@ -35,7 +36,7 @@ popd
 
 # upload new shards and sums to s3
 java -cp $clojars_jar clojure.main -m clojars.tools.upload-repo-s3 $repo \
-     $S3_REPO_BUCKET .index 2> /dev/null
+     $S3_REPO_BUCKET .index :gen-index 2> /dev/null
 
 # remove old shards and sums from s3
 java -cp $clojars_jar clojure.main -m clojars.tools.remove-deletions-s3 $repo \

@@ -1,9 +1,12 @@
 (ns clojars.tools.upload-repo-s3
   (:gen-class)
   (:require
+   [clojars.config :as config]
+   [clojars.event :as event]
    [clojars.file-utils :as fu]
    [clojars.s3 :as s3]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [com.stuartsierra.component :as component]))
 
 (defn print-status
   [{:keys [changed new skipped]}]
@@ -56,8 +59,14 @@
 
 (defn -main [& args]
   (if (< (count args) 2)
-    (println "Usage: repo-path bucket-name [subpath]")
-    (let [[repo bucket subpath] args]
+    (println "Usage: repo-path bucket-name [subpath & opts]")
+    (let [[repo bucket subpath & opts] args
+          opts-map (zipmap (map read-string opts)
+                           (repeat true))]
       (upload-repo (s3/s3-client bucket)
                    (io/file repo)
-                   subpath))))
+                   subpath)
+      (when (:gen-index opts-map)
+        (let [event-emitter (component/start (event/new-sqs-emitter
+                                              (:event-queue (config/config))))]
+          (event/emit event-emitter :repo-path-needs-index {:path subpath}))))))
