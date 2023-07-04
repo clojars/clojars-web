@@ -1,7 +1,6 @@
 {:base-url            "https://clojars.org"
  :bcrypt-work-factor  12
  :bind                "127.0.0.1"
- :cache-path          "data/cache"
  :cdn-token           #profile {:production #ssm-parameter "/clojars/production/cdn_token"
                                 :default    nil}
  :cdn-url             "https://repo.clojars.org"
