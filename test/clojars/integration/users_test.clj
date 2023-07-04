@@ -357,13 +357,14 @@
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
+      ((fn [session] (email/expect-mock-emails 2) session))
+      (press "Add Member")
       ((fn [session]
          ;; clear the add emails
-         (email/expect-mock-emails 2)
          (email/wait-for-mock-emails 1000)
+         ;; Then prep for the remove emails
+         (email/expect-mock-emails 2)
          session))
-      (press "Add Member")
-      ((fn [session] (email/expect-mock-emails 2) session))
       (press "Remove Member"))
   (help/match-audit {:username "dantheman"}
                     {:tag "member-removed"
