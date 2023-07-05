@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <suppress>
+   <notes><![CDATA[
+   file name: jackson-databind-2.15.2.jar
+
+   This is only triggered if you feed jackson circular input. See
+   https://github.com/FasterXML/jackson-databind/issues/3972.
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
+   <cve>CVE-2023-35116</cve>
+  </suppress>
+
+  <suppress>
+   <notes><![CDATA[
+   file name: snakeyaml-1.33.jar
+
+   This only impacts deserialization, and we only serialize yaml. We would have
+   to upgrade to SnakeYAML 2.0 to address this, and we use SnakeYAML via
+   ring-middleware-format, which does not support v2.0.
+
+   See https://bitbucket.org/snakeyaml/snakeyaml/issues/561/cve-2022-1471-vulnerability-in
+   for a discussion of the CVE.
+
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
+   <cve>CVE-2022-1471</cve>
+  </suppress>
+
+</suppressions>

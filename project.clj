@@ -1,18 +1,17 @@
 (defproject clojars-web "216-SNAPSHOT"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.11.1"]
-                 [org.clojure/core.memoize "1.0.253"]
                  ;; manage jetty dependencies directly to make it easier to address CVEs
                  [org.eclipse.jetty/jetty-client "9.4.51.v20230217"]
                  [org.eclipse.jetty/jetty-server "9.4.51.v20230217"]
                  ;; manage jackson-databind directly to make it easiser to address CVEs
-                 [com.fasterxml.jackson.core/jackson-databind "2.14.0-rc1"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.15.2"]
                  [raven-clj "1.6.0"
                   :exclusions [cheshire]]
                  [org.apache.maven/maven-model "3.8.4"]
                  [org.apache.maven/maven-repository-metadata "3.8.4"]
                  [org.codehaus.plexus/plexus-utils "3.4.1"]
-                 [ring-middleware-format "0.7.4"
+                 [ring-middleware-format "0.7.5"
                   :exclusions [ring/ring-core
                                cheshire
                                com.fasterxml.jackson.core/jackson-core
@@ -44,7 +43,7 @@
                  [org.mindrot/jbcrypt "0.4"]
                  [com.github.scribejava/scribejava-apis "8.3.1"
                   :exclusions [com.fasterxml.jackson.core/jackson-databind]]
-                 [buddy/buddy-core "1.10.1"
+                 [buddy/buddy-core "1.11.423"
                   :exclusions [commons-codec
                                cheshire]]
                  ;; addresses CVE-2020-28491
@@ -65,15 +64,15 @@
                  [org.apache.lucene/lucene-queryparser "8.11.1"]
                  [org.clojure/tools.nrepl "0.2.11"]
                  [yesql "0.5.3"]
-                 [org.postgresql/postgresql "42.4.1"]
+                 [org.postgresql/postgresql "42.6.0"]
                  [duct/hikaricp-component "0.1.2"
                   :exclusions [com.stuartsierra/component
                                org.slf4j/slf4j-api
                                org.slf4j/slf4j-nop]]
                  [duct "0.8.2"
                   :exclusions [org.clojure/tools.reader]]
-                 [ring/ring-core "1.9.4"]
-                 [ring/ring-jetty-adapter "1.9.4"]
+                 [ring/ring-core "1.10.0"]
+                 [ring/ring-jetty-adapter "1.10.0"]
                  [ring-jetty-component "0.3.1"
                   :exclusions [org.clojure/tools.reader
                                ring/ring-core]]
@@ -92,10 +91,10 @@
 
                  ;; logging
                  [org.clojure/tools.logging "1.2.4"]
-                 [ch.qos.logback/logback-classic "1.3.0-alpha5"
+                 [ch.qos.logback/logback-classic "1.4.8"
                   :exclusions [com.sun.mail/javax.mail]]
                  ;; Upgrading for compatibility with logback 1.3.x
-                 [org.slf4j/jcl-over-slf4j "2.0.0-alpha1"]
+                 [org.slf4j/jcl-over-slf4j "2.0.7"]
 
                  ;; AWS
                  [com.cognitect.aws/api "0.8.681"]

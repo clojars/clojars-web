@@ -1,0 +1,3 @@
+;; Configuration reference: https://github.com/rm-hull/nvd-clojure/tree/v3.3.0#configuration-options
+
+{:suppression-file ".nvd-suppressions.xml" }
