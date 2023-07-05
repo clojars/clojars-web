@@ -11,7 +11,7 @@ If you're looking for user documentation, try
 the [wiki](http://github.com/clojars/clojars-web/wiki/_pages). There is a
 also a [FAQ](https://github.com/clojars/clojars-web/wiki/About).
 
-See [the CHANGELOG](CHANGELOG.org) for facing changes.
+See [the CHANGELOG](CHANGELOG.org) for changes.
 
 Contributing
 ------------
@@ -45,7 +45,7 @@ To begin developing, start with a REPL.
 lein repl
 ```
 
-You'll need postgres running as well. That's managed via
+You'll need elasticmq, minio, and postgres running as well. That's managed via
 docker-compose:
 
 ```sh
