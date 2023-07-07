@@ -10,39 +10,42 @@
    [meta-merge.core :refer [meta-merge]]
    [raven-clj.core :as raven-clj]))
 
-(def prod-env
+(def ^:private prod-env
   {:app {:middleware []}})
 
-(defn info [& msg]
+(defn- info [& msg]
   (apply println "clojars-web:" msg))
 
-(defn warn [& msg]
+(defn- warn [& msg]
   (apply println "clojars-web: WARNING -" msg))
 
-(defn prod-system [config prod-reporter]
+(defn- prod-system [config prod-reporter]
   (-> (meta-merge config prod-env)
       system/new-system
-      (assoc
-       :error-reporter (err/multiple-reporters
-                        (err/log-reporter)
-                        prod-reporter))))
+      (assoc :error-reporter prod-reporter)))
 
-(defn error-reporter [config]
-  (let [dsn (:sentry-dsn config)]
-    (if dsn
-      (let [raven-reporter (err/raven-error-reporter {:dsn dsn})]
-        (info "enabling raven-clj client dsn:project-id:" (:project-id (raven-clj/parse-dsn dsn)))
-        (Thread/setDefaultUncaughtExceptionHandler raven-reporter)
-        raven-reporter)
-      (do
-        (warn "no :sentry-dsn set in config, errors won't be logged to Sentry")
-        (err/null-reporter)))))
+(defn- raven-reporter
+  [{:as _config :keys [sentry-dsn]}]
+  (if sentry-dsn
+    (let [raven-reporter (err/raven-error-reporter {:dsn sentry-dsn})]
+      (info "enabling raven-clj client dsn:project-id:" (:project-id (raven-clj/parse-dsn sentry-dsn)))
+      raven-reporter)
+    (warn "no :sentry-dsn set in config, errors won't be logged to Sentry")))
+
+(defn- error-reporter [config]
+  (if-some [raven-reporter (raven-reporter config)]
+    (err/multiple-reporters
+     (err/log-reporter)
+     raven-reporter)
+    (err/log-reporter)))
 
 (defn -main [& _args]
   (try
     (alter-var-root #'config/*profile* (constantly "production"))
     (let [config (config/config)
-          system (component/start (prod-system config (error-reporter config)))]
+          error-reporter (error-reporter config)
+          system (component/start (prod-system config error-reporter))]
+      (err/set-default-exception-handler error-reporter)
       (info "starting jetty on" (str "http://" (:bind config) ":" (:port config)))
       (admin/init (get-in system [:db :spec])
                   (:search system)
@@ -50,4 +53,5 @@
     (catch Throwable t
       (binding [*out* *err*]
         (println "Error during app startup:"))
-      (.printStackTrace t))))
+      (.printStackTrace t)
+      (System/exit 70))))

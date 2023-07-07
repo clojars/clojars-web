@@ -37,14 +37,7 @@
                         id
                         (or (:message extra) "RavenErrorReporter capture")
                         e
-                        extra))
-
-  Thread$UncaughtExceptionHandler
-  (uncaughtException [_this _thread throwable]
-    (raven-error-report (:dsn raven-config)
-                        nil
-                        "UncaughtExceptionHandler capture"
-                        throwable)))
+                        extra)))
 
 (defn raven-error-reporter [raven-config]
   (->RavenErrorReporter raven-config))
@@ -67,13 +60,6 @@
 
 (defn stdout-reporter []
   (->StdOutReporter))
-
-(defrecord NullReporter []
-  ErrorReporter
-  (-report-error [_ _ _ _]))
-
-(defn null-reporter []
-  (->NullReporter))
 
 (defrecord MultiReporter [reporters]
   ErrorReporter
@@ -111,3 +97,16 @@
                                   error-page/error-page-response)]
             (->> (report-ring-error reporter t req request-id)
                  (err-response-fn (ex-data t)))))))))
+
+(defn- uncaugt-exception-handler
+  [error-reporter]
+  (reify Thread$UncaughtExceptionHandler
+    (uncaughtException [_ _thread ex]
+      (try
+        (report-error error-reporter ex)
+        (finally
+          (System/exit 70))))))
+
+(defn set-default-exception-handler
+  [error-reporter]
+  (Thread/setDefaultUncaughtExceptionHandler (uncaugt-exception-handler error-reporter)))
