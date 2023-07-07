@@ -18,6 +18,9 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/commits/216][216]]
 + [[https://github.com/clojars/clojars-web/commit/27c287106ce55b7210e1248d08d5434b609a6832][Address/suppress CVEs]] ([[https://github.com/tobias][Toby Crawley]])
 
+*** [[https://github.com/clojars/clojars-web/commits/217][217]]
++ [[https://github.com/clojars/clojars-web/commit/db579608bdb57444336932efb178530aa8d28add][Improve uncaught exception handling]] ([[https://github.com/tobias][Toby Crawley]])
+
 * 2023-June
 *** [[https://github.com/clojars/clojars-web/commits/210][210]]
 + [[https://github.com/clojars/clojars-web/commit/c8c10beb9288129ba499f0ef34868e6de8bbbfcb][Don't share SimpleDateFormat objects as they aren't thread-safe]] ([[https://github.com/tobias][Toby Crawley]])
