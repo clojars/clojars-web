@@ -520,13 +520,18 @@
                          (finalize-deploy storage db event-emitter search
                                           session account upload-dir)
                          (catch Exception e
-                           ;; FIXME: we may have already thrown-invalid here
-                           ;; - should we check for that and only
-                           ;; throw on other exceptions?
-                           (throw-forbidden e
-                                            {:account account
-                                             :group group
-                                             :artifact artifact}))))))))
+                           (throw-forbidden
+                            e
+                            (merge
+                             {:account account
+                              :group group
+                              :artifact artifact
+                              ;; This will cause exceptions that /aren't/ from a
+                              ;; throw-* call to be reported to sentry, etc
+                              ;; since the data for those will have :report?
+                              ;; false
+                              :report? true}
+                             (ex-data e))))))))))
               {:status 201
                :headers {}
                :body nil}))))
