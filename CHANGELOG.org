@@ -4,6 +4,10 @@ Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
 * 2023-August
+*** [[https://github.com/clojars/clojars-web/commits/219][219]]
++ [[https://github.com/clojars/clojars-web/issues/563][Include release date for each version in feed.clj]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/issues/564][Include scm tag for each version in feed.clj]] ([[https://github.com/tobias][Toby Crawley]])
+
 *** [[https://github.com/clojars/clojars-web/commits/218][218]]
 + [[https://github.com/clojars/clojars-web/issues/659][Exceptions from clojars.routes.repo are not reported]] ([[https://github.com/tobias][Toby Crawley]])
 
