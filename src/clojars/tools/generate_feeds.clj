@@ -6,6 +6,7 @@
    [clojars.file-utils :as fu]
    [clojars.maven :as maven]
    [clojars.s3 :as s3]
+   [clojars.util :as util]
    [clojure.java.io :as io]
    [clojure.set :as set])
   (:import
@@ -14,22 +15,33 @@
     PrintWriter)
    java.util.zip.GZIPOutputStream))
 
+(defn- versions-data
+  [jars]
+  (let [distinct-jars (into [] (util/distinct-by :version) jars)]
+    {:versions (mapv :version distinct-jars)
+     :versions-meta (mapv
+                     (fn [{:keys [created scm version]}]
+                       (util/assoc-some {:version version
+                                         :release-date created}
+                                        :scm-tag (:tag scm)))
+                     distinct-jars)}))
+
 (defn full-feed [db]
   (let [grouped-jars (->> (db/all-jars db)
                           (maven/sort-by-version)
                           (reverse) ;; We want the most recent version first
-                          (map (comp #(assoc % :url (:homepage %))
-                                     #(select-keys % [:group-id :artifact-id :version
-                                                      :description :scm :homepage])
-                                     #(set/rename-keys % {:group_name :group-id
-                                                          :jar_name   :artifact-id})))
-                          (group-by (juxt :group-id :artifact-id)))]
+                          (group-by (juxt :group_name :jar_name)))]
     (->> (for [[[group-id artifact-id] jars] grouped-jars]
            (try
-             (-> (first jars)
-                 (dissoc :version)
-                 (assoc :versions (vec (distinct (map :version jars))))
-                 maven/without-nil-values)
+             (let [base-jar (first jars)]
+               (-> base-jar
+                   (select-keys [:group_name :jar_name
+                                 :description :scm :homepage])
+                   (set/rename-keys {:group_name :group-id
+                                     :jar_name   :artifact-id})
+                   (assoc :url (:homepage base-jar))
+                   (merge (versions-data jars))
+                   maven/without-nil-values))
              (catch Exception e
                (printf "Got exeption when processing %s:%s, skipping: %s\n"
                        group-id artifact-id (.getMessage e)))))
