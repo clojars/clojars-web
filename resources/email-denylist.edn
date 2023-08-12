@@ -1,0 +1,6 @@
+;; A set of addresses that we never want to send an email to.
+#{
+  ;; Used by GitHub on the account they use for integration testing token breach
+  ;; reporting, but it doesn't actually exist, resulting in monitoring noise
+  "secret-scanning@gmail.com"
+  }
