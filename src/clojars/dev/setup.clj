@@ -26,6 +26,7 @@
       "delete from jars"
       "delete from users"
       "delete from group_verifications"
+      "delete from group_settings"
       "delete from audit"])
     (catch Exception _)))
 

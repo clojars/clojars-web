@@ -695,3 +695,15 @@
                                 {:connection db})
      (sql/find-groups-jars-information {:group_id group-id}
                                        {:connection db}))))
+
+(defn set-group-mfa-required
+  [db group-id required?]
+  (sql/set-group-mfa-required! {:group_id    group-id
+                                :require_mfa required?}
+                               {:connection db}))
+
+(defn get-group-settings
+  [db group-id]
+  (sql/get-group-settings {:group_id group-id}
+                          {:connection db
+                           :result-set-fn first}))

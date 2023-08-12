@@ -605,3 +605,16 @@ version = :version
 --name: delete-group!
 DELETE FROM groups
 WHERE name = :group_id;
+
+--name: set-group-mfa-required!
+INSERT INTO group_settings
+(group_name, require_mfa_to_deploy)
+VALUES
+(:group_id, :require_mfa)
+ON CONFLICT (group_name)
+DO UPDATE SET
+require_mfa_to_deploy = :require_mfa
+
+--name: get-group-settings
+SELECT * FROM group_settings
+WHERE group_name = :group_id
