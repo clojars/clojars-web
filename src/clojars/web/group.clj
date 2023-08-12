@@ -1,7 +1,7 @@
 (ns clojars.web.group
   (:require
    [clojars.auth :refer [authorized-admin? authorized-member?]]
-   [clojars.db :refer [find-group-verification jars-by-groupname]]
+   [clojars.db :refer [find-group-verification get-group-settings jars-by-groupname]]
    [clojars.web.common :refer [audit-table form-table html-doc jar-link user-link error-list verified-group-badge-small]]
    [clojars.web.safe-hiccup :refer [form-to]]
    [clojars.web.structured-data :as structured-data]
@@ -14,7 +14,8 @@
   (let [admin? (authorized-admin? db account groupname)
         member? (authorized-member? db account groupname)
         show-membership-details? (or admin? member?)
-        verified-group? (find-group-verification db groupname)]
+        verified-group? (find-group-verification db groupname)
+        group-settings (get-group-settings db groupname)]
     (html-doc (str groupname " group") {:account account :description (format "Clojars projects in the %s group" groupname)}
               [:div.col-xs-12
                (structured-data/breadcrumbs [{:url  (str "https://clojars.org/groups/" groupname)
@@ -64,18 +65,30 @@
                  (unordered-list (map user-link (sort (map :user actives)))))
                (error-list errors)
                (when admin?
-                 [:div.add-member
-                  [:h2 "Add member to group"]
-                  (form-table
-                   [:post (str "/groups/" groupname)]
-                   [[[:label "Username "]
-                     (text-field "username")]
-                    [[:label "Admin? "]
-                     [:input {:type "checkbox"
-                              :name "admin"
-                              :id "admin"
-                              :value 1
-                              :checked false}]]]
-                   [:input.button {:type "submit" :value "Add Member"}])])
+                 (list
+                  [:div.add-member
+                   [:h2 "Add member to group"]
+                   (form-table
+                    [:post (str "/groups/" groupname)]
+                    [[[:label "Username "]
+                      (text-field "username")]
+                     [[:label "Admin? "]
+                      [:input {:type "checkbox"
+                               :name "admin"
+                               :id "admin"
+                               :value 1
+                               :checked false}]]]
+                    [:input.button {:type "submit" :value "Add Member"}])]
+                  [:div.group-settings
+                   [:h2 "Group Settings"]
+                   (form-table
+                    [:post (format "/groups/%s/settings" groupname)]
+                    [[[:label "Require users to have two-factor auth enabled to deploy? "]
+                      [:input {:type "checkbox"
+                               :name "require_mfa"
+                               :id "require_mfa"
+                               :value 1
+                               :checked (:require_mfa_to_deploy group-settings false)}]]]
+                    [:input.button {:type "submit" :value "Update Settings"}])]))
                (when show-membership-details?
                  (audit-table db groupname {:group-name groupname}))])))

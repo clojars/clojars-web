@@ -131,10 +131,44 @@
                                   (str "No such member: "
                                        username)))))))))))
 
+(defn- update-group-settings
+  [db event-emitter groupname require-mfa? details]
+  (let [actives (seq (db/group-actives db groupname))
+        settings {:require_mfa_to_deploy require-mfa?}]
+    (auth/try-account
+     (fn [account]
+       (auth/require-admin-authorization
+        db
+        account
+        groupname
+        #(log/with-context {:tag :update-group-settings
+                            :username account
+                            :group groupname
+                            :settings settings}
+           (if actives
+             (do
+               (db/set-group-mfa-required db groupname require-mfa?)
+               (event/emit event-emitter
+                           :group-settings-updated
+                           (merge
+                            details
+                            {:admin-emails (db/group-admin-emails db groupname)
+                             :group groupname
+                             :username account
+                             :settings settings}))
+               (log/info {:status :success})
+               (log/audit db {:tag :group-settings-updated
+                              :message (format "settings updated: %s" (pr-str settings))})
+               (view/show-group db account groupname actives))
+             (view/show-group db account groupname actives
+                              "Cannot set settings for non-existent group"))))))))
+
 (defn routes [db event-emitter]
   (compojure/routes
    (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
         (get-members db groupname))
+   (POST ["/groups/:groupname/settings", :groupname #"[^/]+"] [groupname require_mfa :as request]
+         (update-group-settings db event-emitter groupname (= "1" require_mfa) (common/request-details request)))
    (POST ["/groups/:groupname", :groupname #"[^/]+"] [groupname username admin :as request]
          (toggle-or-add-member db event-emitter groupname username (= "1" admin) (common/request-details request)))
    (DELETE ["/groups/:groupname", :groupname #"[^/]+"] [groupname username :as request]
