@@ -1136,3 +1136,41 @@
                  :div
                  :div]
           (has (text? "org.clojars.dantheman/test 0.0.1"))))))
+
+(deftest deploying-when-mfa-required
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password"))
+
+  (let [token (create-deploy-token
+               (session (help/app))
+               "dantheman" "password" "testing")]
+
+    (db/set-group-mfa-required help/*db* "org.clojars.dantheman" true)
+
+    (testing "deploying without mfa fails"
+      (is (thrown-with-msg?
+           DeploymentException
+           #"403 Forbidden - .* requires you to have two-factor auth enabled to deploy"
+            (deploy
+             {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+              :jar-file (io/file (io/resource "test.jar"))
+              :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                          {:groupId "org.clojars.dantheman"
+                                           :version "0.0.2"})
+              :password  token})))
+      (help/match-audit {:username "dantheman"}
+                        {:user "dantheman"
+                         :group_name "org.clojars.dantheman"
+                         :jar_name "test"
+                         :version "0.0.2"
+                         :message "The group 'org.clojars.dantheman' requires you to have two-factor auth enabled to deploy. See https://bit.ly/45qrtA8"
+                         :tag "deploy-forbidden"}))
+
+    (testing "deploy with mfa enabled works"
+      (db/enable-otp! help/*db* "dantheman")
+      (deploy
+       {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                    {:groupId "org.clojars.dantheman"})
+        :password token}))))

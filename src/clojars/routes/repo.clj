@@ -456,6 +456,17 @@
        "The provided single-use token has already been used"
        {}))))
 
+(defn- maybe-assert-user-has-mfa-enabled
+  [db account groupname]
+  (let [group-settings (db/get-group-settings db groupname)]
+    (when (and (:require_mfa_to_deploy group-settings)
+               (not (db/user-has-mfa? db account)))
+      (throw-forbidden
+       (format "The group '%s' requires you to have two-factor auth enabled to deploy. See https://bit.ly/45qrtA8"
+               groupname)
+       {:group groupname
+        :username account}))))
+
 (defn- handle-versioned-upload [storage db body session group artifact version filename]
   (let [groupname (fu/path->group group)
         timestamp-version (when (maven/snapshot-version? version) (maven/snapshot-timestamp-version filename))]
@@ -469,6 +480,7 @@
      (fn [account upload-dir]
        (maybe-assert-token-matches-group+artifact session groupname artifact)
        (maybe-assert-single-use-token-unused session upload-dir)
+       (maybe-assert-user-has-mfa-enabled db account groupname)
        (write-metadata session upload-dir groupname group artifact version timestamp-version)
        (let [file (try-save-to-file (io/file upload-dir group artifact version filename) body)]
          (when (deploy-finalized? upload-dir)

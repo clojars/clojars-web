@@ -440,6 +440,10 @@
   (sql/disable-otp! {:username username}
                     {:connection db}))
 
+(defn user-has-mfa?
+  [db username]
+  (some? (:otp_recovery_code (find-user db username))))
+
 (defn generate-deploy-token []
   (str "CLOJARS_" (hexadecimalize (generate-secure-token 30))))
 
