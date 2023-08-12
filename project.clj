@@ -1,4 +1,4 @@
-(defproject clojars-web "220-SNAPSHOT"
+(defproject clojars-web "220"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.11.1"]
                  ;; manage jetty dependencies directly to make it easier to address CVEs
