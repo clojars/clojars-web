@@ -509,3 +509,11 @@
       (is (= :single-use-status/yes single_use)))))
 
 ;; TODO: recent-versions
+
+(deftest group-settings
+  ;; Test insert
+  (db/set-group-mfa-required help/*db* "my-group" true)
+  (is (true? (:require_mfa_to_deploy (db/get-group-settings help/*db* "my-group"))))
+  ;; Test upsert
+  (db/set-group-mfa-required help/*db* "my-group" false)
+  (is (false? (:require_mfa_to_deploy (db/get-group-settings help/*db* "my-group")))))

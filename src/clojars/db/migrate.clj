@@ -110,6 +110,15 @@
   (sql/db-do-commands trans
                       ["create index deps_idx0 on deps (dep_group_name, dep_jar_name)"
                        "create index deps_idx1 on deps (group_name, jar_name, version)"]))
+
+(defn- add-group-settings-table
+  [trans]
+  (sql/db-do-commands trans
+                      (str "create table group_settings "
+                           "(group_name text primary key,"
+                           "require_mfa_to_deploy bool,"
+                           "updated timestamp not null default current_timestamp)")))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -122,7 +131,8 @@
    #'add-single-use-to-tokens
    #'add-expires-at-to-tokens
    #'add-send-deploy-emails-to-users
-   #'add-indexes-to-deps-table])
+   #'add-indexes-to-deps-table
+   #'add-group-settings-table])
 
 (defn migrate [db]
   (sql/db-do-commands db
