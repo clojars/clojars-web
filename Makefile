@@ -14,6 +14,10 @@ migrate-db:
 nvd-check:
 	./bin/nvd-check
 
+.PHONY: prep-deps
+prep-deps:
+	clojure -A:defaults -X:deps prep
+
 .PHONY: test
 test:
 	./bin/kaocha

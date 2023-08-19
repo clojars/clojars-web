@@ -8,7 +8,7 @@
                        :dbname   "clojars"
                        :host     #profile {:production #ssm-parameter "/clojars/production/db_host"
                                            :default    "localhost"}
-                       :port     #profile {:default    55432
+                       :port     #profile {:default    #or [#env DB_PORT 55432]
                                            :test       #or [#env DB_PORT 55433]
                                            :production 5432}
                        :user     #profile {:production #ssm-parameter "/clojars/production/db_user"
