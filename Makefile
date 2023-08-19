@@ -21,3 +21,7 @@ prep-deps:
 .PHONY: test
 test:
 	./bin/kaocha
+
+.PHONY: uberjar
+uberjar:
+	clojure -T:build uberjar
