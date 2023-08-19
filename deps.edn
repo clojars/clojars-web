@@ -40,6 +40,7 @@
                                   ;; not used, addresses CVE-2020-11987, CVE-2019-17566
                                   org.apache.xmlgraphics/batik-dom
                                   org.apache.xmlgraphics/batik-svggen]}
+  org.apache.commons/commons-email {:mvn/version "1.5"}
   org.apache.lucene/lucene-core {:mvn/version "8.11.1"}
   org.apache.lucene/lucene-analyzers-common {:mvn/version "8.11.1"}
   org.apache.lucene/lucene-queryparser {:mvn/version "8.11.1"}
@@ -76,4 +77,24 @@
              ;; Addresses CVE-2015-0886
              org.mindrot/jbcrypt {:mvn/version "0.4"}
              ;; Addresses CVE-2022-25857, CVE-2022-38749, CVE-2022-41854, CVE-2022-38751, CVE-2022-38752, CVE-2022-38750
-             org.yaml/snakeyaml {:mvn/version "1.33"}}}}}
+             org.yaml/snakeyaml {:mvn/version "1.33"}}}
+
+           :dev {:extra-deps
+                 {clj-commons/pomegranate {:mvn/version "1.2.1"}
+
+                  eftest/eftest {:mvn/version "0.5.9"}
+
+                  kerodon/kerodon {:mvn/version "0.9.1"}
+
+                  net.polyc0l0r/bote {:mvn/version "0.1.0"}
+                  nubank/matcher-combinators {:mvn/version "3.8.6"}
+
+                  org.clojure/tools.namespace {:mvn/version "1.2.0"}
+
+                  reloaded.repl/reloaded.repl {:mvn/version "0.2.4"}
+
+                  vvvvalvalval/scope-capture-nrepl {:mvn/version "0.3.1"}}
+                 :extra-paths ["test" "dev-resources"]}
+           :test {:extra-deps
+                  {lambdaisland/kaocha {:mvn/version "1.85.1342"}}
+                  :main-opts ["-m" "kaocha.runner"]}}}

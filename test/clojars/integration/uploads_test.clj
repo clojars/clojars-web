@@ -139,7 +139,9 @@
       :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                                   {:groupId "org.clojars.dantheman"})
       :username "test@example.org"
-      :password token})))
+      :password token}))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
 
 (deftest deploying-with-a-scoped-token
   (-> (session (help/app))
@@ -431,7 +433,9 @@
       :jar-file (io/file (io/resource "test.jar"))
       :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                                   {:groupId "org.clojars.fixture"})
-      :password  token})))
+      :password  token}))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
 
 (deftest user-cannot-deploy-to-a-non-existent-group
   (-> (session (help/app))
@@ -574,7 +578,9 @@
       :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
                                   {:groupId "net.mikera"
                                    :artifactId "clojure-pom"})
-      :password  token})))
+      :password  token}))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
 
 (deftest user-can-deploy-new-version-in-same-session
   (-> (session (help/app))
@@ -590,7 +596,9 @@
       :jar-file (io/file (io/resource "test.jar"))
       :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
       :password  token
-      :retain-session? true})))
+      :retain-session? true}))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
 
 (deftest user-can-redeploy-snapshots
   (-> (session (help/app))
@@ -605,7 +613,9 @@
      {:coordinates '[org.clojars.dantheman/test "0.0.3-SNAPSHOT"]
       :jar-file (io/file (io/resource "test.jar"))
       :pom-file (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
-      :password  token})))
+      :password  token}))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
 
 (deftest user-can-deploy-snapshot-with-dot
   (-> (session (help/app))
@@ -617,7 +627,9 @@
       :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
                                   {:groupId "org.clojars.dantheman"
                                    :artifactId "test.thing"})
-      :password  token})))
+      :password  token}))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
 
 (deftest snapshot-deploys-preserve-timestamp-version
   (-> (session (help/app))
@@ -673,7 +685,9 @@
                             (versioned-name f "20170505.125655-99"))
                     {:body f
                      :throw-entire-message? true
-                     :basic-auth ["dantheman" token]})))))
+                     :basic-auth ["dantheman" token]}))))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
 
 (deftest user-can-deploy-with-classifiers
   (-> (session (help/app))
@@ -717,7 +731,9 @@
                      ;; any content will do since we don't validate signatures
                      [:extension "jar.asc"] pom
                      [:extension "pom.asc"] pom}
-      :password token})))
+      :password token}))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
 
 (deftest user-can-deploy-with-ssh-signatures
   (-> (session (help/app))
@@ -731,7 +747,9 @@
                      ;; any content will do since we don't validate signatures
                      [:extension "jar.sig"] pom
                      [:extension "pom.sig"] pom}
-      :password token})))
+      :password token}))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
 
 (deftest missing-signature-fails-the-deploy
   (-> (session (help/app))
