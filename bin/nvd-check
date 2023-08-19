@@ -11,5 +11,5 @@ clojure -Ttools install nvd-clojure/nvd-clojure '{:mvn/version "RELEASE"}' :as n
 
 cd "$ROOT"
 clojure -J-Dclojure.main.report=stderr -Tnvd nvd.task/check \
-    :classpath '"'"$(lein with-profile uberjar classpath)"'"' \
+    :classpath '"'"$(clojure -Spath -A:defaults)"'"' \
     :config-filename '".nvd-clojure.edn"'
