@@ -79,6 +79,10 @@
              ;; Addresses CVE-2022-25857, CVE-2022-38749, CVE-2022-41854, CVE-2022-38751, CVE-2022-38752, CVE-2022-38750
              org.yaml/snakeyaml {:mvn/version "1.33"}}}
 
+           :check {:extra-deps {athos/clj-check {:git/url "https://github.com/athos/clj-check.git"
+                                                :sha "0ca84df1357d71429243b99908303f45a934654c"}}
+                  :main-opts ["-m" "clj-check.check"]}
+
            :dev {:extra-deps
                  {clj-commons/pomegranate {:mvn/version "1.2.1"}
 
