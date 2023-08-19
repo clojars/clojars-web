@@ -99,6 +99,9 @@
 
                   vvvvalvalval/scope-capture-nrepl {:mvn/version "0.3.1"}}
                  :extra-paths ["test" "dev-resources"]}
+
+           :migrate-db {:main-opts ["-m" "clojars.tools.migrate-db" "development"]}
+
            :test {:extra-deps
                   {lambdaisland/kaocha {:mvn/version "1.85.1342"}}
                   :main-opts ["-m" "kaocha.runner"]}}}

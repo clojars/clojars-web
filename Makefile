@@ -6,6 +6,10 @@ check:
 lint:
 	./bin/clj-kondo --lint src test
 
+.PHONY: migrate-db
+migrate-db:
+	clojure -M:defaults:migrate-db
+
 .PHONY: nvd-check
 nvd-check:
 	./bin/nvd-check
