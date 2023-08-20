@@ -1,0 +1,112 @@
+{:paths ["src" "resources"]
+ :mvn/repos
+ {"central" {:url "https://repo1.maven.org/maven2/"}
+  "clojars" {:url "https://repo.clojars.org/"}
+  ;; Needed for com.github.kenglxn.qrgen/javase, which is a dependency of one-time.
+  ;; See https://github.com/kenglxn/QRGen/issues/61
+  "jitpack" {:url "https://jitpack.io/"}}
+
+ :deps
+ {aero/aero {:mvn/version "1.1.6"}
+
+  buddy/buddy-core {:mvn/version "1.11.423"}
+
+  ch.qos.logback/logback-classic {:mvn/version "1.4.8"}
+  cheshire/cheshire {:mvn/version "5.10.1"}
+  clj-http/clj-http {:mvn/version "3.12.3"}
+  clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
+  clj-time/clj-time {:mvn/version "0.15.2"}
+  com.cemerick/friend {:mvn/version "0.2.3"
+                       :exclusions [;; not used, excluded to address CVE-2007-1652, CVE-2007-1651
+                                    org.openid4java/openid4java-nodeps
+                                    ;; not used, excluded to address CVE-2012-0881, CVE-2013-4002, CVE-2009-2625
+                                    net.sourceforge.nekohtml/nekohtml]}
+  com.cognitect.aws/api {:mvn/version "0.8.681"}
+  com.cognitect.aws/endpoints {:mvn/version "1.1.12.489"}
+  com.cognitect.aws/s3 {:mvn/version "847.2.1398.0"}
+  com.cognitect.aws/sqs {:mvn/version "847.2.1398.0"}
+  com.cognitect.aws/ssm {:mvn/version "847.2.1365.0"}
+  com.github.scribejava/scribejava-apis {:mvn/version "8.3.1"}
+  com.stuartsierra/component {:mvn/version "0.3.1"}
+
+  digest/digest {:mvn/version "1.4.10"}
+  duct/duct {:mvn/version "0.8.2"}
+  duct/hikaricp-component {:mvn/version "0.1.2"
+                           :exclusions [org.slf4j/slf4j-nop]}
+
+  one-time/one-time {:mvn/version "0.7.0"
+                     :exclusions [;; not needed on java 17, addresses CWE-120
+                                  com.github.jai-imageio/jai-imageio-core
+                                  ;; not used, addresses CVE-2020-11987, CVE-2019-17566
+                                  org.apache.xmlgraphics/batik-dom
+                                  org.apache.xmlgraphics/batik-svggen]}
+  org.apache.commons/commons-email {:mvn/version "1.5"}
+  org.apache.lucene/lucene-core {:mvn/version "8.11.1"}
+  org.apache.lucene/lucene-analyzers-common {:mvn/version "8.11.1"}
+  org.apache.lucene/lucene-queryparser {:mvn/version "8.11.1"}
+  org.apache.maven/maven-model {:mvn/version "3.8.4"}
+  org.apache.maven/maven-repository-metadata {:mvn/version "3.8.4"}
+  org.clojure/clojure {:mvn/version "1.11.1"}
+  org.clojure/tools.logging {:mvn/version "1.2.4"}
+  org.clojure/tools.nrepl {:mvn/version "0.2.11"}
+  org.postgresql/postgresql {:mvn/version "42.6.0"}
+
+  net.cgrand/regex {:mvn/version "1.0.1"}
+
+  raven-clj/raven-clj {:mvn/version "1.6.0"}
+  ring/ring-core {:mvn/version "1.10.0"}
+  ring/ring-defaults {:mvn/version "0.3.3"}
+  ring/ring-jetty-adapter {:mvn/version "1.10.0"}
+  ring-jetty-component/ring-jetty-component {:mvn/version "0.3.1"}
+  ring-middleware-format/ring-middleware-format {:mvn/version "0.7.5"}
+
+  valip/valip {:mvn/version "0.2.0"}
+
+  yesql/yesql {:mvn/version "0.5.3"}}
+
+ :aliases {:defaults
+           ;; We use override-deps to address CVEs
+           {:override-deps
+            {;; Addreses CVE-2022-42004, CVE-2022-42003, CVE-2021-46877, CVE-2020-36518
+             com.fasterxml.jackson.core/jackson-databind {:mvn/version "2.15.2"}
+             ;; Addreses CVE-2019-10086, CVE-2014-0114
+             commons-beanutils/commons-beanutils {:mvn/version "1.9.4"}
+             ;; Addresses CVE-2015-6420
+             commons-collections/commons-collections {:mvn/version "3.2.2"}
+
+             ;; Addresses CVE-2015-0886
+             org.mindrot/jbcrypt {:mvn/version "0.4"}
+             ;; Addresses CVE-2022-25857, CVE-2022-38749, CVE-2022-41854, CVE-2022-38751, CVE-2022-38752, CVE-2022-38750
+             org.yaml/snakeyaml {:mvn/version "1.33"}}}
+
+           :build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.5"}}
+                   :ns-default build}
+
+           :check {:extra-deps {athos/clj-check {:git/url "https://github.com/athos/clj-check.git"
+                                                 :sha "0ca84df1357d71429243b99908303f45a934654c"}}
+                   :main-opts ["-m" "clj-check.check"]}
+
+           :dev {:extra-deps
+                 {clj-commons/pomegranate {:mvn/version "1.2.1"}
+
+                  eftest/eftest {:mvn/version "0.5.9"}
+
+                  kerodon/kerodon {:mvn/version "0.9.1"}
+
+                  net.polyc0l0r/bote {:mvn/version "0.1.0"}
+                  nubank/matcher-combinators {:mvn/version "3.8.6"}
+
+                  org.clojure/tools.namespace {:mvn/version "1.2.0"}
+
+                  reloaded.repl/reloaded.repl {:mvn/version "0.2.4"}
+
+                  vvvvalvalval/scope-capture-nrepl {:mvn/version "0.3.1"}}
+                 :extra-paths ["dev" "dev-resources" "test"]}
+
+           :migrate-db {:main-opts ["-m" "clojars.tools.migrate-db" "development"]}
+
+           :setup-dev-repo {:main-opts ["-m" "clojars.tools.setup-dev"]}
+
+           :test {:extra-deps
+                  {lambdaisland/kaocha {:mvn/version "1.85.1342"}}
+                  :main-opts ["-m" "kaocha.runner"]}}}

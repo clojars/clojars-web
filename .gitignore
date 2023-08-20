@@ -26,3 +26,4 @@ pom.xml
 
 .clj-kondo/.cache
 bin/.cache
+.cpcache
