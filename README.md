@@ -35,14 +35,14 @@ website.
 Development
 -----------
 
-**Note: Java 17 is required**
+**Note: Java 17 and `make` are required**
 
 ### Development system
 
-To begin developing, start with a REPL.
+To begin developing, start with a REPL (Note: if you are instead starting a repl from your editor, you will need to include the `:default` and `:dev` aliases).
 
 ```sh
-lein repl
+make repl
 ```
 
 You'll need elasticmq, minio, and postgres running as well. That's managed via
@@ -62,7 +62,7 @@ user=> (migrate)
 or alternatively, from the command line.
 
 ```sh
-$ lein migrate
+$ make migrate-db
 ```
 
 Run `go` to initiate and start the system.
@@ -99,7 +99,7 @@ setup a search index:
 ```sh
 mkdir data/dev_repo
 cp -r ~/.m2/repository/* data/dev_repo
-lein run -m clojars.tools.setup-dev
+make setup-dev-repo
 ```
 
 Note that this setup task isn't perfect - SNAPSHOTS won't have
@@ -122,16 +122,11 @@ user=> (test #'clojars.test.unit.db/added-users-can-be-found)
 ...
 ```
 
-Tests can also be run through Leiningen for CI.
+Tests can also be run via [kaocha](https://github.com/lambdaisland/kaocha):
 
 ```sh
-lein test
+make test
 ```
-
-### Production system with development config
-
-Occasionally it can be useful to start a production system based on the development
-configuration. This can be done by `lein run`.
 
 Deployment
 ----------
@@ -146,7 +141,7 @@ Configuration
 
 The configuration is loaded from `resources/config.edn`.
 
-When running automated tests at the repl, or with `lein test`, a test environment
+When running automated tests at the repl, or with `make test`, a test environment
 is used to provide isolation. It can be found in `test/clojars/test/test_helper.clj`.
 
 License
