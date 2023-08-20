@@ -5,8 +5,6 @@
    (java.time
     LocalDate)))
 
-;; TODO: (toby) add a task to tag & push a release
-(def version (format "%s.%s" (LocalDate/now) (b/git-count-revs nil)))
 (def class-dir "target/classes")
 (def basis (b/create-basis {:aliases [:default]}))
 (def uber-file "target/clojars-web-standalone.jar")
@@ -27,3 +25,10 @@
            :uber-file uber-file
            :basis basis
            :main 'clojars.main}))
+
+(def version (format "%s.%s" (LocalDate/now) (b/git-count-revs nil)))
+
+(defn tag-release [_]
+  (printf "Tagging release version %s...\n" version)
+  (b/git-process {:git-args (format "tag %s" version)})
+  (b/git-process {:git-args (format "push origin %s" version)}))

@@ -22,6 +22,10 @@ prep-deps:
 repl:
 	clj -A:defaults:dev
 
+.PHONY: tag-release
+tag-release:
+	clj -T:build tag-release
+
 .PHONY: test
 test:
 	./bin/kaocha
