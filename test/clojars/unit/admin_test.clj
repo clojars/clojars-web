@@ -32,7 +32,7 @@
 (defn in-backup-somewhere? [name]
   (some #{name} (map (memfn getName) (file-seq (io/file (:deletion-backup-dir (config)))))))
 
-(def ^:dynamic *search-removals*)
+(def ^:dynamic *search-removals* nil)
 
 (defmacro with-repo-setup [& body]
   `(let [jar# (io/file (io/resource "fake.jar"))]

@@ -16,9 +16,9 @@
 (defn current-date-str []
   (.format (SimpleDateFormat. "yyyyMMdd") (db/get-time)))
 
-(def ^:dynamic *db*)
-(def ^:dynamic *search*)
-(def ^:dynamic *storage*)
+(def ^:dynamic *db* nil)
+(def ^:dynamic *search* nil)
+(def ^:dynamic *storage* nil)
 
 (defn backup-dir [base-dir path]
   (io/file base-dir
