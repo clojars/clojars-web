@@ -26,9 +26,7 @@
            :basis basis
            :main 'clojars.main}))
 
-(def version (format "%s.%s" (LocalDate/now) (b/git-count-revs nil)))
-
 (defn tag-release [_]
-  (printf "Tagging release version %s...\n" version)
-  (b/git-process {:git-args (format "tag %s" version)})
-  (b/git-process {:git-args (format "push origin %s" version)}))
+  (let [version (format "%s.%s" (LocalDate/now) (b/git-count-revs nil))]
+    (b/git-process {:git-args (format "tag %s" version)})
+    (b/git-process {:git-args (format "push origin %s" version)})))
