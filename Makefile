@@ -22,6 +22,10 @@ prep-deps:
 repl:
 	clj -A:defaults:dev
 
+.PHONY: setup-dev-repo
+setup-dev-repo:
+	clojure -M:defaults:setup-dev-repo
+
 .PHONY: tag-release
 tag-release:
 	clj -T:build tag-release

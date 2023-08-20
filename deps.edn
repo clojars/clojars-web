@@ -105,6 +105,8 @@
 
            :migrate-db {:main-opts ["-m" "clojars.tools.migrate-db" "development"]}
 
+           :setup-dev-repo {:main-opts ["-m" "clojars.tools.setup-dev"]}
+
            :test {:extra-deps
                   {lambdaisland/kaocha {:mvn/version "1.85.1342"}}
                   :main-opts ["-m" "kaocha.runner"]}}}
