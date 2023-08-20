@@ -18,6 +18,10 @@ nvd-check:
 prep-deps:
 	clojure -A:defaults -X:deps prep
 
+.PHONY: repl
+repl:
+	clj -A:defaults:dev
+
 .PHONY: test
 test:
 	./bin/kaocha

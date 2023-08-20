@@ -101,7 +101,7 @@
                   reloaded.repl/reloaded.repl {:mvn/version "0.2.4"}
 
                   vvvvalvalval/scope-capture-nrepl {:mvn/version "0.3.1"}}
-                 :extra-paths ["test" "dev-resources"]}
+                 :extra-paths ["dev" "dev-resources" "test"]}
 
            :migrate-db {:main-opts ["-m" "clojars.tools.migrate-db" "development"]}
 
