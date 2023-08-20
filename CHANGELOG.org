@@ -4,6 +4,11 @@ Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
 * 2023-August
+*** [[https://github.com/clojars/clojars-web/commits/2023-08-20.1998][2023-08-20.1998]]
+Note: We changed from a counter for the release version to ~<date>.<commit-count>~ with this release.
+
++ [[https://github.com/clojars/clojars-web/pull/872][Migrate from project.clj to deps.edn]] ([[https://github.com/tobias][Toby Crawley]])
+
 *** [[https://github.com/clojars/clojars-web/commits/220][220]]
 + [[https://github.com/clojars/clojars-web/commit/0d33a469744f71aa965eac40c6a9cdebd44edefa][Add denylist to email sender]] ([[https://github.com/tobias][Toby Crawley]])
 + [[https://github.com/clojars/clojars-web/issues/823][Require MFA group wide to deploy]] ([[https://github.com/tobias][Toby Crawley]])
