@@ -332,6 +332,18 @@ WHERE (
 ORDER BY created DESC
 LIMIT 1;
 
+--name: find-latest-release
+SELECT *
+FROM jars
+WHERE (
+  group_name = :groupname
+  AND
+  jar_name = :jarname
+)
+ORDER BY created DESC
+LIMIT 1;
+
+
 --name: max-jars-id
 SELECT max(id) AS max_id FROM jars;
 
