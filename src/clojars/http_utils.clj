@@ -1,8 +1,9 @@
 (ns clojars.http-utils
   (:require
+   [aging-session.event :as aging-session-event]
+   [aging-session.memory :as aging-session]
    [clojure.string :as str]
    [ring.middleware.session :refer [wrap-session]]
-   [ring.middleware.session.memory :as mem]
    [ring.util.response :refer [content-type response]]))
 
 (defn wrap-cors-headers [handler]
@@ -25,7 +26,11 @@
   (reset! session-store-atom {}))
 
 (defn wrap-secure-session [f]
-  (let [mem-store (mem/memory-store session-store-atom)
+  (let [mem-store (aging-session/aging-memory-store
+                   :session-atom     session-store-atom
+                   :refresh-on-write true
+                   ;; Allow sessions to remain active for 48 hours
+                   :events           [(aging-session-event/expires-after 172800)])
         secure-session (wrap-session f {:cookie-attrs {:secure true
                                                        :http-only true}
                                         :store mem-store})
