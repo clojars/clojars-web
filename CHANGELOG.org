@@ -7,23 +7,25 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/commits/2023-09-28.2002][2023-09-28.2002]]
 + [[https://github.com/clojars/clojars-web/commit/29b5d25cdc8ede87a35967691110f84a4a8c23d1][Prevent memory leak from in-memory session store]] ([[https://github.com/tobias][Toby Crawley]])
 
+*** [[https://github.com/clojars/clojars-web/commits/2023-09-29.2006][2023-09-29.2006]]
++ [[https://github.com/clojars/clojars-web/pull/874][Require a license in the POM for new projects]] ([[https://github.com/tobias][Toby Crawley]])
+
 * 2023-August
-*** [[https://github.com/clojars/clojars-web/commits/2023-08-20.1998][2023-08-20.1998]]
-Note: We changed from a counter for the release version to ~<date>.<commit-count>~ with this release.
-
-+ [[https://github.com/clojars/clojars-web/pull/872][Migrate from project.clj to deps.edn]] ([[https://github.com/tobias][Toby Crawley]])
-
-*** [[https://github.com/clojars/clojars-web/commits/220][220]]
-+ [[https://github.com/clojars/clojars-web/commit/0d33a469744f71aa965eac40c6a9cdebd44edefa][Add denylist to email sender]] ([[https://github.com/tobias][Toby Crawley]])
-+ [[https://github.com/clojars/clojars-web/issues/823][Require MFA group wide to deploy]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/218][218]]
++ [[https://github.com/clojars/clojars-web/issues/659][Exceptions from clojars.routes.repo are not reported]] ([[https://github.com/tobias][Toby Crawley]])
 
 *** [[https://github.com/clojars/clojars-web/commits/219][219]]
 + [[https://github.com/clojars/clojars-web/issues/563][Include release date for each version in feed.clj]] ([[https://github.com/tobias][Toby Crawley]])
 + [[https://github.com/clojars/clojars-web/issues/564][Include scm tag for each version in feed.clj]] ([[https://github.com/tobias][Toby Crawley]])
 
-*** [[https://github.com/clojars/clojars-web/commits/218][218]]
-+ [[https://github.com/clojars/clojars-web/issues/659][Exceptions from clojars.routes.repo are not reported]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/220][220]]
++ [[https://github.com/clojars/clojars-web/commit/0d33a469744f71aa965eac40c6a9cdebd44edefa][Add denylist to email sender]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/issues/823][Require MFA group wide to deploy]] ([[https://github.com/tobias][Toby Crawley]])
 
+*** [[https://github.com/clojars/clojars-web/commits/2023-08-20.1998][2023-08-20.1998]]
+Note: We changed from a counter for the release version to ~<date>.<commit-count>~ with this release.
+
++ [[https://github.com/clojars/clojars-web/pull/872][Migrate from project.clj to deps.edn]] ([[https://github.com/tobias][Toby Crawley]])
 * 2023-July
 *** [[https://github.com/clojars/clojars-web/commits/213][213]]
 + [[https://github.com/clojars/clojars-web/pull/869][Generate repo index.html files on each deploy]] ([[https://github.com/tobias][Toby Crawley]])
@@ -55,30 +57,30 @@ Note: We changed from a counter for the release version to ~<date>.<commit-count
 + [[https://github.com/clojars/clojars-web/pull/868][Use SQS for async processing instead of the tap queue]] ([[https://github.com/tobias][Toby Crawley]])
 
 * 2023-May
-*** [[https://github.com/clojars/clojars-web/commits/209][209]]
-+ [[https://github.com/clojars/clojars-web/commit/d991781f5b28297b2c07153325484c975cb50c2e][Don't cache full not-found responses locally]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/200][200]]
++ [[https://github.com/clojars/clojars-web/issues/864][Properly verify io groups for VCS self-service verification]] ([[https://github.com/tobias][Toby Crawley]])
 
-*** [[https://github.com/clojars/clojars-web/commits/208][208]]
-+ [[https://github.com/clojars/clojars-web/commit/be2816e5b3b4408a9f2bdcb1bd44ad923c85f896][Cache repo listings locally on disk to reduce s3 calls]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/203][203]]
++ [[https://github.com/clojars/clojars-web/issues/860][Return html repo indexes instead of building it in js]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/commits/204][204]]
++ [[https://github.com/clojars/clojars-web/commit/571a948e90c393d296ed9c820da7ecb42b465ef1][Replace pingometer logo with uptime.com]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/commits/205][205]]
++ [[https://github.com/clojars/clojars-web/issues/863][Support SSH signing]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/commits/206][206]]
++ [[https://github.com/clojars/clojars-web/commit/e33ca29d83a18bfe9a51867a66876f4cd064f10f][Instruct fastly to cache repo listings for 12 hours intead of 15 minutes]] ([[https://github.com/tobias][Toby Crawley]])
 
 *** [[https://github.com/clojars/clojars-web/commits/207][207]]
 + [[https://github.com/clojars/clojars-web/commit/1395b24be573eac01655e5f124dcbc279462a450][Return 404s for not found repo paths]] ([[https://github.com/tobias][Toby Crawley]])
 + [[https://github.com/clojars/clojars-web/commit/289171e16cbd76dc3a90dbd8bfb565916ba91b3d][Use spaces instead of nbsp in repo listing to reduce file size]] ([[https://github.com/tobias][Toby Crawley]])
 
-*** [[https://github.com/clojars/clojars-web/commits/206][206]]
-+ [[https://github.com/clojars/clojars-web/commit/e33ca29d83a18bfe9a51867a66876f4cd064f10f][Instruct fastly to cache repo listings for 12 hours intead of 15 minutes]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/208][208]]
++ [[https://github.com/clojars/clojars-web/commit/be2816e5b3b4408a9f2bdcb1bd44ad923c85f896][Cache repo listings locally on disk to reduce s3 calls]] ([[https://github.com/tobias][Toby Crawley]])
 
-*** [[https://github.com/clojars/clojars-web/commits/205][205]]
-+ [[https://github.com/clojars/clojars-web/issues/863][Support SSH signing]] ([[https://github.com/tobias][Toby Crawley]])
-
-*** [[https://github.com/clojars/clojars-web/commits/204][204]]
-+ [[https://github.com/clojars/clojars-web/commit/571a948e90c393d296ed9c820da7ecb42b465ef1][Replace pingometer logo with uptime.com]] ([[https://github.com/tobias][Toby Crawley]])
-
-*** [[https://github.com/clojars/clojars-web/commits/203][203]]
-+ [[https://github.com/clojars/clojars-web/issues/860][Return html repo indexes instead of building it in js]] ([[https://github.com/tobias][Toby Crawley]])
-
-*** [[https://github.com/clojars/clojars-web/commits/200][200]]
-+ [[https://github.com/clojars/clojars-web/issues/864][Properly verify io groups for VCS self-service verification]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/209][209]]
++ [[https://github.com/clojars/clojars-web/commit/d991781f5b28297b2c07153325484c975cb50c2e][Don't cache full not-found responses locally]] ([[https://github.com/tobias][Toby Crawley]])
 
 ** 2023-April
 *** [[https://github.com/clojars/clojars-web/commits/197][197]]
