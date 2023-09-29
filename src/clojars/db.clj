@@ -316,7 +316,15 @@
                                :result-set-fn first}))))
   (defn all-jars [db]
     (map read-edn-fields
-         (sql/all-jars {} {:connection db}))))
+         (sql/all-jars {} {:connection db})))
+
+  (defn find-latest-release
+    [db groupname jarname]
+    (read-edn-fields
+     (sql/find-latest-release {:groupname groupname
+                               :jarname   jarname}
+                              {:connection    db
+                               :result-set-fn first}))))
 
 (defn find-dependencies
   [db groupname jarname version]

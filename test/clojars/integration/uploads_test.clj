@@ -10,6 +10,7 @@
    [clojars.file-utils :as fu]
    [clojars.http-utils :refer [clear-sessions!]]
    [clojars.integration.steps :refer [create-deploy-token login-as register-as]]
+   [clojars.routes.repo :as repo]
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
    [clojars.web.common :as common]
@@ -581,6 +582,86 @@
       :password  token}))
   ;; This test throws on failure, so we have this assertion to satisfy kaocha
   (is true))
+
+(deftest new-project-must-include-license
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
+    (is (thrown-with-msg?
+         DeploymentException
+         #"Forbidden - the POM file does not include a license"
+          (deploy
+           {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (io/file (io/resource "test-0.0.1/test-no-license.pom"))
+            :password  token})))
+
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.1"
+                       :message "the POM file does not include a license. See https://bit.ly/3PQunZU"
+                       :tag "missing-license"})))
+
+(deftest existing-project-with-no-license-does-not-require-license
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
+    ;; Deploy a version with no license with license check disabled so we can
+    ;; get this project in a legacy state
+    (with-redefs [repo/validate-pom-license (constantly true)]
+      (deploy
+       {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+        :jar-file (io/file (io/resource "test.jar"))
+        :pom-file (io/file (io/resource "test-0.0.1/test-no-license.pom"))
+        :password token}))
+
+    ;; Deploy a new version that doesn't have a license
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test-no-license.pom"))
+                                  {:version "0.0.2"})
+      :password token})
+
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.2"
+                       :tag "deployed"})))
+
+(deftest project-that-had-license-for-most-recent-release-must-provide-license
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
+    ;; Deploy a version with a license
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+      :password token})
+
+    ;; Deploy a new version that doesn't have a license
+    (is (thrown-with-msg?
+         DeploymentException
+         #"Forbidden - the POM file does not include a license"
+         (deploy
+          {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+           :jar-file (io/file (io/resource "test.jar"))
+           :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test-no-license.pom"))
+                                       {:version "0.0.2"})
+           :password token})))
+
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.2"
+                       :message "the POM file does not include a license. See https://bit.ly/3PQunZU"
+                       :tag "missing-license"})))
+
 
 (deftest user-can-deploy-new-version-in-same-session
   (-> (session (help/app))

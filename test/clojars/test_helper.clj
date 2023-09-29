@@ -151,14 +151,12 @@
 (defn rewrite-pom [file m]
   (let [new-pom (doto (File/createTempFile (.getName file) ".pom")
                   .deleteOnExit)]
-    (-> file
-        slurp
-        (as-> % (reduce (fn [accum [element new-value]]
-                          (str/replace accum (re-pattern (format "<(%s)>.*?<" (name element)))
-                                       (format "<$1>%s<" new-value)))
-                        %
-                        m))
-        (->> (spit new-pom)))
+    (spit new-pom
+          (reduce (fn [accum [element new-value]]
+                    (str/replace accum (re-pattern (format "<(%s)>.*?<" (name element)))
+                                 (format "<$1>%s<" new-value)))
+                  (slurp file)
+                  m))
     new-pom))
 
 (defn at-as-time-str
