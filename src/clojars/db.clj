@@ -599,20 +599,7 @@
     (map read-edn-fields
          (q db {:select   :*
                 :from     :jars
-                :order-by :id})))
-
-  (defn find-latest-release
-    [db groupname jarname]
-    (-> (q db
-           {:select :*
-            :from :jars
-            :where [:and
-                    [:= :group_name groupname]
-                    [:= :jar_name jarname]]
-            :order-by [[:created :desc]]
-            :limit 1})
-        (first)
-        (read-edn-fields))))
+                :order-by :id}))))
 
 (defn find-dependencies
   [db groupname jarname version]
