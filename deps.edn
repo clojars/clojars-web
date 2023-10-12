@@ -27,6 +27,7 @@
   com.cognitect.aws/sqs {:mvn/version "847.2.1398.0"}
   com.cognitect.aws/ssm {:mvn/version "847.2.1365.0"}
   com.github.scribejava/scribejava-apis {:mvn/version "8.3.1"}
+  com.github.seancorfield/honeysql {:mvn/version "2.4.1078"}
   com.stuartsierra/component {:mvn/version "0.3.1"}
 
   digest/digest {:mvn/version "1.4.10"}
@@ -49,6 +50,7 @@
   org.apache.maven/maven-model {:mvn/version "3.8.4"}
   org.apache.maven/maven-repository-metadata {:mvn/version "3.8.4"}
   org.clojure/clojure {:mvn/version "1.11.1"}
+  org.clojure/java.jdbc {:mvn/version "0.7.12"}
   org.clojure/tools.logging {:mvn/version "1.2.4"}
   org.clojure/tools.nrepl {:mvn/version "0.2.11"}
   org.postgresql/postgresql {:mvn/version "42.6.0"}
@@ -62,9 +64,7 @@
   ring-jetty-component/ring-jetty-component {:mvn/version "0.3.1"}
   ring-middleware-format/ring-middleware-format {:mvn/version "0.7.5"}
 
-  valip/valip {:mvn/version "0.2.0"}
-
-  yesql/yesql {:mvn/version "0.5.3"}}
+  valip/valip {:mvn/version "0.2.0"}}
 
  :aliases {:defaults
            ;; We use override-deps to address CVEs

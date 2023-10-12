@@ -63,7 +63,7 @@
           (path->backup path *storage* (:deletion-backup-dir (config)))
           (storage/remove-path *storage* path))
         (db/delete-jars *db* group-id)
-        (db/delete-groups *db* group-id)
+        (db/delete-group *db* group-id)
         (search/delete! *search* group-id)))
     (println "No group found under" group-id)))
 
