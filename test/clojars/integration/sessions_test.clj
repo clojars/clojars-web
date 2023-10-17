@@ -1,12 +1,13 @@
 (ns clojars.integration.sessions-test
   (:require
+   [clojars.db :as db]
    [clojars.integration.steps :refer [create-deploy-token enable-mfa login-as register-as]]
    [clojars.test-helper :as help]
-   [clojure.java.jdbc :as jdbc]
    [clojure.test :refer [deftest testing use-fixtures]]
    [kerodon.core :refer [follow follow-redirect session within]]
    [kerodon.test :refer [has status? text?]]
    [net.cgrand.enlive-html :as enlive]
+   [next.jdbc.sql :as sql]
    [one-time.core :as ot])
   (:import
    (java.util
@@ -58,8 +59,7 @@
   (let [app (help/app)]
     (-> (session app)
         (register-as "fixture" "fixture@example.org" "password"))
-    (jdbc/db-do-commands help/*db*
-                         "update users set password='' where \"user\" = 'fixture'")
+    (sql/update! help/*db* :users {:password ""} {db/user-column "fixture"})
     (-> (session app)
         (login-as "fixture" "password")
         (follow-redirect)

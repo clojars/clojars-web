@@ -496,7 +496,7 @@
     (is (nil? expires_at))
     (is (= groupname group_name))
     (is (= jarname jar_name))
-    (is (= :single-use-status/no single_use))
+    (is (= "no" single_use))
     (is (= (-> token buddy.hash/sha256 buddy.codecs/bytes->hex)
            token_hash))
 
@@ -506,7 +506,7 @@
                            username tokenname groupname jarname true expires-at-time)
           {:keys [expires_at single_use]} (db/find-token-by-value help/*db* token)]
       (is (= expires-at-time expires_at))
-      (is (= :single-use-status/yes single_use)))))
+      (is (= "yes" single_use)))))
 
 ;; TODO: recent-versions
 

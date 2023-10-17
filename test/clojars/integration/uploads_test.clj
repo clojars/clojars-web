@@ -16,12 +16,12 @@
    [clojars.web.common :as common]
    [clojure.data.codec.base64 :as base64]
    [clojure.java.io :as io]
-   [clojure.java.jdbc :as sql]
    [clojure.string :as str]
    [clojure.test :refer [are deftest is testing use-fixtures]]
    [kerodon.core :refer [fill-in follow press session uncheck visit within]]
    [kerodon.test :refer [has status? text?]]
-   [net.cgrand.enlive-html :as enlive])
+   [net.cgrand.enlive-html :as enlive]
+   [next.jdbc.sql :as sql])
   (:import
    (java.sql
     Timestamp)
@@ -647,12 +647,12 @@
     (is (thrown-with-msg?
          DeploymentException
          #"Forbidden - the POM file does not include a license"
-         (deploy
-          {:coordinates '[org.clojars.dantheman/test "0.0.2"]
-           :jar-file (io/file (io/resource "test.jar"))
-           :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test-no-license.pom"))
-                                       {:version "0.0.2"})
-           :password token})))
+          (deploy
+           {:coordinates '[org.clojars.dantheman/test "0.0.2"]
+            :jar-file (io/file (io/resource "test.jar"))
+            :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test-no-license.pom"))
+                                        {:version "0.0.2"})
+            :password token})))
 
     (help/match-audit {:username "dantheman"}
                       {:user "dantheman"
@@ -1116,7 +1116,7 @@
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         db (:db (config))
         {token-id :id} (db/find-token-by-value db token)
-        _ (sql/update! db :deploy_tokens {:token_hash nil} ["id = ?" token-id])]
+        _ (sql/update! db :deploy_tokens {:token_hash nil} {:id token-id})]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
       :jar-file (io/file (io/resource "test.jar"))

@@ -7,25 +7,27 @@
    [clj-time.core :as time]
    [clojars.config :refer [config]]
    [clojars.maven :as mvn]
-   [clojars.util :refer [filter-some]]
+   [clojars.util :refer [assoc-some filter-some]]
    [clojure.edn :as edn]
-   [clojure.java.jdbc :as jdbc]
    [clojure.set :as set]
    [clojure.spec.alpha :as s]
    [clojure.string :as str]
    [honey.sql :as hsql]
+   [next.jdbc :as jdbc]
+   [next.jdbc.prepare :as jdbc.prepare]
+   [next.jdbc.result-set :as jdbc.result-set]
+   [next.jdbc.sql :as sql]
+   [next.jdbc.types :as jdbc.types]
    [one-time.core :as ot])
   (:import
-   (clojure.lang
-    Keyword)
    (java.security
     SecureRandom)
    (java.sql
     Timestamp)
    (java.util
-    UUID)
-   (org.postgresql.util
-    PGobject)))
+    UUID)))
+
+(set! *warn-on-reflection* true)
 
 (def reserved-names
   #{"about"
@@ -90,34 +92,17 @@
     "webmaster"
     "welcome"})
 
-;; ----- JDBC extensions -----
 
-;; read/write postgres enums
-;; from https://www.bevuta.com/en/blog/using-postgresql-enums-in-clojure/
+;; From https://cljdoc.org/d/com.github.seancorfield/next.jdbc/1.3.894/doc/migration-from-clojure-java-jdbc
 
-(defn- kw->pgenum
-  [kw]
-  (let [type (-> (namespace kw)
-                 (str/replace "-" "_"))
-        value (name kw)]
-    (doto (PGobject.)
-      (.setType type)
-      (.setValue value))))
-
-(extend-type Keyword
-  jdbc/ISQLValue
-  (sql-value [kw]
-    (kw->pgenum kw)))
-
-(let [schema-enums #{"single_use_status"}]
-  (extend-type String
-    jdbc/IResultSetReadColumn
-    (result-set-read-column
-      [val rsmeta idx]
-      (let [type (.getColumnTypeName rsmeta idx)]
-        (if (contains? schema-enums type)
-          (keyword (str/replace type "_" "-") val)
-          val)))))
+(defn do-commands
+  [connectable commands]
+  (if (instance? java.sql.Connection connectable)
+    (with-open [stmt (jdbc.prepare/statement connectable)]
+      (run! #(.addBatch stmt %) commands)
+      (into [] (.executeBatch stmt)))
+    (with-open [conn (jdbc/get-connection connectable)]
+      (do-commands conn commands))))
 
 (defn get-time []
   (Timestamp. (System/currentTimeMillis)))
@@ -129,62 +114,68 @@
   ([db query-data]
    (q db query-data nil))
   ([db query-data opts]
-   #_(clojure.pprint/pprint (hsql/format query-data {:quoted true}))
-   (jdbc/query db (hsql/format query-data {:quoted true}) opts)))
+   (sql/query db (hsql/format query-data {:quoted true})
+              (assoc opts
+                     :builder-fn jdbc.result-set/as-unqualified-lower-maps))))
 
 (defn- execute!
   [db query-data]
   (jdbc/execute! db (hsql/format query-data {:quoted true})))
 
+
+(def user-column
+  "user is a reserved word, so we have to quote it."
+  "\"user\"")
+
 (defn find-user
   [db username]
-  (q db
-     {:select :*
-      :from :users
-      :where [:= :user username]
-      :limit 1}
-     {:result-set-fn first}))
+  (first
+   (q db
+      {:select :*
+       :from :users
+       :where [:= :user username]
+       :limit 1})))
 
 (defn find-user-by-user-or-email
   [db username-or-email]
-  (q db
-     {:select :*
-      :from :users
-      :where [:or
-              [:= :user username-or-email]
-              [:= :email username-or-email]]
-      :limit 1}
-     {:result-set-fn first}))
+  (first
+   (q db
+      {:select :*
+       :from :users
+       :where [:or
+               [:= :user username-or-email]
+               [:= :email username-or-email]]
+       :limit 1})))
 
 (defn find-user-by-email-in
   [db emails]
-  (q db
-     {:select :*
-      :from :users
-      :where [:in :email emails]
-      :limit 1}
-     {:result-set-fn first}))
+  (first
+   (q db
+      {:select :*
+       :from :users
+       :where [:in :email emails]
+       :limit 1})))
 
 (defn find-user-by-password-reset-code
   [db reset-code]
-  (q db
-     {:select :*
-      :from :users
-      :where [:and
-              [:= :password_reset_code reset-code]
-              [:>= :password_reset_code_created_at
-               (-> 1 time/days time/ago time.coerce/to-sql-date)]]
-      :limit 1}
-     {:result-set-fn first}))
+  (first
+   (q db
+      {:select :*
+       :from :users
+       :where [:and
+               [:= :password_reset_code reset-code]
+               [:>= :password_reset_code_created_at
+                (-> 1 time/days time/ago time.coerce/to-sql-date)]]
+       :limit 1})))
 
 (defn find-user-by-id
   [db id]
-  (q db
-     {:select :*
-      :from :users
-      :where [:= :id id]
-      :limit 1}
-     {:result-set-fn first}))
+  (first
+   (q db
+      {:select :*
+       :from :users
+       :where [:= :id id]
+       :limit 1})))
 
 (defn find-user-tokens-by-username
   [db username]
@@ -201,12 +192,12 @@
 
 (defn find-token
   [db token-id]
-  (q db
-     {:select :*
-      :from :deploy_tokens
-      :where [:= :id token-id]
-      :limit 1}
-     {:result-set-fn first}))
+  (first
+   (q db
+      {:select :*
+       :from :deploy_tokens
+       :where [:= :id token-id]
+       :limit 1})))
 
 (def hash-deploy-token
   (comp buddy.codecs/bytes->hex buddy.hash/sha256))
@@ -215,21 +206,21 @@
   "Finds a token with the matching value. This is somewhat expensive,
   since it looks up the token by hash, then brcypt-verifies each result."
   [db token-value]
-  (q db
-     {:select :*
-      :from :deploy_tokens
-      :where [:= :token_hash (hash-deploy-token token-value)]}
-     {:result-set-fn (partial filter-some
-                              #(creds/bcrypt-verify token-value (:token %)))}))
+  (filter-some
+   #(creds/bcrypt-verify token-value (:token %))
+   (q db
+      {:select :*
+       :from :deploy_tokens
+       :where [:= :token_hash (hash-deploy-token token-value)]})))
 
 (defn find-group-verification
   [db group-name]
-  (q db
-     {:select :*
-      :from :group_verifications
-      :where [:= :group_name group-name]
-      :limit 1}
-     {:result-set-fn first}))
+  (first
+   (q db
+      {:select :*
+       :from :group_verifications
+       :where [:= :group_name group-name]
+       :limit 1})))
 
 (defn find-group-verifications-for-users-groups
   [db username]
@@ -246,66 +237,66 @@
 (defn verify-group!
   [db username group-name]
   (when-not (find-group-verification db group-name)
-    (jdbc/insert! db :group_verifications
-                  {:group_name group-name
-                   :verified_by username})))
+    (sql/insert! db :group_verifications
+                 {:group_name group-name
+                  :verified_by username})))
 
 (defn find-groupnames
   [db username]
-  (q db
-     {:select :name
-      :from :groups
-      :where [:and
-              [:= :user username]
-              [:not [:is :inactive true]]]
-      :order-by :name}
-     {:row-fn :name}))
+  (mapv :name
+        (q db
+           {:select :name
+            :from :groups
+            :where [:and
+                    [:= :user username]
+                    [:not [:is :inactive true]]]
+            :order-by :name})))
 
 (defn group-membernames
   [db groupname]
-  (q db
-     {:select :user
-      :from :groups
-      :where [:and
-              [:= :name groupname]
-              [:not [:is :inactive true]]
-              [:not [:is :admin true]]]}
-     {:row-fn :user}))
+  (mapv :user
+        (q db
+           {:select :user
+            :from :groups
+            :where [:and
+                    [:= :name groupname]
+                    [:not [:is :inactive true]]
+                    [:not [:is :admin true]]]})))
 
 (defn group-adminnames
   [db groupname]
-  (q db
-     {:select :user
-      :from :groups
-      :where [:and
-              [:= :name groupname]
-              [:not [:is :inactive true]]
-              [:= :admin true]]}
-     {:row-fn :user}))
+  (mapv :user
+        (q db
+           {:select :user
+            :from :groups
+            :where [:and
+                    [:= :name groupname]
+                    [:not [:is :inactive true]]
+                    [:= :admin true]]})))
 
 (defn group-admin-emails
   [db groupname]
-  (q db
-     {:select :email
-      :from :users
-      :where [:in :user
-              {:select :user
-               :from :groups
-               :where [:and
-                       [:= :name groupname]
-                       [:not [:is :inactive true]]
-                       [:= :admin true]]}]}
-     {:row-fn :email}))
+  (mapv :email
+        (q db
+           {:select :email
+            :from :users
+            :where [:in :user
+                    {:select :user
+                     :from :groups
+                     :where [:and
+                             [:= :name groupname]
+                             [:not [:is :inactive true]]
+                             [:= :admin true]]}]})))
 
 (defn group-activenames
   [db groupname]
-  (q db
-     {:select :user
-      :from :groups
-      :where [:and
-              [:= :name groupname]
-              [:not [:is :inactive true]]]}
-     {:row-fn :user}))
+  (mapv :user
+        (q db
+           {:select :user
+            :from :groups
+            :where [:and
+                    [:= :name groupname]
+                    [:not [:is :inactive true]]]})))
 
 (defn group-active-users
   [db groupname]
@@ -321,11 +312,11 @@
 
 (defn group-allnames
   [db groupname]
-  (q db
-     {:select :user
-      :from :groups
-      :where [:= :name groupname]}
-     {:row-fn :user}))
+  (mapv :user
+        (q db
+           {:select :user
+            :from :groups
+            :where [:= :name groupname]})))
 
 (defn group-actives
   [db groupname]
@@ -391,39 +382,41 @@
   ([db groupname jarname]
    (recent-versions db groupname jarname nil))
   ([db groupname jarname num]
-   (q db
-      (cond-> {:select :version
-               :from [[{:select-distinct-on [[:version] :version :created]
-                        :from :jars
-                        :where
-                        [:and
-                         [:= :group_name groupname]
-                         [:= :jar_name jarname]]}
-                       :distinct_jars]]
-               :order-by [[:distinct_jars/created :desc]]}
-        num (assoc :limit num))
-      {:row-fn #(select-keys % [:version])})))
+   (mapv #(select-keys % [:version])
+         (q db
+            (cond-> {:select :version
+                     :from [[{:select-distinct-on [[:version] :version :created]
+                              :from :jars
+                              :where
+                              [:and
+                               [:= :group_name groupname]
+                               [:= :jar_name jarname]]}
+                             :distinct_jars]]
+                     :order-by [[:distinct_jars/created :desc]]}
+              num (assoc :limit num))))))
 
 (defn count-versions
   [db groupname jarname]
-  (q db
-     {:select [[[:count [:distinct :version]] :count]]
-      :from :jars
-      :where [:and
-              [:= :group_name groupname]
-              [:= :jar_name jarname]]
-      :limit 1}
-     {:result-set-fn first
-      :row-fn :count}))
+  (->
+   (q db
+      {:select [[[:count [:distinct :version]] :count]]
+       :from :jars
+       :where [:and
+               [:= :group_name groupname]
+               [:= :jar_name jarname]]
+       :limit 1})
+   (first)
+   :count))
 
 (defn max-jars-id
   [db]
-  (q db
-     {:select [[[:max :id] :max_id]]
-      :from :jars
-      :limit 1}
-     {:row-fn :max_id
-      :result-set-fn first}))
+  (->
+   (q db
+      {:select [[[:max :id] :max_id]]
+       :from :jars
+       :limit 1})
+   (first)
+   :max_id))
 
 (defn recent-jars
   [db]
@@ -445,14 +438,15 @@
 
 (defn jar-exists
   [db groupname jarname]
-  (q db
-     {:select 1
-      :from :jars
-      :where [:and
-              [:= :group_name groupname]
-              [:= :jar_name jarname]]}
-     {:result-set-fn first
-      :row-fn some?}))
+  (->
+   (q db
+      {:select 1
+       :from :jars
+       :where [:and
+               [:= :group_name groupname]
+               [:= :jar_name jarname]]})
+   (first)
+   (some?)))
 
 (def str-map
   (s/map-of keyword? string?))
@@ -485,20 +479,20 @@
     ([db groupname jarname]
      (find-jar db groupname jarname nil))
     ([db groupname jarname version]
-     (read-edn-fields
-      (q db
-         {:select :*
-          :from :jars
-          :where (cond-> [:and
-                          [:= :group_name groupname]
-                          [:= :jar_name jarname]]
-                   version (conj [:= :version version]))
-          :order-by (if version
-                      [[:created :desc]]
-                      [[[:like :version [:inline "%-SNAPSHOT"]] :asc]
-                       [:created :desc]])
-          :limit 1}
-         {:result-set-fn first}))))
+     (-> (q db
+            {:select :*
+             :from :jars
+             :where (cond-> [:and
+                             [:= :group_name groupname]
+                             [:= :jar_name jarname]]
+                      version (conj [:= :version version]))
+             :order-by (if version
+                         [[:created :desc]]
+                         [[[:like :version [:inline "%-SNAPSHOT"]] :asc]
+                          [:created :desc]])
+             :limit 1})
+         (first)
+         (read-edn-fields))))
 
   (defn all-jars [db]
     (map read-edn-fields
@@ -508,16 +502,16 @@
 
   (defn find-latest-release
     [db groupname jarname]
-    (read-edn-fields
-     (q db
-        {:select :*
-         :from :jars
-         :where [:and
-                 [:= :group_name groupname]
-                 [:= :jar_name jarname]]
-         :order-by [[:created :desc]]
-         :limit 1}
-        {:result-set-fn first}))))
+    (-> (q db
+           {:select :*
+            :from :jars
+            :where [:and
+                    [:= :group_name groupname]
+                    [:= :jar_name jarname]]
+            :order-by [[:created :desc]]
+            :limit 1})
+        (first)
+        (read-edn-fields))))
 
 (defn find-dependencies
   [db groupname jarname version]
@@ -550,24 +544,26 @@
 
 (defn count-all-projects
   [db]
-  (q db
-     {:select [[[:count :*] :count]]
-      :from [[{:select-distinct [:group_name :jar_name]
-               :from :jars}
-              :sub]]}
-     {:result-set-fn first
-      :row-fn :count}))
+  (->
+   (q db
+      {:select [[[:count :*] :count]]
+       :from [[{:select-distinct [:group_name :jar_name]
+                :from :jars}
+               :sub]]})
+   (first)
+   :count))
 
 (defn count-projects-before [db s]
-  (q db
-     {:select [[[:count :*] :count]]
-      :from [[{:select-distinct [:group_name :jar_name]
-               :from :jars
-               :order-by [:group_name :jar_name]}
-              :sub]]
-      :where [[:< [:raw "group_name || '/' || jar_name"] s]]}
-     {:result-set-fn first
-      :row-fn :count}))
+  (->
+   (q db
+      {:select [[[:count :*] :count]]
+       :from [[{:select-distinct [:group_name :jar_name]
+                :from :jars
+                :order-by [:group_name :jar_name]}
+               :sub]]
+       :where [[:< [:raw "group_name || '/' || jar_name"] s]]})
+   (first)
+   :count))
 
 (defn browse-projects [db current-page per-page]
   (vec
@@ -580,11 +576,11 @@
 
 (defn- add-member*
   [db groupname username added-by admin?]
-  (jdbc/insert! db :groups
-                {:name      groupname
-                 "\"user\"" username
-                 :added_by  added-by
-                 :admin     (boolean admin?)}))
+  (sql/insert! db :groups
+               {:name       groupname
+                user-column username
+                :added_by   added-by
+                :admin      (boolean admin?)}))
 
 (defn add-user
   [db email username password]
@@ -593,7 +589,7 @@
                 :password (bcrypt password)
                 :send_deploy_emails true
                 :created (get-time)}]
-    (jdbc/insert! db :users (set/rename-keys record {:username "\"user\""}))
+    (sql/insert! db :users (set/rename-keys record {:username user-column}))
     (doseq [groupname [(str "net.clojars." username)
                        (str "org.clojars." username)]]
       (add-member* db groupname username "clojars" true)
@@ -605,29 +601,28 @@
   (let [fields {:email    email
                 :username username
                 :account  account}]
-    (jdbc/update! db :users
-                  (cond-> fields
-                    true           (set/rename-keys {:username "\"user\""})
-                    true           (dissoc :account)
-                    (seq password) (assoc :password (bcrypt password)))
-                  ["\"user\" = ?" account])
+    (sql/update! db :users
+                 (cond-> fields
+                   true           (set/rename-keys {:username user-column})
+                   true           (dissoc :account)
+                   (seq password) (assoc :password (bcrypt password)))
+                 {user-column account})
     fields))
 
 (defn update-user-notifications
   [db account prefs]
-  (jdbc/update! db :users prefs
-                ["\"user\" = ?" account]))
+  (sql/update! db :users prefs {user-column account}))
 
 (defn reset-user-password
   [db username reset-code password]
   (assert (not (str/blank? reset-code)))
   (assert (some? username))
-  (jdbc/update! db :users
-                {:password                       (bcrypt password)
-                 :password_reset_code            nil
-                 :password_reset_code_created_at nil}
-                ["password_reset_code = ? AND \"user\" = ?"
-                 reset-code username]))
+  (sql/update! db :users
+               {:password                       (bcrypt password)
+                :password_reset_code            nil
+                :password_reset_code_created_at nil}
+               {:password_reset_code reset-code
+                user-column username}))
 
 ;; Password resets
 ;; Reference:
@@ -648,35 +643,35 @@
 (defn set-password-reset-code!
   [db username]
   (let [reset-code (hexadecimalize (generate-secure-token 20))]
-    (jdbc/update! db :users
-                  {:password_reset_code            reset-code
-                   :password_reset_code_created_at (get-time)}
-                  ["\"user\" = ?" username])
+    (sql/update! db :users
+                 {:password_reset_code            reset-code
+                  :password_reset_code_created_at (get-time)}
+                 {user-column username})
     reset-code))
 
 (defn set-otp-secret-key!
   [db username]
   (let [secret-key (ot/generate-secret-key)]
-    (jdbc/update! db :users
-                  {:otp_secret_key secret-key}
-                  ["\"user\" = ?" username])))
+    (sql/update! db :users
+                 {:otp_secret_key secret-key}
+                 {user-column username})))
 
 (defn enable-otp!
   [db username]
   (let [recovery-code (str (UUID/randomUUID))]
-    (jdbc/update! db :users
-                  {:otp_active        true
-                   :otp_recovery_code (bcrypt recovery-code)}
-                  ["\"user\" = ?" username])
+    (sql/update! db :users
+                 {:otp_active        true
+                  :otp_recovery_code (bcrypt recovery-code)}
+                 {user-column username})
     recovery-code))
 
 (defn disable-otp!
   [db username]
-  (jdbc/update! db :users
-                {:otp_active        false
-                 :otp_recovery_code nil
-                 :otp_secret_key    nil}
-                ["\"user\" = ?" username]))
+  (sql/update! db :users
+               {:otp_active        false
+                :otp_recovery_code nil
+                :otp_secret_key    nil}
+               {user-column username}))
 
 (defn user-has-mfa?
   [db username]
@@ -700,48 +695,49 @@
                 :token_hash (hash-deploy-token token)
                 :group_name group-name
                 :jar_name jar-name
-                :single_use (if single-use?
-                              :single-use-status/yes
-                              :single-use-status/no)
+                :single_use (jdbc.types/as-other (if single-use?
+                                                   "yes"
+                                                   "no"))
                 :expires_at expires-at}]
-    (jdbc/insert! db :deploy_tokens
-                  (update record :token bcrypt))
+    (sql/insert! db :deploy_tokens
+                 (update record :token bcrypt))
     record))
 
 (defn consume-deploy-token
   [db token-id]
-  (jdbc/update! db :deploy_tokens
-                {:single_use :single-use-status/used
-                 :updated    (get-time)}
-                ["id = ?" token-id]))
+  (sql/update! db :deploy_tokens
+               {:single_use (jdbc.types/as-other "used")
+                :updated    (get-time)}
+               {:id token-id}))
 
 (defn disable-deploy-token
   [db token-id]
-  (jdbc/update! db :deploy_tokens
-                {:disabled true
-                 :updated  (get-time)}
-                ["id = ?" token-id]))
+  (sql/update! db :deploy_tokens
+               {:disabled true
+                :updated  (get-time)}
+               {:id token-id}))
 
 (defn set-deploy-token-used
   [db token-id]
-  (jdbc/update! db :deploy_tokens
-                {:last_used (get-time)}
-                ["id = ?" token-id]))
+  (sql/update! db :deploy_tokens
+               {:last_used (get-time)}
+               {:id token-id}))
 
 (defn set-deploy-token-hash
   [db token-id token-value]
-  (jdbc/update! db :deploy_tokens
-                {:token_hash (hash-deploy-token token-value)}
-                ["id = ? AND token_hash is null" token-id]))
+  (sql/update! db :deploy_tokens
+               {:token_hash (hash-deploy-token token-value)}
+               {:id token-id
+                :token_hash nil}))
 
 (defn add-audit [db tag username group-name jar-name version message]
-  (jdbc/insert! db :audit
-                {:tag        tag
-                 "\"user\""  username
-                 :group_name group-name
-                 :jar_name   jar-name
-                 :version    version
-                 :message    message}))
+  (sql/insert! db :audit
+               {:tag        tag
+                user-column username
+                :group_name group-name
+                :jar_name   jar-name
+                :version    version
+                :message    message}))
 
 (defn find-audit
   [db {:keys [username group-name jar-name version]}]
@@ -867,50 +863,46 @@
 
 (defn- group+jar+version-where
   [group-id jar-id version]
-  (let [base-where "group_name = ?"]
-    (cond
-      version [(format "%s AND jar_name = ? AND version = ?" base-where)
-               group-id jar-id version]
-      jar-id  [(format "%s AND jar_name = ?" base-where)
-               group-id jar-id]
-      :else   [base-where group-id])))
+  (assoc-some {:group_name group-id}
+              :jar_name jar-id
+              :version version))
 
 (defn- delete-dependencies
   [db group-id jar-id version]
-  (jdbc/delete! db :deps (group+jar+version-where group-id jar-id version)))
+  (sql/delete! db :deps (group+jar+version-where group-id jar-id version)))
 
 (defn add-jar
   [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]
   (check-group db account group name)
-  (jdbc/insert! db :jars
-                {:group_name  group
-                 :jar_name    name
-                 :version     version
-                 "\"user\""   account
-                 :created     (get-time)
-                 :description description
-                 :homepage    homepage
-                 :packaging   (when packaging (clojure.core/name packaging))
-                 :licenses    (when licenses (safe-pr-str licenses str-map-vector))
-                 :scm         (when scm (safe-pr-str scm str-map))
-                 :authors     (str/join ", " (map #(.replace % "," "")
-                                                  authors))})
+  (sql/insert! db :jars
+               {:group_name  group
+                :jar_name    name
+                :version     version
+                user-column  account
+                :created     (get-time)
+                :description description
+                :homepage    homepage
+                :packaging   (when packaging (clojure.core/name packaging))
+                :licenses    (when licenses (safe-pr-str licenses str-map-vector))
+                :scm         (when scm (safe-pr-str scm str-map))
+                :authors     (str/join ", " (map #(.replace ^String % "," "")
+                                                 authors))})
   (when (mvn/snapshot-version? version)
     (delete-dependencies db group name version))
   (doseq [dep dependencies]
-    (jdbc/insert! db :deps
-                  (-> dep
-                      (set/rename-keys {:group_name :dep_group_name
-                                        :jar_name   :dep_jar_name
-                                        :version    :dep_version
-                                        :scope      :dep_scope})
-                      (assoc :group_name group
-                             :jar_name   name
-                             :version   version)))))
+    (sql/insert! db :deps
+                 (-> dep
+                     (set/rename-keys {:group_name :dep_group_name
+                                       :jar_name   :dep_jar_name
+                                       :version    :dep_version
+                                       :scope      :dep_scope})
+                     (assoc :group_name group
+                            :jar_name   name
+                            :version   version)))))
 
 (defn- delete-jars*
   [db group-id jar-id version]
-  (jdbc/delete! db :jars (group+jar+version-where group-id jar-id version)))
+  (sql/delete! db :jars (group+jar+version-where group-id jar-id version)))
 
 (defn delete-jars [db group-id & [jar-id version]]
   (delete-jars* db group-id jar-id version)
@@ -919,8 +911,7 @@
 ;; does not delete jars in the group. should it?
 (defn delete-group
   [db group-id]
-  (jdbc/delete! db :groups
-                ["name = ?" group-id]))
+  (sql/delete! db :groups {:name group-id}))
 
 (defn- find-groups-jars-information
   [db group-id]
@@ -1029,9 +1020,9 @@
 
 (defn get-group-settings
   [db group-id]
-  (q db
-     {:select :*
-      :from :group_settings
-      :where [:= :group_name group-id]
-      :limit 1}
-     {:result-set-fn first}))
+  (first
+   (q db
+      {:select :*
+       :from :group_settings
+       :where [:= :group_name group-id]
+       :limit 1})))

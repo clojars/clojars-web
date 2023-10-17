@@ -6,7 +6,8 @@
    [clojars.maven :as maven]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
-   [clojure.java.jdbc :as jdbc]))
+   [next.jdbc :as jdbc]
+   [next.jdbc.sql :as sql]))
 
 (defn pom-seq [repo known-paths]
   (for [f (file-seq repo)
@@ -28,22 +29,26 @@
 (defn update-jar [db {:keys [group_name jar_name version]} {:keys [scm packaging licenses dependencies]}]
   ;; note this will lock the db during the updates, so prod will
   ;; error if it tries to use it
-  (jdbc/with-db-transaction
+  (jdbc/with-transaction
     [trans db]
-    (jdbc/update! trans :jars
-                  {:licenses  (when licenses (pr-str licenses))
-                   :packaging (when packaging (name packaging))
-                   :scm       (when scm (pr-str scm))}
-                  ["group_name = ? AND jar_name = ? AND version = ?"
-                   group_name jar_name version])
+    (sql/update! trans :jars
+                 {:licenses  (when licenses (pr-str licenses))
+                  :packaging (when packaging (name packaging))
+                  :scm       (when scm (pr-str scm))}
+                 {:group_name group_name
+                  :jar_name   jar_name
+                  :version    version})
     (when (seq dependencies)
-      (apply jdbc/insert! trans :deps
-             [:group_name :jar_name :version :dep_group_name
-              :dep_jar_name :dep_version :dep_scope]
-             (map (fn [dep]
-                    [group_name jar_name version (:group_name dep)
-                     (:jar_name dep) (or (:version dep) "") (:scope dep)])
-                  dependencies)))))
+      (apply sql/insert! trans :deps
+             (mapv (fn [dep]
+                     {:group_name     group_name
+                      :jar_name       jar_name
+                      :version        version
+                      :dep_group_name (:group_name dep)
+                      :dep_jar_name   (:jar_name dep)
+                      :dep_version    (or (:version dep) "")
+                      :dep_scope      (:scope dep)})
+                   dependencies)))))
 
 (defn read-data [data-file]
   (if (.exists data-file)

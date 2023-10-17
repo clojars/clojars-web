@@ -14,7 +14,6 @@
    [clojars.system :as system]
    [clojars.web :as web]
    [clojure.java.io :as io]
-   [clojure.java.jdbc :as jdbc]
    [clojure.java.shell :as shell]
    [clojure.string :as str]
    [clojure.test :refer [is]]
@@ -75,13 +74,11 @@
   (binding [config/*profile* "test"]
     ;; double binding since ^ needs to be bound for config to load
     ;; properly
-    (binding [*db* {:connection (jdbc/get-connection (:db (config/config)))}]
-      (try
-        (clear-database *db*)
-        (with-out-str
-          (migrate/migrate *db*))
-        (f)
-        (finally (.close (:connection *db*)))))))
+    (binding [*db* (:db (config/config))]
+      (clear-database *db*)
+      (with-out-str
+        (migrate/migrate *db*))
+      (f))))
 
 (defrecord NoStats []
   stats/Stats
