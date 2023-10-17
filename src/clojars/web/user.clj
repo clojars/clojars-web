@@ -142,7 +142,7 @@
           (profile-form account params nil (apply concat (vals errors))))
         (let [old-email (:email (find-user-by-user-or-email db account))
               email-changed? (not= old-email email)
-              password-changed? (some? password)]
+              password-changed? (seq password)]
           (update-user db account email account password)
           (log/info {:status :success})
           (when email-changed?
