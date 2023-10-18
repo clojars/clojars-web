@@ -7,7 +7,6 @@
    [clojars.search :as search]
    [clojars.stats :as stats]
    [clojure.java.io :as io]
-   [clojure.java.jdbc :as jdbc]
    [clojure.string :as str])
   (:import
    (org.apache.maven.artifact.repository.metadata
@@ -19,7 +18,7 @@
 
 (defn clear-database! [db]
   (try
-    (jdbc/db-do-commands
+    (db/do-commands
      db
      ["delete from deps"
       "delete from groups"

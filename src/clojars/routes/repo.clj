@@ -340,7 +340,7 @@
 (defn- maybe-consume-single-use-token
   [db session]
   (let [token (token-from-session session)]
-    (when (= :single-use-status/yes (:single_use token))
+    (when (= "yes" (:single_use token))
       (db/consume-deploy-token db (:id token)))))
 
 (defn- gen-repo-paths
@@ -464,7 +464,7 @@
     ;; We are starting a new upload with a used token. We can't blindly reject
     ;; all used token requests since we may get legitimate upload requests after
     ;; the deploy is finalized
-    (when (and (= :single-use-status/used (:single_use token))
+    (when (and (= "used" (:single_use token))
                (nil? (:token-id (read-metadata upload-dir))))
       (throw-forbidden
        "The provided single-use token has already been used"

@@ -106,7 +106,7 @@
        (for [token tokens
              :let [disabled? (:disabled token)
                    expired? (auth/token-expired? token)
-                   used? (= :single-use-status/used (:single_use token))
+                   used? (= "used" (:single_use token))
                    classes (str/join " "
                                      (remove nil?
                                              [(when disabled? "token-disabled")

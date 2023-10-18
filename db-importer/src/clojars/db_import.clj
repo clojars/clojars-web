@@ -1,8 +1,9 @@
 (ns clojars.db-import
   (:require
-   [clojure.java.jdbc :as jdbc]
+   [clojars.db :as db]
    [clojure.set :as set]
-   [clojure.walk :as walk]))
+   [clojure.walk :as walk]
+   [next.jdbc.sql :as sql]))
 
 (def tables
   [:users
@@ -12,13 +13,13 @@
 
 (defn select-all
   [db table]
-  (jdbc/query
+  (sql/query
    db
    [(format "select * from %s" (name table))]))
 
 (defn clear-psql-db
   [psql-db]
-  (jdbc/db-do-commands
+  (db/do-commands
    psql-db
    (mapv
     #(format "delete from %s" (name %))
@@ -79,15 +80,15 @@
   [db table data]
   (doseq [chunk (partition-all 10000 data)]
     (printf "==> inserting batch of %s\n" (count chunk))
-    (jdbc/insert-multi! db table
-                        (map translate-row chunk))))
+    (sql/insert-multi! db table
+                       (map translate-row chunk))))
 
 (defn existing-ids
   [db table]
-  (set
-   (jdbc/query db
-               [(format "select id from %s" (name table))]
-               {:row-fn :id})))
+  (into #{}
+        (map :id)
+        (sql/query db
+                   [(format "select id from %s" (name table))])))
 
 (defn -main
   [& [sqlite-db-path pg-host pg-port pg-user pg-password :as args]]
