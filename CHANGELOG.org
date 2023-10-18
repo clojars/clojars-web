@@ -3,6 +3,13 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+* 2023-October
+*** [[https://github.com/clojars/clojars-web/commits/2023-10-18.2012][2023-10-18.2012]]
++ [[https://github.com/clojars/clojars-web/commit/2d09602722df78ef40e30f5d9bcf01df011af27e][Convert from yesql to honeysql for SQL queries]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/1116f6c6b3a5cc7b484fdb24175127f43f232d83][Convert from java.jdbc to next.jdbc]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/07603ad74ea21f722ef7184f200b04ff6e75b30e][Don't send password change email when just profile email address changed]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/f1b251f4e788798a61cdb0d72023a00f7525945f][Adjust dependencies to address CVEs]] ([[https://github.com/tobias][Toby Crawley]])
+
 * 2023-September
 *** [[https://github.com/clojars/clojars-web/commits/2023-09-28.2002][2023-09-28.2002]]
 + [[https://github.com/clojars/clojars-web/commit/29b5d25cdc8ede87a35967691110f84a4a8c23d1][Prevent memory leak from in-memory session store]] ([[https://github.com/tobias][Toby Crawley]])
