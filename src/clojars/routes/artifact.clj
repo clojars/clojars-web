@@ -10,7 +10,7 @@
 (defn- with-shields-io-img-src
   "Allows shields.io badges to be shown on artifact pages."
   [body]
-  (http-utils/with-extra-img-src ["https://img.shields.io"] body))
+  (http-utils/with-extra-csp-srcs {:img-src ["https://img.shields.io"]} body))
 
 (defn show [db stats group-id artifact-id]
   (when-some [artifact (db/find-jar db group-id artifact-id)]

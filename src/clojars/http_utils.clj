@@ -42,15 +42,18 @@
         (regular-session req)))))
 
 (defn- content-security-policy
-  [{:as _request ::keys [extra-csp-img-src]}]
+  [{:as _request ::keys [extra-csp-srcs]}]
   (str/join
    ";"
-   ;; Load anything from the clojars domain
-   ["default-src 'self'"
-    ;; Load images from clojars domain along with dnsimple's logo and any extra
-    ;; allowed sources per page
-    (apply str "img-src 'self' https://cdn.dnsimple.com "
-           (interpose " " extra-csp-img-src))]))
+   (concat
+    ;; Load anything from the clojars domain
+    ["default-src 'self'"
+     ;; Load images from clojars domain along with dnsimple's logo and any extra
+     ;; allowed sources per page
+     (apply str "img-src 'self' https://cdn.dnsimple.com "
+            (interpose " " (:img-src extra-csp-srcs)))]
+    (for [[k v] (dissoc extra-csp-srcs :img-src)]
+      (apply str (name k) " 'self' " (interpose " " v))))))
 
 (def ^:private permissions-policy
   ;; We only need to write to the clipboard
@@ -72,10 +75,10 @@
           ;; referrer with non-secure sites.
           (assoc-in [:headers "Referrer-Policy"] "no-referrer-when-downgrade")))))
 
-(defn with-extra-img-src
-  "Adds an additional img-src to our content-security-policy."
-  [src body]
+(defn with-extra-csp-srcs
+  "Adds an additional *-src values to our content-security-policy."
+  [srcs body]
   (-> body
       (response)
       (content-type "text/html;charset=utf-8")
-      (assoc ::extra-csp-img-src src)))
+      (assoc ::extra-csp-srcs srcs)))

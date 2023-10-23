@@ -19,7 +19,7 @@
 (defn- with-data-img-src
   "Allows data: badges to be shown on the mfa page to allow the qrcode to load."
   [body]
-  (http-utils/with-extra-img-src ["data:"] body))
+  (http-utils/with-extra-csp-srcs {:img-src ["data:"]} body))
 
 (defn- create-mfa [db
                    account
