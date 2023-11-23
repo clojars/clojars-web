@@ -21,7 +21,7 @@
     (db/do-commands
      db
      ["delete from deps"
-      "delete from groups"
+      "delete from permissions"
       "delete from jars"
       "delete from users"
       "delete from group_verifications"

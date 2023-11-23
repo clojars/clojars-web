@@ -228,8 +228,8 @@
      {:select :*
       :from :group_verifications
       :where [:in :group_name
-              {:select :name
-               :from :groups
+              {:select-distinct :group_name
+               :from :permissions
                :where [:and
                        [:= :user username]
                        [:not [:is :inactive true]]]}]}))
@@ -243,23 +243,23 @@
 
 (defn find-groupnames
   [db username]
-  (mapv :name
+  (mapv :group_name
         (q db
-           {:select :name
-            :from :groups
+           {:select-distinct :group_name
+            :from :permissions
             :where [:and
                     [:= :user username]
                     [:not [:is :inactive true]]]
-            :order-by :name})))
+            :order-by :group_name})))
 
 (defn group-membernames
   [db groupname]
   (mapv :user
         (q db
-           {:select :user
-            :from :groups
+           {:select-distinct :user
+            :from :permissions
             :where [:and
-                    [:= :name groupname]
+                    [:= :group_name groupname]
                     [:not [:is :inactive true]]
                     [:not [:is :admin true]]]})))
 
@@ -267,10 +267,10 @@
   [db groupname]
   (mapv :user
         (q db
-           {:select :user
-            :from :groups
+           {:select-distinct :user
+            :from :permissions
             :where [:and
-                    [:= :name groupname]
+                    [:= :group_name groupname]
                     [:not [:is :inactive true]]
                     [:= :admin true]]})))
 
@@ -281,10 +281,10 @@
            {:select :email
             :from :users
             :where [:in :user
-                    {:select :user
-                     :from :groups
+                    {:select-distinct :user
+                     :from :permissions
                      :where [:and
-                             [:= :name groupname]
+                             [:= :group_name groupname]
                              [:not [:is :inactive true]]
                              [:= :admin true]]}]})))
 
@@ -292,10 +292,10 @@
   [db groupname]
   (mapv :user
         (q db
-           {:select :user
-            :from :groups
+           {:select-distinct :user
+            :from :permissions
             :where [:and
-                    [:= :name groupname]
+                    [:= :group_name groupname]
                     [:not [:is :inactive true]]]})))
 
 (defn group-active-users
@@ -304,27 +304,27 @@
      {:select :*
       :from :users
       :where [:in :user
-              {:select :user
-               :from :groups
+              {:select-distinct :user
+               :from :permissions
                :where [:and
-                       [:= :name groupname]
+                       [:= :group_name groupname]
                        [:not [:is :inactive true]]]}]}))
 
 (defn group-allnames
   [db groupname]
   (mapv :user
         (q db
-           {:select :user
-            :from :groups
-            :where [:= :name groupname]})))
+           {:select-distinct :user
+            :from :permissions
+            :where [:= :group_name groupname]})))
 
 (defn group-actives
   [db groupname]
   (q db
      {:select [:user :admin]
-      :from :groups
+      :from :permissions
       :where [:and
-              [:= :name groupname]
+              [:= :group_name groupname]
               [:not [:is :inactive true]]]}))
 
 (defn jars-by-username
@@ -366,8 +366,8 @@
       :join [[{:select [:jar_name [[:max :created] :created]]
                :from :jars
                :where [:in :group_name
-                       {:select :name
-                        :from :groups
+                       {:select-distinct :group_name
+                        :from :permissions
                         :where [:and
                                 [:= :user username]
                                 [:not [:is :inactive true]]]}]
@@ -576,8 +576,8 @@
 
 (defn- add-member*
   [db groupname username added-by admin?]
-  (sql/insert! db :groups
-               {:name       groupname
+  (sql/insert! db :permissions
+               {:group_name       groupname
                 user-column username
                 :added_by   added-by
                 :admin      (boolean admin?)}))
@@ -762,12 +762,12 @@
   [db groupname username inactivated-by]
   (execute!
    db
-   {:update :groups
+   {:update :permissions
     :set    {:inactive       true
              :inactivated_by inactivated-by}
     :where  [:and
              [:= :user username]
-             [:= :name groupname]
+             [:= :group_name groupname]
              [:not [:is :inactive true]]]}))
 
 (defn add-member
@@ -911,7 +911,7 @@
 ;; does not delete jars in the group. should it?
 (defn delete-group
   [db group-id]
-  (sql/delete! db :groups {:name group-id}))
+  (sql/delete! db :permissions {:group_name group-id}))
 
 (defn- find-groups-jars-information
   [db group-id]
