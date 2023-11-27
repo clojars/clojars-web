@@ -4,6 +4,7 @@
    [clojars.auth :as auth]
    [clojars.db :as db]
    [clojars.event :as event]
+   [clojars.hcaptcha :as hcaptcha]
    [clojars.http-utils :as http-utils]
    [clojars.log :as log]
    [clojars.routes.common :as common]
@@ -115,7 +116,7 @@
         (assoc (redirect "/mfa")
                :flash "Password incorrect.")))))
 
-(defn routes [db event-emitter mailer]
+(defn routes [db event-emitter hcaptcha mailer]
   (compojure/routes
    (GET "/profile" {:keys [flash]}
         (auth/with-account
@@ -146,7 +147,8 @@
            #(view/update-notifications db % params)))
 
    (GET "/register" {:keys [params flash]}
-        (view/register-form params flash))
+        (http-utils/with-extra-csp-srcs hcaptcha/hcaptcha-csp
+          (view/register-form hcaptcha params flash)))
 
    (GET "/forgot-password" _
         (view/forgot-password-form))

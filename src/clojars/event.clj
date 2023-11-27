@@ -74,8 +74,9 @@
                        (sqs-receive-loop running? error-reporter
                                          (sqs-client config) (:queue-url config))))))
   (stop [this]
-    (reset! (:running? this) false)
-    (deref (:thread this) 60000 ::timeout)
+    (when-some [running? (:running? this)]
+      (reset! running? false)
+      (deref (:thread this) 60000 ::timeout))
     this))
 
 (defn new-sqs-receiver

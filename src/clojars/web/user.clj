@@ -13,6 +13,7 @@
                               update-user
                               update-user-notifications]]
    [clojars.event :as event]
+   [clojars.hcaptcha :as hcaptcha]
    [clojars.log :as log]
    [clojars.notifications.common :as notif-common]
    [clojars.web.common :refer [html-doc error-list form-table jar-link
@@ -29,7 +30,8 @@
    [valip.core :refer [validate]]
    [valip.predicates :as pred]))
 
-(defn register-form [{:keys [errors email username]} message]
+(defn register-form
+  [hcaptcha {:keys [errors email username]} message]
   (html-doc "Register" {}
             [:div.small-section
              [:h1 "Register"]
@@ -54,6 +56,8 @@
                       (password-field {:placeholder "confirm your password"
                                        :required true}
                                       :confirm)
+                      [:div.h-captcha {:data-sitekey (hcaptcha/site-key hcaptcha)}]
+                      [:script {:src "https://js.hcaptcha.com/1/api.js" :async true :defer true}]
                       (submit-button "Register"))]))
 
 (defn conj-when [coll test x]
@@ -76,14 +80,20 @@
          "letters, numbers, hyphens and underscores.")]
    [:username pred/present? "Username can't be blank"]])
 
-(defn new-user-validations [db confirm]
+(defn- captcha-validations
+  [hcaptcha]
+  [[:captcha (partial hcaptcha/valid-token? hcaptcha) "Captcha response is invalid."]])
+
+(defn new-user-validations
+  [db hcaptcha confirm]
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (reserved-names %)
                                 (find-user db %)
                                 (seq (group-activenames db %))))
             "Username is already taken"]]
           (user-validations)
-          (password-validations confirm)))
+          (password-validations confirm)
+          (captcha-validations hcaptcha)))
 
 (defn reset-password-validations [db confirm]
   (concat

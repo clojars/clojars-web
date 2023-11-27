@@ -35,6 +35,9 @@
                        :client-secret #profile {:production #ssm-parameter "/clojars/production/gitlab_oauth_client_secret"
                                                 :default    "testing"}
                        :callback-uri  "https://clojars.org/oauth/gitlab/callback"}
+ ;; TODO: (toby) load from ssm-param
+ :hcaptcha            {:site-key "1c3a63fb-fcb9-46e5-abd5-c5efa9b5bfac"
+                       :secret "redacted"}
  :index-path          "data/index"
  :mail                #profile {:production {:from     "contact@clojars.org"
                                              :hostname "email-smtp.us-east-1.amazonaws.com"
