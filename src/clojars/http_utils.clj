@@ -10,7 +10,7 @@
   (fn [req]
     (let [response (handler req)]
       (if (= 200 (:status response))
-        (update-in response [:headers] assoc "Access-Control-Allow-Origin" "*")
+        (update response :headers assoc "Access-Control-Allow-Origin" "*")
         response))))
 
 (defn https-request? [req]

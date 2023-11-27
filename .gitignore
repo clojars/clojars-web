@@ -24,6 +24,7 @@ pom.xml
 /.nrepl-port
 /local-resources
 
-.clj-kondo/.cache
+.clj-kondo/*
+!.clj-kondo/config.edn
 bin/.cache
 .cpcache

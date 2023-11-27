@@ -16,16 +16,16 @@
   help/with-clean-database)
 
 (deftest test-group+domain-correspond?
-  (are [exp group domain]
-       (= exp (nut/group+domain-correspond? group domain))
-    true  "com.foo"     "foo.com"
-    true  "com.foo.bar" "foo.com"
-    false "com.foo"     "foo.org"
-    false "com.foo.bar" "foo.org"
-    false "foo"         "foo"
-    false "foo."        ".foo"
-    false ""            ""
-    false nil           nil))
+  (are [pred group domain]
+       (pred (nut/group+domain-correspond? group domain))
+    true?  "com.foo"     "foo.com"
+    true?  "com.foo.bar" "foo.com"
+    false? "com.foo"     "foo.org"
+    false? "com.foo.bar" "foo.org"
+    false? "foo"         "foo"
+    false? "foo."        ".foo"
+    false? ""            ""
+    false? nil           nil))
 
 (deftest verify-group-by-TXT-with-invalid-domain
   (are [given] (= "The domain name is not a valid domain name."

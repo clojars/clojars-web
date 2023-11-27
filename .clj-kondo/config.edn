@@ -3,5 +3,23 @@
   clojure.java.jdbc/with-db-transaction clojure.core/let}
 
  :linters
- {:unresolved-symbol
+ {:consistent-alias
+  {:aliases {clojure.string str
+
+             honey.sql hsql
+
+             next.jdbc            jdbc
+             next.jdbc.prepare    jdbc.prepare
+             next.jdbc.result-set jdbc.result-set
+             next.jdbc.sql        sql
+             next.jdbc.types      jdbc.types}}
+
+  ;; use false?/true? instead of = false/true
+  :equals-false {:level :warning}
+  :equals-true  {:level :warning}
+
+  ;; warn if assoc-in/get-in/update-in are used with a single key
+  :single-key-in {:level :warning}
+
+  :unresolved-symbol
   {:exclude [(clojure.test/is [match?])]}}}

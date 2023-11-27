@@ -16,12 +16,12 @@
         (assoc
          :recent_versions (db/recent-versions db group-id artifact-id)
          :downloads (stats/download-count stats group-id artifact-id))
-        (update-in [:recent_versions]
-                   (fn [versions]
-                     (map (fn [version]
-                            (assoc version
-                                   :downloads (stats/download-count stats group-id artifact-id (:version version))))
-                          versions)))
+        (update :recent_versions
+                (fn [versions]
+                  (map (fn [version]
+                         (assoc version
+                                :downloads (stats/download-count stats group-id artifact-id (:version version))))
+                       versions)))
         response)
     (not-found nil)))
 
