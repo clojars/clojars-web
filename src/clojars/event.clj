@@ -37,12 +37,15 @@
 (defonce ^:private handlers (atom {}))
 
 (defn- sqs-receive-loop
-  [running? error-reporter sqs-client queue-url]
+  [running? error-reporter sqs-client queue-url message-wait-timeout-seconds]
   (while @running?
     (try
-      ;; This will sleep up to 20s waiting on a message
+      ;; This will sleep up to message-wait-timeout-seconds waiting on a message
+      ;; if it is provided
       (let [res (aws-util/invoke sqs-client :ReceiveMessage
-                                 {:QueueUrl queue-url})]
+                                 (cond-> {:QueueUrl queue-url}
+                                   message-wait-timeout-seconds
+                                   (assoc :WaitTimeSeconds message-wait-timeout-seconds)))]
         (doseq [{:keys [Body ReceiptHandle]} (:Messages res)
                 :let [event (edn/read-string Body)]]
           (doseq [handler (vals @handlers)]
@@ -72,7 +75,9 @@
              :running? running?
              :thread (future
                        (sqs-receive-loop running? error-reporter
-                                         (sqs-client config) (:queue-url config))))))
+                                         (sqs-client config)
+                                         (:queue-url config)
+                                         (:message-wait-timeout config))))))
   (stop [this]
     (reset! (:running? this) false)
     (deref (:thread this) 60000 ::timeout)
