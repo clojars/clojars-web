@@ -65,7 +65,11 @@
                            {:QueueUrl queue-url
                             :ReceiptHandle ReceiptHandle})))
       (catch Exception e
-        (errors/report-error error-reporter e)))))
+        (errors/report-error error-reporter e)
+        ;; We throw the exception to trigger the uncaughtExceptionHandler, which
+        ;; will cause the process to exit. Systemd will restart the process,
+        ;; giving us a new receive loop. See `clojars.errors`.
+        (throw e)))))
 
 (defrecord SQSReceiver [error-reporter config]
   component/Lifecycle
