@@ -85,7 +85,7 @@
         (is (db/find-group-verification help/*db* "io.github.jd2"))))
 
     (testing "with a valid user but group already exists"
-      (db/add-admin help/*db* "com.github.johnd" "someone" "clojars")
+      (db/add-admin help/*db* "com.github.johnd" db/SCOPE-ALL "someone" "clojars")
       (set-mock-responses
        [{:email "john.doe@example.org"
          :primary true

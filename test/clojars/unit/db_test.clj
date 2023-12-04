@@ -92,12 +92,12 @@
         name "testuser"
         password "password"]
     (db/add-user help/*db* email name password)
-    (is (= ["testuser"] (db/group-adminnames help/*db* (str "org.clojars." name))))
+    (is (= ["testuser"] (db/group-adminnames help/*db* (str "org.clojars." name) db/SCOPE-ALL)))
     (is (= ["testuser"] (db/group-activenames help/*db* (str "org.clojars." name))))
-    (is (= [] (db/group-membernames help/*db* (str "org.clojars." name))))
-    (is (= ["testuser"] (db/group-adminnames help/*db* (str "net.clojars." name))))
+    (is (= [] (db/group-membernames help/*db* (str "org.clojars." name)  db/SCOPE-ALL)))
+    (is (= ["testuser"] (db/group-adminnames help/*db* (str "net.clojars." name) db/SCOPE-ALL)))
     (is (= ["testuser"] (db/group-activenames help/*db* (str "net.clojars." name))))
-    (is (= [] (db/group-membernames help/*db* (str "net.clojars." name))))
+    (is (= [] (db/group-membernames help/*db* (str "net.clojars." name) db/SCOPE-ALL)))
     (is (= ["net.clojars.testuser" "org.clojars.testuser"]
            (db/find-groupnames help/*db* name)))))
 
@@ -106,22 +106,36 @@
         name "testuser"
         password "password"]
     (db/add-user help/*db* email name password)
-    (db/add-member help/*db* "test-group" name "some-dude")
+    (db/add-member help/*db* "test-group" db/SCOPE-ALL name "some-dude")
     (is (= ["testuser"] (db/group-activenames help/*db* "test-group")))
-    (is (= ["testuser"] (db/group-membernames help/*db* "test-group")))
-    (is (= [] (db/group-adminnames help/*db* "test-group")))
-    (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))
+    (is (= ["testuser"] (db/group-membernames help/*db* "test-group" db/SCOPE-ALL)))
+    (is (= [] (db/group-adminnames help/*db* "test-group" db/SCOPE-ALL)))
+    (is (some #{"test-group"} (db/find-groupnames help/*db* name)))
+
+    (db/add-member help/*db* "test-group2" "a-project" name "some-dude")
+    (is (= ["testuser"] (db/group-activenames help/*db* "test-group2")))
+    (is (= ["testuser"] (db/group-membernames help/*db* "test-group2" "a-project")))
+    (is (= [] (db/group-membernames help/*db* "test-group2" db/SCOPE-ALL)))
+    (is (= [] (db/group-adminnames help/*db* "test-group2" "a-project")))
+    (is (some #{"test-group2"} (db/find-groupnames help/*db* name)))))
 
 (deftest admins-can-be-added-to-groups
   (let [email "test@example.com"
         name "testadmin"
         password "password"]
     (db/add-user help/*db* email name password)
-    (db/add-admin help/*db* "test-group" name "some-dude")
+    (db/add-admin help/*db* "test-group" db/SCOPE-ALL name "some-dude")
     (is (= ["testadmin"] (db/group-activenames help/*db* "test-group")))
-    (is (= [] (db/group-membernames help/*db* "test-group")))
-    (is (= ["testadmin"] (db/group-adminnames help/*db* "test-group")))
-    (is (some #{"test-group"} (db/find-groupnames help/*db* name)))))
+    (is (= [] (db/group-membernames help/*db* "test-group" db/SCOPE-ALL)))
+    (is (= ["testadmin"] (db/group-adminnames help/*db* "test-group" db/SCOPE-ALL)))
+    (is (some #{"test-group"} (db/find-groupnames help/*db* name)))
+
+    (db/add-admin help/*db* "test-group2" "a-project" name "some-dude")
+    (is (= ["testadmin"] (db/group-activenames help/*db* "test-group2")))
+    (is (= [] (db/group-membernames help/*db* "test-group2" "a-project")))
+    (is (= ["testadmin"] (db/group-adminnames help/*db* "test-group2" "a-project")))
+    (is (= [] (db/group-adminnames help/*db* db/SCOPE-ALL "a-project")))
+    (is (some #{"test-group2"} (db/find-groupnames help/*db* name)))))
 
 ;; TODO: Tests below should have the users added first.
 ;; Currently user unenforced foreign keys are by name
@@ -333,7 +347,7 @@
                 :group_name name}]
     (help/add-verified-group "test-user" name)
     (help/add-verified-group "test-user2" "tester-group")
-    (db/add-member help/*db* name "test-user2" "some-user")
+    (db/add-member help/*db* name db/SCOPE-ALL "test-user2" "some-user")
     (help/with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
     (help/with-time (Timestamp. 1)
@@ -375,7 +389,7 @@
                 :group_name name}]
     (help/add-verified-group "test-user" name)
     (help/add-verified-group "test-user" "tester-group")
-    (db/add-member help/*db* name "test-user2" "some-user")
+    (db/add-member help/*db* name db/SCOPE-ALL "test-user2" "some-user")
     (help/with-time (Timestamp. 0)
       (db/add-jar help/*db* "test-user" jarmap))
     (help/with-time (Timestamp. 1)
@@ -394,7 +408,7 @@
 
 (deftest add-jar-validates-group-permissions
   (let [jarmap {:name "jar-name" :version "1" :group "group-name"}]
-    (db/add-member help/*db* "group-name" "some-user" "some-dude")
+    (db/add-member help/*db* "group-name" db/SCOPE-ALL "some-user" "some-dude")
     (is (thrown? Exception (db/add-jar help/*db* "test-user" jarmap)))))
 
 (deftest recent-jars-returns-6-most-recent-jars-only-most-recent-version

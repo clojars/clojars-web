@@ -92,9 +92,10 @@
     "webmaster"
     "welcome"})
 
+(def SCOPE-ALL "*")
+(def SCOPE-ANY ::scope-any)
 
 ;; From https://cljdoc.org/d/com.github.seancorfield/next.jdbc/1.3.894/doc/migration-from-clojure-java-jdbc
-
 (defn do-commands
   [connectable commands]
   (if (instance? java.sql.Connection connectable)
@@ -252,30 +253,42 @@
                     [:not [:is :inactive true]]]
             :order-by :group_name})))
 
+(defn- with-scoping
+  [scope where]
+  {:pre [(some? scope)]}
+  (cond-> where
+    (not= SCOPE-ANY scope) (conj [:or
+                                  [:= :scope SCOPE-ALL]
+                                  [:= :scope scope]])))
+
 (defn group-membernames
-  [db groupname]
+  [db groupname scope]
   (mapv :user
         (q db
            {:select-distinct :user
             :from :permissions
-            :where [:and
-                    [:= :group_name groupname]
-                    [:not [:is :inactive true]]
-                    [:not [:is :admin true]]]})))
+            :where
+            (with-scoping scope
+              [:and
+               [:= :group_name groupname]
+               [:not [:is :inactive true]]
+               [:not [:is :admin true]]])})))
 
 (defn group-adminnames
-  [db groupname]
+  [db groupname scope]
   (mapv :user
         (q db
            {:select-distinct :user
             :from :permissions
-            :where [:and
-                    [:= :group_name groupname]
-                    [:not [:is :inactive true]]
-                    [:= :admin true]]})))
+            :where
+            (with-scoping scope
+              [:and
+               [:= :group_name groupname]
+               [:not [:is :inactive true]]
+               [:= :admin true]])})))
 
 (defn group-admin-emails
-  [db groupname]
+  [db groupname scope]
   (mapv :email
         (q db
            {:select :email
@@ -283,10 +296,12 @@
             :where [:in :user
                     {:select-distinct :user
                      :from :permissions
-                     :where [:and
-                             [:= :group_name groupname]
-                             [:not [:is :inactive true]]
-                             [:= :admin true]]}]})))
+                     :where
+                     (with-scoping scope
+                       [:and
+                        [:= :group_name groupname]
+                        [:not [:is :inactive true]]
+                        [:= :admin true]])}]})))
 
 (defn group-activenames
   [db groupname]
@@ -297,6 +312,20 @@
             :where [:and
                     [:= :group_name groupname]
                     [:not [:is :inactive true]]]})))
+
+(defn jar-active-usernames
+  [db group-name scope]
+  (into
+   #{}
+   (map :user)
+   (q db
+      {:select-distinct :user
+       :from :permissions
+       :where
+       (with-scoping scope
+         [:and
+          [:= :group_name group-name]
+          [:not [:is :inactive true]]])})))
 
 (defn group-active-users
   [db groupname]
@@ -318,14 +347,86 @@
             :from :permissions
             :where [:= :group_name groupname]})))
 
-(defn group-actives
+(defn group-all-actives
   [db groupname]
   (q db
-     {:select [:user :admin]
+     {:select [:*]
       :from :permissions
       :where [:and
               [:= :group_name groupname]
-              [:not [:is :inactive true]]]}))
+              [:not [:is :inactive true]]]
+      :order-by [:user :scope]}))
+
+(defn admin-group-scopes-for-user
+  [db username groupname]
+  (into #{}
+        (map :scope)
+        (q db
+           {:select :scope
+            :from :permissions
+            :where
+            [:and
+             [:= :group_name groupname]
+             [:= :user username]
+             [:= :admin true]
+             [:not [:is :inactive true]]]})))
+
+(defn user-has-all-scope?
+  [db username groupname]
+  (-> (q db
+         {:select :user
+          :from :permissions
+          :where
+          [:and
+           [:= :group_name groupname]
+           [:= :user username]
+           [:not [:is :inactive true]]
+           [:= :scope SCOPE-ALL]]
+          :limit 1})
+      (first)
+      (some?)))
+
+(defn group-actives
+  [db groupname]
+  (q db
+     {:select :*
+      :from :permissions
+      :where [:and
+              [:= :group_name groupname]
+              [:not [:is :inactive true]]]
+      :order-by [:user :scope]}))
+
+(defn group-actives-for-user
+  [db groupname username]
+  (q db
+     {:select :*
+      :from :permissions
+      :where [:and
+              [:= :group_name groupname]
+              [:not [:is :inactive true]]
+              [:or
+               ;; user has all scope, so can see all other users
+               [:= 1
+                {:select 1
+                 :from :permissions
+                 :where
+                 [:and
+                  [:= :group_name groupname]
+                  [:= :user username]
+                  [:not [:is :inactive true]]
+                  [:= :scope SCOPE-ALL]]
+                 :limit 1}]
+               ;; user has a limited scope, so should only see users within
+               ;; their scope
+               [:in :scope
+                {:select-distinct :scope
+                 :from :permissions
+                 :where
+                 [:and
+                  [:= :group_name groupname]
+                  [:= :user username]
+                  [:not [:is :inactive true]]]}]]]
+      :order-by [:user :scope]}))
 
 (defn jars-by-username
   [db username]
@@ -575,9 +676,11 @@
                   per-page))))
 
 (defn- add-member*
-  [db groupname username added-by admin?]
+  [db groupname scope username added-by admin?]
+  {:pre [(some? scope)]}
   (sql/insert! db :permissions
-               {:group_name       groupname
+               {:group_name groupname
+                :scope      scope
                 user-column username
                 :added_by   added-by
                 :admin      (boolean admin?)}))
@@ -592,7 +695,7 @@
     (sql/insert! db :users (set/rename-keys record {:username user-column}))
     (doseq [groupname [(str "net.clojars." username)
                        (str "org.clojars." username)]]
-      (add-member* db groupname username "clojars" true)
+      (add-member* db groupname SCOPE-ALL username "clojars" true)
       (verify-group! db username groupname))
     record))
 
@@ -759,7 +862,7 @@
         :order-by [[:created :desc]]})))
 
 (defn inactivate-member
-  [db groupname username inactivated-by]
+  [db groupname scope username inactivated-by]
   (execute!
    db
    {:update :permissions
@@ -768,40 +871,42 @@
     :where  [:and
              [:= :user username]
              [:= :group_name groupname]
+             [:= :scope scope]
              [:not [:is :inactive true]]]}))
 
 (defn add-member
-  [db groupname username added-by]
-  (inactivate-member db groupname username added-by)
-  (add-member* db groupname username added-by false))
+  [db groupname scope username added-by]
+  (inactivate-member db groupname scope username added-by)
+  (add-member* db groupname scope username added-by false))
 
-(defn add-admin [db groupname username added-by]
-  (inactivate-member db groupname username added-by)
-  (add-member* db groupname username added-by true))
+(defn add-admin [db groupname scope username added-by]
+  (inactivate-member db groupname scope username added-by)
+  (add-member* db groupname scope username added-by true))
 
-(defn check-group
-  "Throws if the group does not exist, is not accessible to the account, or not verified
-  (when the jarname doesn't already exist).
+(defn check-group+project
+  "Throws if the group does not exist, the account does not have permission to
+  deploy the project, or the group is not verified (when the jarname doesn't
+  already exist).
 
   We only allow deploys of new jars to verified groups. New versions of existing jars
   can still be deployed to non-verified groups."
   [db account groupname jarname]
-  (let [actives (group-activenames db groupname)
+  (let [jar-actives (jar-active-usernames db groupname jarname)
         err (fn [msg]
               (throw (ex-info msg {:account account
                                    :group groupname})))]
     (cond
-      ;; group exists, but user doesn't have access to it
-      (and (seq actives)
-           (not (some #{account} actives)))
-      (err (format "You don't have access to the '%s' group" groupname))
+      ;; group exists, but user doesn't have rights to deploy to the given project
+      (and (seq jar-actives)
+           (not (contains? jar-actives account)))
+      (err (format "You don't have access to the '%s/%s' project" groupname jarname))
 
       ;; group/jar exists, so new versions can be deployed
       (jar-exists db groupname jarname)
       true
 
       ;; group doesn't exist, reject since we no longer auto-create groups
-      (empty? actives)
+      (empty? jar-actives)
       (err (format "Group '%s' doesn't exist. See https://bit.ly/3MuKGXO" groupname))
 
       ;; group isn't verified, so new jars/projects can't be deployed to it
@@ -814,7 +919,7 @@
   [db account groupname]
   (let [actives (group-activenames db groupname)]
     (when (empty? actives)
-      (add-admin db groupname account "clojars"))))
+      (add-admin db groupname SCOPE-ALL account "clojars"))))
 
 (defn- group-names-for-provider
   [provider provider-username]
@@ -842,7 +947,7 @@
                 (cond
                   (empty? actives)
                   (do
-                    (add-admin db group-name username "clojars")
+                    (add-admin db group-name SCOPE-ALL username "clojars")
                     (verify-group! db username group-name)
                     nil)
 
@@ -873,7 +978,7 @@
 
 (defn add-jar
   [db account {:keys [group name version description homepage authors packaging licenses scm dependencies]}]
-  (check-group db account group name)
+  (check-group+project db account group name)
   (sql/insert! db :jars
                {:group_name  group
                 :jar_name    name

@@ -20,22 +20,18 @@
 (defn with-account [f]
   (friend/authenticated (try-account f)))
 
-(defn authorized-admin? [db account group]
+(defn authorized-admin? [db account group scope]
   (when account
-    (let [adminnames (db/group-adminnames db group)
+    (let [adminnames (db/group-adminnames db group scope)
           allnames (db/group-allnames db group)]
       (or (some #{account} adminnames) (empty? allnames)))))
-
-(defn authorized-member? [db account group]
-  (when account
-    (some #{account} (db/group-membernames db group))))
 
 (defn authorized-group-access? [db account group]
   (when account
     (some #{account} (db/group-allnames db group))))
 
-(defn require-admin-authorization [db account group f]
-  (if (authorized-admin? db account group)
+(defn require-admin-authorization [db account group scope f]
+  (if (authorized-admin? db account group scope)
     (f)
     (friend/throw-unauthorized friend/*identity*
                                {:cemerick.friend/required-roles group})))

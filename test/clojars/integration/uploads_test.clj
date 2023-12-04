@@ -18,7 +18,7 @@
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.test :refer [are deftest is testing use-fixtures]]
-   [kerodon.core :refer [fill-in follow press session uncheck visit within]]
+   [kerodon.core :refer [choose fill-in follow follow-redirect press session uncheck visit within]]
    [kerodon.test :refer [has status? text?]]
    [net.cgrand.enlive-html :as enlive]
    [next.jdbc.sql :as sql])
@@ -406,7 +406,7 @@
       (register-as "fixture" "fixture@example.org" "password"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
-                          #"Forbidden - You don't have access to the 'org\.clojars\.fixture' group"
+                          #"Forbidden - You don't have access to the 'org\.clojars\.fixture/test' project"
           (deploy
            {:coordinates '[org.clojars.fixture/test "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -418,7 +418,7 @@
                        :group_name "org.clojars.fixture"
                        :jar_name "test"
                        :version "0.0.1"
-                       :message "You don't have access to the 'org.clojars.fixture' group"})))
+                       :message "You don't have access to the 'org.clojars.fixture/test' project"})))
 
 (deftest user-can-deploy-to-group-when-not-admin
   (-> (session (help/app))
@@ -427,7 +427,7 @@
       (register-as "fixture" "fixture@example.org" "password")
       (visit "/groups/org.clojars.fixture")
       (fill-in [:#username] "dantheman")
-      (press "Add Member"))
+      (press "Add Permission"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.fixture/test "0.0.1"]
@@ -437,6 +437,47 @@
       :password  token}))
   ;; This test throws on failure, so we have this assertion to satisfy kaocha
   (is true))
+
+(deftest user-can-deploy-to-group-when-permission-scoped-to-the-project
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password"))
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  ;; Deploy once so the project exists to be scoped to below
+  (let [token (create-deploy-token (session (help/app)) "fixture" "password" "testing")]
+    (deploy
+     {:coordinates '[org.clojars.fixture/test "0.0.1"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                  {:groupId "org.clojars.fixture"})
+      :username "fixture"
+      :password  token}))
+  (-> (session (help/app))
+      (login-as "fixture" "password")
+      (follow-redirect)
+      (visit "/groups/org.clojars.fixture")
+      (fill-in [:#username] "dantheman")
+      (choose [:#scope_to_jar_select] "test")
+      (press "Add Permission"))
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
+    (deploy
+     {:coordinates '[org.clojars.fixture/test "0.0.2"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                  {:groupId "org.clojars.fixture"
+                                   :version "0.0.2"})
+      :password  token})
+    (testing "User can't deploy to another project in the group if it only has rights to a single project"
+      (is (thrown-with-msg?
+           DeploymentException
+           #"Forbidden - You don't have access to the 'org.clojars.fixture/test2' project"
+            (deploy
+             {:coordinates '[org.clojars.fixture/test2 "0.0.1"]
+              :jar-file (io/file (io/resource "test.jar"))
+              :pom-file (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                          {:groupId "org.clojars.fixture"
+                                           :artifactId "test2"})
+              :password  token}))))))
 
 (deftest user-cannot-deploy-to-a-non-existent-group
   (-> (session (help/app))
@@ -467,8 +508,8 @@
     ;; create a prior version in a non-verified group - we have to do
     ;; this directly and prevent a verified group check since we can
     ;; longer deploy to create the group or project
-    (db/add-admin help/*db* "legacy-group" "dantheman" "testing")
-    (with-redefs [db/check-group (constantly nil)]
+    (db/add-admin help/*db* "legacy-group" db/SCOPE-ALL "dantheman" "testing")
+    (with-redefs [db/check-group+project (constantly nil)]
       (db/add-jar help/*db* "dantheman" {:group "legacy-group"
                                          :name "test"
                                          :version "0.0.1-SNAPSHOT"}))
@@ -500,7 +541,7 @@
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
-    (db/add-admin help/*db* "legacy-group" "dantheman" "testing")
+    (db/add-admin help/*db* "legacy-group" db/SCOPE-ALL "dantheman" "testing")
 
     (is (thrown-with-msg? DeploymentException
                           #"Forbidden - Group 'legacy-group' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"
@@ -1135,7 +1176,7 @@
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "donthemon")
-      (press "Add Member"))
+      (press "Add Permission"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (email/expect-mock-emails 2)
     (deploy
@@ -1165,7 +1206,7 @@
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "donthemon")
-      (press "Add Member"))
+      (press "Add Permission"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
@@ -1191,7 +1232,7 @@
       (register-as "dantheman" "test@example.org" "password")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "donthemon")
-      (press "Add Member"))
+      (press "Add Permission"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (email/expect-mock-emails 1)
     (deploy

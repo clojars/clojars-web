@@ -126,6 +126,13 @@
    ["alter table groups rename to permissions"
     "alter table permissions rename column name to group_name"]))
 
+(defn- add-scope-to-permissions
+  [tx]
+  (db/do-commands
+   tx
+   ["alter table permissions add scope text default '*' not null"
+    "create index permissions_idx0 on permissions (group_name, scope)"]))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -140,7 +147,8 @@
    #'add-send-deploy-emails-to-users
    #'add-indexes-to-deps-table
    #'add-group-settings-table
-   #'rename-groups-to-permissions])
+   #'rename-groups-to-permissions
+   #'add-scope-to-permissions])
 
 (defn migrate [db]
   (db/do-commands db

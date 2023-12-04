@@ -1,15 +1,12 @@
 (ns clojars.integration.users-test
   (:require
-   [clojars.db :as db]
    [clojars.email :as email]
    [clojars.integration.steps :refer [disable-mfa enable-mfa login-as register-as]]
    ;; for defmethods
-   [clojars.notifications.group]
    [clojars.notifications.user]
    [clojars.test-helper :as help]
-   [clojure.string :as str]
    [clojure.test :refer [deftest is testing use-fixtures]]
-   [kerodon.core :refer [check fill-in follow follow-redirect
+   [kerodon.core :refer [fill-in follow follow-redirect
                          press session visit within]]
    [kerodon.test :refer [has status? text? value?]]
    [net.cgrand.enlive-html :as enlive]))
@@ -275,121 +272,6 @@
       (has (status? 200))
       (within [:p]
         (has (text? "The reset code was not found. Please ask for a new code in the forgot password page")))))
-
-(deftest admin-can-add-member-to-group
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
-  (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
-      ((fn [session] (email/expect-mock-emails 2) session))
-      (visit "/groups/org.clojars.dantheman")
-      (fill-in [:#username] "fixture")
-      (press "Add Member")
-      ;; (follow-redirect)
-      (within [:table.group-member-list
-               [:tr enlive/last-of-type]
-               [:td enlive/first-of-type]]
-        (has (text? "fixture")))
-      (within [:table.group-member-list
-               [:tr enlive/last-of-type]
-               [:td (enlive/nth-of-type 2)]]
-        (has (text? "No"))))
-
-  (is (some #{"fixture"} (db/group-membernames help/*db* "org.clojars.dantheman")))
-
-  (help/match-audit {:username "dantheman"}
-                    {:tag "member-added"
-                     :user "dantheman"
-                     :group_name "org.clojars.dantheman"
-                     :message "user 'fixture' added as member"})
-
-  (is (true? (email/wait-for-mock-emails)))
-  (is (= 2 (count @email/mock-emails)))
-  (is (= #{"fixture@example.org" "test@example.org"}
-         (into #{} (map first) @email/mock-emails)))
-  (is (every? #(= "A member was added to the group org.clojars.dantheman"
-                  %)
-              (into [] (map second) @email/mock-emails)))
-  (is (every? #(str/starts-with? % "User 'fixture' was added to the org.clojars.dantheman group by dantheman.\n\n")
-              (into [] (map #(nth % 2)) @email/mock-emails))))
-
-(deftest admin-can-add-admin-to-group
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
-  (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
-      ((fn [session] (email/expect-mock-emails 2) session))
-      (visit "/groups/org.clojars.dantheman")
-      (fill-in [:#username] "fixture")
-      (check [:#admin])
-      (press "Add Member")
-      (within [:table.group-member-list
-               [:tr enlive/last-of-type]
-               [:td enlive/first-of-type]]
-        (has (text? "fixture")))
-      (within [:table.group-member-list
-               [:tr enlive/last-of-type]
-               [:td (enlive/nth-of-type 2)]]
-        (has (text? "Yes"))))
-
-  (is (some #{"fixture"} (db/group-adminnames help/*db* "org.clojars.dantheman")))
-
-  (help/match-audit {:username "dantheman"}
-                    {:tag "member-added"
-                     :user "dantheman"
-                     :group_name "org.clojars.dantheman"
-                     :message "user 'fixture' added as admin"})
-
-  (is (true? (email/wait-for-mock-emails)))
-  (is (= 2 (count @email/mock-emails)))
-  (is (= #{"fixture@example.org" "test@example.org"}
-         (into #{} (map first) @email/mock-emails)))
-  (is (every? #(= "An admin member was added to the group org.clojars.dantheman"
-                  %)
-              (into [] (map second) @email/mock-emails)))
-  (is (every? #(str/starts-with? % "User 'fixture' was added as an admin to the org.clojars.dantheman group by dantheman.\n\n")
-              (into [] (map #(nth % 2)) @email/mock-emails))))
-
-(deftest admin-can-remove-user-from-group
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
-  (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
-      (visit "/groups/org.clojars.dantheman")
-      (fill-in [:#username] "fixture")
-      ((fn [session] (email/expect-mock-emails 2) session))
-      (press "Add Member")
-      ((fn [session]
-         ;; clear the add emails
-         (email/wait-for-mock-emails 1000)
-         ;; Then prep for the remove emails
-         (email/expect-mock-emails 2)
-         session))
-      (press "Remove Member"))
-  (help/match-audit {:username "dantheman"}
-                    {:tag "member-removed"
-                     :user "dantheman"
-                     :group_name "org.clojars.dantheman"
-                     :message "user 'fixture' removed"})
-
-  (is (true? (email/wait-for-mock-emails)))
-  (is (= 2 (count @email/mock-emails)))
-  (is (= #{"fixture@example.org" "test@example.org"}
-         (into #{} (map first) @email/mock-emails)))
-  (is (every? #(= "A member was removed from the group org.clojars.dantheman"
-                  %)
-              (into [] (map second) @email/mock-emails)))
-  (is (every? #(str/starts-with? % "User 'fixture' was removed from the org.clojars.dantheman group by dantheman.\n\n")
-              (into [] (map #(nth % 2)) @email/mock-emails))))
-
-(deftest user-must-exist-to-be-added-to-group
-  (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
-      (visit "/groups/org.clojars.dantheman")
-      (fill-in [:#username] "fixture")
-      (press "Add Member")
-      (within [:div.error :ul :li]
-        (has (text? "No such user: fixture")))))
 
 (deftest users-can-be-viewed
   (-> (session (help/app))
