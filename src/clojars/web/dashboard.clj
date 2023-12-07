@@ -110,5 +110,6 @@
        [:li (link-to "https://github.com/clojars/clojars-web/wiki/Pushing" "How do I deploy to clojars?")]
        [:li (link-to "https://github.com/clojars/clojars-web/wiki/Data" "How can I access clojars data programatically?")]
        [:li (link-to "https://github.com/clojars/clojars-web/wiki/Groups" "What are groups?")]
-       [:li (link-to "https://github.com/clojars/clojars-web/wiki/POM" "What does my POM need to look like?")]]]]]
+       [:li (link-to "https://github.com/clojars/clojars-web/wiki/Verified-Group-Names" "How do I verify a group name?")]
+       [:li (link-to "https://github.com/clojars/clojars-web/wiki/" "More...")]]]]]
    (audit-table db account {:username account})))
