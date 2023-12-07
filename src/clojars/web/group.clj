@@ -61,36 +61,48 @@
       (unordered-list (map jar-link all-group-jars))
       [:h2 "Permissions"]
       (if show-membership-details?
-        [:table.group-member-list
-         [:thead
-          [:tr
-           [:th "Username"]
-           [:th "Scope"]
-           [:th "Admin?"]]]
-         [:tbody
-          (for [active (sort-by :user actives)
-                :let [{:keys [admin scope user]} active]]
-            [:tr
-             [:td (user-link user)]
-             [:td scope]
-             [:td
-              (if admin "Yes" "No")]
-             (when (and (not= account user)
-                        (current-user-admin-for-scope? scope))
-               (list
-                [:td
-                 (form-to [:post (str "/groups/" groupname)]
-                          (hidden-field "username" user)
-                          (hidden-field "scope_to_jar" scope)
-                          (hidden-field "admin" (if admin 0 1))
-                          [:input.button.green-button {:type "submit"
-                                                       :value "Toggle Admin"}])]
-                [:td
-                 (form-to [:delete (str "/groups/" groupname)]
-                          (hidden-field "username" user)
-                          (hidden-field "scope_to_jar" scope)
-                          [:input.button.red-button {:type "submit"
-                                                     :value "Remove Permission"}])]))])]]
+        (list
+         [:details.help
+          [:summary "Help"]
+          [:p "A user that has a permission in a group can deploy new versions
+           of projects that are within the group. Users scoped to All
+           Projects (*) can deploy any existing project within the group, and
+           can deploy new projects. A user scoped to one or more projects can
+           only deploy to those projects."]
+          [:p "An Admin permission for a given project scope will allow the
+           user (in addition to the right to deploy) to add permissions, but
+           only within that scope. For example, an Admin user scoped to the
+           'foo' project can only add new permissions scoped to 'foo'."]]
+         [:table.group-member-list
+          [:thead
+           [:tr
+            [:th "Username"]
+            [:th "Scope"]
+            [:th "Admin?"]]]
+          [:tbody
+           (for [active (sort-by :user actives)
+                 :let [{:keys [admin scope user]} active]]
+             [:tr
+              [:td (user-link user)]
+              [:td scope]
+              [:td
+               (if admin "Yes" "No")]
+              (when (and (not= account user)
+                         (current-user-admin-for-scope? scope))
+                (list
+                 [:td
+                  (form-to [:post (str "/groups/" groupname)]
+                           (hidden-field "username" user)
+                           (hidden-field "scope_to_jar" scope)
+                           (hidden-field "admin" (if admin 0 1))
+                           [:input.button.green-button {:type "submit"
+                                                        :value "Toggle Admin"}])]
+                 [:td
+                  (form-to [:delete (str "/groups/" groupname)]
+                           (hidden-field "username" user)
+                           (hidden-field "scope_to_jar" scope)
+                           [:input.button.red-button {:type "submit"
+                                                      :value "Remove Permission"}])]))])]])
         (unordered-list (->> (db/group-all-actives db groupname)
                              (into []
                                    (comp
@@ -113,7 +125,7 @@
                       :id "admin"
                       :value 1
                       :checked false}]]
-            [[:label "Limit access to project "]
+            [[:label "Scope to project "]
              [:span
               [:select
                {:name :scope_to_jar
