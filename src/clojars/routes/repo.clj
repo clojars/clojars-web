@@ -143,9 +143,9 @@
       (ex-data e-or-message))
      cause)))
 
-(defn- check-group [db account group artifact]
+(defn- check-group+project [db account group artifact]
   (try
-    (db/check-group db account group artifact)
+    (db/check-group+project db account group artifact)
     (catch Exception e
       (throw-forbidden e
                        {:account account
@@ -162,7 +162,7 @@
                          :username account}
         (when artifact
           ;; will throw if there are any issues
-          (check-group db account groupname artifact))
+          (check-group+project db account groupname artifact))
         (let [upload-dir (find-upload-dir groupname artifact version timestamp-version session)]
           (f account upload-dir)
           ;; should we only do 201 if the file didn't already exist?
@@ -502,7 +502,7 @@
            ;; but since this includes the group authorization check,
            ;; we do it here just in case. Will throw if there are any
            ;; issues.
-           (check-group db account groupname artifact)
+           (check-group+project db account groupname artifact)
            (deploy-post-finalized-file storage upload-dir file)))))))
 
 ;; web handlers

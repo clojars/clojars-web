@@ -113,13 +113,14 @@
   (binding [config/*profile* "test"]
     ;; double binding since ^ needs to be bound for config to load
     ;; properly
-    (binding [system (component/start (assoc (system/new-system (config/config))
-                                             :repo-bucket (s3/mock-s3-client)
-                                             :error-reporter (quiet-reporter)
-                                             :index-factory memory-index
-                                             :mailer (email/mock-mailer)
-                                             :stats (no-stats)
-                                             :github (oauth-service/new-mock-oauth-service "GitHub" {})))]
+    (binding [system (component/start
+                      (assoc (system/new-system (config/config))
+                             :repo-bucket (s3/mock-s3-client)
+                             :error-reporter (quiet-reporter)
+                             :index-factory memory-index
+                             :mailer (email/mock-mailer)
+                             :stats (no-stats)
+                             :github (oauth-service/new-mock-oauth-service "GitHub" {})))]
       (let [db (get-in system [:db :spec])]
         (try
           (clear-database db)
@@ -203,3 +204,7 @@
           (Thread/sleep 1000)
           (recur (inc attempt)))
         false))))
+
+(defn assert-status
+  [session status]
+  (is (= status (get-in session [:response :status]))))

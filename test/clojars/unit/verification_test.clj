@@ -87,8 +87,8 @@
     (db/add-group help/*db* "dantheman" "com.foo")
     ;; We have to have some other member for the group to be considered to
     ;; exist.
-    (db/add-member help/*db* "com.foo" "anotheruser" "testing")
-    (db/inactivate-member help/*db* "com.foo" "dantheman" "testing")
+    (db/add-member help/*db* "com.foo" db/SCOPE-ALL "anotheruser" "testing")
+    (db/inactivate-member help/*db* "com.foo" db/SCOPE-ALL "dantheman" "testing")
     (help/with-TXT records
       (is (match?
            {:txt-records records

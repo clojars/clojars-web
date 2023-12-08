@@ -53,12 +53,12 @@
      (reset! email-latch (CountDownLatch. n))))
 
   (defn wait-for-mock-emails
-    "Blocks for up to `wait-ms` (default: 100ms) waiting for `n` emails to be sent
+    "Blocks for up to `wait-ms` (default: 1000ms) waiting for `n` emails to be sent
   via the mock, where `n` was passed to `expect-mock-emails` (defaulting to 1 if
   not called). Returns true if `n` reached within that time. Reset with
   `expect-mock-emails` between tests using the same system."
     ([]
-     (wait-for-mock-emails 100))
+     (wait-for-mock-emails 1000))
     ([wait-ms]
      (.await @email-latch wait-ms TimeUnit/MILLISECONDS)))
 

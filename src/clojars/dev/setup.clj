@@ -21,7 +21,7 @@
     (db/do-commands
      db
      ["delete from deps"
-      "delete from groups"
+      "delete from permissions"
       "delete from jars"
       "delete from users"
       "delete from group_verifications"
@@ -89,7 +89,8 @@
                  [_ group-path artifact-id] (re-find group-artifact-pattern (get-path parent))
                  version (.getName version-dir)
                  group-id (str/lower-case (fu/path->group group-path))
-                 user (or (first (db/group-adminnames db group-id)) (rand-nth users))]]
+                 user (or (first (db/group-adminnames db group-id db/SCOPE-ALL))
+                          (rand-nth users))]]
        (when-not (db/find-jar db group-id artifact-id version)
          (printf "Importing %s/%s %s (user: %s)\n" group-id artifact-id version user)
          (db/add-group db user group-id)
