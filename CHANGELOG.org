@@ -3,6 +3,17 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** 2023-December
+*** [[https://github.com/clojars/clojars-web/commits/2023-12-03.2016][2023-12-03.2016]]
++ [[https://github.com/clojars/clojars-web/commit/8d5b8e2c4b93771a34ecb1b14e5d5cbf62d2491e][Use long polling with SQS]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/2023-12-03.2017][2023-12-03.2017]]
++ [[https://github.com/clojars/clojars-web/commit/b60afa3cf8c181fe511b71a1ade27bd04c46110f][Throw on SQS receive-loop exception to force prcess to exit]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/2023-12-05.2019][2023-12-05.2019]]
++ [[https://github.com/clojars/clojars-web/commit/785266dbcbc0ea3fea4ccf55a8992f2ed62183f4][Use mock mailer in development]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/d25bdccbfe32ad23b6b60906b596ed1b5d63cbad][Update logback to address CVE-2023-6378]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/2023-12-08.2024][2023-12-08.2024]]
++ [[https://github.com/clojars/clojars-web/pull/877][Project-level scoped permissions]] ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2023-October
 *** [[https://github.com/clojars/clojars-web/commits/2023-10-18.2012][2023-10-18.2012]]
 + [[https://github.com/clojars/clojars-web/commit/2d09602722df78ef40e30f5d9bcf01df011af27e][Convert from yesql to honeysql for SQL queries]] ([[https://github.com/tobias][Toby Crawley]])
