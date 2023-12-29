@@ -215,23 +215,17 @@
      {:pom pom-data})))
 
 (defn- validate-pom-license
-  [db pom group name]
+  [pom]
   (when (empty? (:licenses pom))
-    (let [latest-release (db/find-latest-release db group name)]
-      ;; Require a license if:
-      ;; - this is a new project
-      ;; - the prior released version had a license
-      (when (or (not latest-release)
-                (seq (:licenses latest-release)))
-        (throw-invalid
-         :missing-license
-         "the POM file does not include a license. See https://bit.ly/3PQunZU")))))
+    (throw-invalid
+     :missing-license
+     "the POM file does not include a license. See https://bit.ly/3PQunZU")))
 
-(defn- validate-pom [db pom group name version]
+(defn- validate-pom [pom group name version]
   (validate-pom-entry pom :group group)
   (validate-pom-entry pom :name name)
   (validate-pom-entry pom :version version)
-  (validate-pom-license db pom group name))
+  (validate-pom-license pom))
 
 (defn- validate-module-entry
   "Validates a key in a Gradle module"
@@ -323,7 +317,7 @@
   (validate-jar-name+version name version)
   (when module
     (validate-module module group name version))
-  (validate-pom db pom group name version)
+  (validate-pom pom group name version)
   (assert-non-redeploy db group name version)
   (assert-non-central-shadow group name)
 
