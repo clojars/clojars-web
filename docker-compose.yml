@@ -1,7 +1,7 @@
 version: '3'
 services:
   dev-db:
-    image: postgres:12.1
+    image: postgres:15.5
     ports:
       - "55432:5432"
     environment:
