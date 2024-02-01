@@ -17,17 +17,19 @@
                                            :default    "clojars"}}
  :deletion-backup-dir #profile {:production "/home/clojars/repo-deleted"
                                 :default    "data/test/repo-backup"}
- :event-queue         #profile {:production {:queue-url "https://sqs.us-east-2.amazonaws.com/825662292780/clojars-events"
+ :dev-event-queue-url #profile {:test    "http://localhost:9324/000000000000/clojars-events-test"
+                                :default "http://localhost:9324/000000000000/clojars-events"}
+ :event-queue         #profile {:production {:queue-url            "https://sqs.us-east-2.amazonaws.com/825662292780/clojars-events"
                                              :message-wait-timeout 20}
-                                :default    {:credentials {:access-key-id     "fake-access-key"
-                                                           :secret-access-key "fake-secret-key"}
-                                             :endpoint {:protocol "http"
-                                                        :hostname "localhost"
-                                                        :port     9324}
-                                             :region "us-east-1"
-                                             :queue-url "http://localhost:9324/000000000000/clojars-events"
+                                :default    {:credentials          {:access-key-id     "fake-access-key"
+                                                                    :secret-access-key "fake-secret-key"}
+                                             :endpoint             {:protocol "http"
+                                                                    :hostname "localhost"
+                                                                    :port     9324}
+                                             :region               "us-east-1"
+                                             :queue-url            #ref [:dev-event-queue-url]
                                              :message-wait-timeout #profile {:default 5
-                                                                             :test nil}}}
+                                                                             :test    nil}}}
  :github-oauth        {:client-id     #profile {:production #ssm-parameter "/clojars/production/github_oauth_client_id"
                                                 :default    "testing"}
                        :client-secret #profile {:production #ssm-parameter "/clojars/production/github_oauth_client_secret"
