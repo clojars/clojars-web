@@ -101,26 +101,28 @@
    [:current-password #(correct-password? db username %)
     "Current password is incorrect"]])
 
-;;
-
-(defn profile-form [account user flash-msg & [errors]]
-  (html-doc "Profile" {:account account}
-            [:div.small-section
-             (flash flash-msg)
-             [:h1 "Profile"]
-             (error-list errors)
-             [:p "Your Clojars profile is just your email address and your password. You can change them here if you like."]
-             (form-to [:post "/profile"]
-                      (label :email "Email")
-                      [:input {:type :email :name :email :id
-                               :email :value (user :email)}]
-                      (label :current-password "Current password")
-                      (password-field :current-password)
-                      (label :password "New password")
-                      (password-field :password)
-                      (label :confirm "Confirm new password")
-                      (password-field :confirm)
-                      (submit-button "Update"))]))
+(defn profile-form
+  [account user flash-msg & [errors]]
+  (let [heading (format "Profile (%s)" account)]
+    (html-doc
+     heading
+     {:account account}
+     [:div.small-section
+      (flash flash-msg)
+      [:h1 heading]
+      (error-list errors)
+      [:p "Your Clojars profile is just your email address and your password. You can change them here if you like."]
+      (form-to [:post "/profile"]
+               (label :email "Email")
+               [:input {:type :email :name :email :id
+                        :email :value (user :email)}]
+               (label :current-password "Current password")
+               (password-field :current-password)
+               (label :password "New password")
+               (password-field :password)
+               (label :confirm "Confirm new password")
+               (password-field :confirm)
+               (submit-button "Update"))])))
 
 (defn update-profile
   [db event-emitter account {:keys [email current-password password confirm] :as params} details]
@@ -157,23 +159,26 @@
           (assoc (redirect "/profile")
                  :flash "Profile updated."))))))
 
-(defn notifications-form [account user flash-msg & [errors]]
-  (html-doc "Notification Preferences" {:account account}
-            [:div.small-section
-             (flash flash-msg)
-             [:h1 "Notification Preferences"]
-             (error-list errors)
-             (form-table
-              [:post "/notification-preferences"]
-              [[[:label {:for :send-deploy-emails}
-                 "Receive deploy notification emails?"]
-                [:input {:type :checkbox
-                         :name :send-deploy-emails
-                         :id   :send-deploy-emails
-                         :value 1
-                         :checked (:send_deploy_emails user)}]]]
-              (list [:p "If checked, you will receive an email notifying you of every deploy in any group you are a member of."]
-                    (submit-button "Update")))]))
+(defn notifications-form
+  [account user flash-msg & [errors]]
+  (let [heading (format "Notification Preferences (%s)" account)]
+    (html-doc heading
+              {:account account}
+              [:div.small-section
+               (flash flash-msg)
+               [:h1 heading]
+               (error-list errors)
+               (form-table
+                [:post "/notification-preferences"]
+                [[[:label {:for :send-deploy-emails}
+                   "Receive deploy notification emails?"]
+                  [:input {:type :checkbox
+                           :name :send-deploy-emails
+                           :id   :send-deploy-emails
+                           :value 1
+                           :checked (:send_deploy_emails user)}]]]
+                (list [:p "If checked, you will receive an email notifying you of every deploy in any group you are a member of."]
+                      (submit-button "Update")))])))
 
 (defn update-notifications [db account {:keys [send-deploy-emails] :as _params}]
   (log/with-context {:tag :update-notification-preferences
@@ -299,24 +304,26 @@
 
 (defn mfa
   [account {:as _user :keys [otp_active]} flash-msg]
-  (html-doc
-   "Two-Factor Authentication" {:account account}
-   [:div.small-section
-    (flash flash-msg)
-    [:h1 "Two-Factor Authentication"]
-    [:div.help
-     [:p
-      "With two-factor authentication, you can set up a Time-based One Time Password (TOTP) device "
-      "that will generate tokens you can use in addition to your password to log in."]]
-    [:p "Two-factor authentication is currently "
-     [:strong (if otp_active "enabled." "disabled.")]
-     (format " To %s it, enter your password." (if otp_active "disable" "enable"))]
-    (form-to [(if otp_active :delete :post) "/mfa"]
-             (label :password "Password")
-             (password-field {:required true}
-                             :password)
-             (submit-button (format "%s two-factor authentication"
-                                    (if otp_active "Disable" "Enable"))))]))
+  (let [heading (format "Two-Factor Authentication (%s)" account)]
+    (html-doc
+     heading
+     {:account account}
+     [:div.small-section
+      (flash flash-msg)
+      [:h1 heading]
+      [:div.help
+       [:p
+        "With two-factor authentication, you can set up a Time-based One Time Password (TOTP) device "
+        "that will generate tokens you can use in addition to your password to log in."]]
+      [:p "Two-factor authentication is currently "
+       [:strong (if otp_active "enabled." "disabled.")]
+       (format " To %s it, enter your password." (if otp_active "disable" "enable"))]
+      (form-to [(if otp_active :delete :post) "/mfa"]
+               (label :password "Password")
+               (password-field {:required true}
+                               :password)
+               (submit-button (format "%s two-factor authentication"
+                                      (if otp_active "Disable" "Enable"))))])))
 
 (defn setup-mfa
   [account {:as _user :keys [email otp_secret_key]} flash-msg]
@@ -328,12 +335,14 @@
         qrcode-b64 (-> qrcode-stream
                        (.toByteArray)
                        (base64/encode)
-                       (String.))]
+                       (String.))
+        heading (format "Two-Factor Authentication (%s)" account)]
     (html-doc
-     "Two-Factor Authentication" {:account account}
+     heading
+     {:account account}
      [:div.small-section
       (flash flash-msg)
-      [:h1 "Two-Factor Authentication"]
+      [:h1 heading]
       [:p "Scan this QR code with your chosen authenticator:"]
       [:img {:src (format "data:image/png;base64,%s" qrcode-b64)}]
       [:p "Can't scan the QR code? Enter your key manually into your two-factor device: "

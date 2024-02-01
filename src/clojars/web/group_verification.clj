@@ -108,47 +108,48 @@
 
 (defn index
   [account flash-data]
-  (html-doc
-   "Group Verification"
-   {:account account}
-   [:div.col-xs-6
-    [:h1 "Group Verification"]
-    (format-flash flash-data)
-    [:div.via-txt
-     [:h2 "Verification by TXT Record"]
-     [:details.help
-      [:summary "Help"]
-      (TXT-help account)]
-     (form-to [:post "/verify/group/txt"]
-              (label :group "Group name")
-              (text-field {:required    true
-                           :placeholder "com.example"}
-                          :group)
-              (label :domain "Domain with TXT record")
-              (text-field {:required    true
-                           :placeholder "example.com"}
-                          :domain)
-              (submit-button "Verify Group"))]
-    [:div.via-vcs
-     [:h2 "Verification of GitHub/Gitlab Repo Groups"]
-     [:details.help
-      [:summary "Help"]
-      (vcs-help account)]
-     (form-to [:post "/verify/group/vcs"]
-              (label :url "Verification Repository URL")
-              (text-field {:required    true
-                           :placeholder (format "https://github.com/example/clojars-%s"
-                                                account)}
-                          :url)
-              (submit-button "Verify Groups"))]
-    [:div.via-parent
-     [:h2 "Verification by Parent Group"]
-     [:details.help
-      [:summary "Help"]
-      parent-help]
-     (form-to [:post "/verify/group/parent"]
-              (label :group "Group name")
-              (text-field {:required    true
-                           :placeholder "com.example.ham"}
-                          :group)
-              (submit-button "Verify Group"))]]))
+  (let [heading (format "Group Verification (%s)" account)]
+    (html-doc
+     heading
+     {:account account}
+     [:div.col-xs-6
+      [:h1 heading]
+      (format-flash flash-data)
+      [:div.via-txt
+       [:h2 "Verification by TXT Record"]
+       [:details.help
+        [:summary "Help"]
+        (TXT-help account)]
+       (form-to [:post "/verify/group/txt"]
+                (label :group "Group name")
+                (text-field {:required    true
+                             :placeholder "com.example"}
+                            :group)
+                (label :domain "Domain with TXT record")
+                (text-field {:required    true
+                             :placeholder "example.com"}
+                            :domain)
+                (submit-button "Verify Group"))]
+      [:div.via-vcs
+       [:h2 "Verification of GitHub/Gitlab Repo Groups"]
+       [:details.help
+        [:summary "Help"]
+        (vcs-help account)]
+       (form-to [:post "/verify/group/vcs"]
+                (label :url "Verification Repository URL")
+                (text-field {:required    true
+                             :placeholder (format "https://github.com/example/clojars-%s"
+                                                  account)}
+                            :url)
+                (submit-button "Verify Groups"))]
+      [:div.via-parent
+       [:h2 "Verification by Parent Group"]
+       [:details.help
+        [:summary "Help"]
+        parent-help]
+       (form-to [:post "/verify/group/parent"]
+                (label :group "Group name")
+                (text-field {:required    true
+                             :placeholder "com.example.ham"}
+                            :group)
+                (submit-button "Verify Group"))]])))

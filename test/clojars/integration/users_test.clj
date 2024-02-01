@@ -183,7 +183,7 @@
       (follow "profile")
       (has (status? 200))
       (within [:title]
-        (has (text? "Profile - Clojars")))
+        (has (text? "Profile (fixture) - Clojars")))
 
       (fill-in "Current password" "")
       (press "Update")

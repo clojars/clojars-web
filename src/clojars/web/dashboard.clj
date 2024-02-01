@@ -77,39 +77,41 @@
      "Recently pushed projects"]]
    [:ul.recent-jars-list.row (map #(recent-jar stats %) (recent-jars db))]))
 
-(defn dashboard [db account]
-  (html-doc
-   "Dashboard"
-   {:account account}
-   [:div.light-article.col-xs-12
-    [:h1 (str "Dashboard (" account ")")]
-    [:div.col-xs-12.col-sm-4
-     [:div.dash-palette
-      [:h2 "Your Projects"]
-      (let [jars (db/jars-by-username db account)]
-        (if (seq jars)
-          (unordered-list (map jar-link jars))
-          [:p "You don't have any projects, would you like to "
-           (link-to "https://github.com/clojars/clojars-web/wiki/Pushing" "add one")
-           "?"]))]]
-    [:div.col-xs-12.col-sm-4
-     [:div.dash-palette
-      [:h2 "Your Groups"]
-      (unordered-list
-       (map (fn [group-name]
-              (let [verified-group? (db/find-group-verification db group-name)]
-                (list [:span (group-link group-name)]
-                      (when verified-group?
-                        verified-group-badge-small))))
-            (db/find-groupnames db account)))]]
-    [:div.col-xs-12.col-sm-4
-     [:div.dash-palette
-      [:h2 "FAQ"]
-      [:ul
-       [:li (link-to "https://github.com/clojars/clojars-web/wiki/Tutorial" "How I create a new project?")]
-       [:li (link-to "https://github.com/clojars/clojars-web/wiki/Pushing" "How do I deploy to clojars?")]
-       [:li (link-to "https://github.com/clojars/clojars-web/wiki/Data" "How can I access clojars data programatically?")]
-       [:li (link-to "https://github.com/clojars/clojars-web/wiki/Groups" "What are groups?")]
-       [:li (link-to "https://github.com/clojars/clojars-web/wiki/Verified-Group-Names" "How do I verify a group name?")]
-       [:li (link-to "https://github.com/clojars/clojars-web/wiki/" "More...")]]]]]
-   (audit-table db account {:username account})))
+(defn dashboard
+  [db account]
+  (let [heading (format "Dashboard (%s)" account)]
+    (html-doc
+     heading
+     {:account account}
+     [:div.light-article.col-xs-12
+      [:h1 heading]
+      [:div.col-xs-12.col-sm-4
+       [:div.dash-palette
+        [:h2 "Your Projects"]
+        (let [jars (db/jars-by-username db account)]
+          (if (seq jars)
+            (unordered-list (map jar-link jars))
+            [:p "You don't have any projects, would you like to "
+             (link-to "https://github.com/clojars/clojars-web/wiki/Pushing" "add one")
+             "?"]))]]
+      [:div.col-xs-12.col-sm-4
+       [:div.dash-palette
+        [:h2 "Your Groups"]
+        (unordered-list
+         (map (fn [group-name]
+                (let [verified-group? (db/find-group-verification db group-name)]
+                  (list [:span (group-link group-name)]
+                        (when verified-group?
+                          verified-group-badge-small))))
+              (db/find-groupnames db account)))]]
+      [:div.col-xs-12.col-sm-4
+       [:div.dash-palette
+        [:h2 "FAQ"]
+        [:ul
+         [:li (link-to "https://github.com/clojars/clojars-web/wiki/Tutorial" "How I create a new project?")]
+         [:li (link-to "https://github.com/clojars/clojars-web/wiki/Pushing" "How do I deploy to clojars?")]
+         [:li (link-to "https://github.com/clojars/clojars-web/wiki/Data" "How can I access clojars data programatically?")]
+         [:li (link-to "https://github.com/clojars/clojars-web/wiki/Groups" "What are groups?")]
+         [:li (link-to "https://github.com/clojars/clojars-web/wiki/Verified-Group-Names" "How do I verify a group name?")]
+         [:li (link-to "https://github.com/clojars/clojars-web/wiki/" "More...")]]]]]
+     (audit-table db account {:username account}))))
