@@ -26,5 +26,13 @@
    <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
    <cve>CVE-2022-1471</cve>
   </suppress>
+  <suppress>
+     <notes><![CDATA[
+     This CVE only impacts programs using Clojure < 1.9.0, and gets reported for any jar
+     that has a lower Clojure in its pom, even if the project being checked is using a
+     newer Clojure (as we are).
+     ]]></notes>
+     <cve>CVE-2017-20189</cve>
+  </suppress>
 
 </suppressions>
