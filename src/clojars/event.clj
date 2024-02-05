@@ -8,6 +8,8 @@
    [cognitect.aws.credentials :as credentials]
    [com.stuartsierra.component :as component]))
 
+(set! *warn-on-reflection* true)
+
 (defn- sqs-client
   [{:as _config :keys [credentials endpoint region]}]
   (doto (aws/client (cond-> {:api :sqs}
@@ -77,14 +79,16 @@
     (let [running? (atom true)]
       (assoc this
              :running? running?
-             :thread (future
-                       (sqs-receive-loop running? error-reporter
-                                         (sqs-client config)
-                                         (:queue-url config)
-                                         (:message-wait-timeout config))))))
+             :thread (doto (Thread.
+                            (fn []
+                              (sqs-receive-loop running? error-reporter
+                                                (sqs-client config)
+                                                (:queue-url config)
+                                                (:message-wait-timeout config))))
+                       (.start)))))
   (stop [this]
     (reset! (:running? this) false)
-    (deref (:thread this) 60000 ::timeout)
+    (.join ^Thread (:thread this) 60000)
     this))
 
 (defn new-sqs-receiver
