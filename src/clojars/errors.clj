@@ -98,7 +98,7 @@
             (->> (report-ring-error reporter t req request-id)
                  (err-response-fn (ex-data t)))))))))
 
-(defn- uncaugt-exception-handler
+(defn- uncaught-exception-handler
   [error-reporter]
   (reify Thread$UncaughtExceptionHandler
     (uncaughtException [_ _thread ex]
@@ -109,4 +109,4 @@
 
 (defn set-default-exception-handler
   [error-reporter]
-  (Thread/setDefaultUncaughtExceptionHandler (uncaugt-exception-handler error-reporter)))
+  (Thread/setDefaultUncaughtExceptionHandler (uncaught-exception-handler error-reporter)))
