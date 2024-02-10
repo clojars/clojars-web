@@ -36,25 +36,35 @@
                   (base64/decode key-sig)
                   {:key key :alg :ecdsa+sha256}))))
 
-;; - make emails async
 ;; - add timing logs
+
+(defn- token-response
+  [{:keys [token type]} found?]
+  {:token_raw  token
+   :token_type type
+   :label      (if found? "true_positive" "false_positive")})
+
+(defn- check-token
+  [db event-emitter {:as token-data :keys [token url]}]
+  (if-some [{:as db-token :keys [id disabled user_id]}
+            (db/find-token-by-value db token)]
+    (do
+      (when (not disabled)
+        (db/disable-deploy-token db id))
+      (event/emit event-emitter :token-breached
+                  {:user-id         user_id
+                   :token-disabled? disabled
+                   :token-name      (:name db-token)
+                   :commit-url      url})
+      (token-response token-data true))
+    (token-response token-data false)))
 
 (defn- handle-github-token-breach
   [db event-emitter {:as _request :keys [headers body]}]
   (let [body-str (slurp body)]
     (if (valid-github-request? headers body-str)
       (let [data (json/parse-string body-str true)]
-        (doseq [{:keys [token url]} data]
-          (when-let [{:as db-token :keys [id disabled user_id]}
-                     (db/find-token-by-value db token)]
-            (when (not disabled)
-              (db/disable-deploy-token db id))
-            (event/emit event-emitter :token-breached
-                        {:user-id user_id
-                         :token-disabled? disabled
-                         :token-name (:name db-token)
-                         :commit-url url})))
-        (response/status 200))
+        (response/response (mapv (partial check-token db event-emitter) data)))
       (response/status 422))))
 
 (defn routes [db event-emitter]
