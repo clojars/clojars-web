@@ -23,6 +23,7 @@
                                (delete! [_ group# artifact#]
                                  (swap! *search-removals* conj (format "%s/%s" group# artifact#))))
               admin/*storage* (storage/fs-storage (:repo (config)))]
+      (db/add-user admin/*db* "testuser@example.com" "testuser" "password")
       (help/add-verified-group "testuser" "org.ham")
       (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "1" :description "delete me"})
       (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "2" :description ""})
@@ -142,3 +143,69 @@
                 (admin/verify-group! "testuser" "org.hambiscuit")))
     (is (some #{"testuser"} (db/group-activenames help/*db* "org.hambiscuit")))))
 
+(deftest delete-user!-works
+  ;; Given: a user with:
+  ;; - otp
+  ;; - password reset code
+  ;; - deploy token
+  (db/enable-otp! admin/*db* "testuser")
+  (db/set-otp-secret-key! admin/*db* "testuser")
+  (db/set-password-reset-code! admin/*db* "testuser")
+  (db/add-deploy-token admin/*db* "testuser" "token" nil nil false (db/get-time))
+
+  ;; And: a shared default group with a jar
+  (db/add-admin admin/*db* "org.clojars.testuser" db/SCOPE-ALL "otheruser" "testuser")
+  (db/add-jar admin/*db* "testuser" {:group   "org.clojars.testuser"
+                                     :name    "jar"
+                                     :version "1.0"})
+
+  ;; And: and audit record
+  (db/add-audit admin/*db* "testing" "testuser" nil nil nil "a message")
+
+  (let [user-id      (:id (db/find-user admin/*db* "testuser"))
+
+        ;; When: we mark the user as deleted
+        new-username (admin/delete-user! "testuser")]
+
+    ;; Then: the user is really renamed to a deleted placeholder
+    (is (re-find #"deleted_\d+" new-username))
+    (is (nil? (db/find-user admin/*db* "testuser")))
+
+    ;; And: they have no email, and otp & password recovery is cleared
+    (is (match?
+         {:email               ""
+          :otp_active          false
+          :otp_recovery_code   nil
+          :otp_secret_key      nil
+          :password_reset_code nil
+          :user                new-username}
+         (db/find-user admin/*db* new-username)))
+
+    ;; And: their deploy tokens are disabled
+    (is (:disabled (first (db/find-deploy-tokens-for-user admin/*db* user-id))))
+
+    ;; And: empty default groups are deleted
+    (is (empty? (db/group-allnames admin/*db* "net.clojars.testuser")))
+    (is (empty? (db/find-group-verification admin/*db* "net.clojars.testuser")))
+
+    ;; And: non-empty default groups are left in place, but with the new username
+    (is (= [new-username "otheruser"] (db/group-allnames admin/*db* "org.clojars.testuser")))
+    (is (some? (db/find-group-verification admin/*db* "org.clojars.testuser")))
+
+    ;; And: existing non-default groups are left in place, but with the new username
+    (is (= [new-username] (db/group-allnames admin/*db* "org.ham")))
+    (is (match? {:verified_by new-username}
+                (db/find-group-verification admin/*db* "org.ham")))
+
+    ;; And: any jars they deployed have the new username
+    (is (seq (db/jars-by-username admin/*db* new-username)))
+    (is (empty? (db/jars-by-username admin/*db* "testuser")))
+
+    ;; And: their audit records have been reassigned to the new username
+    (is (seq (db/find-audit admin/*db* {:username new-username})))
+    (is (empty? (db/find-audit admin/*db* {:username "testuser"})))))
+
+(deftest delete-user!-with-non-existent-user
+  (is (thrown-with-msg?
+       Exception #"User does-not-exist not found!"
+        (admin/delete-user! "does-not-exist"))))

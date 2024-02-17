@@ -9,7 +9,8 @@
    [clojure.java.shell :as shell]
    [clojure.pprint :refer [pprint]]
    [clojure.string :as str]
-   [clojure.tools.nrepl.server :as nrepl])
+   [clojure.tools.nrepl.server :as nrepl]
+   [next.jdbc :as jdbc])
   (:import
    java.text.SimpleDateFormat))
 
@@ -174,6 +175,32 @@
             (pprint group-active-members)
             (println "User is *not* an active member of the group."))))
       (println "Clojars TXT record not found."))))
+
+(defn delete-user!
+  "This is really a soft-deletion, where the user is mostly left in place, but has
+  a new username of the form `deleted_<current-ms>` everywhere appropriate.
+
+  Returns the new username."
+  [old-username]
+  (let [user-record (db/find-user *db* old-username)
+        _ (when (nil? user-record)
+            (throw (ex-info (format "User %s not found!" old-username) {})))
+        user-id (:id user-record)
+        new-username (format "deleted_%s" (System/currentTimeMillis))
+        empty-default-groups (into []
+                                   (filter
+                                    #(empty? (db/jars-by-groupname *db* %)))
+                                   (db/default-user-groups old-username))]
+    (jdbc/with-transaction [tx *db*]
+      (db/disable-otp! tx old-username)
+      (db/clear-password-reset-code! tx old-username)
+      (db/disable-deploy-tokens-for-user tx user-id)
+      (db/rename-user tx old-username new-username)
+      ;; Clear email, set random password
+      (db/update-user tx new-username ""
+                      (db/hexadecimalize (db/generate-secure-token 20)))
+      (run! (fn [group] (db/delete-group tx group)) empty-default-groups))
+    new-username))
 
 (defn handler [mapping]
   (nrepl/default-handler

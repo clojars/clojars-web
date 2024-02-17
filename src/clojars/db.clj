@@ -672,6 +672,11 @@
                 :added_by   added-by
                 :admin      (boolean admin?)}))
 
+(defn default-user-groups
+  [username]
+  (mapv #(format "%s.clojars.%s" % username)
+        ["net" "org"]))
+
 (defn add-user
   [db email username password]
   (let [record {:email email
@@ -680,24 +685,44 @@
                 :send_deploy_emails true
                 :created (get-time)}]
     (sql/insert! db :users (set/rename-keys record {:username user-column}))
-    (doseq [groupname [(str "net.clojars." username)
-                       (str "org.clojars." username)]]
+    (doseq [groupname (default-user-groups username)]
       (add-member* db groupname SCOPE-ALL username "clojars" true)
       (verify-group! db username groupname))
     record))
 
 (defn update-user
-  [db account email username password]
-  (let [fields {:email    email
-                :username username
-                :account  account}]
-    (sql/update! db :users
-                 (cond-> fields
-                   true           (set/rename-keys {:username user-column})
-                   true           (dissoc :account)
-                   (seq password) (assoc :password (bcrypt password)))
-                 {user-column account})
-    fields))
+  [db account email password]
+  (sql/update! db :users
+               (cond-> {:email email}
+                 (seq password) (assoc :password (bcrypt password)))
+               {user-column account})
+  {:email    email
+   :username account
+   :account  account})
+
+(defn rename-user
+  [db old-name new-name]
+  (jdbc/with-transaction [tx db]
+    (sql/update! tx :users
+                 {user-column new-name}
+                 {user-column old-name})
+    (sql/update! tx :permissions
+                 {user-column new-name}
+                 {user-column old-name})
+    (sql/update! tx :permissions
+                 {:added_by new-name}
+                 {:added_by old-name})
+    (sql/update! tx :group_verifications
+                 {:verified_by new-name}
+                 {:verified_by old-name})
+    (sql/update! tx :jars
+                 {user-column new-name}
+                 {user-column old-name})
+    (sql/update! tx :audit
+                 {user-column new-name}
+                 {user-column old-name})
+    {:username new-name
+     :account  new-name}))
 
 (defn update-user-notifications
   [db account prefs]
@@ -738,6 +763,12 @@
                   :password_reset_code_created_at (get-time)}
                  {user-column username})
     reset-code))
+
+(defn clear-password-reset-code!
+  [db username]
+  (sql/update! db :users
+               {:password_reset_code nil}
+               {user-column username}))
 
 (defn set-otp-secret-key!
   [db username]
@@ -793,6 +824,14 @@
                  (update record :token bcrypt))
     record))
 
+(defn find-deploy-tokens-for-user
+  [db user-id]
+  (mapv #(dissoc % :token)
+        (q db
+           {:select :*
+            :from :deploy_tokens
+            :where [:= :user_id user-id]})))
+
 (defn consume-deploy-token
   [db token-id]
   (sql/update! db :deploy_tokens
@@ -806,6 +845,13 @@
                {:disabled true
                 :updated  (get-time)}
                {:id token-id}))
+
+(defn disable-deploy-tokens-for-user
+  [db user-id]
+  (sql/update! db :deploy_tokens
+               {:disabled true
+                :updated  (get-time)}
+               {:user_id user-id}))
 
 (defn set-deploy-token-used
   [db token-id]
@@ -1002,8 +1048,10 @@
 
 ;; does not delete jars in the group. should it?
 (defn delete-group
-  [db group-id]
-  (sql/delete! db :permissions {:group_name group-id}))
+  [db groupname]
+  (jdbc/with-transaction [tx db]
+    (sql/delete! tx :permissions {:group_name groupname})
+    (sql/delete! tx :group_verifications {:group_name groupname})))
 
 (defn- find-groups-jars-information
   [db group-id]

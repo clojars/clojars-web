@@ -5,7 +5,8 @@
    [clj-time.core :as time]
    [clojars.db :as db]
    [clojars.test-helper :as help]
-   [clojure.test :refer [are deftest is use-fixtures]])
+   [clojure.test :refer [are deftest is use-fixtures]]
+   [matcher-combinators.test])
   (:import
    (clojure.lang
     ExceptionInfo)
@@ -15,20 +16,12 @@
 (use-fixtures :each
   help/with-clean-database)
 
-(defn submap [s m]
-  (every? (fn [[k v]] (= (get m k) v)) s))
-
-(deftest submap-test
-  (is (not (submap {:a 1} nil)))
-  (is (not (submap {:a 1} {:a 2})))
-  (is (submap {:a 1} {:a 1 :b 2})))
-
 (deftest added-users-can-be-found
   (let [email "test@example.com"
         name "testuser"
         password "password"]
     (db/add-user help/*db* email name password)
-    (are [x] (submap {:email email
+    (are [x] (match? {:email email
                       :user name}
                      x)
       (db/find-user help/*db* name)
@@ -44,7 +37,7 @@
         password "password"]
     (db/add-user help/*db* email name password)
     (let [reset-code (db/set-password-reset-code! help/*db* "testuser")]
-      (is (submap {:email email
+      (is (match? {:email email
                    :user name
                    :password_reset_code reset-code}
                   (db/find-user-by-password-reset-code help/*db* reset-code)))
@@ -52,38 +45,49 @@
       (time/do-at (-> 2 time/days time/from-now)
                   (is (not (db/find-user-by-password-reset-code help/*db* reset-code)))))))
 
+(deftest renamed-users-can-be-found
+  (let [email "test@example.com"
+        name "testuser"
+        password "password"
+        created-at (Timestamp. 0)
+        name2 "testuser2"]
+    (help/with-time created-at
+      (db/add-user help/*db* email name password)
+      (help/with-time (Timestamp. 1)
+        (db/rename-user help/*db* name name2)
+        (are [x] (match? {:user name2
+                          :created created-at}
+                         x)
+          (db/find-user help/*db* name2)
+          (db/find-user-by-user-or-email help/*db* name2)))
+      (is (not (db/find-user help/*db* name))))))
+
 (deftest updated-users-can-be-found
   (let [email "test@example.com"
         name "testuser"
         password "password"
         created-at (Timestamp. 0)
         email2 "test2@example.com"
-        name2 "testuser2"
         password2 "password2"]
     (help/with-time created-at
       (db/add-user help/*db* email name password)
       (help/with-time (Timestamp. 1)
-        (db/update-user help/*db* name email2 name2 password2)
-        (are [x] (submap {:email email2
-                          :user name2
-                          :created created-at}
-                         x)
-          (db/find-user help/*db* name2)
-          (db/find-user-by-user-or-email help/*db* name2)
-          (db/find-user-by-user-or-email help/*db* email2)))
-      (is (not (db/find-user help/*db* name))))))
+        (db/update-user help/*db* name email2 password2)
+        (is (match?
+             {:email email2
+              :created created-at}
+             (db/find-user-by-user-or-email help/*db* email2)))))))
 
 (deftest update-user-works-when-password-is-blank
   (let [email "test@example.com"
         name "testuser"
         password "password"
         email2 "test2@example.com"
-        name2 "testuser2"
         password2 ""]
     (db/add-user help/*db* email name password)
     (let [old-user (db/find-user help/*db* name)]
-      (db/update-user help/*db* name email2 name2 password2)
-      (let [user (db/find-user help/*db* name2)]
+      (db/update-user help/*db* name email2 password2)
+      (let [user (db/find-user help/*db* name)]
         (is (= email2 (:email user)))
         (is (= (:password old-user) (:password user)))))))
 
@@ -160,7 +164,7 @@
     (help/add-verified-group "test-user" name)
     (help/with-time created-at
       (db/add-jar help/*db* "test-user" jarmap)
-      (are [x] (submap result x)
+      (are [x] (match? result x)
         (db/find-jar help/*db* name name)
         (first (db/jars-by-groupname help/*db* name))
         (first (db/jars-by-username help/*db* "test-user"))))))
@@ -212,7 +216,7 @@
     (db/add-jar help/*db* "test-user" jarmap)
     (let [deps (db/find-dependencies help/*db* name name "1.0")]
       (is (= 1 (count deps)))
-      (is (submap
+      (is (match?
            {:jar_name       name
             :group_name     name
             :version        "1.0"
@@ -234,7 +238,7 @@
     (db/add-jar help/*db* "test-user" jarmap)
     (let [deps (db/find-dependencies help/*db* name name "1.0-SNAPSHOT")]
       (is (= 1 (count deps)))
-      (is (submap
+      (is (match?
            {:jar_name       name
             :group_name     name
             :version        "1.0-SNAPSHOT"
@@ -357,7 +361,7 @@
     (help/with-time (Timestamp. 3)
       (db/add-jar help/*db* "test-user2" (assoc jarmap :group "tester-group")))
     (let [jars (db/jars-by-groupname help/*db* name)]
-      (dorun (map #(is (submap %1 %2))
+      (dorun (map #(is (match? %1 %2))
                   [result
                    (assoc result :jar_name "tester2")
                    (assoc result :jar_name "tester3")]
@@ -399,7 +403,7 @@
     (help/with-time (Timestamp. 3)
       (db/add-jar help/*db* "test-user" (assoc jarmap :group "tester-group")))
     (let [jars (db/jars-by-username help/*db* "test-user")]
-      (dorun (map #(is (submap %1 %2))
+      (dorun (map #(is (match? %1 %2))
                   [result
                    (assoc result :jar_name "tester2")
                    (assoc result :group_name "tester-group")]
@@ -441,7 +445,7 @@
       (db/add-jar help/*db* "test-user" (assoc jarmap :name "6")))
     (help/with-time (Timestamp. (long 7))
       (db/add-jar help/*db* "test-user" (assoc jarmap :version "7")))
-    (dorun (map #(is (submap %1 %2))
+    (dorun (map #(is (match? %1 %2))
                 [(assoc result :version "7")
                  (assoc result :jar_name "6")
                  (assoc result :jar_name "4")
