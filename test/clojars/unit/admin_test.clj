@@ -143,7 +143,7 @@
                 (admin/verify-group! "testuser" "org.hambiscuit")))
     (is (some #{"testuser"} (db/group-activenames help/*db* "org.hambiscuit")))))
 
-(deftest delete-user!-works
+(deftest soft-delete-user!-works
   ;; Given: a user with:
   ;; - otp
   ;; - password reset code
@@ -165,7 +165,7 @@
   (let [user-id      (:id (db/find-user admin/*db* "testuser"))
 
         ;; When: we mark the user as deleted
-        new-username (admin/delete-user! "testuser")]
+        new-username (admin/soft-delete-user! "testuser")]
 
     ;; Then: the user is really renamed to a deleted placeholder
     (is (re-find #"deleted_\d+" new-username))
@@ -205,7 +205,7 @@
     (is (seq (db/find-audit admin/*db* {:username new-username})))
     (is (empty? (db/find-audit admin/*db* {:username "testuser"})))))
 
-(deftest delete-user!-with-non-existent-user
+(deftest soft-delete-user!-with-non-existent-user
   (is (thrown-with-msg?
        Exception #"User does-not-exist not found!"
-        (admin/delete-user! "does-not-exist"))))
+        (admin/soft-delete-user! "does-not-exist"))))

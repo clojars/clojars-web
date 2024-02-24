@@ -176,9 +176,9 @@
             (println "User is *not* an active member of the group."))))
       (println "Clojars TXT record not found."))))
 
-(defn delete-user!
-  "This is really a soft-deletion, where the user is mostly left in place, but has
-  a new username of the form `deleted_<current-ms>` everywhere appropriate.
+(defn soft-delete-user!
+  "This leaves the user mostly in place, but changes the username to one of the
+  form `deleted_<current-ms>` everywhere appropriate.
 
   Returns the new username."
   [old-username]
