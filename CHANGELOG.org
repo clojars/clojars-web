@@ -10,6 +10,10 @@ Newest items at the top. Note that updates before 2022-August were copied from
 + [[https://github.com/clojars/clojars-web/commit/dbe8769339c6470f9a094e1017e695bc85e27a3b][Use a Thread for SQS receive loop to allow UCE to work]] ([[https://github.com/tobias][Toby Crawley]])
 *** [[https://github.com/clojars/clojars-web/commits/2024-02-10.2037][2024-02-10.2037]]
 + [[https://github.com/clojars/clojars-web/commit/60c064f9612f98336aebf6bda2845d112ff2827c][Report validity to GitHub on secret scanning requests]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/2024-02-24.2041][2024-02-24.2041]]
++ [[https://github.com/clojars/clojars-web/commit/1655377c40927316c15cfd225dda5470cb801efb][Add admin tooling to soft-delete users]] ([[https://github.com/tobias][Toby Crawley]])
+*** [[https://github.com/clojars/clojars-web/commits/2024-02-29.2042][2024-02-29.2042]]
++ [[https://github.com/clojars/clojars-web/commit/d3153018dda214f00569bc8276c9b9dbf28a46c8][Upgrade postgresql driver to address CVE-2024-1597]] ([[https://github.com/tobias][Toby Crawley]])
 
 ** 2023-December
 *** [[https://github.com/clojars/clojars-web/commits/2023-12-03.2016][2023-12-03.2016]]
