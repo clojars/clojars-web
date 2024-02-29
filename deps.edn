@@ -63,7 +63,7 @@
   ;; CVE-2023-41900, CVE-2023-36479
   org.eclipse.jetty/jetty-server {:mvn/version "9.4.53.v20231009"}
 
-  org.postgresql/postgresql {:mvn/version "42.6.0"}
+  org.postgresql/postgresql {:mvn/version "42.7.2"}
 
   net.cgrand/regex {:mvn/version "1.0.1"}
 
