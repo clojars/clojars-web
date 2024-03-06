@@ -11,11 +11,16 @@ cd "$dir/.."
 
 clojars_jar=$1
 
-java -cp "$clojars_jar" clojure.main -m clojars.tools.build-search-index production | tee /tmp/index-out.txt
+mkdir -p tmp
 
-index_path=$(grep "index-path:" /tmp/index-out.txt | sed -n 's/index-path: \(.*\)/\1/p')
+index_out=tmp/index-out.txt
+java -cp "$clojars_jar" clojure.main -m clojars.tools.build-search-index production | tee "$index_out"
+
+index_path=$(grep "index-path:" "$index_out" | sed -n 's/index-path: \(.*\)/\1/p')
+
+index_archive=tmp/artifact-index.tgz
 
 # upload the new index the s3 bucket
-tar czf /tmp/artifact-index.tgz "$index_path"
+tar czf "$index_archive" "$index_path"
 
-aws s3 cp --no-progress --content-type 'application/gzip' /tmp/artifact-index.tgz "s3://clojars-artifact-index/"
+aws s3 cp --no-progress --content-type 'application/gzip' "$index_archive" "s3://clojars-artifact-index/"

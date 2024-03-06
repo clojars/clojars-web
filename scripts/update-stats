@@ -13,16 +13,17 @@ if [ -z "$date" ]; then
   date=$(date --date='1 day ago' +%Y%m%d)
 fi
 
-cdn_logfile=/tmp/cdn-access-yesterday.log
+mkdir -p tmp
+cdn_logfile=tmp/cdn-access-yesterday.log
 
 # generate the combined cdn stats first
 "$dir"/combine-cdn-logs "$clojars_jar" "$cdn_logfile" "$date"
 
 S3_STATS_BUCKET=clojars-stats-production
 
-downloads_date=/tmp/downloads-$date.edn
-downloads_all_old=/tmp/all-old.edn
-downloads_all_new=/tmp/all-new.edn
+downloads_date=tmp/downloads-$date.edn
+downloads_all_old=tmp/all-old.edn
+downloads_all_new=tmp/all-new.edn
 
 # grab the latest all.edn from s3
 aws s3 cp "s3://${S3_STATS_BUCKET}/all.edn" "$downloads_all_old"

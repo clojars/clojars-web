@@ -115,8 +115,8 @@
             (write-sums jar-file)
             (write-sums gz-file)))))
 
-(defn -main [env]
+(defn -main [feed-dir env]
   (let [{:keys [db s3]} (config (keyword env))]
-    (generate-feeds "/tmp"
+    (generate-feeds feed-dir
                     db
                     (s3/s3-client (:repo-bucket s3)))))
