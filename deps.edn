@@ -67,7 +67,7 @@
 
   net.cgrand/regex {:mvn/version "1.0.1"}
 
-  raven-clj/raven-clj {:mvn/version "1.6.0"}
+  raven-clj/raven-clj {:mvn/version "1.7.0"}
   ring/ring-core {:mvn/version "1.10.0"}
   ring/ring-defaults {:mvn/version "0.3.3"}
   ring/ring-jetty-adapter {:mvn/version "1.10.0"}
