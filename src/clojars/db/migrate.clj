@@ -11,7 +11,7 @@
 
 (defn initial-schema [tx]
   (doseq [cmd (map str/trim
-                   (-> (str "queries" (File/separator) "clojars.sql")
+                   (-> (str "queries" File/separator "clojars.sql")
                        io/resource
                        slurp
                        (str/split #";\s*")))

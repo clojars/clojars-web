@@ -9,6 +9,8 @@
    [clojure.java.io :as io]
    [clojure.string :as str])
   (:import
+   (java.io
+    File)
    (org.apache.maven.artifact.repository.metadata
     Metadata
     Versioning)
@@ -74,7 +76,7 @@
 (defn get-path
   "Ensures that / is used as separator when regex depends on it."
   [file]
-  (str/replace (.getPath file) (java.io.File/separator) "/"))
+  (str/replace (.getPath file) File/separator "/"))
 
 (defn import-repo
   "Builds a dev db from the contents of the repo."

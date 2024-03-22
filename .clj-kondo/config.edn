@@ -3,7 +3,11 @@
   clojure.java.jdbc/with-db-transaction clojure.core/let}
 
  :linters
- {:consistent-alias
+ {
+  ;; warn when we'll never reach an else
+  :condition-always-true {:level :warning}
+
+  :consistent-alias
   {:aliases {clojure.string str
 
              honey.sql hsql
