@@ -10,7 +10,11 @@
 (defn raven-extra-data [e extra]
   (-> (ex-data e)
       (merge extra)
-      (dissoc :message)))
+      (dissoc :message)
+      ;; Errors thrown by Cognitect's AWS client include the root exception in
+      ;; the ex-data, which we can't serialize to Sentry, so we strip it out
+      ;; here.
+      (dissoc :cognitect.http-client/throwable)))
 
 (defn raven-event-info [id message e extra]
   (cond-> {}
