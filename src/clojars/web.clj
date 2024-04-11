@@ -38,7 +38,7 @@
   [maybe-page]
   (try
     (Integer/parseInt maybe-page)
-    (catch NumberFormatException _nfe
+    (catch Exception _
       (throw (ex-info
               "page must be an integer"
               {:report? false
