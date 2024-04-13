@@ -84,7 +84,6 @@
      (verify/routes db event-emitter)
      (token/routes db)
      (api/routes db stats)
-     (GET "/error" _ (throw (Exception. "What!? You really want an error?")))
      (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
      (ANY "*" _
           (try-account

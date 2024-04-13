@@ -4,6 +4,7 @@
    [clojars.errors :as errors]
    [clojars.log :as log]
    [clojars.test-helper :as help]
+   [clojars.web.dashboard :as dashboard]
    [clojure.test :refer [deftest is use-fixtures]]
    [kerodon.core :refer [fill-in follow-redirect follow press
                          session visit within]]
@@ -16,24 +17,22 @@
   help/run-test-app)
 
 (deftest server-errors-display-error-page
-  (with-out-str (-> (session (help/app))
-                    (visit "/error")
-                    (within [:div.small-section :> :h1]
-                      (has (text? "Oops!"))))))
-
-(deftest error-page-includes-error-id
-  (with-redefs [log/trace-id (constantly #uuid "8f3788f5-9001-444d-8c57-049ba685cea8")]
+  (with-redefs [dashboard/index-page (fn [& _] (throw (Exception. "BOOM!")))
+                log/trace-id (constantly #uuid "8f3788f5-9001-444d-8c57-049ba685cea8")]
     (with-out-str (-> (session (help/app))
-                      (visit "/error")
+                      (visit "/")
+                      (within [:div.small-section :> :h1]
+                        (has (text? "Oops!")))
                       (within [:div.small-section :> :pre.error-id]
                         (has (text? "error-id:\"8f3788f5-9001-444d-8c57-049ba685cea8\"")))))))
 
 (deftest server-errors-log-caught-exceptions
   (let [err (atom nil)]
-    (with-redefs [errors/report-error (fn [_r e & _] (reset! err e))]
+    (with-redefs [dashboard/index-page (fn [& _] (throw (Exception. "BOOM!")))
+                  errors/report-error (fn [_r e & _] (reset! err e))]
       (-> (session (help/app))
-          (visit "/error"))
-      (is (re-find #"You really want an error" (.getMessage @err))))))
+          (visit "/"))
+      (is (re-find #"BOOM" (.getMessage @err))))))
 
 (deftest browse-page-renders-multiple-pages
   (help/add-verified-group "test-user" "tester")
