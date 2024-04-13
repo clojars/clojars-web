@@ -3,10 +3,9 @@
    [buddy.core.codecs :as buddy.codecs]
    [buddy.core.hash :as buddy.hash]
    [cemerick.friend.credentials :as creds]
-   [clj-time.coerce :as time.coerce]
-   [clj-time.core :as time]
    [clojars.config :refer [config]]
    [clojars.maven :as mvn]
+   [clojars.time :as time]
    [clojars.util :refer [assoc-some filter-some]]
    [clojure.edn :as edn]
    [clojure.set :as set]
@@ -166,7 +165,7 @@
        :where [:and
                [:= :password_reset_code reset-code]
                [:>= :password_reset_code_created_at
-                (-> 1 time/days time/ago time.coerce/to-sql-date)]]
+                (Timestamp/from (time/days-ago 1))]]
        :limit 1})))
 
 (defn find-user-by-id

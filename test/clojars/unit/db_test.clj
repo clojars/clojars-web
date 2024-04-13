@@ -2,9 +2,9 @@
   (:require
    [buddy.core.codecs :as buddy.codecs]
    [buddy.core.hash :as buddy.hash]
-   [clj-time.core :as time]
    [clojars.db :as db]
    [clojars.test-helper :as help]
+   [clojars.time :as time]
    [clojure.test :refer [are deftest is use-fixtures]]
    [matcher-combinators.test])
   (:import
@@ -41,9 +41,8 @@
                    :user name
                    :password_reset_code reset-code}
                   (db/find-user-by-password-reset-code help/*db* reset-code)))
-
-      (time/do-at (-> 2 time/days time/from-now)
-                  (is (not (db/find-user-by-password-reset-code help/*db* reset-code)))))))
+      (time/with-now (time/days-from 2)
+        (is (not (db/find-user-by-password-reset-code help/*db* reset-code)))))))
 
 (deftest renamed-users-can-be-found
   (let [email "test@example.com"

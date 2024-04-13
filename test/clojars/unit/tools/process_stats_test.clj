@@ -1,6 +1,5 @@
 (ns clojars.unit.tools.process-stats-test
   (:require
-   [clj-time.core :as time]
    [clojars.tools.process-stats :as stats]
    [clojure.java.io :as io]
    [clojure.test :refer [deftest is]]))
@@ -27,8 +26,7 @@
       (is (= 200 (:status m)))
       (is (= 2377 (:size m)))
       (is (= "GET" (:method m)))
-      (is (= 14 (time/day (:time m))))
-      (is (= 40 (time/minute (:time m))))
+      (is (= (.toInstant #inst "2012-04-14T06:40:59Z") (:time m)))
       (is (= "haddock" (:name m)))
       (is (= "captain.archibald" (:group m)))
       (is (= "0.1.0" (:version m)))

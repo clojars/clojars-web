@@ -15,7 +15,6 @@
   cheshire/cheshire {:mvn/version "5.10.1"}
   clj-http/clj-http {:mvn/version "3.12.3"}
   clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
-  clj-time/clj-time {:mvn/version "0.15.2"}
   com.cemerick/friend {:mvn/version "0.2.3"
                        :exclusions [;; not used, excluded to address CVE-2007-1652, CVE-2007-1651
                                     org.openid4java/openid4java-nodeps

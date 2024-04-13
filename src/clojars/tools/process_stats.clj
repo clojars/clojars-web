@@ -2,17 +2,18 @@
   "generate usage statistics from web log"
   (:gen-class)
   (:require
-   [clj-time.format :as timef]
    [clojars.file-utils :as fu]
+   [clojars.time :as time]
    [clojars.util :as util]
    [clojure.java.io :as io]
    [net.cgrand.regex :as re])
   (:import
-   java.io.BufferedReader
-   java.util.regex.Pattern))
+   (java.io
+    BufferedReader)
+   (java.util.regex
+    Pattern)))
 
-(def time-clf (timef/formatter "dd/MMM/YYYY:HH:mm:ss Z"))
-(def time-cdn (timef/formatters :date-time-no-ms))
+(set! *warn-on-reflection* true)
 
 ;; net.cgrand/regex currently doesn't allow Patterns
 ;; but they're too handy so let's enable them anyway
@@ -67,7 +68,7 @@
               segment \.
               [#"\w+" :as :ext])))
 
-(defn is-legacy? [line]
+(defn is-legacy? [^String line]
   (.contains line " \"-\" "))
 
 (defn parse-path [s]
@@ -86,16 +87,15 @@
      {:status (util/parse-long (:status m))
       :method (:method m)
       :size (util/parse-long (:size m))
-      :time (when (:time m) (try (timef/parse time-cdn (:time m))
-                                 (catch IllegalArgumentException _)))})))
+      :time (when (:time m)
+              (try (time/parse-instant (:time m))
+                   (catch IllegalArgumentException _)))})))
 
 (defn valid-download? [m]
   (and m
        (= (:status m) 200)
        (= (:method m) "GET")
        (= (:ext m) "jar")))
-
-(def as-year-month (partial timef/unparse (timef/formatters :year-month)))
 
 (defn compute-stats [lines]
   (->> lines
