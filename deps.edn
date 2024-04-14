@@ -40,6 +40,8 @@
   kirasystems/aging-session {:mvn/version "0.5.0"
                              :exclusions [org.clojure/clojurescript]}
 
+  metosin/malli {:mvn/version "0.15.0"}
+
   one-time/one-time {:mvn/version "0.7.0"
                      :exclusions [ ;; not needed on java 17, addresses CWE-120
                                   com.github.jai-imageio/jai-imageio-core

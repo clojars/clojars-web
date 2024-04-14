@@ -1,5 +1,6 @@
 (ns clojars.integration.web-test
   (:require
+   [clj-http.client :as http]
    [clojars.db :as db]
    [clojars.errors :as errors]
    [clojars.log :as log]
@@ -9,6 +10,7 @@
    [kerodon.core :refer [fill-in follow-redirect follow press
                          session visit within]]
    [kerodon.test :refer [has text?]]
+   [matcher-combinators.test]
    [net.cgrand.enlive-html :as enlive]))
 
 (use-fixtures :each
@@ -33,6 +35,24 @@
       (-> (session (help/app))
           (visit "/"))
       (is (re-find #"BOOM" (.getMessage @err))))))
+
+(defn- search-request
+  [param-string]
+  (-> (format "http://localhost:%s/search?%s"
+              help/test-port
+              param-string)
+      (http/get {:throw-exceptions false})))
+
+(deftest invalid-params-are-rejected
+  (is (match?
+       {:status 400
+        :body "{:schema [:map-of :keyword :string], :value {:q {:a \"b\"}}, :errors ({:path [1], :in [:q], :schema :string, :value {:a \"b\"}})}"}
+       (search-request "q[a]=b")))
+
+  (is (match?
+       {:status 400
+        :body "{:schema [:map-of :keyword :string], :value {:q [\"b\"]}, :errors ({:path [1], :in [:q], :schema :string, :value [\"b\"]})}"}
+       (search-request "q[]=b"))))
 
 (deftest browse-page-renders-multiple-pages
   (help/add-verified-group "test-user" "tester")

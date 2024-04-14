@@ -28,6 +28,7 @@
    [clojure.java.io :as io]
    [compojure.core :refer [ANY context GET PUT routes]]
    [compojure.route :refer [not-found]]
+   [malli.core :as m]
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.defaults :as ring-defaults]
    [ring.middleware.flash :refer [wrap-flash]]
@@ -102,6 +103,33 @@
       ;; We have our own session impl in http-utils
       (dissoc :session)))
 
+(def ^:private params-schema
+  "The schema for params for all routes other than /repo or /token-breach. We
+  currently only expect params to be strings, so this prevents vector (a[]=b) or
+  map (a[b]=c) params from coming through and triggering exceptions for code
+  that expects strings.
+
+  We typically only see vector or map params when someone is attempting to fuzz
+  the API.
+
+  This schema will need to be expanded if we ever to need to use vector or map
+  params."
+  [:map-of :keyword :string])
+
+(defn wrap-reject-invalid-params
+  "Checks `:params` from the request against `params-schema`, returning a 400 if
+  validation fails. This should be within `wrap-params`, so query + form params
+  are merged to `:params`."
+  [f]
+  (fn [{:as req :keys [params]}]
+    (if (m/validate params-schema params)
+      (f req)
+      (let [explanation (pr-str (m/explain params-schema params))]
+        (log/warn {:tag         :invalid-params
+                   :explanation explanation})
+        {:status 400
+         :body   explanation}))))
+
 (defn clojars-app
   [{:as system
     :keys [db
@@ -139,6 +167,7 @@
                        (registration/workflow db)
                        (github/workflow github http-client db)
                        (gitlab/workflow gitlab http-client db)]})
+         (wrap-reject-invalid-params)
          (wrap-exceptions error-reporter)
          (log/wrap-request-context)
          ;; Use flash directly since we have custom session logic, so can't use
