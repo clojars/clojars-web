@@ -1,5 +1,6 @@
 (ns clojars.integration.web-test
   (:require
+   [cheshire.core :as json]
    [clj-http.client :as http]
    [clojars.db :as db]
    [clojars.errors :as errors]
@@ -10,6 +11,7 @@
    [kerodon.core :refer [fill-in follow-redirect follow press
                          session visit within]]
    [kerodon.test :refer [has text?]]
+   [matcher-combinators.matchers :as m]
    [matcher-combinators.test]
    [net.cgrand.enlive-html :as enlive]))
 
@@ -46,12 +48,18 @@
 (deftest invalid-params-are-rejected
   (is (match?
        {:status 400
-        :body "{:schema [:map-of :keyword :string], :value {:q {:a \"b\"}}, :errors ({:path [1], :in [:q], :schema :string, :value {:a \"b\"}})}"}
+        :body
+        (m/via json/decode
+               {"explanation"
+                "{:schema [:map-of :keyword :string], :value {:q {:a \"b\"}}, :errors ({:path [1], :in [:q], :schema :string, :value {:a \"b\"}})}"})}
        (search-request "q[a]=b")))
 
   (is (match?
        {:status 400
-        :body "{:schema [:map-of :keyword :string], :value {:q [\"b\"]}, :errors ({:path [1], :in [:q], :schema :string, :value [\"b\"]})}"}
+        :body
+        (m/via json/decode
+               {"explanation"
+                "{:schema [:map-of :keyword :string], :value {:q [\"b\"]}, :errors ({:path [1], :in [:q], :schema :string, :value [\"b\"]})}"})}
        (search-request "q[]=b"))))
 
 (deftest browse-page-renders-multiple-pages

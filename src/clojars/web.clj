@@ -2,6 +2,7 @@
   (:require
    [cemerick.friend :as friend]
    [cemerick.friend.workflows :as workflows]
+   [cheshire.core :as json]
    [clojars.auth :as auth :refer [try-account]]
    [clojars.config :refer [config]]
    [clojars.errors :refer [wrap-exceptions]]
@@ -32,7 +33,8 @@
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.defaults :as ring-defaults]
    [ring.middleware.flash :refer [wrap-flash]]
-   [ring.middleware.not-modified :refer [wrap-not-modified]]))
+   [ring.middleware.not-modified :refer [wrap-not-modified]]
+   [ring.util.response :refer [bad-request content-type]]))
 
 (defn try-parse-page
   "Will throw a targeted error if maybe-page doesn't parse as an integer."
@@ -127,8 +129,10 @@
       (let [explanation (pr-str (m/explain params-schema params))]
         (log/warn {:tag         :invalid-params
                    :explanation explanation})
-        {:status 400
-         :body   explanation}))))
+        (-> {:explanation explanation}
+            (json/encode)
+            (bad-request)
+            (content-type "application/json"))))))
 
 (defn clojars-app
   [{:as system
