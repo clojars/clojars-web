@@ -1,6 +1,6 @@
 <configuration debug="false">
 
-  <appender name="EDNL" class="ch.qos.logback.core.FileAppender">
+  <appender name="EDNL" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${log.dir:-logs}/clojars.ednl</file>
     <!-- Handling rotation here instead of via logrotate in the server config to avoid restarting the process -->
      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -14,7 +14,7 @@
     </encoder>
   </appender>
 
-  <appender name="LOG" class="ch.qos.logback.core.FileAppender">
+  <appender name="LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${log.dir:-logs}/clojars.log</file>
     <!-- Handling rotation here instead of via logrotate in the server config to avoid restarting the process -->
      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
