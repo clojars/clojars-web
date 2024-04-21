@@ -56,11 +56,6 @@
                                       :confirm)
                       (submit-button "Register"))]))
 
-(defn conj-when [coll test x]
-  (if test
-    (conj coll x)
-    coll))
-
 ;; Validations
 
 (defn password-validations [confirm]
