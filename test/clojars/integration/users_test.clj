@@ -1,5 +1,6 @@
 (ns clojars.integration.users-test
   (:require
+   [clojars.db :as db]
    [clojars.email :as email]
    [clojars.integration.steps :refer [disable-mfa enable-mfa login-as register-as]]
    ;; for defmethods
@@ -23,6 +24,15 @@
       (has (status? 200))
       (within [:div.light-article :> :h1]
         (has (text? "Dashboard (dantheman)")))))
+
+(deftest user-registering-with-upcase-email-gets-downcased
+  (-> (session (help/app))
+      (register-as "dantheman" "Test@example.org" "password")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (dantheman)"))))
+  (is (= "test@example.org" (:email (db/find-user help/*db* "dantheman")))))
 
 (deftest bad-registration-info-should-show-error
   (-> (session (help/app))

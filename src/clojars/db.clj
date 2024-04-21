@@ -144,7 +144,7 @@
        :from :users
        :where [:or
                [:= :user username-or-email]
-               [:= :email username-or-email]]
+               [:= :email (str/lower-case username-or-email)]]
        :limit 1})))
 
 (defn find-user-by-email-in
@@ -153,7 +153,7 @@
    (q db
       {:select :*
        :from :users
-       :where [:in :email emails]
+       :where [:in :email (mapv str/lower-case emails)]
        :limit 1})))
 
 (defn find-user-by-password-reset-code
@@ -678,7 +678,7 @@
 
 (defn add-user
   [db email username password]
-  (let [record {:email email
+  (let [record {:email (str/lower-case email)
                 :username username
                 :password (bcrypt password)
                 :send_deploy_emails true
@@ -695,7 +695,7 @@
                (cond-> {:email email}
                  (seq password) (assoc :password (bcrypt password)))
                {user-column account})
-  {:email    email
+  {:email    (str/lower-case email)
    :username account
    :account  account})
 

@@ -84,6 +84,27 @@
         (is (db/find-group-verification help/*db* "com.github.jd2"))
         (is (db/find-group-verification help/*db* "io.github.jd2"))))
 
+    (testing "with a valid upcased email"
+      (db/add-user help/*db* "john.doe3@example.org" "johndoe3" "pwd12345")
+      (set-mock-responses
+       [{:email "John.doe3@example.org"
+         :primary true
+         :verified true}]
+       "jd3")
+
+      (let [req {:uri "/oauth/github/callback"
+                 :params {:code "1234567890"}}
+            response (handle-workflow req)
+
+            {:keys [auth-provider identity provider-login username]} response]
+
+        (is (= "GitHub" auth-provider))
+        (is (= "johndoe3" identity))
+        (is (= "jd3" provider-login))
+        (is (= "johndoe3" username))
+        (is (db/find-group-verification help/*db* "com.github.jd3"))
+        (is (db/find-group-verification help/*db* "io.github.jd3"))))
+
     (testing "with a valid user but group already exists"
       (db/add-admin help/*db* "com.github.johnd" db/SCOPE-ALL "someone" "clojars")
       (set-mock-responses
