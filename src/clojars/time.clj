@@ -19,9 +19,9 @@
      ~@body))
 
 (defn days-ago
-  ([days]
+  (^Instant [days]
    (days-ago (now) days))
-  ([^Instant instant ^long days]
+  (^Instant [^Instant instant ^long days]
    (.minus instant days ChronoUnit/DAYS)))
 
 (defn days-from
