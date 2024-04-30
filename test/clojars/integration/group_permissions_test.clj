@@ -328,7 +328,7 @@
   (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password"))
   (-> (session (help/app))
-      (register-as "fixture2" "fixture@example.org" "password"))
+      (register-as "fixture2" "fixture2@example.org" "password"))
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
   ;; Add jars so they show in select
@@ -474,7 +474,7 @@
   (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password"))
   (-> (session (help/app))
-      (register-as "fixture2" "fixture@example.org" "password"))
+      (register-as "fixture2" "fixture2@example.org" "password"))
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
   ;; Add jars so they show in select

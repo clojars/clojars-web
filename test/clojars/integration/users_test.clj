@@ -34,6 +34,32 @@
         (has (text? "Dashboard (dantheman)"))))
   (is (= "test@example.org" (:email (db/find-user help/*db* "dantheman")))))
 
+(deftest user-registering-with-email-of-existing-user-shows-error
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (dantheman)"))))
+  (-> (session (help/app))
+      (register-as "dantheman2" "test@example.org" "password")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "A user already exists with this email")))))
+
+(deftest user-registering-with-upcase-email-of-existing-user-shows-error
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (dantheman)"))))
+  (-> (session (help/app))
+      (register-as "dantheman2" "Test@example.org" "password")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "A user already exists with this email")))))
+
 (deftest bad-registration-info-should-show-error
   (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password"))
@@ -155,6 +181,19 @@
     (doseq [body bodies]
       (is (re-find #"from 'fixture@example.org' to 'fixture2@example.org'" body))
       (is (re-find #"Client IP" body)))))
+
+(deftest user-cannot-update-email-to-another-users-email
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  (-> (session (help/app))
+      (register-as "fixture2" "fixture2@example.org" "password")
+      (follow-redirect)
+      (follow "profile")
+      (fill-in "Email" "fixture@example.org")
+      (fill-in "Current password" "password")
+      (press "Update")
+      (within [:div.error :ul :li]
+        (has (text? "A user already exists with this email")))))
 
 (deftest user-can-update-just-password
   (email/expect-mock-emails 1)
