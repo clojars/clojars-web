@@ -58,26 +58,36 @@
 
 ;; Validations
 
-(defn password-validations [confirm]
+(defn- password-validations [confirm]
   [[:password #(<= 8 (count %)) "Password must be 8 characters or longer"]
    [:password #(= % confirm) "Password and confirm password must match"]
    [:password #(> 256 (count %)) "Password must be 256 or fewer characters"]])
 
-(defn user-validations []
-  [[:email pred/present? "Email can't be blank"]
-   [:email #(re-matches #".+@.+" %) "Email must have an @ sign and a domain"]
-   [:username #(re-matches #"[a-z0-9_-]+" %)
-    (str "Username must consist only of lowercase "
-         "letters, numbers, hyphens and underscores.")]
-   [:username pred/present? "Username can't be blank"]])
+(defn- user-validations
+  ([db]
+   (user-validations db nil))
+  ([db existing-username]
+   (let [existing-email-fn (if existing-username
+                             #(let [existing-user (find-user-by-user-or-email db %)]
+                                (or (nil? existing-user)
+                                    (= existing-username (:user existing-user))))
+                             #(nil? (find-user-by-user-or-email db %)))]
+     [[:email pred/present? "Email can't be blank"]
+      [:email #(re-matches #".+@.+" %) "Email must have an @ sign and a domain"]
+      [:email existing-email-fn "A user already exists with this email"]
+      [:username #(re-matches #"[a-z0-9_-]+" %)
+       (str "Username must consist only of lowercase "
+            "letters, numbers, hyphens and underscores.")]
+      [:username pred/present? "Username can't be blank"]])))
 
-(defn new-user-validations [db confirm]
+(defn new-user-validations
+  [db confirm]
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (reserved-names %)
                                 (find-user db %)
                                 (seq (group-activenames db %))))
             "Username is already taken"]]
-          (user-validations)
+          (user-validations db)
           (password-validations confirm)))
 
 (defn reset-password-validations [db confirm]
@@ -129,7 +139,7 @@
                                        :username account
                                        :password password}
                              (concat
-                              (user-validations)
+                              (user-validations db account)
                               (current-password-validations db account)
                               (when-not (blank? password)
                                 (password-validations confirm))))]
