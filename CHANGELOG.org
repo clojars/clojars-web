@@ -3,6 +3,20 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** 2024-April
+*** [[https://github.com/clojars/clojars-web/releases/tag/2024-04-13.2054][2024-04-13.2054]]
++ [[https://github.com/clojars/clojars-web/commit/50c6cc28261a6ee8fda4d476f8c004004841d961][Tighten search page error handling]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/32867445a39a6a744fbadd60e9ce1d4f44110964][Address CVEs with bouncycastle]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/c061d2bd6df6314a200a30c82bb04733a863019c][Remove usage of clj-time in favor of java.time]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/d3a7cff8c40c4bc8f462e155548027f8d4dac2f5][Remove /error route]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2024-04-14.2056][2024-04-14.2056]]
++ [[https://github.com/clojars/clojars-web/commit/6824d96c945d697022b67990f809364128930b29][Fix logback to actually roll logs]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/a26e1ee9eb5cee9e4ef6ac6f9ef6164c37c0e40e][Reject non-flat http params in an attempt to reduce errors from fuzzing]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2024-04-14.2057][2024-04-14.2057]]
++ [[https://github.com/clojars/clojars-web/commit/89e33a5a60f10ccb33e59d3a418a224bcb4af0dd][Return invalid params response as json]] ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2024-March
 *** [[https://github.com/clojars/clojars-web/commits/2024-03-05.2045][2024-03-05.2045]]
 + [[https://github.com/clojars/clojars-web/commit/9a6b64d4b034b4079e469df0541e567299db4140][Use tmp dir on root volume for stats generation to prevent filling /tmp]] ([[https://github.com/tobias][Toby Crawley]])
