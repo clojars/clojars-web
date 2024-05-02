@@ -103,7 +103,26 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Email can't be blankEmail must have an @ sign and a domain")))
+        (has (text? "Email can't be blankEmail is not valid")))
+
+      (fill-in "Email" "not-an-email@adf@")
+      (fill-in "Username" "dantheman")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
+      (press "Register")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "Email is not valid")))
+
+      (fill-in "Email" (apply str "too-long@foo."
+                              (repeat 250 "a")))
+      (fill-in "Username" "dantheman")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
+      (press "Register")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "Email is not valid")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "")
@@ -265,7 +284,7 @@
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Email can't be blankEmail must have an @ sign and a domain")))))
+        (has (text? "Email can't be blankEmail is not valid")))))
 
 (deftest user-can-get-new-password
   (email/expect-mock-emails 1)

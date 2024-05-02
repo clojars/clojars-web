@@ -18,7 +18,7 @@
    [clojars.web.common :refer [html-doc error-list form-table jar-link
                                flash group-link verified-group-badge-small]]
    [clojars.web.safe-hiccup :refer [form-to]]
-   [clojure.string :refer [blank?]]
+   [clojure.string :as str :refer [blank?]]
    [hiccup.element :refer [unordered-list]]
    [hiccup.form :refer [label text-field
                         password-field
@@ -63,6 +63,18 @@
    [:password #(= % confirm) "Password and confirm password must match"]
    [:password #(> 256 (count %)) "Password must be 256 or fewer characters"]])
 
+(def ^:private email-regex
+  (re-pattern (str "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+"
+                   "(?:\\.[a-z0-9!#$%&'*+/=?" "^_`{|}~-]+)*"
+                   "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+"
+                   "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")))
+
+(defn- validate-email
+  [email]
+  (and (string? email)
+       (<= (.length ^String email) 254)
+       (some? (re-matches email-regex email))))
+
 (defn- user-validations
   ([db]
    (user-validations db nil))
@@ -73,7 +85,7 @@
                                     (= existing-username (:user existing-user))))
                              #(nil? (find-user-by-user-or-email db %)))]
      [[:email pred/present? "Email can't be blank"]
-      [:email #(re-matches #".+@.+" %) "Email must have an @ sign and a domain"]
+      [:email validate-email "Email is not valid"]
       [:email existing-email-fn "A user already exists with this email"]
       [:username #(re-matches #"[a-z0-9_-]+" %)
        (str "Username must consist only of lowercase "
@@ -129,9 +141,14 @@
                (password-field :confirm)
                (submit-button "Update"))])))
 
+(defn normalize-email
+  [email]
+  (when email
+    (str/lower-case (str/trim email))))
+
 (defn update-profile
   [db event-emitter account {:keys [email current-password password confirm] :as params} details]
-  (let [email (and email (.trim email))]
+  (let [email (normalize-email email)]
     (log/with-context {:tag :update-profile
                        :username account}
       (if-let [errors (apply validate {:email email
