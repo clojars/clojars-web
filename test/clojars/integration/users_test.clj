@@ -1,5 +1,6 @@
 (ns clojars.integration.users-test
   (:require
+   [clojars.db :as db]
    [clojars.email :as email]
    [clojars.integration.steps :refer [disable-mfa enable-mfa login-as register-as]]
    ;; for defmethods
@@ -23,6 +24,41 @@
       (has (status? 200))
       (within [:div.light-article :> :h1]
         (has (text? "Dashboard (dantheman)")))))
+
+(deftest user-registering-with-upcase-email-gets-downcased
+  (-> (session (help/app))
+      (register-as "dantheman" "Test@example.org" "password")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (dantheman)"))))
+  (is (= "test@example.org" (:email (db/find-user help/*db* "dantheman")))))
+
+(deftest user-registering-with-email-of-existing-user-shows-error
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (dantheman)"))))
+  (-> (session (help/app))
+      (register-as "dantheman2" "test@example.org" "password")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "A user already exists with this email")))))
+
+(deftest user-registering-with-upcase-email-of-existing-user-shows-error
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password")
+      (follow-redirect)
+      (has (status? 200))
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (dantheman)"))))
+  (-> (session (help/app))
+      (register-as "dantheman2" "Test@example.org" "password")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "A user already exists with this email")))))
 
 (deftest bad-registration-info-should-show-error
   (-> (session (help/app))
@@ -67,7 +103,26 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Email can't be blankEmail must have an @ sign and a domain")))
+        (has (text? "Email can't be blankEmail is not valid")))
+
+      (fill-in "Email" "not-an-email@adf@")
+      (fill-in "Username" "dantheman")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
+      (press "Register")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "Email is not valid")))
+
+      (fill-in "Email" (apply str "too-long@foo."
+                              (repeat 250 "a")))
+      (fill-in "Username" "dantheman")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
+      (press "Register")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "Email is not valid")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "")
@@ -146,6 +201,19 @@
       (is (re-find #"from 'fixture@example.org' to 'fixture2@example.org'" body))
       (is (re-find #"Client IP" body)))))
 
+(deftest user-cannot-update-email-to-another-users-email
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  (-> (session (help/app))
+      (register-as "fixture2" "fixture2@example.org" "password")
+      (follow-redirect)
+      (follow "profile")
+      (fill-in "Email" "fixture@example.org")
+      (fill-in "Current password" "password")
+      (press "Update")
+      (within [:div.error :ul :li]
+        (has (text? "A user already exists with this email")))))
+
 (deftest user-can-update-just-password
   (email/expect-mock-emails 1)
   (-> (session (help/app))
@@ -216,7 +284,7 @@
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Email can't be blankEmail must have an @ sign and a domain")))))
+        (has (text? "Email can't be blankEmail is not valid")))))
 
 (deftest user-can-get-new-password
   (email/expect-mock-emails 1)

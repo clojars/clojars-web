@@ -3,12 +3,12 @@
    [cemerick.friend.workflows :as workflow]
    [clojars.db :refer [add-user]]
    [clojars.log :as log]
-   [clojars.web.user :refer [register-form new-user-validations]]
+   [clojars.web.user :refer [register-form new-user-validations normalize-email]]
    [ring.util.response :refer [response content-type]]
    [valip.core :refer [validate]]))
 
 (defn register [db {:keys [email username password confirm]}]
-  (let [email (and email (.trim email))]
+  (let [email (normalize-email email)]
     (log/with-context {:email email
                        :username username
                        :tag :registration}
