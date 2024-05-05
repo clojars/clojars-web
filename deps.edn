@@ -16,7 +16,7 @@
   clj-http/clj-http {:mvn/version "3.12.3"}
   clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
   com.cemerick/friend {:mvn/version "0.2.3"
-                       :exclusions [;; not used, excluded to address CVE-2007-1652, CVE-2007-1651
+                       :exclusions [ ;; not used, excluded to address CVE-2007-1652, CVE-2007-1651
                                     org.openid4java/openid4java-nodeps
                                     ;; not used, excluded to address CVE-2012-0881, CVE-2013-4002, CVE-2009-2625
                                     net.sourceforge.nekohtml/nekohtml]}
@@ -64,6 +64,10 @@
   org.clojure/tools.logging {:mvn/version "1.2.4"}
   org.clojure/tools.nrepl {:mvn/version "0.2.11"}
   org.postgresql/postgresql {:mvn/version "42.7.2"}
+  ;; Having this as a top-level dep instead of having it come in transitively
+  ;; allows logging to be properly configured instead of going to stdout, and I
+  ;; don't know why! - Toby 2024-05-05
+  org.slf4j/slf4j-api {:mvn/version "2.0.13"}
   org.tcrawley/cognitect-http-client {:mvn/version "1.11.129"}
 
   net.cgrand/regex {:mvn/version "1.0.1"}
@@ -80,7 +84,7 @@
  :aliases {:defaults
            ;; We use override-deps to address CVEs
            {:override-deps
-            {;; Addreses CVE-2022-42004, CVE-2022-42003, CVE-2021-46877, CVE-2020-36518
+            { ;; Addreses CVE-2022-42004, CVE-2022-42003, CVE-2021-46877, CVE-2020-36518
              com.fasterxml.jackson.core/jackson-databind {:mvn/version "2.15.2"}
              ;; Addreses CVE-2019-10086, CVE-2014-0114
              commons-beanutils/commons-beanutils {:mvn/version "1.9.4"}
