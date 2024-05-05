@@ -20,7 +20,9 @@
                                     org.openid4java/openid4java-nodeps
                                     ;; not used, excluded to address CVE-2012-0881, CVE-2013-4002, CVE-2009-2625
                                     net.sourceforge.nekohtml/nekohtml]}
-  com.cognitect.aws/api {:mvn/version "0.8.681"}
+  com.cognitect.aws/api {:mvn/version "0.8.692"
+                         ;; we use org.tcrawley/cognitect-http-client instead to use Jetty 11
+                         :exclusions [com.cognitect/http-client]}
   com.cognitect.aws/endpoints {:mvn/version "1.1.12.489"}
   com.cognitect.aws/s3 {:mvn/version "847.2.1398.0"}
   com.cognitect.aws/sqs {:mvn/version "847.2.1398.0"}
@@ -58,24 +60,18 @@
   ;; CVE-2024-30171, CVE-2024-30172
   org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.78"}
   org.bouncycastle/bcprov-jdk18on {:mvn/version "1.78"}
-  org.clojure/clojure {:mvn/version "1.11.2"}
+  org.clojure/clojure {:mvn/version "1.11.3"}
   org.clojure/tools.logging {:mvn/version "1.2.4"}
   org.clojure/tools.nrepl {:mvn/version "0.2.11"}
-  ;; Override jetty brought in by aws/api to address CVE-2023-40167,
-  ;; CVE-2023-41900, CVE-2023-36479
-  org.eclipse.jetty/jetty-client {:mvn/version "9.4.53.v20231009"}
-  ;; Override jetty brought in by ring-jetty-adapter to address CVE-2023-40167,
-  ;; CVE-2023-41900, CVE-2023-36479
-  org.eclipse.jetty/jetty-server {:mvn/version "9.4.53.v20231009"}
-
   org.postgresql/postgresql {:mvn/version "42.7.2"}
+  org.tcrawley/cognitect-http-client {:mvn/version "1.11.129"}
 
   net.cgrand/regex {:mvn/version "1.0.1"}
 
   raven-clj/raven-clj {:mvn/version "1.7.0"}
-  ring/ring-core {:mvn/version "1.10.0"}
-  ring/ring-defaults {:mvn/version "0.3.3"}
-  ring/ring-jetty-adapter {:mvn/version "1.10.0"}
+  ring/ring-core {:mvn/version "1.12.1"}
+  ring/ring-defaults {:mvn/version "0.5.0"}
+  ring/ring-jetty-adapter {:mvn/version "1.12.1"}
   ring-jetty-component/ring-jetty-component {:mvn/version "0.3.1"}
   ring-middleware-format/ring-middleware-format {:mvn/version "0.7.5"}
 
