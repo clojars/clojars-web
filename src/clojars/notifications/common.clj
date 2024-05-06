@@ -3,10 +3,12 @@
    (java.text
     SimpleDateFormat)))
 
+(set! *warn-on-reflection* true)
+
 (def did-not-take-action
   "If you *didn't* take this action, please reply to this email to let the Clojars admins know that your account has potentially been compromised!")
 
-(defn- iso-8601 []
+(defn- iso-8601 ^SimpleDateFormat []
   (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSSZ"))
 
 (defn details-table

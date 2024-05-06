@@ -23,14 +23,14 @@
   "Creates an img tag with support for 2x and 3x retina images.
   Will check if the retina images exist before adding them to srcset.
   Throws if the src image does not exist."
-  [src alt]
+  [^String src alt]
   (assert (= (first src) \/) (format "src %s must start with a /" src))
   (assert (public-resource-exists? src)
           (format "File %s does not exist" (str "public" src)))
 
   (let [last-period (.lastIndexOf src ".")
-        base (.substring src 0 last-period)
-        extension (.substring src last-period (count src))]
+        base (subs src 0 last-period)
+        extension (subs src last-period (count src))]
     [:img {:src    src
            :alt    alt
            ;; If 1x is not provided in srcset, then browsers will default to src as the 1x image

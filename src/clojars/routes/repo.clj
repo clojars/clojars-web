@@ -26,26 +26,32 @@
     UUID)
    org.apache.commons.io.FileUtils))
 
-(defn save-to-file [dest input]
+(set! *warn-on-reflection* true)
+
+(defn save-to-file
+  [^File dest input]
   (-> dest
       .getParentFile
       .mkdirs)
   (io/copy input dest)
   dest)
 
-(defn- try-save-to-file [dest input]
+(defn- try-save-to-file
+  [^File dest input]
   (try
     (save-to-file dest input)
     (catch IOException e
       (.delete dest)
       (throw e))))
 
-(defn- pom? [file]
-  (let [filename (if (string? file) file (.getName file))]
+(defn- pom?
+  [^File file]
+  (let [^String filename (if (string? file) file (.getName file))]
     (.endsWith filename ".pom")))
 
-(defn- module? [file]
-  (let [filename (if (string? file) file (.getName file))]
+(defn- module?
+  [^File file]
+  (let [^String filename (if (string? file) file (.getName file))]
     (.endsWith filename ".module")))
 
 (def metadata-edn "_metadata.edn")
@@ -73,7 +79,8 @@
                   :token-id token-id)]
     (spit (io/file dir metadata-edn) (pr-str metadata))))
 
-(defn find-upload-dir [group artifact version timestamp-version {:keys [upload-dirs]}]
+(defn find-upload-dir
+  ^File [group artifact version timestamp-version {:keys [upload-dirs]}]
   (if-let [dir (some (fn [dir]
                        (let [dir (io/file dir)
                              metadata (read-metadata dir)
@@ -128,7 +135,8 @@
   [e-or-message meta]
   (let [throwable? (instance? Throwable e-or-message)
         [message cause] (if throwable?
-                          [(.getMessage e-or-message) (.getCause e-or-message)]
+                          [(.getMessage ^Throwable e-or-message)
+                           (.getCause ^Throwable e-or-message)]
                           [e-or-message])]
     (when throwable?
       (log/error {:tag :upload-exception
@@ -173,13 +181,16 @@
                             :upload-dirs (fnil conj #{}) (.getAbsolutePath upload-dir))
            :body nil})))))
 
-(defn find-pom [dir]
+(defn find-pom
+  ^File [dir]
   (util/filter-some pom? (file-seq dir)))
 
-(defn find-module [dir]
+(defn find-module
+  ^File [dir]
   (util/filter-some module? (file-seq dir)))
 
-(defn- match-file-name [match f]
+(defn- match-file-name
+  [match ^File f]
   (let [name (.getName f)]
     (if (string? match)
       (= match name)
@@ -190,7 +201,7 @@
    (find-artifacts dir true))
   ([dir remove-checksums?]
    (let [tx (comp
-             (filter (memfn isFile))
+             (filter (fn [^File f] (.isFile f)))
              (remove (partial match-file-name metadata-edn)))]
      (into []
            (if remove-checksums?
@@ -264,7 +275,7 @@
                          meta))))))
 
 (defn validate-checksums [artifacts]
-  (doseq [f artifacts]
+  (doseq [^File f artifacts]
     ;; verify that at least one type of checksum file exists
     (when (and (not (or (.exists (fu/checksum-file f :md5))
                         (.exists (fu/checksum-file f :sha1))))
@@ -287,7 +298,7 @@
   ;; if any signatures exist, require them for every artifact
   (let [suffix-matcher (partial match-file-name (re-pattern (format "\\%s$" suffix)))]
     (when (some suffix-matcher artifacts)
-      (doseq [f artifacts
+      (doseq [^File f artifacts
               :when (not (suffix-matcher f))
               :when (not (.exists (io/file (str (.getAbsolutePath f) suffix))))]
         (throw-invalid :file-missing-signature
@@ -401,10 +412,10 @@
         (validate-deploy db dir pom module posted-metadata)
         (run! #(storage/write-artifact
                 storage
-                (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath %)) %)
+                (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath ^File %)) %)
               (->> (file-seq dir)
-                   (remove (memfn isDirectory))
-                   (remove #(some #{(.getName %)} [metadata-edn]))))
+                   (remove (fn [^File f] (.isDirectory f)))
+                   (remove #(some #{(.getName ^File %)} [metadata-edn]))))
 
         (db/add-jar db account pom)
         (maybe-consume-single-use-token db session)
@@ -421,7 +432,7 @@
 (defn- deploy-finalized? [dir]
   (.exists (io/file dir ".finalized")))
 
-(defn- deploy-post-finalized-file [storage tmp-repo file]
+(defn- deploy-post-finalized-file [storage ^File tmp-repo ^File file]
   (storage/write-artifact storage
                           (fu/subpath (.getAbsolutePath tmp-repo) (.getAbsolutePath file)) file))
 

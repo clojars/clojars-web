@@ -4,16 +4,20 @@
    [clojars.remote-service :as remote-service :refer [defendpoint]])
   (:import
    (com.github.scribejava.core.builder.api
-    DefaultApi20)))
+    DefaultApi20)
+   (com.github.scribejava.core.oauth
+    OAuth20Service)))
 
-(defrecord GitlabService [service]
+(set! *warn-on-reflection* true)
+
+(defrecord GitlabService [^OAuth20Service service]
   oauth-service/OauthService
 
   (authorization-url [_]
     (.getAuthorizationUrl service {"scope" "read_user"}))
 
   (access-token [_ code]
-    (.getAccessToken (.getAccessToken service code)))
+    (.getAccessToken (.getAccessToken service ^String code)))
 
   (provider-name [_]
     "GitLab"))

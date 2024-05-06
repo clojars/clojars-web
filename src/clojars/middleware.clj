@@ -11,7 +11,7 @@
   (fn [request]
     (let [uri (:uri request)]
       (handler (assoc request :uri (if (and (not (= "/" uri))
-                                            (.endsWith uri "/"))
+                                            (.endsWith ^String uri "/"))
                                      (subs uri 0 (dec (count uri)))
                                      uri))))))
 

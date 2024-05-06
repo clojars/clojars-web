@@ -3,22 +3,27 @@
   (:require
    [clojars.file-utils :as fu]
    [clojure.edn :as edn]
-   [clojure.java.io :as io])
+   [clojure.java.io :as io]
+   [clojure.string :as str])
   (:import
+   (java.util List)
    (org.apache.maven.artifact.repository.metadata
     Metadata)
    (org.apache.maven.artifact.repository.metadata.io.xpp3
     MetadataXpp3Reader
     MetadataXpp3Writer)
    (org.apache.maven.model
+    Contributor
+    Dependency
     License
     Model
     Scm)
    org.apache.maven.model.io.xpp3.MavenXpp3Reader))
 
+(set! *warn-on-reflection* true)
+
 (def group+jar-name-regex #"^[a-z0-9_.-]+$")
 (def version-regex #"^[a-zA-Z0-9_.+-]+$")
-(def repo-path-regex #"^([a-z0-9_-]+/)+([a-zA-Z0-9_.+-]+/)?$")
 
 (defn without-nil-values
   "Prunes a map of pairs that have nil values."
@@ -57,13 +62,14 @@
     :url          (.getUrl model)
     :licenses     (mapv license-to-map (.getLicenses model))
     :scm          (scm-to-map (.getScm model))
-    :authors      (mapv #(.getName %) (.getContributors model))
+    :authors      (mapv #(.getName ^Contributor %) (.getContributors model))
     :packaging    (keyword (.getPackaging model))
     :dependencies (mapv
-                   (fn [d] {:group_name (.getGroupId d)
-                            :jar_name   (.getArtifactId d)
-                            :version    (or (.getVersion d) "")
-                            :scope      (or (.getScope d) "compile")})
+                   (fn [^Dependency d]
+                     {:group_name (.getGroupId d)
+                      :jar_name   (.getArtifactId d)
+                      :version    (or (.getVersion d) "")
+                      :scope      (or (.getScope d) "compile")})
                    (.getDependencies model))}))
 
 (defn read-pom
@@ -129,7 +135,7 @@
   (when s
     (when-let [[prefix counter suffix] (seq (rest (re-find #"^([^0-9.-]*?)[.-]?([0-9]*)[.-]?([^0-9.-]*?)$" s)))]
       (let [to-lower (fn [s]
-                       (when-not (empty? s) (.toLowerCase s)))]
+                       (when-not (empty? s) (str/lower-case s)))]
         [(to-lower (if (and (empty? prefix)
                             (empty? counter))
                      suffix
@@ -140,7 +146,7 @@
                         (empty? counter))
            (to-lower suffix))]))))
 
-(def common-qualifiers
+(def ^List common-qualifiers
   "common qualifiers in relative sort order"
   ["alpha" "beta" "cr" "rc" "snapshot" "final" "release"])
 
@@ -155,7 +161,7 @@
       (< -1 y-value x-value)       1 ;; both fractions are common, y has a lower sort order
       :else                        0)))
 
-(defn compare-qualifiers [qx qy]
+(defn compare-qualifiers [^String qx ^String qy]
   (let [[qx-prefix qx-counter qx-suffix] (split-qualifier qx)
         [qy-prefix qy-counter qy-suffix] (split-qualifier qy)
         qx-counter (or qx-counter -1)
@@ -194,7 +200,7 @@
   [jars]
   (sort-by :version #(compare-versions %1 %2) jars))
 
-(defn snapshot-version? [version]
+(defn snapshot-version? [^String version]
   (.endsWith version "-SNAPSHOT"))
 
 (defn central-metadata

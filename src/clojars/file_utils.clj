@@ -2,11 +2,15 @@
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [digest :as d]))
+   [digest :as d])
+  (:import
+   (java.io File)))
+
+(set! *warn-on-reflection* true)
 
 (defn checksum-file
   "Returns a file for the sum of `file` of type `type`"
-  [file type]
+  ^File [file type]
   (let [file' (io/file file)]
     (io/file (.getParentFile file')
              (format "%s.%s" (.getName file') (name type)))))

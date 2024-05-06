@@ -6,7 +6,10 @@
    [clojars.s3 :as s3]
    [clojure.java.io :as io])
   (:import
+   java.io.File
    org.apache.commons.io.FileUtils))
+
+(set! *warn-on-reflection* true)
 
 (defprotocol Storage
   (-write-artifact [_ path file force-overwrite?])
@@ -39,7 +42,7 @@
 (defn multi-storage [& storages]
   (->MultiStorage storages))
 
-(defrecord FileSystemStorage [base-dir]
+(defrecord FileSystemStorage [^File base-dir]
   Storage
   (-write-artifact [_ path file force-overwrite?]
     (let [dest (io/file base-dir path)]
@@ -60,8 +63,8 @@
     (when (path-exists? t path)
       (->> (io/file base-dir path)
            file-seq
-           (filter (memfn isFile))
-           (map #(fu/subpath (.getAbsolutePath base-dir) (.getAbsolutePath %))))))
+           (filter (fn [^File f] (.isFile f)))
+           (map #(fu/subpath (.getAbsolutePath base-dir) (.getAbsolutePath ^File %))))))
   (artifact-url [_ path]
     (->> path (io/file base-dir) .toURI .toURL)))
 
@@ -73,12 +76,12 @@
   (-write-artifact [_ path file _force-overwrite?]
     (s3/put-file client path file {:ACL "public-read"}))
   (remove-path [_ path]
-    (if (.endsWith path "/")
+    (if (.endsWith ^String path "/")
       (run! (partial s3/delete-object client)
             (s3/list-object-keys client path))
       (s3/delete-object client path)))
   (path-exists? [_ path]
-    (if (.endsWith path "/")
+    (if (.endsWith ^String path "/")
       (boolean (seq (s3/list-objects client path)))
       (s3/object-exists? client path)))
   (path-seq [_ path]

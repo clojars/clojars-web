@@ -10,11 +10,13 @@
    (org.apache.commons.mail
     SimpleEmail)))
 
+(set! *warn-on-reflection* true)
+
 (def ^:private email-denylist
   (edn/read-string (slurp (io/resource "email-denylist.edn"))))
 
 (defn simple-mailer [{:keys [hostname username password port tls? from]}]
-  (fn [to subject message]
+  (fn [^String to subject message]
     (log/with-context {:tag :email
                        :email-to to
                        :email-subject subject}
@@ -60,10 +62,10 @@
     ([]
      (wait-for-mock-emails 1000))
     ([wait-ms]
-     (.await @email-latch wait-ms TimeUnit/MILLISECONDS)))
+     (.await ^CountDownLatch @email-latch wait-ms TimeUnit/MILLISECONDS)))
 
   (defn mock-mailer []
     (expect-mock-emails)
     (fn [to subject message]
       (swap! mock-emails conj [to subject message])
-      (.countDown @email-latch))))
+      (.countDown ^CountDownLatch @email-latch))))

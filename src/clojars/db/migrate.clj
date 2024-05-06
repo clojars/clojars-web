@@ -9,12 +9,14 @@
    (java.io
     File)))
 
+(set! *warn-on-reflection* true)
+
 (defn initial-schema [tx]
-  (doseq [cmd (map str/trim
-                   (-> (str "queries" File/separator "clojars.sql")
-                       io/resource
-                       slurp
-                       (str/split #";\s*")))
+  (doseq [^String cmd (map str/trim
+                           (-> (str "queries" File/separator "clojars.sql")
+                               io/resource
+                               slurp
+                               (str/split #";\s*")))
           :when (not (.isEmpty cmd))
           :when (not (re-find #"^\s*--" cmd))]
     (db/do-commands tx [cmd])))

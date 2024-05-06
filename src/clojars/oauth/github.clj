@@ -4,7 +4,11 @@
    [clojars.remote-service :as remote-service :refer [defendpoint]])
   (:import
    (com.github.scribejava.apis
-    GitHubApi)))
+    GitHubApi)
+   (com.github.scribejava.core.oauth
+    OAuth20Service)))
+
+(set! *warn-on-reflection* true)
 
 (defendpoint get-emails
   [_client token]
@@ -18,14 +22,14 @@
    :url "https://api.github.com/user"
    :oauth-token token})
 
-(defrecord GitHubService [service]
+(defrecord GitHubService [^OAuth20Service service]
   oauth-service/OauthService
 
   (authorization-url [_]
     (.getAuthorizationUrl service {"scope" "user:email"}))
 
   (access-token [_ code]
-    (.getAccessToken (.getAccessToken service code)))
+    (.getAccessToken (.getAccessToken service ^String code)))
 
   (provider-name [_]
     "GitHub"))

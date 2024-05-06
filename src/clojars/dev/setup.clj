@@ -18,6 +18,8 @@
     MetadataXpp3Reader
     MetadataXpp3Writer)))
 
+(set! *warn-on-reflection* true)
+
 (defn clear-database! [db]
   (try
     (db/do-commands
@@ -43,11 +45,13 @@
            name)
         (range n)))
 
-(defn write-metadata [md file]
+(defn write-metadata
+  [^Metadata md file]
   (with-open [w (io/writer file)]
     (.write (MetadataXpp3Writer.) w md)))
 
-(defn read-metadata [file]
+(defn read-metadata
+  ^Metadata [file]
   (.read (MetadataXpp3Reader.) (io/input-stream file)))
 
 (defn create-metadata [md-file group-id artifact-id version]
@@ -67,15 +71,15 @@
        (update-metadata md-file version)
        (create-metadata md-file group-id artifact-id version))))
   ([md-file version]
-   (-> md-file
-       read-metadata
-       (doto (-> .getVersioning (.addVersion version)))
-       (write-metadata md-file))))
+   (let [md (read-metadata md-file)]
+     (-> md
+         (doto (-> .getVersioning (.addVersion version)))
+         (write-metadata md-file)))))
 
 ;; TODO: If there are more places that require this, move to a utility location.
 (defn get-path
   "Ensures that / is used as separator when regex depends on it."
-  [file]
+  [^File file]
   (str/replace (.getPath file) File/separator "/"))
 
 (defn import-repo
@@ -84,7 +88,7 @@
   (let [group-artifact-pattern (re-pattern (str repo "/(.*)/([^/]*)$"))]
     (io/make-parents stats-file)
     (->>
-     (for [version-dir (file-seq (io/file repo))
+     (for [^File version-dir (file-seq (io/file repo))
            :when (and (.isDirectory version-dir)
                       (re-find #"^[0-9]\." (.getName version-dir)))
            :let [parent (.getParentFile version-dir)
@@ -116,7 +120,7 @@
              {})
      pr-str
      (spit stats-file))
-    (println "Wrote download stats to" (.getAbsolutePath stats-file))))
+    (println "Wrote download stats to" (.getAbsolutePath ^File stats-file))))
 
 (defn setup-dev-environment []
   (let [{:keys [repo stats-dir db]} (config)
@@ -125,7 +129,7 @@
              "and import all of the projects in" repo "into the db.\n")
     (print "Are you sure you want to continue? [y/N] ")
     (flush)
-    (when-not (= "y" (.toLowerCase (read-line)))
+    (when-not (= "y" (str/lower-case (read-line)))
       (println "Aborting.")
       (System/exit 1))
     (println "==> Clearing the" db "db...")

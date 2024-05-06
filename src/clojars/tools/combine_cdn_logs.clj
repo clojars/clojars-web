@@ -4,7 +4,11 @@
    [clojars.s3 :as s3]
    [clojure.java.io :as io])
   (:import
-   java.io.FileOutputStream))
+   (java.io
+    FileOutputStream
+    InputStream)))
+
+(set! *warn-on-reflection* true)
 
 ;; downloads and combines cdn log files from s3 for the
 ;; given date, then uploads the combined file to s3 bucket
@@ -23,7 +27,7 @@
           s3-log-files (s3/list-object-keys s3 date)]
       (with-open [fos (FileOutputStream. dest-file)]
         ;; download and combine s3 logs
-        (domap #(with-open [in (s3/get-object-stream s3 %)]
+        (domap #(with-open [^InputStream in (s3/get-object-stream s3 %)]
                   (io/copy in fos))
                s3-log-files)))))
 

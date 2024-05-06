@@ -7,11 +7,14 @@
    [cognitect.aws.credentials :as credentials])
   (:import
    (java.io
-    ByteArrayInputStream)
+    ByteArrayInputStream
+    InputStream)
    (java.util
     Date)
    (org.apache.commons.io
     IOUtils)))
+
+(set! *warn-on-reflection* true)
 
 (defprotocol S3Bucket
   (-delete-object [client key])
@@ -131,7 +134,7 @@
     (record-call calls '-list-entries prefix)
     (into []
           (comp
-           (filter (fn [k]
+           (filter (fn [^String k]
                      (if prefix
                        (.startsWith k prefix)
                        true)))
@@ -149,12 +152,12 @@
     (record-call calls '-list-objects prefix)
     (into []
           (comp
-           (filter (fn [k] (if prefix (.startsWith k prefix) true)))
+           (filter (fn [^String k] (if prefix (.startsWith k prefix) true)))
            (map (fn [k] (mock-object-entry k (get @state k)))))
           (keys @state)))
   (-put-object [_ key stream _opts]
     (record-call calls '-put-object key)
-    (swap! state assoc key (IOUtils/toByteArray stream))))
+    (swap! state assoc key (IOUtils/toByteArray ^InputStream stream))))
 
 (defn mock-s3-client []
   (->MockS3Client (atom {}) (atom [])))

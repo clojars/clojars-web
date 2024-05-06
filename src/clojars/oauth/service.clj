@@ -1,7 +1,11 @@
 (ns clojars.oauth.service
   (:import
    (com.github.scribejava.core.builder
-    ServiceBuilder)))
+    ServiceBuilder)
+   (com.github.scribejava.core.builder.api
+    DefaultApi20)))
+
+(set! *warn-on-reflection* true)
 
 (defprotocol OauthService
   (authorization-url [service])
@@ -24,7 +28,7 @@
   (->MockOauthService provider config))
 
 (defn build-oauth-service
-  [api-key api-secret callback-uri api-instance]
+  [api-key ^String api-secret ^String callback-uri ^DefaultApi20 api-instance]
   (-> (ServiceBuilder. api-key)
       (.apiSecret api-secret)
       (.callback callback-uri)

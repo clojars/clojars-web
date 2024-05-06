@@ -27,7 +27,11 @@
    [one-time.qrgen :as qrgen]
    [ring.util.response :refer [redirect]]
    [valip.core :refer [validate]]
-   [valip.predicates :as pred]))
+   [valip.predicates :as pred])
+  (:import
+   (java.io ByteArrayOutputStream)))
+
+(set! *warn-on-reflection* true)
 
 (defn register-form [{:keys [errors email username]} message]
   (html-doc "Register" {}
@@ -36,25 +40,25 @@
              (flash message)
              (error-list errors)
              (form-to [:post "/register"]
-                      (label :email "Email")
-                      (email-field {:value email
-                                    :required true
-                                    :placeholder "bob@example.com"}
-                                   :email)
-                      (label :username "Username")
-                      (text-field {:value username
-                                   :required true
-                                   :placeholder "bob"}
-                                  :username)
-                      (label :password "Password")
-                      (password-field {:placeholder "keep it secret, keep it safe"
-                                       :required true}
-                                      :password)
-                      (label :confirm "Confirm password")
-                      (password-field {:placeholder "confirm your password"
-                                       :required true}
-                                      :confirm)
-                      (submit-button "Register"))]))
+               (label :email "Email")
+               (email-field {:value email
+                             :required true
+                             :placeholder "bob@example.com"}
+                            :email)
+               (label :username "Username")
+               (text-field {:value username
+                            :required true
+                            :placeholder "bob"}
+                           :username)
+               (label :password "Password")
+               (password-field {:placeholder "keep it secret, keep it safe"
+                                :required true}
+                               :password)
+               (label :confirm "Confirm password")
+               (password-field {:placeholder "confirm your password"
+                                :required true}
+                               :confirm)
+               (submit-button "Register"))]))
 
 ;; Validations
 
@@ -349,15 +353,16 @@
 
 (defn setup-mfa
   [account {:as _user :keys [email otp_secret_key]} flash-msg]
-  (let [qrcode-stream (qrgen/totp-stream {:image-type :PNG
-                                          :image-size 300
-                                          :label "Clojars.org"
-                                          :user email
-                                          :secret otp_secret_key})
+  (let [^ByteArrayOutputStream qrcode-stream (qrgen/totp-stream
+                                              {:image-type :PNG
+                                               :image-size 300
+                                               :label "Clojars.org"
+                                               :user email
+                                               :secret otp_secret_key})
         qrcode-b64 (-> qrcode-stream
                        (.toByteArray)
                        (base64/encode)
-                       (String.))
+                       (as-> ^bytes % (String. %)))
         heading (format "Two-Factor Authentication (%s)" account)]
     (html-doc
      heading

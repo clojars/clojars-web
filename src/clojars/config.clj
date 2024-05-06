@@ -34,7 +34,7 @@
 
 (defn jdbc-url [db-config]
   (if (string? db-config)
-    (if (.startsWith db-config "jdbc:")
+    (if (.startsWith ^String db-config "jdbc:")
       db-config
       (str "jdbc:" db-config))
     (let [{:keys [dbtype dbname host port user password]} db-config]

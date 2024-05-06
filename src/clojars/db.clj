@@ -104,7 +104,7 @@
     (with-open [conn (jdbc/get-connection connectable)]
       (do-commands conn commands))))
 
-(defn get-time []
+(defn get-time ^Timestamp []
   (Timestamp. (System/currentTimeMillis)))
 
 (defn bcrypt [s]

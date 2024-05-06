@@ -12,7 +12,10 @@
    [one-time.core :as ot]
    [ring.util.request :as req])
   (:import
+   java.sql.Timestamp
    org.apache.commons.codec.binary.Base64))
+
+(set! *warn-on-reflection* true)
 
 (defn try-account [f]
   (f (:username (friend/current-authentication))))
@@ -102,7 +105,7 @@
 (defn token-expired?
   [{:as _token :keys [expires_at]}]
   (and expires_at
-       (.after (db/get-time) expires_at)))
+       (.after (db/get-time) ^Timestamp expires_at)))
 
 (defn token-credential-fn [db]
   (fn [{username-or-email :username password :password}]

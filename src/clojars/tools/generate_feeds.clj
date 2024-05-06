@@ -12,8 +12,11 @@
   (:import
    (java.io
     FileOutputStream
+    OutputStream
     PrintWriter)
    java.util.zip.GZIPOutputStream))
+
+(set! *warn-on-reflection* true)
 
 (defn- versions-data
   [jars]
@@ -48,21 +51,21 @@
          (keep identity))))
 
 (defn write-to-file
-  ([data file gzip?]
-   (write-to-file data file gzip? prn))
-  ([data file gzip? out-fn]
-   (with-open [w (-> (FileOutputStream. file)
+  ([data filename gzip?]
+   (write-to-file data filename gzip? prn))
+  ([data ^String filename gzip? out-fn]
+   (with-open [w (-> (FileOutputStream. filename)
                      (cond-> gzip? (GZIPOutputStream.))
-                     (PrintWriter.))]
+                     (as-> ^OutputStream % (PrintWriter. %)))]
      (binding [*out* w]
        (doseq [form data]
          (out-fn form))))
-   file))
+   filename))
 
 (defn pom-list [s3-bucket]
   (sort
    (into []
-         (comp (filter #(.endsWith % ".pom"))
+         (comp (filter #(.endsWith ^String % ".pom"))
                ;; to match historical list format
                (map (partial str "./")))
          (s3/list-object-keys s3-bucket))))

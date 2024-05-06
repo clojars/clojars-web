@@ -12,7 +12,10 @@
    [clojure.tools.nrepl.server :as nrepl]
    [next.jdbc :as jdbc])
   (:import
+   java.net.URL
    java.text.SimpleDateFormat))
+
+(set! *warn-on-reflection* true)
 
 (defn current-date-str []
   (.format (SimpleDateFormat. "yyyyMMdd") (db/get-time)))
@@ -31,7 +34,7 @@
     (run!
      (fn [p]
        (try
-         (let [url (storage/artifact-url storage p)
+         (let [url ^URL (storage/artifact-url storage p)
                dest (io/file ts-dir p)]
            (.mkdirs (.getParentFile dest))
            (with-open [in (.openStream url)]
