@@ -43,15 +43,13 @@
      (link-to "https://github.com/clojars/clojars-web/wiki/Data" "API")
      [:div.sponsors
       [:div.sponsors-title
-       "sponsored by"
-       (link-to "https://www.bountysource.com/teams/clojars/backers" "individual contributors")
-       "with hosting costs covered by:"]
+       "Hosting costs sponsored by:"]
       [:div.sponsors-group
        [:div.sponsor
         (link-to "https://shortcut.com/"
                  (image "/images/shortcut-logo.png" "Shortcut Software Company"))]]
       [:div.sponsors-title
-       "and in-kind sponsorship from:"]
+       "With in-kind sponsorship from:"]
       [:div.sponsors-group
        [:div.sponsor
         (link-to "https://www.deps.co"
