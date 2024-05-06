@@ -87,8 +87,9 @@
                                                 (:message-wait-timeout config))))
                        (.start)))))
   (stop [this]
-    (reset! (:running? this) false)
-    (.join ^Thread (:thread this) 60000)
+    (when-some [running? (:running? this)]
+      (reset! running? false)
+      (.join ^Thread (:thread this) 60000))
     this))
 
 (defn new-sqs-receiver
