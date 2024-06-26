@@ -29,7 +29,8 @@
    [valip.core :refer [validate]]
    [valip.predicates :as pred])
   (:import
-   (java.io ByteArrayOutputStream)))
+   (java.io
+    ByteArrayOutputStream)))
 
 (set! *warn-on-reflection* true)
 
@@ -40,25 +41,25 @@
              (flash message)
              (error-list errors)
              (form-to [:post "/register"]
-               (label :email "Email")
-               (email-field {:value email
-                             :required true
-                             :placeholder "bob@example.com"}
-                            :email)
-               (label :username "Username")
-               (text-field {:value username
-                            :required true
-                            :placeholder "bob"}
-                           :username)
-               (label :password "Password")
-               (password-field {:placeholder "keep it secret, keep it safe"
-                                :required true}
-                               :password)
-               (label :confirm "Confirm password")
-               (password-field {:placeholder "confirm your password"
-                                :required true}
-                               :confirm)
-               (submit-button "Register"))]))
+                      (label :email "Email")
+                      (email-field {:value email
+                                    :required true
+                                    :placeholder "bob@example.com"}
+                                   :email)
+                      (label :username "Username")
+                      (text-field {:value username
+                                   :required true
+                                   :placeholder "bob"}
+                                  :username)
+                      (label :password "Password")
+                      (password-field {:placeholder "keep it secret, keep it safe"
+                                       :required true}
+                                      :password)
+                      (label :confirm "Confirm password")
+                      (password-field {:placeholder "confirm your password"
+                                       :required true}
+                                      :confirm)
+                      (submit-button "Register"))]))
 
 ;; Validations
 
@@ -255,7 +256,7 @@
                 "Password reset for Clojars"
                 (->> ["Hello,"
                       (format "We received a request from someone, hopefully you, to reset the password of the clojars user: %s." (:user user))
-                      "To contine with the reset password process, click on the following link:"
+                      "To continue with the reset password process, click on the following link:"
                       reset-password-url
                       "This link is valid for 24 hours, after which you will need to generate a new one."
                       (notif-common/details-table details)

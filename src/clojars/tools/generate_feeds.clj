@@ -46,7 +46,7 @@
                    (merge (versions-data jars))
                    maven/without-nil-values))
              (catch Exception e
-               (printf "Got exeption when processing %s:%s, skipping: %s\n"
+               (printf "Got exception when processing %s:%s, skipping: %s\n"
                        group-id artifact-id (.getMessage e)))))
          (keep identity))))
 

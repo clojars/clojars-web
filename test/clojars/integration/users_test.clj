@@ -306,7 +306,7 @@
     (let [password "some-secret!"
           [_ reset-password-link]
           (re-find
-           #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of the clojars user: fixture.\n\nTo contine with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
+           #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of the clojars user: fixture.\n\nTo continue with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
            message)]
       (is (re-find #"Client IP" message))
       (is (string? reset-password-link))
