@@ -1,5 +1,5 @@
 (ns clojars.web.safe-hiccup
-  "Hiccup requires explicit (h ..) calls in order to preven XSS.  This
+  "Hiccup requires explicit (h ..) calls in order to prevent XSS.  This
 does some monkey patching to automatically escape strings."
   (:require
    [hiccup.compiler :refer [HtmlRenderer]]

@@ -22,18 +22,18 @@
   (-put-object [client key stream opts]))
 
 (defn- list-objects-chunk
-  [client bucket-name prefix delimeter continuation-token]
+  [client bucket-name prefix delimiter continuation-token]
   (let [request (cond-> {:Bucket bucket-name}
                   continuation-token (assoc :ContinuationToken continuation-token)
-                  delimeter          (assoc :Delimiter delimeter)
+                  delimiter          (assoc :Delimiter delimiter)
                   prefix             (assoc :Prefix prefix))]
     (aws-util/invoke client :ListObjectsV2 request)))
 
 (defn- list-objects-seq
   "Generates a lazy seq of list-objects results, chunked by the API's paging."
-  [client bucket-name {:as opts :keys [continuation-token delimeter prefix]}]
+  [client bucket-name {:as opts :keys [continuation-token delimiter prefix]}]
   (let [{:as result :keys [IsTruncated NextContinuationToken]}
-        (list-objects-chunk client bucket-name prefix delimeter continuation-token)]
+        (list-objects-chunk client bucket-name prefix delimiter continuation-token)]
     (if IsTruncated
       (lazy-seq
        (cons result
@@ -68,7 +68,7 @@
   (-list-entries [_ prefix]
     (sequence
      (mapcat #(concat (:CommonPrefixes %) (map strip-etag (:Contents %))))
-     (list-objects-seq s3 bucket-name {:delimeter "/"
+     (list-objects-seq s3 bucket-name {:delimiter "/"
                                        :prefix prefix})))
 
   (-list-objects [_ prefix]

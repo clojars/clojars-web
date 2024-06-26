@@ -89,7 +89,7 @@
                      ;; multiple deploys of different versions in the same
                      ;; session to succeed.
                      ;;
-                     ;; They would fail occassionaly depending on the natural
+                     ;; They would fail occasionally depending on the natural
                      ;; sort of the upload-dirs. When we are finalizing a
                      ;; deploy, we don't have the version, since the finalize is
                      ;; triggered by the maven-metadata.xml upload, which isn't
@@ -298,7 +298,7 @@
   ;; We're on purpose *at least* as restrictive as the recommendations on
   ;; https://maven.apache.org/guides/mini/guide-naming-conventions.html
   ;; If you want loosen these please include in your proposal the
-  ;; ramifications on usability, security and compatiblity with filesystems,
+  ;; ramifications on usability, security and compatibility with filesystems,
   ;; OSes, URLs and tools.
   (validate-regex name maven/group+jar-name-regex
                   (str "project names must consist solely of lowercase "

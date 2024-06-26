@@ -26,7 +26,7 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/commits/2023-12-03.2016][2023-12-03.2016]]
 + [[https://github.com/clojars/clojars-web/commit/8d5b8e2c4b93771a34ecb1b14e5d5cbf62d2491e][Use long polling with SQS]] ([[https://github.com/tobias][Toby Crawley]])
 *** [[https://github.com/clojars/clojars-web/commits/2023-12-03.2017][2023-12-03.2017]]
-+ [[https://github.com/clojars/clojars-web/commit/b60afa3cf8c181fe511b71a1ade27bd04c46110f][Throw on SQS receive-loop exception to force prcess to exit]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/b60afa3cf8c181fe511b71a1ade27bd04c46110f][Throw on SQS receive-loop exception to force process to exit]] ([[https://github.com/tobias][Toby Crawley]])
 *** [[https://github.com/clojars/clojars-web/commits/2023-12-05.2019][2023-12-05.2019]]
 + [[https://github.com/clojars/clojars-web/commit/785266dbcbc0ea3fea4ccf55a8992f2ed62183f4][Use mock mailer in development]] ([[https://github.com/tobias][Toby Crawley]])
 + [[https://github.com/clojars/clojars-web/commit/d25bdccbfe32ad23b6b60906b596ed1b5d63cbad][Update logback to address CVE-2023-6378]] ([[https://github.com/tobias][Toby Crawley]])
@@ -70,7 +70,7 @@ Note: We changed from a counter for the release version to ~<date>.<commit-count
 + [[https://github.com/clojars/clojars-web/pull/869][Generate repo index.html files on each deploy]] ([[https://github.com/tobias][Toby Crawley]])
 
 *** [[https://github.com/clojars/clojars-web/commits/214][214]]
-+ [[https://github.com/clojars/clojars-web/commit/63c8ab4a35863f1968573f2f45e8eca77ad5798e][Propery set public-read on uploaded index.html files]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/63c8ab4a35863f1968573f2f45e8eca77ad5798e][Properly set public-read on uploaded index.html files]] ([[https://github.com/tobias][Toby Crawley]])
 
 *** [[https://github.com/clojars/clojars-web/commits/215][215]]
 + [[https://github.com/clojars/clojars-web/commit/d2a1ee71bd345f16ae50915f5e35318fb0fe863c][Remove now unused repo listing route]] ([[https://github.com/tobias][Toby Crawley]])
@@ -109,7 +109,7 @@ Note: We changed from a counter for the release version to ~<date>.<commit-count
 + [[https://github.com/clojars/clojars-web/issues/863][Support SSH signing]] ([[https://github.com/tobias][Toby Crawley]])
 
 *** [[https://github.com/clojars/clojars-web/commits/206][206]]
-+ [[https://github.com/clojars/clojars-web/commit/e33ca29d83a18bfe9a51867a66876f4cd064f10f][Instruct fastly to cache repo listings for 12 hours intead of 15 minutes]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/e33ca29d83a18bfe9a51867a66876f4cd064f10f][Instruct fastly to cache repo listings for 12 hours instead of 15 minutes]] ([[https://github.com/tobias][Toby Crawley]])
 
 *** [[https://github.com/clojars/clojars-web/commits/207][207]]
 + [[https://github.com/clojars/clojars-web/commit/1395b24be573eac01655e5f124dcbc279462a450][Return 404s for not found repo paths]] ([[https://github.com/tobias][Toby Crawley]])
@@ -430,7 +430,7 @@ https://github.com/clojars/clojars-server-config/compare/e130b3e7b63baabf69cbca5
 *** 92
 We recently lost our sponsorship to host
 the server and repo from Rackspace (we are very grateful for the four+
-years of sponsorship we recieved from them), and have since been
+years of sponsorship we received from them), and have since been
 accepted in to [[https://aws.amazon.com/blogs/opensource/aws-promotional-credits-open-source-projects/][Amazon's AWS Open Source program]]. So we are now
 working on migrating off of Rackspace and on to AWS. The bulk of the
 work since the last [[https://groups.google.com/d/msg/clojars-maintainers/civ5d2NaA98/HaMKsSuVCgAJ ][release announcement]] has been moving data that

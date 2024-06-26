@@ -234,7 +234,7 @@
                 "Password reset for Clojars"
                 (->> ["Hello,"
                       (format "We received a request from someone, hopefully you, to reset the password of the clojars user: %s." (:user user))
-                      "To contine with the reset password process, click on the following link:"
+                      "To continue with the reset password process, click on the following link:"
                       reset-password-url
                       "This link is valid for 24 hours, after which you will need to generate a new one."
                       (notif-common/details-table details)
