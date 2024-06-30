@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Self-extracting typos shim. Sourced releases from GitHub.
+
+set -euo pipefail
+
+TYPOS_VERSION="v1.22.9"
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
+
+function ensure_typos() {
+    # Doesn't take args, simply reads variables set above.
+    VERSION=$TYPOS_VERSION
+    PLATFORM="$(uname -s)"
+    ARCH="$(uname -m)"
+    PATH_SUFFIX=""
+
+    if [ "${PLATFORM}" == "Darwin" ]; then
+        if [ "${ARCH}" == "x86_64" ]; then
+            PATH_SUFFIX="x86_64-apple-darwin"
+        elif [ "${ARCH}" == "arm64" ]; then
+            PATH_SUFFIX="aarch64-apple-darwin"
+        fi
+    elif [ "${PLATFORM}" == "Linux" ]; then
+         if [ "${ARCH}" == "x86_64" ]; then
+             PATH_SUFFIX="x86_64-unknown-linux-musl"
+         fi
+    fi
+
+    if [ -z "$PATH_SUFFIX" ]; then
+        echo "Platform ${PLATFORM} and ${ARCH} combination is currently not supported" >&2 && exit 1
+    fi
+
+    ARCHIVE="typos-${VERSION}-${PATH_SUFFIX}.tar.gz"
+    CACHE_DIR="$ROOT/bin/.cache/typos-${VERSION}"
+    if ! [ -f "${CACHE_DIR}/BOOTSTRAPPED" ]; then
+        echo "Missing typos binary for version [${VERSION}] -- will download." >&2
+        PACKAGE_FULL_URL="https://github.com/crate-ci/typos/releases/download/${VERSION}/${ARCHIVE}"
+        mkdir -p "$ROOT/bin/.cache"
+        pushd "$ROOT/bin/.cache" >/dev/null 2>&1 || exit 1
+        echo "Downloading ${PACKAGE_FULL_URL}..." >&2
+        curl -#L -O "${PACKAGE_FULL_URL}" ||
+            (echo "Failed to download ${PACKAGE_FULL_URL}." && exit 1)
+
+        (rm -rf "$CACHE_DIR" &&
+           mkdir "$CACHE_DIR" &&
+           tar --extract --directory="$CACHE_DIR" -f "${ARCHIVE}") >&2 ||
+          (echo "Failed to extract ${PACKAGE_FULL_URL}." && exit 1)
+        rm -rf "${ARCHIVE}"
+        touch "${CACHE_DIR}/BOOTSTRAPPED"
+        popd >/dev/null 2>&1 || exit 2
+    fi
+}
+
+ensure_typos
+exec "${ROOT}/bin/.cache/typos-${VERSION}/typos" "$@"

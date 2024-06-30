@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Make sure I'm not about to introduce more kondo linting errors/warnings
+# Make sure I'm not about to introduce more kondo linting errors/warnings or typos
 
 # get just the clj/cljs files from the git changeset
 changed_clj="$(git diff --cached --name-only | grep -E 'cljs?$')"
@@ -17,4 +17,11 @@ if [ -n "${changed_clj}" ] ; then
     "./bin/cljstyle" fix "$f"
     git add "$f"
   done
+fi
+
+changed_files="$(git diff --cached --name-only)"
+if [ -n "${changed_files}" ]; then
+  if ! ./bin/typos $changed_files; then
+    exit 1
+  fi
 fi

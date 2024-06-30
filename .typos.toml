@@ -1,0 +1,18 @@
+[default]
+extend-ignore-re = [
+    # ns alias
+    ":as [0-9a-z]*\\]"
+]
+
+[default.extend-words]
+Blance = "Blance"
+edn = "edn"
+juxt = "juxt"
+
+[type.gpg]
+extend-glob = ["*.gpg"]
+check-file = false
+
+[type.min-js]
+extend-glob = ["*.min.js"]
+check-file = false

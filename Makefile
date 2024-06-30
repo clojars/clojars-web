@@ -34,6 +34,10 @@ tag-release:
 test:
 	./bin/kaocha
 
+.PHONY: typos
+typos:
+	./bin/typos
+
 .PHONY: uberjar
 uberjar:
 	clojure -T:build uberjar
