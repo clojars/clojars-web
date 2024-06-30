@@ -16,5 +16,5 @@
                      (binding [*out* *err*]
                        (println (format "Failed to read %s: %s" filename (.getMessage e))))
                      {})))
-                   args)]
+               args)]
     (prn (apply merge-with (partial merge-with +) stats))))

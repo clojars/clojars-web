@@ -6,7 +6,8 @@
    [clojure.java.io :as io]
    [clojure.string :as str])
   (:import
-   (java.util List)
+   (java.util
+    List)
    (org.apache.maven.artifact.repository.metadata
     Metadata)
    (org.apache.maven.artifact.repository.metadata.io.xpp3

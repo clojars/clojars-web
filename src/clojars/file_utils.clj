@@ -4,7 +4,8 @@
    [clojure.string :as str]
    [digest :as d])
   (:import
-   (java.io File)))
+   (java.io
+    File)))
 
 (set! *warn-on-reflection* true)
 
