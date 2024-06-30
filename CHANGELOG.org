@@ -3,6 +3,13 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** 2024-June
+*** [[https://github.com/clojars/clojars-web/releases/tag/2024-06-09.2074][2024-06-09.2074]]
++ [[https://github.com/clojars/clojars-web/commit/4acf752f11adf2a32041f8788852771c5eb909fa][Upgrade nippy to address CVE-2024-36124]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2024-06-09.2074][2024-06-09.2074]]
++ [[https://github.com/clojars/clojars-web/commit/053cb838677011f7cc39ad3a577b01edc279ccf8][Clean up many typos]] ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2024-May
 *** [[https://github.com/clojars/clojars-web/releases/tag/2024-05-02.2064][2024-05-02.2064]]
 + [[https://github.com/clojars/clojars-web/pull/882][Ensure emails are downcased; don't allow future duplicate email usage]] ([[https://github.com/tobias][Toby Crawley]])
