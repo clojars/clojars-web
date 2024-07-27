@@ -2,9 +2,14 @@
   (:require
    [cognitect.aws.client.api :as aws]))
 
+(defn- not-found-error?
+  [v]
+  (= :cognitect.anomalies/not-found (:cognitect.anomalies/category v)))
+
 (defn- throw-on-error
   [v]
-  (if (some? (:cognitect.anomalies/category v))
+  (if (and (some? (:cognitect.anomalies/category v))
+           (not (not-found-error? v)))
     (throw (ex-info "AWS request failed" v))
     v))
 
@@ -14,5 +19,5 @@
 
 (defn not-found->nil
   [v]
-  (when (not= :cognitect.anomalies/not-found (:cognitect.anomalies/category v))
+  (when (not (not-found-error? v))
     v))
