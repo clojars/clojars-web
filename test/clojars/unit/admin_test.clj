@@ -3,6 +3,7 @@
    [clojars.admin :as admin]
    [clojars.config :refer [config]]
    [clojars.db :as db]
+   [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.storage :as storage]
    [clojars.test-helper :as help]
@@ -12,17 +13,27 @@
 
 (def ^:dynamic *search-removals* nil)
 
-(defn with-repo-setup2
+(def ^:dynamic *s3-client* nil)
+
+;; Note: these tests exercise the s3 client end-to-end, and require minio to
+;; running. See docker-compose.yml
+
+(defn with-repo-setup
   [f]
-  (let [jar (io/file (io/resource "fake.jar"))]
+  (let [config (config)
+        jar (io/file (io/resource "fake.jar"))
+        s3-client (help/real-s3-client (get-in config [:s3 :repo-bucket]))]
     (binding [*search-removals* (atom #{})
+              *s3-client* s3-client
               admin/*db* help/*db*
               admin/*search* (reify search/Search
                                (delete! [_ group#]
                                  (swap! *search-removals* conj group#))
                                (delete! [_ group# artifact#]
                                  (swap! *search-removals* conj (format "%s/%s" group# artifact#))))
-              admin/*storage* (storage/fs-storage (:repo (config)))]
+              admin/*storage* (storage/multi-storage
+                               (storage/fs-storage (:repo config))
+                               (storage/s3-storage s3-client))]
       (db/add-user admin/*db* "testuser@example.com" "testuser" "password")
       (help/add-verified-group "testuser" "org.ham")
       (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "1" :description "delete me"})
@@ -41,14 +52,14 @@
 (use-fixtures :each
   help/default-fixture
   help/with-clean-database
-  with-repo-setup2)
+  with-repo-setup)
 
 (deftest segments->path-should-work
   (are [exp given] (= exp (admin/segments->path given))
-    "a/b" ["a" "b"]
-    "a/b/c" ["a.b" "c"]
-    "a/b/c" ["a.b.c"]
-    "a/b/c" ["a.b" nil "c" nil]))
+    "a/b/" ["a" "b"]
+    "a/b/c/" ["a.b" "c"]
+    "a/b/c/" ["a.b.c"]
+    "a/b/c/" ["a.b" nil "c" nil]))
 
 (deftest backup-dir-should-work
   (with-redefs [admin/current-date-str (constantly "20160827")]
@@ -70,6 +81,13 @@
   (is (backup-exists? "org/ham" "biscuit/2/biscuit-2.pom"))
   (is (backup-exists? "org/ham" "sandwich/1/sandwich-1.jar"))
   (is (backup-exists? "org/ham" "sandwich/1/sandwich-1.pom"))
+
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/1/biscuit-1.jar")))
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/1/biscuit-1.pom")))
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/2/biscuit-2.jar")))
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/2/biscuit-2.pom")))
+  (is (not (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.jar")))
+  (is (not (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.pom")))
 
   (is (not (.exists (io/file (:repo (config)) "org/ham"))))
 
@@ -96,6 +114,13 @@
   (is  (.exists (io/file (:repo (config)) "org/ham/sandwich/1/sandwich-1.jar")))
   (is  (.exists (io/file (:repo (config)) "org/ham/sandwich/1/sandwich-1.pom")))
 
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/1/biscuit-1.jar")))
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/1/biscuit-1.pom")))
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/2/biscuit-2.jar")))
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/2/biscuit-2.pom")))
+  (is (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.jar"))
+  (is (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.pom"))
+
   (is (not (db/find-jar admin/*db* "org.ham" "biscuit")))
   (is (db/find-jar admin/*db* "org.ham" "sandwich"))
   (is (seq (db/group-activenames admin/*db* "org.ham")))
@@ -118,6 +143,13 @@
   (is  (.exists (io/file (:repo (config)) "org/ham/biscuit/2/biscuit-2.pom")))
   (is  (.exists (io/file (:repo (config)) "org/ham/sandwich/1/sandwich-1.jar")))
   (is  (.exists (io/file (:repo (config)) "org/ham/sandwich/1/sandwich-1.pom")))
+
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/1/biscuit-1.jar")))
+  (is (not (s3/object-exists? *s3-client* "org/ham/biscuit/1/biscuit-1.pom")))
+  (is (s3/object-exists? *s3-client* "org/ham/biscuit/2/biscuit-2.jar"))
+  (is (s3/object-exists? *s3-client* "org/ham/biscuit/2/biscuit-2.pom"))
+  (is (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.jar"))
+  (is (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.pom"))
 
   (is (not (db/find-jar admin/*db* "org.ham" "biscuit" "1")))
   (is (db/find-jar admin/*db* "org.ham" "biscuit" "2"))

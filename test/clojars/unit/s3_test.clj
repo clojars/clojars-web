@@ -1,6 +1,7 @@
 (ns clojars.unit.s3-test
   (:require
    [clojars.s3 :as s3]
+   [clojars.test-helper :as help]
    [clojure.java.io :as io]
    [clojure.test :refer [deftest is testing use-fixtures]]
    [cognitect.aws.client.api :as aws]
@@ -17,19 +18,7 @@
     v))
 
 (def ^:private real-s3-client
-  (memoize
-   (fn []
-     (let [bucket "testing-bucket"
-           client (s3/s3-client bucket
-                                {:credentials {:access-key-id     "fake-access-key"
-                                               :secret-access-key "fake-secret-key"}
-                                 :endpoint {:protocol "http"
-                                            :hostname "localhost"
-                                            :port     9000}
-                                 :region "us-east-1"})]
-       (aws/invoke (:s3 client) {:op      :CreateBucket
-                                 :request {:Bucket bucket}})
-       client))))
+  (memoize (fn [] (help/real-s3-client "testing-bucket"))))
 
 (def ^:private page-size 1000)
 

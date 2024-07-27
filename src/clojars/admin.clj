@@ -45,7 +45,7 @@
 
 (defn segments->path [segments]
   (let [[group & rest] (remove nil? segments)]
-    (str/join "/" (concat [(fu/group->path group)] rest))))
+    (str (str/join "/" (concat [(fu/group->path group)] rest)) "/")))
 
 (defn help []
   (println

@@ -17,6 +17,7 @@
    [clojure.java.shell :as shell]
    [clojure.string :as str]
    [clojure.test :refer [is]]
+   [cognitect.aws.client.api :as aws]
    [com.stuartsierra.component :as component]
    [matcher-combinators.test])
   (:import
@@ -208,3 +209,18 @@
 (defn assert-status
   [session status]
   (is (= status (get-in session [:response :status]))))
+
+(defn real-s3-client
+  "This creates a real s3 client for testing s3-specific functionality. It
+  requires minio to running. See docker-compose.yml."
+  [bucket]
+  (let [client (s3/s3-client bucket
+                             {:credentials {:access-key-id     "fake-access-key"
+                                            :secret-access-key "fake-secret-key"}
+                              :endpoint {:protocol "http"
+                                         :hostname "localhost"
+                                         :port     9000}
+                              :region "us-east-1"})]
+    (aws/invoke (:s3 client) {:op      :CreateBucket
+                              :request {:Bucket bucket}})
+    client))
