@@ -17,7 +17,7 @@
   [^Response response]
   (proxy [HttpServletResponseWrapper] [response]
     (setHeader [name value]
-      (if (and (= name "status-message") value)
+      (if (and (= "status-message" name) value)
         ;; Jetty ignores the reason passed to HttpServletResponse#setStatus(),
         ;; so we have to call a method on Jetty's response impl instead.
         (.setStatusWithReason ^Response response (.getStatus response) value)

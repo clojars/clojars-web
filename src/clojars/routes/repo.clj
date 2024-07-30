@@ -266,7 +266,7 @@
                   :artifact-id artifact-id
                   ;; report both failures to reach central and shadow attempts to sentry
                   :report? true}]
-        (if (= ret :failure)
+        (if (= :failure ret)
           (throw-invalid :central-shadow-check-failure
                          "failed to contact Maven Central to verify project name. See https://bit.ly/3rTLqxZ"
                          (assoc meta :status 503))

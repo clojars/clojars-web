@@ -14,8 +14,8 @@
         response))))
 
 (defn https-request? [req]
-  (or (= (:scheme req) :https)
-      (= (get-in req [:headers "x-forwarded-proto"]) "https")))
+  (or (= :https (:scheme req))
+      (= "https" (get-in req [:headers "x-forwarded-proto"]))))
 
 (def ^:private session-store-atom
   (atom {}))

@@ -487,11 +487,11 @@
   (db/add-jar help/*db* "test-user" {:name "rock" :group "tester" :version "0.2"})
   (db/add-jar help/*db* "test-user" {:name "paper" :group "tester" :version "0.1"})
   (db/add-jar help/*db* "test-user" {:name "scissors" :group "tester" :version "0.1"})
-  (is (= (db/count-all-projects help/*db*) 4))
-  (is (= (db/count-projects-before help/*db* "a") 0))
-  (is (= (db/count-projects-before help/*db* "tester/rock") 2))
-  (is (= (db/count-projects-before help/*db* "tester/rocks") 3))
-  (is (= (db/count-projects-before help/*db* "z") 4)))
+  (is (= 4 (db/count-all-projects help/*db*)))
+  (is (= 0 (db/count-projects-before help/*db* "a")))
+  (is (= 2 (db/count-projects-before help/*db* "tester/rock")))
+  (is (= 3 (db/count-projects-before help/*db* "tester/rocks")))
+  (is (= 4 (db/count-projects-before help/*db* "z"))))
 
 (deftest can-check-jar-exists
   (help/add-verified-group "test-user" "tester")

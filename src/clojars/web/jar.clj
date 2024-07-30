@@ -232,7 +232,7 @@
 (defn- dependencies [db {:keys [group_name jar_name version]}]
   (when-some [deps (seq (into []
                               (comp
-                               (filter #(= (:dep_scope %) "compile"))
+                               (filter #(= "compile" (:dep_scope %)))
                                (map
                                 #(set/rename-keys % {:dep_group_name :group_name
                                                      :dep_jar_name   :jar_name
@@ -245,7 +245,7 @@
         [:li (dependency-link db dep)])])))
 
 (defn- get-dependents [db {:keys [group_name jar_name]}]
-  (filter #(= (:dep_scope %) "compile")
+  (filter #(= "compile" (:dep_scope %))
           (db/find-jar-dependents db group_name jar_name)))
 
 (defn- dependents [db jar version-count]

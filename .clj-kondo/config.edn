@@ -18,6 +18,8 @@
              next.jdbc.sql        sql
              next.jdbc.types      jdbc.types}}
 
+  :equals-expected-position {:level :warning}
+
   ;; use false?/true? instead of = false/true
   :equals-false {:level :warning}
   :equals-true  {:level :warning}

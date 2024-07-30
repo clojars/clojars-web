@@ -33,6 +33,7 @@
 
 ;; this might be a good candidate for test.check
 (deftest comparing-versions
+  #_{:clj-kondo/ignore [:equals-expected-position]}
   (are [op v1 v2] (op (maven/compare-versions v1 v2) 0)
     = "0.0.1"                 "0.0.1"
     > "0.0.1"                 "0.0.1-SNAPSHOT"

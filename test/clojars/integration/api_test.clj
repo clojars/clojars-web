@@ -28,8 +28,8 @@
       (is (= 404 (-> e ex-data :status))))))
 
 (deftest utils-test
-  (is (= (help/get-content-type {:headers {"content-type" "application/json"}}) "application/json"))
-  (is (= (help/get-content-type {:headers {"content-type" "application/json;charset=utf-8"}}) "application/json")))
+  (is (= "application/json" (help/get-content-type {:headers {"content-type" "application/json"}})))
+  (is (= "application/json" (help/get-content-type {:headers {"content-type" "application/json;charset=utf-8"}}))))
 
 (deftest an-api-test
   (-> (session (help/app))

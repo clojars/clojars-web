@@ -301,8 +301,8 @@
         (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
   (let [[to subject message :as email] (first @email/mock-emails)]
     (is email)
-    (is (= to "fixture@example.org"))
-    (is (= subject "Password reset for Clojars"))
+    (is (= "fixture@example.org" to))
+    (is (= "Password reset for Clojars" subject))
     (let [password "some-secret!"
           [_ reset-password-link]
           (re-find

@@ -364,7 +364,7 @@
         current-page (-> current-page (max 1) (min total-pages))
 
         main-div [:div.page-nav]
-        previous-page (if (= current-page 1)
+        previous-page (if (= 1 current-page)
                         [[:span.previous-page.disabled previous-text]]
                         [[:a.previous-page
                           {:href (str page-url (- current-page 1))}

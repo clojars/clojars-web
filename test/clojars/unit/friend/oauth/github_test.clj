@@ -156,8 +156,8 @@
                  :params {:code "1234567890"}}
             response (handle-workflow req)]
 
-        (is (= (-> response :headers (get "Location")) "/register"))
-        (is (= (:flash response) "No account emails match the verified emails we got from GitHub"))))
+        (is (= "/register" (-> response :headers (get "Location"))))
+        (is (= "No account emails match the verified emails we got from GitHub" (:flash response)))))
 
     (testing "with a non verified e-mail"
       (set-mock-responses
@@ -169,8 +169,8 @@
                  :params {:code "1234567890"}}
             response (handle-workflow req)]
 
-        (is (= (-> response :headers (get "Location")) "/login"))
-        (is (= (:flash response) "No verified emails were found in your GitHub account"))))
+        (is (= "/login" (-> response :headers (get "Location"))))
+        (is (= "No verified emails were found in your GitHub account" (:flash response)))))
 
     (testing "with an error returned to the callback"
       (let [req {:uri "/oauth/github/callback"
@@ -179,5 +179,5 @@
                           :error_uri "https://docs.github.com/apps/managing-oauth-apps/troubleshooting-authorization-request-errors/#access-denied"}}
             response (handle-workflow req)]
 
-        (is (= (-> response :headers (get "Location")) "/login"))
-        (is (= (:flash response) "You declined access to your GitHub account"))))))
+        (is (= "/login" (-> response :headers (get "Location"))))
+        (is (= "You declined access to your GitHub account" (:flash response)))))))

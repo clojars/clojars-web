@@ -93,9 +93,9 @@
 
 (defn valid-download? [m]
   (and m
-       (= (:status m) 200)
-       (= (:method m) "GET")
-       (= (:ext m) "jar")))
+       (= 200 (:status m))
+       (= "GET" (:method m))
+       (= "jar" (:ext m))))
 
 (defn compute-stats [lines]
   (->> lines

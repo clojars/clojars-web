@@ -96,7 +96,7 @@
                  :params {:code "1234567890"}}
             response (handle-workflow req)]
 
-        (is (= (-> response :headers (get "Location")) "/register"))
+        (is (= "/register" (-> response :headers (get "Location"))))
         (is (= "No account emails match the verified emails we got from GitLab. Note: your Clojars email must be your primary email in GitLab, since the GitLab API does't provide a way to get verified secondary emails."
                (:flash response)))))
 
@@ -108,5 +108,5 @@
                           :error_uri "https://docs.gitlab.com/apps/managing-oauth-apps/troubleshooting-authorization-request-errors/#access-denied"}}
             response (handle-workflow req)]
 
-        (is (= (-> response :headers (get "Location")) "/login"))
+        (is (= "/login" (-> response :headers (get "Location"))))
         (is (= "You declined access to your GitLab account" (:flash response)))))))

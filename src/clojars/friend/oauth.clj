@@ -9,7 +9,7 @@
 (defn- handle-error [{:keys [params] ::keys [oauth-service]}]
   (let [{:keys [error error_description]} params]
     (when error
-      (if (= error "access_denied")
+      (if (= "access_denied" error)
         (assoc (redirect "/login")
                :flash (format "You declined access to your %s account"
                               (oauth-service/provider-name oauth-service)))

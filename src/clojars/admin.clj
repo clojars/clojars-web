@@ -128,7 +128,7 @@
   (printf "Do you want to verify %s for %s? [y/N] " group username)
   (flush)
   (let [res (read-line)]
-    (if (= res "y")
+    (if (= "y" res)
       (do
         (verify-group! username group)
         (printf "\nGroup verified: https://clojars.org/groups/%s\n" group))

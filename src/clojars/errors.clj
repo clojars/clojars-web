@@ -96,7 +96,7 @@
           (app req))
         (catch Throwable t
           (let [params (:params req)
-                err-response-fn (if (= (:format params) "json")
+                err-response-fn (if (= "json" (:format params))
                                   error-api/error-api-response
                                   error-page/error-page-response)]
             (->> (report-ring-error reporter t req request-id)

@@ -142,10 +142,9 @@
 (defn get-content-type [resp]
   (some-> resp :headers (get "content-type") (str/split #";") first))
 
-(defn assert-cors-header [resp]
-  (some-> resp :headers
-          (get "access-control-allow-origin")
-          (= "*")))
+(defn assert-cors-header
+  [resp]
+  (= "*" (get-in resp [:headers "access-control-allow-origin"])))
 
 (defn rewrite-pom [file m]
   (let [new-pom (doto (File/createTempFile (.getName file) ".pom")

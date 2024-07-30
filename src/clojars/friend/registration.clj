@@ -31,6 +31,6 @@
 
 (defn workflow [db]
   (fn [{:keys [uri request-method params]}]
-    (when (and (= uri "/register")
-               (= request-method :post))
+    (when (and (= "/register" uri)
+               (= :post request-method))
       (register db params))))

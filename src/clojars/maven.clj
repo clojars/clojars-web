@@ -221,7 +221,7 @@
                 (boolean (central-metadata group-id artifact-id))
                 (catch Exception _ :failure))]
       (if (and
-           (= ret :failure)
+           (= :failure ret)
            (< attempt 9))
         (do
           (Thread/sleep (bit-shift-left 1 (inc attempt)))
