@@ -1,6 +1,5 @@
 (ns clojars.unit.maven-test
   (:require
-   [clojars.config :refer [config]]
    [clojars.maven :as maven]
    [clojure.java.io :as io]
    [clojure.test :refer [are deftest is]]))
@@ -31,11 +30,6 @@
 
     (is (= "Some Other License" (:name l2)))
     (is (= "http://example.com/license2" (:url l2)))))
-
-(def snapshot "20120806.052549-1")
-
-(defn expected-file [& [d1 d2 d3 file]]
-  (io/file ((config) :repo) d1 d2 d3 (str file "-" snapshot ".pom")))
 
 ;; this might be a good candidate for test.check
 (deftest comparing-versions
