@@ -22,6 +22,8 @@
   :equals-false {:level :warning}
   :equals-true  {:level :warning}
 
+  :redundant-str-call {:level :warning}
+
   ;; warn if assoc-in/get-in/update-in are used with a single key
   :single-key-in {:level :warning}
 

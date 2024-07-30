@@ -240,7 +240,7 @@
                               (db/find-dependencies db group_name jar_name version)))]
     (list
      [:h3 "Dependencies"]
-     [(keyword (str "ul#dependencies"))
+     [:ul#dependencies
       (for [dep deps]
         [:li (dependency-link db dep)])])))
 
@@ -256,7 +256,7 @@
                               all-deps)]
       (list
        [:h3 "Dependents (on Clojars)"]
-       [(keyword (str "ul#dependents"))
+       [:ul#dependents
         (for [dep (take 10 distinct-deps)]
           [:li (dependent-link dep)])]
        [:p (link-to (str (jar-url jar) "/dependents")
@@ -312,7 +312,7 @@
      title
      {:account     account
       :description (format "%s %s" title (:description jar))
-      :label1      (str "Total downloads / this version")
+      :label1      "Total downloads / this version"
       :data1       (format "%s / %s" total-downloads downloads-this-version)
       :label2      "Coordinates"
       :data2       (format "[%s \"%s\"]" (jar-name jar) version)}
