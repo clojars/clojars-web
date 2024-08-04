@@ -11,14 +11,10 @@
    [clojure.java.io :as io]
    [clojure.tools.namespace.repl :refer [refresh]]
    [eftest.runner :as eftest]
-   [meta-merge.core :refer [meta-merge]]
    [reloaded.repl :refer [system init stop go clear]])
   (:import
    (java.io
     ByteArrayInputStream)))
-
-(def dev-env
-  {:app {:middleware []}})
 
 (defn migrate []
   (migrate/migrate (:db (config/config))))
@@ -28,7 +24,7 @@
   (migrate)
   (let [stats-bucket (s3/mock-s3-client)]
     (s3/put-object stats-bucket "all.edn" (ByteArrayInputStream. (.getBytes "{}")))
-    (assoc (system/new-system (meta-merge (config/config) dev-env))
+    (assoc (system/new-system (config/config))
            :error-reporter (errors/stdout-reporter)
            :mailer         (email/mock-mailer)
            :repo-bucket    (s3/mock-s3-client)

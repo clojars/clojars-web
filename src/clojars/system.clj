@@ -23,12 +23,7 @@
    [duct.component.endpoint :refer [endpoint-component]]
    [duct.component.handler :refer [handler-component]]
    [duct.component.hikaricp :refer [hikaricp]]
-   [meta-merge.core :refer [meta-merge]]
    [ring.component.jetty :refer [jetty-server]]))
-
-(def base-env
-  {:app {:middleware []}
-   :http {:configurator patch/use-status-message-header}})
 
 (defrecord StorageComponent [error-reporter delegate on-disk-repo repo-bucket cdn-token cdn-url]
   storage/Storage
@@ -72,11 +67,11 @@
         :stats  [:stats-bucket]})))
 
 (defn new-system [config]
-  (let [{:as config :keys [github-oauth gitlab-oauth]} (meta-merge base-env config)]
+  (let [{:as config :keys [github-oauth gitlab-oauth]} config]
     (-> (merge
          (base-system config)
          (component/system-map
-          :app            (handler-component (:app config))
+          :app            (handler-component nil)
           :clojars-app    (endpoint-component web/clojars-app)
           :github         (github/new-github-service (:client-id github-oauth)
                                                      (:client-secret github-oauth)
@@ -86,7 +81,8 @@
                                                      (:callback-uri gitlab-oauth))
           :event-emitter  (event/new-sqs-emitter (:event-queue config))
           :event-receiver (event/new-sqs-receiver (:event-queue config))
-          :http           (jetty-server (:http config))
+          :http           (jetty-server (assoc (:http config)
+                                               :configurator patch/use-status-message-header))
           :http-client    (remote-service/new-http-remote-service)
           :mailer         (simple-mailer (:mail config))
           :notifications  (notifications/notification-component)

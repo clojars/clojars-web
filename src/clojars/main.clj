@@ -7,11 +7,7 @@
     [errors :as err]
     [system :as system]]
    [com.stuartsierra.component :as component]
-   [meta-merge.core :refer [meta-merge]]
    [raven-clj.core :as raven-clj]))
-
-(def ^:private prod-env
-  {:app {:middleware []}})
 
 (defn- info [& msg]
   (apply println "clojars-web:" msg))
@@ -20,8 +16,7 @@
   (apply println "clojars-web: WARNING -" msg))
 
 (defn- prod-system [config prod-reporter]
-  (-> (meta-merge config prod-env)
-      system/new-system
+  (-> (system/new-system config)
       (assoc :error-reporter prod-reporter)))
 
 (defn- raven-reporter

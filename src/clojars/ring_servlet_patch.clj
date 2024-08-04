@@ -40,5 +40,6 @@
 
   The status message is used to provide additional context when deploying."
   [^Server server]
+  (println "Adding Jetty status-message handler")
   (let [^ServletContextHandler handler (.getHandler server)]
     (.insertHandler handler (handler-wrapper))))
