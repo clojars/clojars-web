@@ -4,7 +4,7 @@
     <file>${log.dir:-logs}/clojars.ednl</file>
     <!-- Handling rotation here instead of via logrotate in the server config to avoid restarting the process -->
      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-       <fileNamePattern>clojars-%d{yyyy-MM-dd}.%i.ednl.gz</fileNamePattern>
+       <fileNamePattern>${log.dir:-logs}/clojars-%d{yyyy-MM-dd}.%i.ednl.gz</fileNamePattern>
        <maxFileSize>64MB</maxFileSize>    
        <maxHistory>14</maxHistory>
        <totalSizeCap>512GB</totalSizeCap>
@@ -18,7 +18,7 @@
     <file>${log.dir:-logs}/clojars.log</file>
     <!-- Handling rotation here instead of via logrotate in the server config to avoid restarting the process -->
      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-       <fileNamePattern>clojars-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+       <fileNamePattern>${log.dir:-logs}/clojars-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
        <maxFileSize>64MB</maxFileSize>    
        <maxHistory>14</maxHistory>
        <totalSizeCap>512GB</totalSizeCap>
