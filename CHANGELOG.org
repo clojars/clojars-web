@@ -3,11 +3,29 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** 2024-August
+*** [[https://github.com/clojars/clojars-web/tree/2024-08-03.2087][2024-08-03.2087]]
++ [[https://github.com/clojars/clojars-web/commit/ac9e6733a261ebb18d305379ef95f34d42fe3ef5][Upgrade to clojure 1.12.0-rc1]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/tree/2024-08-04.2088][2024-08-04.2088]]
++ [[https://github.com/clojars/clojars-web/commit/978eeab87928772c158fa454aeb9c8c1e630b8d2][Remove unnecessary app & http config]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/tree/2024-08-09.2089][2024-08-09.2089]]
++ [[https://github.com/clojars/clojars-web/commit/2df51fb53ed39fdd75e1637828b786015edce314][Keep rolled logs in log dif]] ([[https://github.com/tobias][Toby Crawley]])
+
+** 2024-July
+*** [[https://github.com/clojars/clojars-web/releases/tag/2024-07-27.2080][2024-07-27.2080]]
++ [[https://github.com/clojars/clojars-web/commit/662e10febf1267b1e67c321b1aa337550f3d7a29][Don't throw on s3 not-found]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/b7d7d99bacfb863ddc9139d895640b8bf9a7b3fa][Properly delete artifacts from S3]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2024-07-30.2085][2024-07-30.2085]]
++ [[https://github.com/clojars/clojars-web/commit/0d6640ae647f8b075e74c1b3d20128dccbadebc5][Upgrade to clojure 1.12.0-beta2]] ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2024-June
 *** [[https://github.com/clojars/clojars-web/releases/tag/2024-06-09.2074][2024-06-09.2074]]
 + [[https://github.com/clojars/clojars-web/commit/4acf752f11adf2a32041f8788852771c5eb909fa][Upgrade nippy to address CVE-2024-36124]] ([[https://github.com/tobias][Toby Crawley]])
 
-*** [[https://github.com/clojars/clojars-web/releases/tag/2024-06-09.2074][2024-06-09.2074]]
+*** [[https://github.com/clojars/clojars-web/releases/tag/2024-06-30.2075][2024-06-30.2075]]
 + [[https://github.com/clojars/clojars-web/commit/053cb838677011f7cc39ad3a577b01edc279ccf8][Clean up many typos]] ([[https://github.com/tobias][Toby Crawley]])
 
 ** 2024-May
