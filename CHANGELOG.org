@@ -13,6 +13,9 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/tree/2024-08-09.2089][2024-08-09.2089]]
 + [[https://github.com/clojars/clojars-web/commit/2df51fb53ed39fdd75e1637828b786015edce314][Keep rolled logs in log dif]] ([[https://github.com/tobias][Toby Crawley]])
 
+*** [[https://github.com/clojars/clojars-web/tree/2024-08-29.2092][2024-08-29.2092]]
++ [[https://github.com/clojars/clojars-web/commit/78a7408d3b1f614c477b047a17c5938aa60687b8][Upgrade to clojure 1.12.0-rc2]] ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2024-July
 *** [[https://github.com/clojars/clojars-web/releases/tag/2024-07-27.2080][2024-07-27.2080]]
 + [[https://github.com/clojars/clojars-web/commit/662e10febf1267b1e67c321b1aa337550f3d7a29][Don't throw on s3 not-found]] ([[https://github.com/tobias][Toby Crawley]])
