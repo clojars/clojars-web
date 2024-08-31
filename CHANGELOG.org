@@ -280,7 +280,7 @@ This covers changes released in Clojars 149 through 158.
 - [[https://github.com/clojars/clojars-web/issues/814][Dependents of a jar are now shown in the sidebar if they are on Clojars]]
 - Upgraded from Java 11 to Java 17
 - Many dependency upgrades to address CVEs
-- Search was rewritten to use Lucene 8 and retuned to address search quality issues ([[https://github.com/clojars/clojars-web/issues/806][#806]], [[https://github.com/clojars/clojars-web/issues/721][#721]], [[ https://github.com/clojars/clojars-web/issues/719 ][#719]])
+- Search was rewritten to use Lucene 8 and retuned to address search quality issues ([[https://github.com/clojars/clojars-web/issues/806][#806]], [[https://github.com/clojars/clojars-web/issues/721][#721]], [[https://github.com/clojars/clojars-web/issues/719][#719]])
 
 ** 2021-September
 *** 148
