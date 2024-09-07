@@ -32,7 +32,7 @@
 
   java.util.List
   (redact [v]
-    (vec (map redact v)))
+    (mapv redact v))
 
   java.util.Map
   (redact [v]
