@@ -35,7 +35,7 @@ website.
 Development
 -----------
 
-**Note: Java 17 and `make` are required**
+**Note: Java 21 and `make` are required**
 
 ### Development system
 
