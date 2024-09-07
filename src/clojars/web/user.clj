@@ -2,7 +2,7 @@
   (:require
    [buddy.core.codecs.base64 :as base64]
    [cemerick.friend.credentials :as creds]
-   [clojars.config :refer [config]]
+   [clojars.config :as config]
    [clojars.db :as db :refer [find-group-verification
                               find-groupnames
                               find-user
@@ -13,6 +13,7 @@
                               update-user
                               update-user-notifications]]
    [clojars.event :as event]
+   [clojars.hcaptcha :as hcaptcha]
    [clojars.log :as log]
    [clojars.notifications.common :as notif-common]
    [clojars.web.common :refer [html-doc error-list form-table jar-link
@@ -34,7 +35,8 @@
 
 (set! *warn-on-reflection* true)
 
-(defn register-form [{:keys [errors email username]} message]
+(defn register-form
+  [hcaptcha {:keys [errors email username]} message]
   (html-doc "Register" {}
             [:div.small-section
              [:h1 "Register"]
@@ -59,6 +61,17 @@
                       (password-field {:placeholder "confirm your password"
                                        :required true}
                                       :confirm)
+                      ;; We don't load the captcha js in tests, since we can't interact
+                      ;; with it. Instead, we emit a text area that we can fill with a
+                      ;; response value that is valid or not when using an hcaptcha
+                      ;; test token..
+                      (if (config/test-profile?)
+                        (list
+                         (label :h-captcha-response "TEST Captcha")
+                         (text-field :h-captcha-response))
+                        (list
+                         [:div.h-captcha {:data-sitekey (hcaptcha/site-key hcaptcha)}]
+                         [:script {:src "https://js.hcaptcha.com/1/api.js" :async true :defer true}]))
                       (submit-button "Register"))]))
 
 ;; Validations
@@ -97,15 +110,20 @@
             "letters, numbers, hyphens and underscores.")]
       [:username pred/present? "Username can't be blank"]])))
 
+(defn- captcha-validations
+  [hcaptcha]
+  [[:captcha (partial hcaptcha/valid-response? hcaptcha) "Captcha response is invalid."]])
+
 (defn new-user-validations
-  [db confirm]
+  [db hcaptcha confirm]
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (reserved-names %)
                                 (find-user db %)
                                 (seq (group-activenames db %))))
             "Username is already taken"]]
           (user-validations db)
-          (password-validations confirm)))
+          (password-validations confirm)
+          (captcha-validations hcaptcha)))
 
 (defn reset-password-validations [db confirm]
   (concat
@@ -249,7 +267,7 @@
   (log/with-context {:email-or-username email-or-username}
     (if-let [user (find-user-by-user-or-email db email-or-username)]
       (let [reset-code (db/set-password-reset-code! db (:user user))
-            base-url (:base-url (config))
+            base-url (:base-url (config/config))
             reset-password-url (str base-url "/password-resets/" reset-code)]
         (log/info {:tag :password-reset-code-generated})
         (mailer (:email user)

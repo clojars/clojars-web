@@ -24,6 +24,13 @@
        (cond-> otp (fill-in "Two-Factor Code" otp))
        (press "Login"))))
 
+(defn fill-in-captcha
+  ([state]
+   ;; From https://docs.hcaptcha.com/#integration-testing-test-keys
+   (fill-in-captcha state "10000000-aaaa-bbbb-cccc-000000000001"))
+  ([state value]
+   (fill-in state "TEST Captcha" value)))
+
 (defn register-as
   ([state user email password]
    (register-as state user email password password))
@@ -35,6 +42,7 @@
        (fill-in "Username" user)
        (fill-in "Password" password)
        (fill-in "Confirm password" confirm)
+       (fill-in-captcha)
        (press "Register"))))
 
 (defn create-deploy-token

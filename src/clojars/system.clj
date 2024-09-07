@@ -2,6 +2,7 @@
   (:require
    [clojars.email :refer [simple-mailer]]
    [clojars.event :as event]
+   [clojars.hcaptcha :as hcaptcha]
    [clojars.notifications :as notifications]
    ;; for defmethods
    [clojars.notifications.admin]
@@ -81,6 +82,7 @@
                                                      (:callback-uri gitlab-oauth))
           :event-emitter  (event/new-sqs-emitter (:event-queue config))
           :event-receiver (event/new-sqs-receiver (:event-queue config))
+          :hcaptcha       (hcaptcha/new-hcaptcha (:hcaptcha config))
           :http           (jetty-server (assoc (:http config)
                                                :configurator patch/use-status-message-header))
           :http-client    (remote-service/new-http-remote-service)
@@ -91,8 +93,8 @@
           :storage        (storage-component (:repo config) (:cdn-token config) (:cdn-url config))))
         (component/system-using
          {:app            [:clojars-app]
-          :clojars-app    [:db :github :gitlab :error-reporter :event-emitter :http-client
-                           :mailer :stats :search :storage]
+          :clojars-app    [:db :github :gitlab :error-reporter :event-emitter :hcaptcha
+                           :http-client :mailer :stats :search :storage]
           :event-emitter  [:error-reporter]
           :http           [:app]
           :notifications  [:db :mailer]

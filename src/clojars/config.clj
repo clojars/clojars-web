@@ -26,6 +26,10 @@
 
 (def ^:dynamic *profile* "development")
 
+(defn test-profile?
+  []
+  (= "test" *profile*))
+
 (defmethod aero/reader 'ssm-parameter
   [_opts _tag value]
   (if (= :production *profile*)

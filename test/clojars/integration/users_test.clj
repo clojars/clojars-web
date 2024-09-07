@@ -2,7 +2,7 @@
   (:require
    [clojars.db :as db]
    [clojars.email :as email]
-   [clojars.integration.steps :refer [disable-mfa enable-mfa login-as register-as]]
+   [clojars.integration.steps :refer [disable-mfa enable-mfa fill-in-captcha login-as register-as]]
    ;; for defmethods
    [clojars.notifications.user]
    [clojars.test-helper :as help]
@@ -72,6 +72,7 @@
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "dantheman")
+      (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
@@ -81,6 +82,7 @@
       (fill-in "Username" "dantheman")
       (fill-in "Password" (apply str (range 123)))
       (fill-in "Confirm password" (apply str (range 123)))
+      (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
@@ -89,6 +91,7 @@
       (fill-in "Password" "password")
       (fill-in "Email" "test@example.com")
       (fill-in "Username" "dantheman")
+      (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (has (value? [:input#username] "dantheman"))
@@ -100,6 +103,7 @@
       (fill-in "Username" "dantheman")
       (fill-in "Password" "password")
       (fill-in "Confirm password" "password")
+      (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
@@ -109,6 +113,7 @@
       (fill-in "Username" "dantheman")
       (fill-in "Password" "password")
       (fill-in "Confirm password" "password")
+      (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
@@ -119,6 +124,7 @@
       (fill-in "Username" "dantheman")
       (fill-in "Password" "password")
       (fill-in "Confirm password" "password")
+      (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
@@ -128,6 +134,7 @@
       (fill-in "Username" "")
       (fill-in "Password" "password")
       (fill-in "Confirm password" "password")
+      (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
@@ -135,6 +142,7 @@
       (fill-in "Username" "<script>")
       (fill-in "Password" "password")
       (fill-in "Confirm password" "password")
+      (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
@@ -143,10 +151,28 @@
       (fill-in "Username" "fixture")
       (fill-in "Password" "password")
       (fill-in "Confirm password" "password")
+      (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Username is already taken")))))
+        (has (text? "Username is already taken")))
+
+      (fill-in "Username" "fixture2")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
+      (fill-in-captcha "bad-value")
+      (press "Register")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "Captcha response is invalid.")))
+      (fill-in "Username" "fixture2")
+      (fill-in "Password" "password")
+      (fill-in "Confirm password" "password")
+      (fill-in-captcha "")
+      (press "Register")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "Captcha response is invalid.")))))
 
 (deftest user-can-update-info
   (email/expect-mock-emails 3)

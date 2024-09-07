@@ -40,6 +40,10 @@
                        :client-secret #profile {:production #ssm-parameter "/clojars/production/gitlab_oauth_client_secret"
                                                 :default    "testing"}
                        :callback-uri  "https://clojars.org/oauth/gitlab/callback"}
+ :hcaptcha            #profile {:production {:site-key #ssm-parameter "/clojars/production/hcaptcha_site_key"
+                                             :secret #ssm-parameter "/clojars/production/hcaptcha_secret"}
+                                :default {:site-key "10000000-ffff-ffff-ffff-000000000001"
+                                          :secret "0x0000000000000000000000000000000000000000"}}
  :index-path          "data/index"
  :mail                #profile {:production {:from     "contact@clojars.org"
                                              :hostname "email-smtp.us-east-1.amazonaws.com"

@@ -50,7 +50,7 @@
                :status 400})))))
 
 (defn- main-routes
-  [{:as _system :keys [db event-emitter mailer search stats]}]
+  [{:as _system :keys [db event-emitter hcaptcha mailer search stats]}]
   (let [db (:spec db)]
     (routes
      (GET "/" _
@@ -83,7 +83,7 @@
      (artifact/routes db stats)
      ;; user routes must go after artifact routes
      ;; since they both catch /:identifier
-     (user/routes db event-emitter mailer)
+     (user/routes db event-emitter hcaptcha mailer)
      (verify/routes db event-emitter)
      (token/routes db)
      (api/routes db stats)
@@ -139,6 +139,7 @@
     :keys [db
            error-reporter
            event-emitter
+           hcaptcha
            http-client
            github
            gitlab
@@ -168,7 +169,7 @@
          (friend/authenticate
           {:credential-fn (auth/password-credential-fn db event-emitter)
            :workflows [(auth/interactive-form-with-mfa-workflow)
-                       (registration/workflow db)
+                       (registration/workflow db hcaptcha)
                        (github/workflow github http-client db)
                        (gitlab/workflow gitlab http-client db)]})
          (wrap-reject-invalid-params)
