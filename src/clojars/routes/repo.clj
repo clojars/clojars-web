@@ -601,7 +601,7 @@
         (log/info {:tag :deploy-password-rejection
                    :username username})
         {:status 401
-         :headers {"status-message" (format "Unauthorized - %s" message)}}))))
+         :status-message (format "Unauthorized - %s" message)}))))
 
 (defn wrap-exceptions [app reporter]
   (fn [req]
@@ -613,5 +613,5 @@
           (report-error reporter e nil request-id)
           (let [data (ex-data e)]
             {:status (or (:status data) 403)
-             :headers {"status-message" (:status-message data)}
+             :status-message (:status-message data)
              :body (.getMessage e)}))))))

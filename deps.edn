@@ -76,6 +76,7 @@
   raven-clj/raven-clj {:mvn/version "1.7.0"}
   ring/ring-core {:mvn/version "1.12.1"}
   ring/ring-defaults {:mvn/version "0.5.0"}
+  ;; Audit clojars.ring-servlet-patch if updating this version!
   ring/ring-jetty-adapter {:mvn/version "1.12.1"}
   ring-jetty-component/ring-jetty-component {:mvn/version "0.3.1"}
   ring-middleware-format/ring-middleware-format {:mvn/version "0.7.5"}
