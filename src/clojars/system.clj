@@ -69,6 +69,7 @@
 
 (defn new-system [config]
   (let [{:as config :keys [github-oauth gitlab-oauth]} config]
+    (patch/monkey-patch-update-servlet-response-to-send-status-message)
     (-> (merge
          (base-system config)
          (component/system-map
@@ -83,8 +84,7 @@
           :event-emitter  (event/new-sqs-emitter (:event-queue config))
           :event-receiver (event/new-sqs-receiver (:event-queue config))
           :hcaptcha       (hcaptcha/new-hcaptcha (:hcaptcha config))
-          :http           (jetty-server (assoc (:http config)
-                                               :configurator patch/use-status-message-header))
+          :http           (jetty-server (:http config))
           :http-client    (remote-service/new-http-remote-service)
           :mailer         (simple-mailer (:mail config))
           :notifications  (notifications/notification-component)
