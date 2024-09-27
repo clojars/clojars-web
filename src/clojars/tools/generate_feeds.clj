@@ -7,10 +7,9 @@
    [clojars.maven :as maven]
    [clojars.s3 :as s3]
    [clojars.util :as util]
-   [clojure.java.io :as io]
    [clojure.data.xml :as xml]
-   [clojure.set :as set]
-   [clojars.routes.artifact :as artifact])
+   [clojure.java.io :as io]
+   [clojure.set :as set])
   (:import
    (java.io
     FileOutputStream
