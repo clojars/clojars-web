@@ -135,28 +135,40 @@
 (defn write-sitemap
   "returns sitemap filename"
   [dest index links]
-  (let [sitemap-file (str dest "/sitemap-" index ".xml.gz")
+  (let [sitemap-file (str dest "/sitemap-" index ".xml")
+        sitemap-file-gz (str sitemap-file ".gz")
         sitemap [::sitemap/urlset {:xmlns sitemap-ns}
                  (for [link links]
                    [::sitemap/url
-                    [::sitemap/loc link]])]]
-    (write-to-file [(xml/sexp-as-element sitemap)]
-                   sitemap-file
-                   :gzip
-                   #(xml/emit % *out*))))
+                    [::sitemap/loc link]])]
+        data [(xml/sexp-as-element sitemap)]]
+    [(write-to-file data
+                    sitemap-file
+                    nil
+                    #(xml/emit % *out*))
+     (write-to-file data
+                    sitemap-file-gz
+                    :gzip
+                    #(xml/emit % *out*))]))
 
 (defn write-sitemap-index
   "returns sitemap index filename"
   [base-url dest sitemap-files]
-  (let [sitemap-index-file (str dest "/sitemap-index.xml.gz")
+  (let [sitemap-index-file (str dest "/sitemap.xml")
+        sitemap-index-file-gz (str sitemap-index-file ".gz")
         sitemap-index [::sitemap/sitemapindex {:xmlns sitemap-ns}
-                       (for [sitemap-file sitemap-files]
+                       (for [[sitemap-file _] sitemap-files]
                          [::sitemap/sitemap
-                          [::sitemap/loc (str base-url "/" sitemap-file)]])]]
-    (write-to-file [(xml/sexp-as-element sitemap-index)]
-                   sitemap-index-file
-                   :gzip
-                   #(xml/emit % *out*))))
+                          [::sitemap/loc (str base-url "/" sitemap-file)]])]
+        data [(xml/sexp-as-element sitemap-index)]]
+    [(write-to-file data
+                     sitemap-index-file
+                     nil
+                     #(xml/emit % *out*))
+     (write-to-file data
+                    sitemap-index-file-gz
+                    :gzip
+                    #(xml/emit % *out*))]))
 
 (defn generate-sitemaps
   "base-url - without the trailing slash"
@@ -165,6 +177,7 @@
                            (partition-all 50000)
                            (map-indexed #(write-sitemap dest %1 %2))
                            ((juxt #(write-sitemap-index base-url dest %) identity))
+                           (apply concat)
                            (apply list*))
         checksum-files (mapcat write-sums sitemap-files)]
     (concat sitemap-files checksum-files)))
