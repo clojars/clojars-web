@@ -600,6 +600,12 @@
                 :from     :jars
                 :order-by :id}))))
 
+
+(defn all-groups [db]
+  (q db {:select-distinct [:group_name]
+         :from :jars
+         :order-by [[:group_name :asc]]}))
+
 (defn find-dependencies
   [db groupname jarname version]
   (q db
@@ -628,6 +634,13 @@
       :order-by [[:group_name :asc] [:jar_name :asc]]
       :limit limit-num
       :offset offset-num}))
+
+(defn all-users
+  [db]
+  (q db
+     {:select [:user]
+      :from :users
+      :order-by [[:user :asc]]}))
 
 (defn count-all-projects
   [db]
