@@ -41,7 +41,6 @@
      (link-to "/dmca" "DMCA")
      (link-to "https://github.com/clojars/clojars-web/wiki/" "help")
      (link-to "https://github.com/clojars/clojars-web/wiki/Data" "API")
-     (link-to "/repo/sitemap.xml" "sitemap")
      [:div.sponsors
       [:div.sponsors-title
        "Hosting costs sponsored by:"]
