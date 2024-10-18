@@ -62,7 +62,6 @@
   org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.78"}
   org.bouncycastle/bcprov-jdk18on {:mvn/version "1.78"}
   org.clojure/clojure {:mvn/version "1.12.0"}
-  org.clojure/data.xml {:mvn/version "0.2.0-alpha9"}
   org.clojure/tools.logging {:mvn/version "1.2.4"}
   org.clojure/tools.nrepl {:mvn/version "0.2.11"}
   org.postgresql/postgresql {:mvn/version "42.7.2"}
