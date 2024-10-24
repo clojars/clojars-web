@@ -136,7 +136,6 @@
   "returns sitemap filename"
   [dest index links]
   (let [sitemap-file (str dest "/sitemap-" index ".xml")
-        sitemap-file-gz (str sitemap-file ".gz")
         sitemap [::sitemap/urlset {:xmlns sitemap-ns}
                  (for [link links]
                    [::sitemap/url
@@ -145,17 +144,12 @@
     [(write-to-file data
                     sitemap-file
                     nil
-                    #(xml/emit % *out*))
-     (write-to-file data
-                    sitemap-file-gz
-                    :gzip
                     #(xml/emit % *out*))]))
 
 (defn write-sitemap-index
   "returns sitemap index filename"
   [base-url dest sitemap-files]
   (let [sitemap-index-file (str dest "/sitemap.xml")
-        sitemap-index-file-gz (str sitemap-index-file ".gz")
         sitemap-index [::sitemap/sitemapindex {:xmlns sitemap-ns}
                        (for [[sitemap-file _] sitemap-files]
                          [::sitemap/sitemap
@@ -164,11 +158,7 @@
     [(write-to-file data
                      sitemap-index-file
                      nil
-                     #(xml/emit % *out*))
-     (write-to-file data
-                    sitemap-index-file-gz
-                    :gzip
-                    #(xml/emit % *out*))]))
+                     #(xml/emit % *out*))]))
 
 (defn generate-sitemaps
   "base-url - without the trailing slash"

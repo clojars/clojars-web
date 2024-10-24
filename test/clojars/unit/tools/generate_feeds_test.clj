@@ -157,12 +157,12 @@
                          (read-string))]
       (is (= expected-jar-list read-jars))))
 
-  (let [sitemap-index-file (io/file "/tmp" "sitemap-index.xml.gz")
-        sitemap-file (io/file "/tmp" "sitemap-0.xml.gz")]
+  (let [sitemap-index-file (io/file "/tmp" "sitemap.xml")
+        sitemap-file (io/file "/tmp" "sitemap-0.xml")]
     (verify-file-and-sums sitemap-index-file)
     (verify-file-and-sums sitemap-file)
     (with-open [in (io/input-stream sitemap-index-file)]
-      (let [sitemap-index (-> in (GZIPInputStream.) (xml/parse))
+      (let [sitemap-index (xml/parse in)
             first-sitemap (-> sitemap-index :content first)
             first-loc (-> first-sitemap :content first)]
         (is (= "sitemapindex" (name (:tag sitemap-index))))
@@ -172,7 +172,7 @@
         (is (= "loc" (name (:tag first-loc))))
         (is (str/ends-with? (->> first-loc :content first) (File/.getPath sitemap-file)))))
     (with-open [in (io/input-stream sitemap-file)]
-      (let [sitemap (-> in (GZIPInputStream.) (xml/parse))
+      (let [sitemap (xml/parse in)
             first-url (-> sitemap :content first)
             first-loc (-> first-url :content first)]
         (is (= "urlset" (-> sitemap :tag name)))
