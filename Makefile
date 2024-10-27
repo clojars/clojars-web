@@ -28,7 +28,7 @@ setup-dev-repo:
 
 .PHONY: tag-release
 tag-release:
-	clj -T:build tag-release
+	clojure -T:build tag-release
 
 .PHONY: test
 test:
