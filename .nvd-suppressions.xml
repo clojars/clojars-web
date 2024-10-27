@@ -26,6 +26,7 @@
    <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
    <cve>CVE-2022-1471</cve>
   </suppress>
+
   <suppress>
      <notes><![CDATA[
      This CVE only impacts programs using Clojure < 1.9.0, and gets reported for any jar
@@ -33,6 +34,24 @@
      newer Clojure (as we are).
      ]]></notes>
      <cve>CVE-2017-20189</cve>
+  </suppress>
+
+  <suppress>
+     <notes><![CDATA[
+     This CVE only impacts usage of Jetty's HttpURI directly, and we don't use it. We can't
+     upgrade to get rid of this CVE as it requires upgrading to Jetty 12, which ring does not
+     yet support (we are are 11 currently).
+     ]]></notes>
+     <cve>CVE-2024-6763</cve>
+  </suppress>
+
+<suppress>
+     <notes><![CDATA[
+     This CVE only impacts projects using http replication, which we don't do. We can't
+     upgrade to get rid of this CVE without rebuilding our indexing code, as it requires
+     upgrading to Lucene 9 (we are on 8 currently).
+     ]]></notes>
+     <cve>CVE-2024-45772</cve>
   </suppress>
 
 </suppressions>
