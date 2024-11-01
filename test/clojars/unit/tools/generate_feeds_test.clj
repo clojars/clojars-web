@@ -6,12 +6,15 @@
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
    [clojars.tools.generate-feeds :as feeds]
+   [clojure.data.xml :as xml]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.test :refer [deftest is use-fixtures]]
    [matcher-combinators.matchers :as m]
    [matcher-combinators.test])
   (:import
+   (java.io
+    File)
    (java.util
     Date)
    (java.util.zip
@@ -113,7 +116,7 @@
     (is (s3/object-exists? cf (str name ".sha1")))))
 
 (deftest the-whole-enchilada
-  (feeds/generate-feeds "/tmp" help/*db* help/*s3-repo-bucket*)
+  (feeds/generate-feeds "/tmp" "http://example.org" help/*db* help/*s3-repo-bucket*)
   (let [feed-file (io/file "/tmp" "feed.clj.gz")]
     (verify-file-and-sums feed-file)
     (verify-s3 help/*s3-repo-bucket* feed-file)
@@ -152,4 +155,26 @@
                          (slurp)
                          (format "[%s]")
                          (read-string))]
-      (is (= expected-jar-list read-jars)))))
+      (is (= expected-jar-list read-jars))))
+
+  (let [sitemap-index-file (io/file "/tmp" "sitemap.xml")
+        sitemap-file (io/file "/tmp" "sitemap-0.xml")]
+    (verify-file-and-sums sitemap-index-file)
+    (verify-file-and-sums sitemap-file)
+    (with-open [in (io/input-stream sitemap-index-file)]
+      (let [sitemap-index (xml/parse in)
+            first-sitemap (-> sitemap-index :content first)
+            first-loc (-> first-sitemap :content first)]
+        (is (= "sitemapindex" (name (:tag sitemap-index))))
+        (is (some? first-sitemap))
+        (is (= "sitemap" (name (:tag first-sitemap))))
+        (is (some? first-loc))
+        (is (= "loc" (name (:tag first-loc))))
+        (is (str/ends-with? (->> first-loc :content first) (File/.getPath sitemap-file)))))
+    (with-open [in (io/input-stream sitemap-file)]
+      (let [sitemap (xml/parse in)
+            first-url (-> sitemap :content first)
+            first-loc (-> first-url :content first)]
+        (is (= "urlset" (-> sitemap :tag name)))
+        (is (= "url" (-> first-url :tag name)))
+        (is (= "loc" (-> first-loc :tag name)))))))
