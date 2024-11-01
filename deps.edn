@@ -52,9 +52,9 @@
                                   org.apache.xmlgraphics/batik-dom
                                   org.apache.xmlgraphics/batik-svggen]}
   org.apache.commons/commons-email {:mvn/version "1.5"}
-  org.apache.lucene/lucene-core {:mvn/version "8.11.1"}
-  org.apache.lucene/lucene-analyzers-common {:mvn/version "8.11.1"}
-  org.apache.lucene/lucene-queryparser {:mvn/version "8.11.1"}
+  org.apache.lucene/lucene-core {:mvn/version "8.11.4"}
+  org.apache.lucene/lucene-analyzers-common {:mvn/version "8.11.4"}
+  org.apache.lucene/lucene-queryparser {:mvn/version "8.11.4"}
   org.apache.maven/maven-model {:mvn/version "3.8.4"}
   org.apache.maven/maven-repository-metadata {:mvn/version "3.8.4"}
   ;; Override bouncycastle brought in by buddy-core to address CVE-2024-29857,
@@ -78,7 +78,7 @@
   ring/ring-core {:mvn/version "1.12.1"}
   ring/ring-defaults {:mvn/version "0.5.0"}
   ;; Audit clojars.ring-servlet-patch if updating this version!
-  ring/ring-jetty-adapter {:mvn/version "1.12.1"}
+  ring/ring-jetty-adapter {:mvn/version "1.13.0"}
   ring-jetty-component/ring-jetty-component {:mvn/version "0.3.1"}
   ring-middleware-format/ring-middleware-format {:mvn/version "0.7.5"}
 
