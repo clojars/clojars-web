@@ -99,6 +99,12 @@
   (binding [*s3-repo-bucket* (s3/mock-s3-client)]
     (f)))
 
+(declare ^:dynamic *s3-stats-bucket*)
+
+(defn with-s3-stats-bucket [f]
+  (binding [*s3-stats-bucket* (s3/mock-s3-client)]
+    (f)))
+
 (declare ^:dynamic test-port)
 
 (defn memory-index []

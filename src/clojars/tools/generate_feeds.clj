@@ -92,9 +92,9 @@
 (xml/alias-uri 'sitemap sitemap-ns)
 
 (defn links-list [base-url db]
-  (let [ ;; get current domain
+  (let [;; get current domain
 
-        base-links [ ;; index, projects, security, dmca
+        base-links [;; index, projects, security, dmca
                     ""
                     "/projects"
                     "/security"
@@ -118,8 +118,8 @@
                                               #(str "/" artifact-id "/versions/" (:version %)))
                                              jars))]
                                   (if (= group-id artifact-id)
-                                     artifact-links
-                                     (map #(str "/" group-id %) artifact-links)))))
+                                    artifact-links
+                                    (map #(str "/" group-id %) artifact-links)))))
                              (all-grouped-jars db))
 
         user-links (into []
@@ -156,9 +156,9 @@
                           [::sitemap/loc (str base-url "/" sitemap-file)]])]
         data [(xml/sexp-as-element sitemap-index)]]
     [(write-to-file data
-                     sitemap-index-file
-                     nil
-                     #(xml/emit % *out*))]))
+                    sitemap-index-file
+                    nil
+                    #(xml/emit % *out*))]))
 
 (defn generate-sitemaps
   "base-url - without the trailing slash"
@@ -172,47 +172,48 @@
         checksum-files (mapcat write-sums sitemap-files)]
     (concat sitemap-files checksum-files)))
 
-(defn put-files [s3-bucket & files]
-  (run! #(let [f (io/file %)]
-           (s3/put-file s3-bucket (.getName f) f {:ACL "public-read"}))
-        files))
+(defn put-files
+  ([s3-bucket files]
+   (put-files s3-bucket "" files))
+  ([s3-bucket prefix files]
+   (run! #(let [f (io/file %)]
+            (s3/put-file s3-bucket (str prefix (.getName f)) f {:ACL "public-read"}))
+         files)))
 
-(defn generate-feeds [dest base-url db s3-bucket]
-  (let [feed-file (str dest "/feed.clj.gz")]
-    (apply put-files
-           s3-bucket
-           (write-to-file (full-feed db) feed-file :gzip)
-           (write-sums feed-file)))
+(defn generate-feeds
+  [dest db s3-bucket]
+  (let [feed-file (str dest "/feed.clj.gz")
+        poms (pom-list s3-bucket)
+        poms-file (str dest "/all-poms.txt")
+        poms-gz-file (str poms-file ".gz")
+        jars (jar-list db)
+        jars-file (str dest "/all-jars.clj")
+        jars-gz-file (str jars-file ".gz")]
+    (concat
+     [(write-to-file (full-feed db) feed-file :gzip)]
+     (write-sums feed-file)
+     [(write-to-file poms poms-file nil println)]
+     [(write-to-file poms poms-gz-file :gzip println)]
+     (write-sums poms-file)
+     (write-sums poms-gz-file)
+     [(write-to-file jars jars-file nil)]
+     [(write-to-file jars jars-gz-file :gzip)]
+     (write-sums jars-file)
+     (write-sums jars-gz-file))))
 
-  (let [poms (pom-list s3-bucket)
-        pom-file (str dest "/all-poms.txt")
-        gz-file (str pom-file ".gz")]
-    (apply put-files
-           s3-bucket
-           (write-to-file poms pom-file nil println)
-           (write-to-file poms gz-file :gzip println)
-           (concat
-            (write-sums pom-file)
-            (write-sums gz-file))))
+(defn generate+store-feeds
+  [db s3-client feed-dir]
+  (put-files s3-client
+             (generate-feeds feed-dir db s3-client)))
 
-  (let [jars (jar-list db)
-        jar-file (str dest "/all-jars.clj")
-        gz-file (str jar-file ".gz")]
-    (apply put-files
-           s3-bucket
-           (write-to-file jars jar-file nil)
-           (write-to-file jars gz-file :gzip)
-           (concat
-            (write-sums jar-file)
-            (write-sums gz-file))))
-
-  (apply put-files
-         s3-bucket
-         (generate-sitemaps base-url dest db)))
+(defn generate+store-sitemaps
+  [db s3-client feed-dir base-url]
+  (put-files s3-client "sitemap/"
+             (generate-sitemaps base-url feed-dir db)))
 
 (defn -main [feed-dir env]
-  (let [{:keys [db s3 base-url]} (config (keyword env))]
-    (generate-feeds feed-dir
-                    base-url
-                    db
-                    (s3/s3-client (:repo-bucket s3)))))
+  (let [{:keys [db s3 base-url]} (config (keyword env))
+        repo-s3-client (s3/s3-client (:repo-bucket s3))
+        stats-s3-client (s3/s3-client (:stats-bucket s3))]
+    (generate+store-feeds db repo-s3-client feed-dir)
+    (generate+store-sitemaps db stats-s3-client feed-dir base-url)))

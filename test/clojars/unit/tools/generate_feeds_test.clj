@@ -48,6 +48,7 @@
   help/default-fixture
   help/with-clean-database
   help/with-s3-repo-bucket
+  help/with-s3-stats-bucket
   setup-db
   setup-s3)
 
@@ -109,14 +110,18 @@
   (is (fu/valid-checksum-file? file :md5 :fail-if-missing))
   (is (fu/valid-checksum-file? file :sha1 :fail-if-missing)))
 
-(defn verify-s3 [cf file]
-  (let [name (.getName file)]
-    (is (s3/object-exists? cf name))
-    (is (s3/object-exists? cf (str name ".md5")))
-    (is (s3/object-exists? cf (str name ".sha1")))))
+(defn verify-s3
+  ([cf file]
+   (verify-s3 cf "" file))
+  ([cf prefix file]
+   (let [name (.getName file)
+         path (str prefix name)]
+     (is (s3/object-exists? cf path))
+     (is (s3/object-exists? cf (str path ".md5")))
+     (is (s3/object-exists? cf (str path ".sha1"))))))
 
-(deftest the-whole-enchilada
-  (feeds/generate-feeds "/tmp" "http://example.org" help/*db* help/*s3-repo-bucket*)
+(deftest test-generate-feeds
+  (feeds/generate+store-feeds help/*db* help/*s3-repo-bucket* "/tmp")
   (let [feed-file (io/file "/tmp" "feed.clj.gz")]
     (verify-file-and-sums feed-file)
     (verify-s3 help/*s3-repo-bucket* feed-file)
@@ -155,12 +160,17 @@
                          (slurp)
                          (format "[%s]")
                          (read-string))]
-      (is (= expected-jar-list read-jars))))
+      (is (= expected-jar-list read-jars)))))
 
+(deftest test-generate-sitemaps
+  (feeds/generate+store-sitemaps
+   help/*db* help/*s3-stats-bucket* "/tmp" "http://example.org")
   (let [sitemap-index-file (io/file "/tmp" "sitemap.xml")
         sitemap-file (io/file "/tmp" "sitemap-0.xml")]
     (verify-file-and-sums sitemap-index-file)
     (verify-file-and-sums sitemap-file)
+    (verify-s3 help/*s3-stats-bucket* "sitemap/" sitemap-index-file)
+    (verify-s3 help/*s3-stats-bucket* "sitemap/" sitemap-file)
     (with-open [in (io/input-stream sitemap-index-file)]
       (let [sitemap-index (xml/parse in)
             first-sitemap (-> sitemap-index :content first)
