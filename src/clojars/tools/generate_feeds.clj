@@ -144,39 +144,40 @@
                    [::sitemap/url
                     [::sitemap/loc link]])]
         data [(xml/sexp-as-element sitemap)]]
-    [(write-to-file data
-                    sitemap-file
-                    nil
-                    #(xml/emit % *out*))]))
+    (write-to-file data
+                   sitemap-file
+                   nil
+                   #(xml/emit % *out*))))
 
 (defn write-sitemap-index
   "returns sitemap index filename"
   [base-url dest sitemap-filenames]
   (let [sitemap-index-file (str dest "/sitemap.xml")
         sitemap-index [::sitemap/sitemapindex {:xmlns sitemap-ns}
-                       (for [[sitemap-filename _] sitemap-filenames
+                       (for [sitemap-filename sitemap-filenames
                              :let [sitemap-file (io/file sitemap-filename)]]
                          [::sitemap/sitemap
                           [::sitemap/loc (format "%s/%s"
                                                  base-url
                                                  (File/.getName sitemap-file))]])]
         data [(xml/sexp-as-element sitemap-index)]]
-    [(write-to-file data
-                    sitemap-index-file
-                    nil
-                    #(xml/emit % *out*))]))
+    (write-to-file data
+                   sitemap-index-file
+                   nil
+                   #(xml/emit % *out*))))
 
 (defn generate-sitemaps
   "base-url - without the trailing slash"
   [base-url dest db]
-  (let [sitemap-files (->> (links-list base-url db)
-                           (partition-all 50000)
-                           (map-indexed #(write-sitemap dest %1 %2))
-                           ((juxt #(write-sitemap-index base-url dest %) identity))
-                           (apply concat)
-                           (apply list*))
-        checksum-files (mapcat write-sums sitemap-files)]
-    (concat sitemap-files checksum-files)))
+  (let [sitemap-files (into
+                       []
+                       (comp
+                        (partition-all 50000)
+                        (map-indexed #(write-sitemap dest %1 %2)))
+                       (links-list base-url db))
+        sitemap-index (write-sitemap-index base-url dest sitemap-files)
+        all-files (into [sitemap-index] sitemap-files)]
+    (concatv all-files (mapcat write-sums all-files))))
 
 (defn put-files
   ([s3-bucket files]
