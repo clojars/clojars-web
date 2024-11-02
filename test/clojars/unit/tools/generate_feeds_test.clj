@@ -105,23 +105,23 @@
 (deftest all-poms-generation-should-work
   (is (= expected-pom-list (feeds/pom-list help/*s3-repo-bucket*))))
 
-(defn verify-file-and-sums [file]
-  (is (.exists file))
-  (is (fu/valid-checksum-file? file :md5 :fail-if-missing))
-  (is (fu/valid-checksum-file? file :sha1 :fail-if-missing)))
+(defmacro verify-file-and-sums [file]
+  (is (.exists ~file))
+  (is (fu/valid-checksum-file? ~file :md5 :fail-if-missing))
+  (is (fu/valid-checksum-file? ~file :sha1 :fail-if-missing)))
 
-(defn verify-s3
+(defmacro verify-s3
   ([cf file]
-   (verify-s3 cf "" file))
+   `(verify-s3 ~cf "" ~file))
   ([cf prefix file]
-   (let [name (.getName file)
-         path (str prefix name)]
-     (is (s3/object-exists? cf path))
-     (is (s3/object-exists? cf (str path ".md5")))
-     (is (s3/object-exists? cf (str path ".sha1"))))))
+   `(let [name# (.getName ~file)
+          path# (str ~prefix name#)]
+      (is (s3/object-exists? ~cf path#))
+      (is (s3/object-exists? ~cf (str path# ".md5")))
+      (is (s3/object-exists? ~cf (str path# ".sha1"))))))
 
-(deftest test-generate-feeds
-  (feeds/generate+store-feeds help/*db* help/*s3-repo-bucket* "/tmp")
+(deftest test-generate-feed
+  (feeds/generate+store-feed help/*db* help/*s3-repo-bucket* "/tmp")
   (let [feed-file (io/file "/tmp" "feed.clj.gz")]
     (verify-file-and-sums feed-file)
     (verify-s3 help/*s3-repo-bucket* feed-file)
@@ -131,8 +131,10 @@
                          (slurp)
                          (format "[%s]")
                          (read-string))]
-      (is (match? (m/in-any-order (expected-feed)) read-feed))))
+      (is (match? (m/in-any-order (expected-feed)) read-feed)))))
 
+(deftest test-generate-poms-list
+  (feeds/generate+store-poms-list help/*s3-repo-bucket* "/tmp")
   (let [pom-file (io/file "/tmp" "all-poms.txt")]
     (verify-file-and-sums pom-file)
     (verify-s3 help/*s3-repo-bucket* pom-file)
@@ -143,8 +145,10 @@
     (verify-file-and-sums pom-file)
     (verify-s3 help/*s3-repo-bucket* pom-file)
     (let [read-poms (-> pom-file (io/input-stream) (GZIPInputStream.) (slurp))]
-      (is (= (str/join "\n" expected-pom-list) (str/trim read-poms)))))
+      (is (= (str/join "\n" expected-pom-list) (str/trim read-poms))))))
 
+(deftest test-generate-jars-list
+  (feeds/generate+store-jars-list help/*db* help/*s3-repo-bucket* "/tmp")
   (let [jar-file (io/file "/tmp" "all-jars.clj")]
     (verify-file-and-sums jar-file)
     (verify-s3 help/*s3-repo-bucket* jar-file)
@@ -180,7 +184,8 @@
         (is (= "sitemap" (name (:tag first-sitemap))))
         (is (some? first-loc))
         (is (= "loc" (name (:tag first-loc))))
-        (is (str/ends-with? (->> first-loc :content first) (File/.getPath sitemap-file)))))
+        (is (str/ends-with? (->> first-loc :content first)
+                            (File/.getName sitemap-file)))))
     (with-open [in (io/input-stream sitemap-file)]
       (let [sitemap (xml/parse in)
             first-url (-> sitemap :content first)

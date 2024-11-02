@@ -53,3 +53,11 @@
                       (recur tail seen)
                       (cons head (iter tail (conj seen ident)))))))))]
      (iter coll #{}))))
+
+(defn concatv
+  "An eager version of concat, returning a vector."
+  ([] [])
+  ([a] (vec a))
+  ([a b] (into (vec a) b))
+  ([a b & colls]
+   (into (concatv a b) cat colls)))
