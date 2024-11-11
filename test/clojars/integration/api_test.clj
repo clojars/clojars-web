@@ -77,6 +77,10 @@
               :homepage "http://example.com"
               :licenses [{:name "Apache-2.0"
                           :url "https://www.apache.org/licenses/LICENSE-2.0.txt"}]
+              :scm {:tag "70470ff6ae74505bdbfe5955fca6797f613c113c"
+                    :url "https://github.com/fake/test"
+                    :connection "scm:git:git://github.com/fake/test.git",
+                    :developer-connection "scm:git:ssh://git@github.com/fake/test.git"}
               :downloads 0
               :recent_versions [{:downloads 0 :version "0.0.3-SNAPSHOT"}
                                 {:downloads 0 :version "0.0.2"}

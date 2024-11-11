@@ -1109,7 +1109,7 @@
   (q db
      {:select [:j/jar_name :j/group_name :homepage :description
                :user [:j/version :latest_version] [:r2/version :latest_release]
-               :licenses]
+               :licenses :scm]
       :from [[:jars :j]]
       ;; find the latest version
       :join [[{:select [:jar_name :group_name [[:max :created] :created]]
@@ -1164,7 +1164,8 @@
   [db group-id artifact-id]
   (some-> (find-jars-information db group-id artifact-id)
           first
-          (update :licenses safe-edn-read str-map-vector)))
+          (update :licenses safe-edn-read str-map-vector)
+          (update :scm safe-edn-read str-map)))
 
 (defn set-group-mfa-required
   [db group-id required?]
