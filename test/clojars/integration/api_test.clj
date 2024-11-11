@@ -84,7 +84,15 @@
               :downloads 0
               :recent_versions [{:downloads 0 :version "0.0.3-SNAPSHOT"}
                                 {:downloads 0 :version "0.0.2"}
-                                {:downloads 0 :version "0.0.1"}]}
+                                {:downloads 0 :version "0.0.1"}]
+              :dependencies [{:group_name "org.pokustan",
+                              :jar_name "pokure",
+                              :version "0.10.1",
+                              :scope "compile"}
+                             {:group_name "clj-jarjar",
+                              :jar_name "clj-jarjar",
+                              :version "6.5.4",
+                              :scope "test"}]}
              body))))
 
   (testing "get non-existent artifact"
