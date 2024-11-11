@@ -75,6 +75,8 @@
               :user "dantheman"
               :description "TEST"
               :homepage "http://example.com"
+              :licenses [{:name "Apache-2.0"
+                          :url "https://www.apache.org/licenses/LICENSE-2.0.txt"}]
               :downloads 0
               :recent_versions [{:downloads 0 :version "0.0.3-SNAPSHOT"}
                                 {:downloads 0 :version "0.0.2"}

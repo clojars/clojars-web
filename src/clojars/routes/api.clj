@@ -11,7 +11,7 @@
    [ring.util.response :refer [response]]))
 
 (defn get-artifact [db stats group-id artifact-id]
-  (if-let [artifact (first (db/find-jars-information db group-id artifact-id))]
+  (if-let [artifact (db/find-jar-artifact db group-id artifact-id)]
     (-> artifact
         (assoc
          :recent_versions (db/recent-versions db group-id artifact-id)
