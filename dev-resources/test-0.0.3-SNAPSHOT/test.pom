@@ -28,4 +28,19 @@
     <url>https://github.com/fake/test</url>
   </scm>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.pokustan</groupId>
+      <artifactId>pokure</artifactId>
+      <version>0.10.1</version>
+    </dependency>
+    <dependency>
+      <groupId>clj-jarjar</groupId>
+      <artifactId>clj-jarjar</artifactId>
+      <version>6.5.4</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+
 </project>

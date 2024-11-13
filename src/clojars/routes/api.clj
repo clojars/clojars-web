@@ -4,6 +4,8 @@
     [db :as db]
     [stats :as stats]
     [http-utils :refer [wrap-cors-headers]]]
+   [clojure
+    [set :as set]]
    [compojure
     [core :as compojure :refer [ANY context GET]]
     [route :refer [not-found]]]
@@ -11,7 +13,7 @@
    [ring.util.response :refer [response]]))
 
 (defn get-artifact [db stats group-id artifact-id]
-  (if-let [artifact (first (db/find-jars-information db group-id artifact-id))]
+  (if-let [artifact (db/find-jar-artifact db group-id artifact-id)]
     (-> artifact
         (assoc
          :recent_versions (db/recent-versions db group-id artifact-id)
@@ -22,6 +24,14 @@
                          (assoc version
                                 :downloads (stats/download-count stats group-id artifact-id (:version version))))
                        versions)))
+        (assoc :dependencies
+               (->> (db/find-dependencies db group-id artifact-id (:latest_version artifact))
+                    (map #(-> %
+                              (select-keys [:dep_group_name :dep_jar_name :dep_version :dep_scope])
+                              (set/rename-keys {:dep_group_name :group_name
+                                                :dep_jar_name   :jar_name
+                                                :dep_version    :version
+                                                :dep_scope      :scope})))))
         response)
     (not-found nil)))
 
