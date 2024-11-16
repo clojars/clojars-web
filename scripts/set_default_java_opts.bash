@@ -3,7 +3,7 @@
 JAVA_OPTS=(
     -XX:+HeapDumpOnOutOfMemoryError
     -XX:+ExitOnOutOfMemoryError
-    -Xmx512m
-    -Xms512m
+    -Xmx1g
+    -Xms1g
     -Daws.region=us-east-2
 )
