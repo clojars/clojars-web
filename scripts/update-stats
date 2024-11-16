@@ -6,6 +6,8 @@ set -e
 
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+source "$dir/set_default_java_opts.bash"
+
 clojars_jar=$1
 
 date=$2
@@ -28,8 +30,8 @@ downloads_all_new=tmp/all-new.edn
 # grab the latest all.edn from s3
 aws s3 cp "s3://${S3_STATS_BUCKET}/all.edn" "$downloads_all_old"
 
-cat "$cdn_logfile" | java -cp "$clojars_jar" clojure.main -m clojars.tools.process-stats > "$downloads_date"
-java -cp "$clojars_jar" clojure.main -m clojars.tools.merge-stats "$downloads_all_old" "$downloads_date" > "$downloads_all_new"
+cat "$cdn_logfile" | java "${JAVA_OPTS[@]}" -cp "$clojars_jar" clojure.main -m clojars.tools.process-stats > "$downloads_date"
+java "${JAVA_OPTS[@]}" -cp "$clojars_jar" clojure.main -m clojars.tools.merge-stats "$downloads_all_old" "$downloads_date" > "$downloads_all_new"
 
 # upload the new stats to the s3 bucket
 aws s3 cp --no-progress --content-type 'application/edn' --acl public-read "$downloads_date" "s3://${S3_STATS_BUCKET}/"

@@ -6,6 +6,10 @@ set -e
 
 clojars_jar=$1
 
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+source "$dir/set_default_java_opts.bash"
+
 mkdir -p tmp
 
-java -cp $clojars_jar clojure.main -m clojars.tools.generate-feeds tmp production 2> /dev/null
+java "${JAVA_OPTS[@]}" -cp $clojars_jar clojure.main -m clojars.tools.generate-feeds tmp production 2> /dev/null

@@ -12,6 +12,10 @@ repo=$4
 CLOJARS_ENVIRONMENT=production
 S3_REPO_BUCKET=clojars-repo-production
 
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+source "$dir/set_default_java_opts.bash"
+
 # synchronize the repo bucket locally
 # we only need the existing index, the poms, and maven-metadata.xml files
 aws s3 sync "s3://$S3_REPO_BUCKET/" "$repo" \
@@ -21,7 +25,7 @@ aws s3 sync "s3://$S3_REPO_BUCKET/" "$repo" \
     --include ".index/*"
 
 # generate the index shards
-java -jar $indexer_jar -n clojars -i $index_dir -d $repo/.index -r $repo -s -q -t min -l -c -k 50
+java "${JAVA_OPTS[@]}" -jar $indexer_jar -n clojars -i $index_dir -d $repo/.index -r $repo -s -q -t min -l -c -k 50
 
 # remove old sums locally (the indexer removes old shards itself, but doesn't remove the sums for those shards)
 shopt -s extglob
@@ -35,11 +39,11 @@ done
 popd
 
 # upload new shards and sums to s3
-java -cp $clojars_jar clojure.main -m clojars.tools.upload-repo-s3 $repo \
+java "${JAVA_OPTS[@]}" -cp $clojars_jar clojure.main -m clojars.tools.upload-repo-s3 $repo \
      $S3_REPO_BUCKET .index :gen-index 2> /dev/null
 
 # remove old shards and sums from s3
-java -cp $clojars_jar clojure.main -m clojars.tools.remove-deletions-s3 $repo \
+java "${JAVA_OPTS[@]}" -cp $clojars_jar clojure.main -m clojars.tools.remove-deletions-s3 $repo \
      $S3_REPO_BUCKET \
      .index 2> /dev/null
 

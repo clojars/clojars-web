@@ -11,11 +11,15 @@ if [ -z "$DATE" ]; then
     DATE=$(date --date='1 day ago' +%Y%m%d)
 fi
 
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+source "$dir/set_default_java_opts.bash"
+
 mkdir -p tmp
 
 S3_LOG_BUCKET=clojars-fastly-logs
 
-java -cp "$clojars_jar" clojure.main -m clojars.tools.combine-cdn-logs \
+java "${JAVA_OPTS[@]}" -cp "$clojars_jar" clojure.main -m clojars.tools.combine-cdn-logs \
      "$S3_LOG_BUCKET" "$DATE" "$output_file"
 
 if [ -s "$output_file" ]; then

@@ -7,6 +7,8 @@ set -e
 
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+source "$dir/set_default_java_opts.bash"
+
 cd "$dir/.."
 
 clojars_jar=$1
@@ -14,7 +16,7 @@ clojars_jar=$1
 mkdir -p tmp
 
 index_out=tmp/index-out.txt
-java -cp "$clojars_jar" clojure.main -m clojars.tools.build-search-index production | tee "$index_out"
+java "${JAVA_OPTS[@]}" -cp "$clojars_jar" clojure.main -m clojars.tools.build-search-index production | tee "$index_out"
 
 index_path=$(grep "index-path:" "$index_out" | sed -n 's/index-path: \(.*\)/\1/p')
 
