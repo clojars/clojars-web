@@ -11,6 +11,8 @@
   (:import
    (java.nio.file
     Paths)
+   (java.time
+    ZonedDateTime)
    (java.util
     Date)
    (org.apache.lucene.analysis
@@ -279,7 +281,7 @@
 
 (defn date-in-epoch-ms
   [iso-8601-date-string]
-  (-> (java.time.ZonedDateTime/parse iso-8601-date-string)
+  (-> (ZonedDateTime/parse iso-8601-date-string)
       .toInstant
       .toEpochMilli
       str))
