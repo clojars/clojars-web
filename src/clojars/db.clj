@@ -23,6 +23,8 @@
     SecureRandom)
    (java.sql
     Timestamp)
+   (java.time
+    Instant)
    (java.util
     UUID)))
 
@@ -600,6 +602,19 @@
                 :from     :jars
                 :order-by :id}))))
 
+;; Note: this will miss a release if:
+;; - the release occurs in the same millisecond as another release
+;; - both of those releases are at the page boundary (one would be the
+;;   last release on a page, where the other (the missed one) would be
+;;   the first on the next page)
+(defn version-feed
+  [db ^Instant from-inst limit]
+  (q db {:select   [:group_name :jar_name :version :created]
+         :from     :jars
+         ;; This uses the jars_idx_created index
+         :where    [:> :created (Timestamp/from from-inst)]
+         :order-by :created
+         :limit    limit}))
 
 (defn all-groups [db]
   (q db {:select-distinct [:group_name]
