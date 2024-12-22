@@ -106,9 +106,10 @@
   (is (= expected-pom-list (feeds/pom-list help/*s3-repo-bucket*))))
 
 (defmacro verify-file-and-sums [file]
-  (is (.exists ~file))
-  (is (fu/valid-checksum-file? ~file :md5 :fail-if-missing))
-  (is (fu/valid-checksum-file? ~file :sha1 :fail-if-missing)))
+  `(do
+     (is (.exists ~file))
+     (is (fu/valid-checksum-file? ~file :md5 :fail-if-missing))
+     (is (fu/valid-checksum-file? ~file :sha1 :fail-if-missing))))
 
 (defmacro verify-s3
   ([cf file]
