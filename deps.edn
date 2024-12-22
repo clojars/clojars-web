@@ -11,7 +11,7 @@
 
   buddy/buddy-core {:mvn/version "1.11.423"}
 
-  ch.qos.logback/logback-classic {:mvn/version "1.4.14"}
+  ch.qos.logback/logback-classic {:mvn/version "1.5.13"}
   cheshire/cheshire {:mvn/version "5.10.1"}
   clj-http/clj-http {:mvn/version "3.12.3"}
   clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
