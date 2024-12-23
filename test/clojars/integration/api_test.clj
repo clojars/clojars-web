@@ -127,9 +127,9 @@
     (is (= 400 (:status res)))
     (is (= {:invalid {:from "1"}} body))))
 
-(defn date-string?
+(defn date-string-with-ms?
   [s]
-  (re-matches #"\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ" s))
+  (re-matches #"\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d\dZ" s))
 
 (deftest test-release-feed
   (let [start-time (System/currentTimeMillis)
@@ -161,19 +161,19 @@
               :releases
               [{:artifact_id "test"
                 :group_id "org.clojars.dantheman"
-                :released_at date-string?
+                :released_at date-string-with-ms?
                 :version "0.0.1"}
                {:artifact_id "test"
                 :group_id "org.clojars.dantheman"
-                :released_at date-string?
+                :released_at date-string-with-ms?
                 :version "0.0.2"}
                {:artifact_id "test"
                 :group_id "org.clojars.dantheman"
-                :released_at date-string?
+                :released_at date-string-with-ms?
                 :version "0.0.3-SNAPSHOT"}
                {:artifact_id "test"
                 :group_id "org.clojars.dantheman"
-                :released_at date-string?
+                :released_at date-string-with-ms?
                 :version "0.0.3-SNAPSHOT"}]}
              body))
 
@@ -201,11 +201,11 @@
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
-                  :released_at date-string?
+                  :released_at date-string-with-ms?
                   :version "0.0.1"}
                  {:artifact_id "test"
                   :group_id "org.clojars.dantheman"
-                  :released_at date-string?
+                  :released_at date-string-with-ms?
                   :version "0.0.2"}]}
                body1))
 
@@ -214,11 +214,11 @@
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
-                  :released_at date-string?
+                  :released_at date-string-with-ms?
                   :version "0.0.3-SNAPSHOT"}
                  {:artifact_id "test"
                   :group_id "org.clojars.dantheman"
-                  :released_at date-string?
+                  :released_at date-string-with-ms?
                   :version "0.0.3-SNAPSHOT"}]}
                body2))
 
@@ -261,7 +261,7 @@
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
-                  :released_at date-string?
+                  :released_at date-string-with-ms?
                   :version "0.0.1"}]}
                body1))
 
@@ -271,11 +271,11 @@
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
-                  :released_at date-string?
+                  :released_at date-string-with-ms?
                   :version "0.0.2"}
                  {:artifact_id "test"
                   :group_id "org.clojars.dantheman"
-                  :released_at date-string?
+                  :released_at date-string-with-ms?
                   :version "0.0.3-SNAPSHOT"}]}
                body2))
 
@@ -285,7 +285,7 @@
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
-                  :released_at date-string?
+                  :released_at date-string-with-ms?
                   :version "0.0.3-SNAPSHOT"}]}
                body3))
 

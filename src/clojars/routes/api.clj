@@ -94,4 +94,5 @@
 (defn routes [db stats]
   (-> (handler db stats)
       (wrap-cors-headers)
-      (wrap-restful-response :formats [:json :edn :yaml :transit-json])))
+      (wrap-restful-response :formats [:json :edn :yaml :transit-json]
+                             :format-options {:json {:date-format "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"}})))
