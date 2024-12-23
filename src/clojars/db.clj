@@ -23,7 +23,10 @@
     SecureRandom)
    (java.sql
     Timestamp)
+   (java.time
+    Instant)
    (java.util
+    Date
     UUID)))
 
 (set! *warn-on-reflection* true)
@@ -600,6 +603,36 @@
                 :from     :jars
                 :order-by :id}))))
 
+(defn- version-feed*
+  [db ^Instant from-inst limit]
+  (q db {:select   [:group_name :jar_name :version :created]
+         :from     :jars
+         ;; This uses the jars_idx_created index
+         :where    [:> :created (Timestamp/from from-inst)]
+         :order-by :created
+         :limit    limit}))
+
+(defn version-feed
+  [db from-inst limit]
+  ;; Get the jars, but with one extra
+  (let [jars (version-feed* db from-inst (inc limit))]
+    ;; If we got back fewer jars than we asked for, just return them, as there
+    ;; aren't hitting a page boundary
+    (if (<= (count jars) limit)
+      jars
+      ;; Drop any jars from the end of the page that were in the same
+      ;; millisecond as the first jar on what would normally be the next page.
+      ;; This prevents dropping a release if:
+      ;; - the release occurs in the same millisecond as another release
+      ;; - both of those releases are at the page boundary (one would be the
+      ;;   last release on a page, where the other (the missed one) would be
+      ;;   the first on the next page)
+      (let [[extra-jar & jars-reversed] (reverse jars)
+            extra-jar-created-ms (.getTime ^Date (:created extra-jar))
+            results-reversed (drop-while #(= extra-jar-created-ms
+                                             (.getTime ^Date (:created %)))
+                                         jars-reversed)]
+        (take limit (reverse results-reversed))))))
 
 (defn all-groups [db]
   (q db {:select-distinct [:group_name]

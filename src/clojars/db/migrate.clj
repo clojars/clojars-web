@@ -135,6 +135,12 @@
    ["alter table permissions add scope text default '*' not null"
     "create index permissions_idx0 on permissions (group_name, scope)"]))
 
+;; This makes the release feed faster
+(defn- add-created-index-to-jars-table
+  [tx]
+  (db/do-commands tx
+                  ["create index jars_idx_created on jars (created)"]))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -150,7 +156,8 @@
    #'add-indexes-to-deps-table
    #'add-group-settings-table
    #'rename-groups-to-permissions
-   #'add-scope-to-permissions])
+   #'add-scope-to-permissions
+   #'add-created-index-to-jars-table])
 
 (defn migrate [db]
   (db/do-commands db
