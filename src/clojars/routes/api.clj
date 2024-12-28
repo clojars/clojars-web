@@ -42,13 +42,15 @@
   (let [next-inst (if (seq releases)
                     (Timestamp/.toInstant (:created (last releases)))
                     from-inst)]
-    {:next    (format "/api/release-feed?from=%s" next-inst)
-     :releases (mapv (fn [{:keys [created group_name jar_name version]}]
-                       {:artifact_id jar_name
-                        :group_id    group_name
-                        :released_at created
-                        :version     version})
-                     releases)}))
+    ;; Note: :next is deprecated, and may be removed at some point
+    {:next      (format "/api/release-feed?from=%s" next-inst)
+     :next_from (str next-inst)
+     :releases  (mapv (fn [{:keys [created group_name jar_name version]}]
+                        {:artifact_id jar_name
+                         :group_id    group_name
+                         :released_at created
+                         :version     version})
+                      releases)}))
 
 ;; public only for testing
 (def page-size 500)

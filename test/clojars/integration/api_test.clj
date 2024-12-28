@@ -21,15 +21,19 @@
   help/with-clean-database
   help/run-test-app)
 
-(defn get-api*
-  ([url-fragment]
-   (get-api* url-fragment nil))
-  ([url-fragment opts]
-   (-> (str "http://localhost:" help/test-port url-fragment)
-       (client/get opts))))
-
 (defn get-api [parts & [opts]]
-  (get-api* (str "/api/" (str/join "/" (map name parts))) opts))
+  (-> (format "http://localhost:%s/api/%s"
+              help/test-port
+              (str/join "/" (map name parts)))
+      (client/get opts)))
+
+(defn get-release-feed
+  ([from]
+   (get-release-feed from nil))
+  ([from opts]
+   (get-api ["release-feed"]
+            (merge {:query-params {"from" (str from)}}
+                   opts))))
 
 (defn assert-404 [& get-args]
   (try
@@ -122,7 +126,7 @@
     (assert-404 [:users "danethemane"])))
 
 (deftest test-release-feed-with-invalid-date
-  (let [res (get-api* "/api/release-feed?from=1" {:throw-exceptions? false})
+  (let [res (get-release-feed "1" {:throw-exceptions? false})
         body (json/parse-string (:body res) true)]
     (is (= 400 (:status res)))
     (is (= {:invalid {:from "1"}} body))))
@@ -148,16 +152,15 @@
     (testing "Every supported content-type works"
       (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/transit+json"]]
         (testing f
-          (let [res (get-api* (format "/api/release-feed?from=%s" start-inst)
-                              {:accept f})]
+          (let [res (get-release-feed start-inst {:accept f})]
             (is (= f (help/get-content-type res)))
             (is (= 200 (:status res)))))))
 
     (testing "The correct releases are returned, along with the correct new from value"
-      (let [res (get-api* (format "/api/release-feed?from=%s" (Instant/ofEpochMilli start-time)))
+      (let [res (get-release-feed (Instant/ofEpochMilli start-time))
             body (json/parse-string (:body res) true)]
         (is (match?
-             {:next (format "/api/release-feed?from=%s" (Instant/ofEpochMilli @curr-time))
+             {:next_from (str (Instant/ofEpochMilli @curr-time))
               :releases
               [{:artifact_id "test"
                 :group_id "org.clojars.dantheman"
@@ -181,23 +184,23 @@
                (:releases body)))))
 
     (testing "getting the next page returns an empty page, along with the from value we gave"
-      (let [res (get-api* (format "/api/release-feed?from=%s" (Instant/ofEpochMilli @curr-time)))
+      (let [res (get-release-feed (Instant/ofEpochMilli @curr-time))
             body (json/parse-string (:body res) true)]
         (is (match?
-             {:next (format "/api/release-feed?from=%s" (Instant/ofEpochMilli @curr-time))
+             {:next_from (str (Instant/ofEpochMilli @curr-time))
               :releases []}
              body))))
 
     (testing "results up to the page size are returned, and the next page has more results"
       (with-redefs [api/page-size 2]
-        (let [res1 (get-api* (format "/api/release-feed?from=%s" (Instant/ofEpochMilli start-time)))
+        (let [res1 (get-release-feed (Instant/ofEpochMilli start-time))
               body1 (json/parse-string (:body res1) true)
-              res2 (get-api* (:next body1))
+              res2 (get-release-feed (:next_from body1))
               body2 (json/parse-string (:body res2) true)
-              res3 (get-api* (:next body2))
+              res3 (get-release-feed (:next_from body2))
               body3 (json/parse-string (:body res3) true)]
           (is (match?
-               {:next (format "/api/release-feed?from=%s" (Instant/ofEpochMilli (+ start-time 3)))
+               {:next_from (str (Instant/ofEpochMilli (+ start-time 3)))
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
@@ -210,7 +213,7 @@
                body1))
 
           (is (match?
-               {:next (format "/api/release-feed?from=%s" (Instant/ofEpochMilli @curr-time))
+               {:next_from (str (Instant/ofEpochMilli @curr-time))
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
@@ -223,7 +226,7 @@
                body2))
 
           (is (match?
-               {:next (format "/api/release-feed?from=%s" (Instant/ofEpochMilli @curr-time))
+               {:next_from (str (Instant/ofEpochMilli @curr-time))
                 :releases []}
                body3)))))))
 
@@ -246,18 +249,18 @@
 
     (testing "When the page boundary is between the two releases in the same ms"
       (with-redefs [api/page-size 2]
-        (let [res1 (get-api* (format "/api/release-feed?from=%s" (Instant/ofEpochMilli start-time)))
+        (let [res1 (get-release-feed (Instant/ofEpochMilli start-time))
               body1 (json/parse-string (:body res1) true)
-              res2 (get-api* (:next body1))
+              res2 (get-release-feed (:next_from body1))
               body2 (json/parse-string (:body res2) true)
-              res3 (get-api* (:next body2))
+              res3 (get-release-feed (:next_from body2))
               body3 (json/parse-string (:body res3) true)
-              res4 (get-api* (:next body3))
+              res4 (get-release-feed (:next_from body3))
               body4 (json/parse-string (:body res4) true)]
 
           ;; Then: we only get the first release on the first page
           (is (match?
-               {:next (format "/api/release-feed?from=%s" (Instant/ofEpochMilli (inc start-time)))
+               {:next_from (str (Instant/ofEpochMilli (inc start-time)))
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
@@ -267,7 +270,7 @@
 
           ;; And: the rest of the former page is part of this one
           (is (match?
-               {:next (format "/api/release-feed?from=%s" (Instant/ofEpochMilli (+ start-time 2)))
+               {:next_from (str (Instant/ofEpochMilli (+ start-time 2)))
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
@@ -281,7 +284,7 @@
 
           ;; And: paging is correct for the rest of the pages
           (is (match?
-               {:next (format "/api/release-feed?from=%s" (Instant/ofEpochMilli (+ start-time 3)))
+               {:next_from (str (Instant/ofEpochMilli (+ start-time 3)))
                 :releases
                 [{:artifact_id "test"
                   :group_id "org.clojars.dantheman"
@@ -290,6 +293,6 @@
                body3))
 
           (is (match?
-               {:next (format "/api/release-feed?from=%s" (Instant/ofEpochMilli @curr-time))
+               {:next_from (str (Instant/ofEpochMilli @curr-time))
                 :releases []}
                body4)))))))
