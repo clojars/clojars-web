@@ -129,7 +129,9 @@
   (let [res (get-release-feed "1" {:throw-exceptions? false})
         body (json/parse-string (:body res) true)]
     (is (= 400 (:status res)))
-    (is (= {:invalid {:from "1"}} body))))
+    (is (= {:message "Invalid from param. It should be in the format of yyyy-MM-ddTHH:mm:ssZ' or yyyy-MM-ddTHH:mm:ss.SSSZ."
+            :from "1"}
+           body))))
 
 (defn date-string-with-ms?
   [s]

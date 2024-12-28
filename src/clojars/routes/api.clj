@@ -65,7 +65,9 @@
     (let [releases (db/version-feed db from-inst page-size)]
       (ring.util/response
        (generate-release-response from-inst releases)))
-    (ring.util/bad-request {:invalid {:from from-str}})))
+    (ring.util/bad-request
+     {:message "Invalid from param. It should be in the format of yyyy-MM-ddTHH:mm:ssZ' or yyyy-MM-ddTHH:mm:ss.SSSZ."
+      :from from-str})))
 
 (defn handler [db stats]
   (compojure/routes
