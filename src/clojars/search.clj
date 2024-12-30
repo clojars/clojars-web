@@ -5,7 +5,6 @@
    [clojars.db :as db]
    [clojars.maven :as maven]
    [clojars.stats :as stats]
-   [clojure.set :as set]
    [clojure.string :as str]
    [com.stuartsierra.component :as component])
   (:import
@@ -55,27 +54,22 @@
 (set! *warn-on-reflection* true)
 
 (defprotocol Search
-  (index! [t pom])
+  (index! [t version-details])
   (search [t query page])
   (delete!
     [t group-id]
     [t group-id artifact-id]))
 
-(def ^:private renames
-  {:name       :artifact-id
-   :jar_name   :artifact-id
-   :group      :group-id
-   :group_name :group-id
-   :created    :at
-   :homepage   :url})
-
-(defn- doc-id ^String [group-id artifact-id]
+(defn- doc-id ^String
+  [group-id artifact-id]
   (str group-id ":" artifact-id))
 
-(defn- jar->id ^String [{:keys [artifact-id group-id]}]
-  (doc-id group-id artifact-id))
+(defn- jar->id ^String
+  [{:keys [group_name jar_name]}]
+  (doc-id group_name jar_name))
 
-(defn delete-from-index [^IndexWriter index-writer ^String group-id & [artifact-id]]
+(defn delete-from-index
+  [^IndexWriter index-writer ^String group-id & [artifact-id]]
   (let [term (if artifact-id
                (Term. "id" (doc-id group-id artifact-id))
                (Term. "group-id" group-id))]
@@ -152,22 +146,23 @@
       (str/replace v #"\.(\s|$)" " "))))
 
 (def ^:private content-items
-  [:artifact-id
-   (hyphen-remover :artifact-id)
-   :group-id
-   (hyphen-remover :group-id)
+  [:jar_name
+   (hyphen-remover :jar_name)
+   :group_name
+   (hyphen-remover :group_name)
    ;; Include 'group name' & 'group name/artifact-name' in content (for a
-   ;; group-id of group.name) to aid in searching for things where new projects
+   ;; group_name of group.name) to aid in searching for things where new projects
    ;; had to be deployed under a domain-based group
-   (period-remover :group-id)
-   (period-remover #(->> % ((juxt :group-id :artifact-id)) (str/join "/")))
+   (period-remover :group_name)
+   (period-remover #(->> % ((juxt :group_name :jar_name)) (str/join "/")))
    ;; Include 'group-name/artifact-name' in content to allow
    ;; the "group-name/artifact-name" phrase to find it
-   #(->> % ((juxt :group-id :artifact-id)) (str/join "/"))
+   #(->> % ((juxt :group_name :jar_name)) (str/join "/"))
    (sentence-period-remover :description)
-   :url
+   :homepage
    :version
-   #(->> % :authors (str/join " "))])
+   #(when-some [authors (:authors %)]
+      (str/replace authors #"," " "))])
 
 (def ^:private ^String content-field-name "_content")
 (def ^:private ^String boost-field-name "_download_boost")
@@ -182,28 +177,20 @@
   [^String name ^String value]
   (TextField. name value Field$Store/YES))
 
-(defn jar->doc
-  ^Iterable [{:keys [at
-                     artifact-id
-                     group-id
-                     description
-                     licenses
-                     url
-                     version]
-              :or   {at (Date.)}
-              :as   jar}
-             download-boost]
+(defn- jar->doc ^Iterable
+  [{:keys [created description group_name homepage jar_name licenses version] :as jar}
+   download-boost]
   (doto (Document.)
     ;; id: We need a unique identifier for each doc so that we can use updateDocument
     (.add (string-field "id" (jar->id jar)))
-    (.add (string-field "artifact-id" artifact-id))
-    (.add (string-field "group-id" group-id))
+    (.add (string-field "artifact-id" jar_name))
+    (.add (string-field "group-id" group_name))
     (cond-> description
       (.add (text-field "description" description)))
-    (.add (string-field "at" (str (.getTime ^Date at))))
+    (.add (string-field "at" (str (.getTime ^Date created))))
     (.add (text-field "licenses" (str/join " " (map :name licenses))))
-    (cond-> url
-      (.add (string-field "url" url)))
+    (cond-> homepage
+      (.add (string-field "url" homepage)))
     ;; version isn't really useful to search, since we only store the
     ;; most-recently-seen value, but we have it here because we've had it
     ;; historically
@@ -226,10 +213,10 @@
 (def download-score-weight 50)
 
 (defn- calculate-document-boost
-  [stats {:as _jar :keys [artifact-id group-id]}]
+  [stats {:as _jar :keys [group_name jar_name]}]
   (let [total (stats/total-downloads stats)]
     (* download-score-weight
-       (/ (or (stats/download-count stats group-id artifact-id) 0)
+       (/ (or (stats/download-count stats group_name jar_name) 0)
           (max 1 total)))))
 
 (defn disk-index
@@ -239,11 +226,10 @@
 
 (defn- index-jar
   [^IndexWriter index-writer stats jar]
-  (let [jar' (set/rename-keys jar renames)
-        doc (jar->doc jar' (calculate-document-boost stats jar'))]
+  (let [doc (jar->doc jar (calculate-document-boost stats jar))]
     ;; always delete and replace the doc, since we are indexing every version
     ;; and the last one wins
-    (.updateDocument index-writer (Term. "id" (jar->id jar')) doc)))
+    (.updateDocument index-writer (Term. "id" (jar->id jar)) doc)))
 
 (defn- track-index-status
   [{:keys [indexed last-time] :as status}]
@@ -384,9 +370,9 @@
 
 (defrecord LuceneSearch [stats index-factory ^Directory index]
   Search
-  (index! [_t pom]
+  (index! [_t version-details]
     (with-open [index-writer (index-writer index false)]
-      (index-jar index-writer stats pom)))
+      (index-jar index-writer stats version-details)))
   (search [_t query page]
     (-search index query page))
   (delete! [_t group-id]

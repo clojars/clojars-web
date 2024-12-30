@@ -22,7 +22,6 @@
     File
     IOException)
    (java.util
-    Date
     UUID)
    org.apache.commons.io.FileUtils))
 
@@ -388,7 +387,7 @@
                                     (str "invalid gradle module file: " (.getMessage e))
                                     {:file module-file})))
 
-          {:keys [group-path name version] :as posted-metadata}
+          {:keys [group group-path name version] :as posted-metadata}
           (read-metadata dir)
 
           md-file (io/file dir group-path name "maven-metadata.xml")]
@@ -422,8 +421,7 @@
         (log/audit db {:tag :deployed})
         (log/info {:tag :deploy-finalized})
         (future
-          (search/index! search (assoc pom
-                                       :at (Date. (.lastModified pom-file))))
+          (search/index! search (db/find-jar db group name version))
           (log/info {:tag :deploy-indexed}))
         (spit (io/file dir ".finalized") "")
         (emit-deploy-events db event-emitter (assoc posted-metadata :deployer-username account))))

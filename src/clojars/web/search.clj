@@ -13,15 +13,13 @@
    [hiccup.element :refer [link-to]]
    [ring.util.codec :refer [url-encode]]))
 
-(defn- jar->json [jar]
-  (let [m {:jar_name (:artifact-id jar)
-           :group_name (:group-id jar)
-           :version (:version jar)
-           :description (:description jar)}
-        created (:at jar)]
-    (if created
-      (assoc m :created created)
-      m)))
+(defn- jar->json
+  [{:keys [artifact-id at description group-id version]}]
+  {:created     at
+   :description description
+   :group_name  group-id
+   :jar_name    artifact-id
+   :version     version})
 
 (defn json-search [search query page]
   (let [response {:status 200
@@ -43,15 +41,14 @@
           :error-message (format "Invalid search syntax for query `%s`" query)}
          (log/trace-id))))))
 
-(defn- jar->xml [jar]
-  (let [attrs {:jar_name (:artifact-id jar)
-               :group_name (:group-id jar)
-               :version (:version jar)
-               :description (some-> (:description jar) xml-escape)}
-        created (:at jar)]
-    {:tag :result :attrs (if created
-                           (assoc attrs :created created)
-                           attrs)}))
+(defn- jar->xml
+  [{:keys [artifact-id at description group-id version]}]
+  {:tag   :result
+   :attrs {:created     at
+           :description (some-> description xml-escape)
+           :group_name  group-id
+           :jar_name    artifact-id
+           :version     version}})
 
 (defn xml-search [search query page]
   (let [response {:status 200

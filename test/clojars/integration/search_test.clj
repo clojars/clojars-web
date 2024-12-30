@@ -4,10 +4,12 @@
    [clj-http.client :as client]
    [clojars.search :as search]
    [clojars.test-helper :as help]
-   [clojure.set :as set]
    [clojure.test :refer [deftest is testing use-fixtures]]
    [clojure.xml :as xml]
-   [matcher-combinators.test]))
+   [matcher-combinators.test])
+  (:import
+   (java.util
+    Date)))
 
 (use-fixtures :each
   help/default-fixture
@@ -28,15 +30,21 @@
               page)
       (client/get opts)))
 
+(defn created-as-str
+  [data]
+  (update data :created #(str (.getTime %))))
+
 (deftest search-test
   (let [base-data {:description "foo" :version "1.0"}
         search-data (map (partial merge base-data)
-                         [{:jar_name "test" :group_name "test"}
-                          {:jar_name "test" :group_name "testing"}])]
+                         [{:created (Date.)
+                           :group_name "test"
+                           :jar_name "test"}
+                          {:created (Date.)
+                           :group_name "testing"
+                           :jar_name "test"}])]
     (doseq [data search-data]
-      (search/index! (:search help/system)
-                     (set/rename-keys data {:jar_name :artifact-id
-                                            :group_name :group-id})))
+      (search/index! (:search help/system) data))
 
     (testing "json request returns json"
       (let [resp (do-search :json "test")]
@@ -81,7 +89,7 @@
             result (json/parse-string (:body resp) true)]
         (is (= 200 (:status resp)))
         (is (= 2 (:count result)))
-        (is (match? search-data (:results result)))))
+        (is (match? (mapv created-as-str search-data) (:results result)))))
 
     (testing "json request with invalid page returns error"
       (let [resp (do-search-with-page :json "test" "a" {:throw-exceptions false})

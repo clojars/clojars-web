@@ -163,15 +163,6 @@
                   m))
     new-pom))
 
-(defn at-as-time-str
-  "Adjusts the :at (or :created) Date to a millis-since-epoch string to
-  match the search results."
-  [data]
-  (let [date->time-str #(str (.getTime %))]
-    (cond-> data
-      (:at data)      (update :at date->time-str)
-      (:created data) (update :created date->time-str))))
-
 (defn add-verified-group
   [account group]
   (db/add-group *db* account group)
