@@ -165,18 +165,22 @@
              {:next_from (str (Instant/ofEpochMilli @curr-time))
               :releases
               [{:artifact_id "test"
+                :description nil
                 :group_id "org.clojars.dantheman"
                 :released_at date-string-with-ms?
                 :version "0.0.1"}
                {:artifact_id "test"
+                :description nil
                 :group_id "org.clojars.dantheman"
                 :released_at date-string-with-ms?
                 :version "0.0.2"}
                {:artifact_id "test"
+                :description "TEST"
                 :group_id "org.clojars.dantheman"
                 :released_at date-string-with-ms?
                 :version "0.0.3-SNAPSHOT"}
                {:artifact_id "test"
+                :description "TEST"
                 :group_id "org.clojars.dantheman"
                 :released_at date-string-with-ms?
                 :version "0.0.3-SNAPSHOT"}]}
@@ -205,10 +209,12 @@
                {:next_from (str (Instant/ofEpochMilli (+ start-time 3)))
                 :releases
                 [{:artifact_id "test"
+                  :description nil
                   :group_id "org.clojars.dantheman"
                   :released_at date-string-with-ms?
                   :version "0.0.1"}
                  {:artifact_id "test"
+                  :description nil
                   :group_id "org.clojars.dantheman"
                   :released_at date-string-with-ms?
                   :version "0.0.2"}]}
@@ -218,10 +224,12 @@
                {:next_from (str (Instant/ofEpochMilli @curr-time))
                 :releases
                 [{:artifact_id "test"
+                  :description "TEST"
                   :group_id "org.clojars.dantheman"
                   :released_at date-string-with-ms?
                   :version "0.0.3-SNAPSHOT"}
                  {:artifact_id "test"
+                  :description "TEST"
                   :group_id "org.clojars.dantheman"
                   :released_at date-string-with-ms?
                   :version "0.0.3-SNAPSHOT"}]}
@@ -265,20 +273,24 @@
                {:next_from (str (Instant/ofEpochMilli (inc start-time)))
                 :releases
                 [{:artifact_id "test"
+                  :description nil
                   :group_id "org.clojars.dantheman"
                   :released_at date-string-with-ms?
                   :version "0.0.1"}]}
                body1))
+
 
           ;; And: the rest of the former page is part of this one
           (is (match?
                {:next_from (str (Instant/ofEpochMilli (+ start-time 2)))
                 :releases
                 [{:artifact_id "test"
+                  :description nil
                   :group_id "org.clojars.dantheman"
                   :released_at date-string-with-ms?
                   :version "0.0.2"}
                  {:artifact_id "test"
+                  :description "TEST"
                   :group_id "org.clojars.dantheman"
                   :released_at date-string-with-ms?
                   :version "0.0.3-SNAPSHOT"}]}
@@ -289,6 +301,7 @@
                {:next_from (str (Instant/ofEpochMilli (+ start-time 3)))
                 :releases
                 [{:artifact_id "test"
+                  :description "TEST"
                   :group_id "org.clojars.dantheman"
                   :released_at date-string-with-ms?
                   :version "0.0.3-SNAPSHOT"}]}

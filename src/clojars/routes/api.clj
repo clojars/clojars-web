@@ -45,8 +45,9 @@
     ;; Note: :next is deprecated, and may be removed at some point
     {:next      (format "/api/release-feed?from=%s" next-inst)
      :next_from (str next-inst)
-     :releases  (mapv (fn [{:keys [created group_name jar_name version]}]
+     :releases  (mapv (fn [{:keys [created description group_name jar_name version]}]
                         {:artifact_id jar_name
+                         :description description
                          :group_id    group_name
                          :released_at created
                          :version     version})

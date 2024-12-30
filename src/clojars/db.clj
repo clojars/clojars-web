@@ -605,7 +605,7 @@
 
 (defn- version-feed*
   [db ^Instant from-inst limit]
-  (q db {:select   [:group_name :jar_name :version :created]
+  (q db {:select   [:created :description :group_name :jar_name :version]
          :from     :jars
          ;; This uses the jars_idx_created index
          :where    [:> :created (Timestamp/from from-inst)]
