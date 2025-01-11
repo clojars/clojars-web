@@ -53,6 +53,9 @@
        "With in-kind sponsorship from:"]
       [:div.sponsors-group
        [:div.sponsor
+        (link-to "https://1password.com/for-non-profits/"
+                 (image "/images/1password-logo.png" "1Password"))]
+       [:div.sponsor
         (link-to "https://www.deps.co"
                  (image "/images/deps-logo.png" "Deps"))]
        [:div.sponsor
