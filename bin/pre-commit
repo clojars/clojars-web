@@ -19,7 +19,7 @@ if [ -n "${changed_clj}" ] ; then
   done
 fi
 
-changed_files="$(git diff --cached --name-only)"
+changed_files="$(git diff --cached --name-only | grep -E -v 'png$')"
 if [ -n "${changed_files}" ]; then
   if ! ./bin/typos $changed_files; then
     exit 1
