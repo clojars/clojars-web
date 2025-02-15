@@ -39,7 +39,7 @@
     "missing-input-secret"
     "sitekey-secret-mismatch"})
 
-(defn- log-and-maybe-thrpw
+(defn- log-and-maybe-throw
   [{:as _response :keys [error-codes success]}]
   (let [log-data {:tag :hcaptcha-response
                   :error-codes error-codes
@@ -54,7 +54,7 @@
                                               (site-key hcaptcha)
                                               (secret hcaptcha)
                                               hcaptcha-response)]
-    (log-and-maybe-thrpw response)
+    (log-and-maybe-throw response)
     (:success response)))
 
 (defn new-hcaptcha
