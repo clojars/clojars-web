@@ -1,34 +1,29 @@
 (ns clojars.web.user
   (:require
    [buddy.core.codecs.base64 :as base64]
-   [cemerick.friend.credentials :as creds]
    [clojars.config :as config]
    [clojars.db :as db :refer [find-group-verification
                               find-groupnames
-                              find-user
                               find-user-by-user-or-email
-                              group-activenames
                               jars-by-username
-                              reserved-names
                               update-user
                               update-user-notifications]]
    [clojars.event :as event]
    [clojars.hcaptcha :as hcaptcha]
    [clojars.log :as log]
    [clojars.notifications.common :as notif-common]
+   [clojars.user-validations :as uv]
    [clojars.web.common :refer [html-doc error-list form-table jar-link
                                flash group-link verified-group-badge-small]]
    [clojars.web.safe-hiccup :refer [form-to]]
-   [clojure.string :as str :refer [blank?]]
+   [clojure.string :as str]
    [hiccup.element :refer [unordered-list]]
    [hiccup.form :refer [label text-field
                         password-field
                         submit-button
                         email-field]]
    [one-time.qrgen :as qrgen]
-   [ring.util.response :refer [redirect]]
-   [valip.core :refer [validate]]
-   [valip.predicates :as pred])
+   [ring.util.response :refer [redirect]])
   (:import
    (java.io
     ByteArrayOutputStream)))
@@ -74,73 +69,6 @@
                          [:script {:src "https://js.hcaptcha.com/1/api.js" :async true :defer true}]))
                       (submit-button "Register"))]))
 
-;; Validations
-
-(defn- password-validations [confirm]
-  [[:password #(<= 8 (count %)) "Password must be 8 characters or longer"]
-   [:password #(= % confirm) "Password and confirm password must match"]
-   [:password #(> 256 (count %)) "Password must be 256 or fewer characters"]])
-
-(def ^:private email-regex
-  (re-pattern (str "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+"
-                   "(?:\\.[a-z0-9!#$%&'*+/=?" "^_`{|}~-]+)*"
-                   "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+"
-                   "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")))
-
-(defn- validate-email
-  [email]
-  (and (string? email)
-       (<= (.length ^String email) 254)
-       (some? (re-matches email-regex email))))
-
-(defn- user-validations
-  ([db]
-   (user-validations db nil))
-  ([db existing-username]
-   (let [existing-email-fn (if existing-username
-                             #(let [existing-user (find-user-by-user-or-email db %)]
-                                (or (nil? existing-user)
-                                    (= existing-username (:user existing-user))))
-                             #(nil? (find-user-by-user-or-email db %)))]
-     [[:email pred/present? "Email can't be blank"]
-      [:email validate-email "Email is not valid"]
-      [:email existing-email-fn "A user already exists with this email"]
-      [:username #(re-matches #"[a-z0-9_-]+" %)
-       (str "Username must consist only of lowercase "
-            "letters, numbers, hyphens and underscores.")]
-      [:username pred/present? "Username can't be blank"]])))
-
-(defn- captcha-validations
-  [hcaptcha]
-  [[:captcha (partial hcaptcha/valid-response? hcaptcha) "Captcha response is invalid."]])
-
-(defn new-user-validations
-  [db hcaptcha confirm]
-  (concat [[:password pred/present? "Password can't be blank"]
-           [:username #(not (or (reserved-names %)
-                                (find-user db %)
-                                (seq (group-activenames db %))))
-            "Username is already taken"]]
-          (user-validations db)
-          (password-validations confirm)
-          (captcha-validations hcaptcha)))
-
-(defn reset-password-validations [db confirm]
-  (concat
-   [[:reset-code #(or (blank? %) (db/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]
-    [:reset-code pred/present? "Reset code can't be blank."]]
-   (password-validations confirm)))
-
-(defn correct-password? [db username current-password]
-  (let [user (find-user db username)]
-    (when (and user (not (blank? current-password)))
-      (creds/bcrypt-verify current-password (:password user)))))
-
-(defn current-password-validations [db username]
-  [[:current-password pred/present? "Current password can't be blank"]
-   [:current-password #(correct-password? db username %)
-    "Current password is incorrect"]])
-
 (defn profile-form
   [account user flash-msg & [errors]]
   (let [heading (format "Profile (%s)" account)]
@@ -174,15 +102,15 @@
   (let [email (normalize-email email)]
     (log/with-context {:tag :update-profile
                        :username account}
-      (if-let [errors (apply validate {:email email
-                                       :current-password current-password
-                                       :username account
-                                       :password password}
-                             (concat
-                              (user-validations db account)
-                              (current-password-validations db account)
-                              (when-not (blank? password)
-                                (password-validations confirm))))]
+      (if-let [errors (uv/validate {:email email
+                                    :current-password current-password
+                                    :username account
+                                    :password password}
+                                   (concat
+                                    (uv/user-validations db account)
+                                    (uv/current-password-validations db account)
+                                    (when-not (str/blank? password)
+                                      (uv/password-validations confirm))))]
         (do
           (log/info {:status :failed
                      :reason :validation-failed})
@@ -320,9 +248,9 @@
 (defn reset-password [db event-emitter reset-code {:keys [password confirm]} details]
   (log/with-context {:tag :reset-password
                      :reset-code reset-code}
-    (if-let [errors (apply validate {:password password
-                                     :reset-code reset-code}
-                           (reset-password-validations db confirm))]
+    (if-let [errors (uv/validate {:password password
+                                  :reset-code reset-code}
+                                 (uv/reset-password-validations db confirm))]
       (do
         (log/info {:status :failed
                    :reason :validation-failed})

@@ -61,3 +61,7 @@
   [config]
   (map->Hcaptcha {:config config
                   :client (remote-service/new-http-remote-service)}))
+
+(defn new-mock-hcaptcha
+  []
+  {:client (remote-service/new-mock-remote-service)})
