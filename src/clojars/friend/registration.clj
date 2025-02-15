@@ -5,8 +5,8 @@
    [clojars.hcaptcha :as hcaptcha]
    [clojars.http-utils :as http-utils]
    [clojars.log :as log]
-   [clojars.web.user :refer [register-form new-user-validations normalize-email]]
-   [valip.core :refer [validate]]))
+   [clojars.user-validations :as uv]
+   [clojars.web.user :refer [register-form normalize-email]]))
 
 (defn register
   [db hcaptcha {:keys [confirm email h-captcha-response password username]}]
@@ -14,11 +14,11 @@
     (log/with-context {:email email
                        :username username
                        :tag :registration}
-      (if-let [errors (apply validate {:captcha  h-captcha-response
-                                       :email    email
-                                       :password password
-                                       :username username}
-                             (new-user-validations db hcaptcha confirm))]
+      (if-let [errors (uv/validate {:captcha  h-captcha-response
+                                    :email    email
+                                    :password password
+                                    :username username}
+                                   (uv/new-user-validations db hcaptcha confirm))]
         (do
           (log/info {:status :validation-failed})
           (http-utils/with-extra-csp-srcs

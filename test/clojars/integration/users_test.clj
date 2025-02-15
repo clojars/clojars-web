@@ -128,7 +128,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Email is not valid")))
+        (has (text? "Email must be 256 or fewer characters")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "")

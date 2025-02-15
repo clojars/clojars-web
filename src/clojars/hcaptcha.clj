@@ -39,7 +39,7 @@
     "missing-input-secret"
     "sitekey-secret-mismatch"})
 
-(defn- log-and-maybe-thrpw
+(defn- log-and-maybe-throw
   [{:as _response :keys [error-codes success]}]
   (let [log-data {:tag :hcaptcha-response
                   :error-codes error-codes
@@ -54,10 +54,14 @@
                                               (site-key hcaptcha)
                                               (secret hcaptcha)
                                               hcaptcha-response)]
-    (log-and-maybe-thrpw response)
+    (log-and-maybe-throw response)
     (:success response)))
 
 (defn new-hcaptcha
   [config]
   (map->Hcaptcha {:config config
                   :client (remote-service/new-http-remote-service)}))
+
+(defn new-mock-hcaptcha
+  []
+  {:client (remote-service/new-mock-remote-service)})
