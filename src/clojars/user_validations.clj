@@ -3,6 +3,7 @@
    [cemerick.friend.credentials :as creds]
    [clojars.db :as db]
    [clojars.hcaptcha :as hcaptcha]
+   [clojars.log :as log]
    [clojure.string :as str]
    [valip.core :as valip]
    [valip.predicates :as pred]))
@@ -64,6 +65,33 @@
   [[:current-password pred/present? "Current password can't be blank"]
    [:current-password #(correct-password? db username %) "Current password is incorrect"]])
 
+(defn- wrap-exceptions
+  "Wraps validation predicates in a try/catch to reject invalid UTF8 strings."
+  [[field pred message]]
+  [field
+   #(try
+      (pred %)
+      (catch Exception e
+        (throw (ex-info "validation error"
+                        {::validation-error? true
+                         ::field field
+                         ::pred pred
+                         ::input %}
+                        e))))
+   message])
+
 (defn validate
   [data validations]
-  (apply valip/validate data validations))
+  (try
+    (apply valip/validate data (map wrap-exceptions validations))
+    (catch Exception e
+      (let [{::keys [field input pred validation-error?]} (ex-data e)]
+        (if validation-error?
+          (do
+            (log/warn {:tag :validation-failed
+                       :field field
+                       :input input
+                       :pred pred
+                       :exception e})
+            {field ["Invalid input"]})
+          (throw e))))))

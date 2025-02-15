@@ -57,6 +57,13 @@
        {:email ["Email must be 256 or fewer characters"]}
        (uv/validate {:email (format "foo@%s.com" (apply str (repeat 254 "a")))
                      :username "auser2"}
+                    (uv/user-validations help/*db*))))
+  ;; Tests that we protect against fuzzing on the registration form
+  (is (match?
+       {:email ["Invalid input"]}
+       ;; This string isn't valid UTF, so will cause postgres to throw
+       (uv/validate {:email (String. (byte-array [0x00]))
+                     :username "auser2"}
                     (uv/user-validations help/*db*)))))
 
 (deftest test-new-user-validations
