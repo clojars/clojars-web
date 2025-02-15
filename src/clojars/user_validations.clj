@@ -9,21 +9,9 @@
 
 (defn password-validations
   [confirm]
-  [[:password #(<= 8 (count %)) "Password must be 8 characters or longer"]
+  [[:password (pred/min-length 8) "Password must be 8 characters or longer"]
    [:password #(= % confirm) "Password and confirm password must match"]
-   [:password #(> 256 (count %)) "Password must be 256 or fewer characters"]])
-
-(def ^:private email-regex
-  (re-pattern (str "(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+"
-                   "(?:\\.[a-z0-9!#$%&'*+/=?" "^_`{|}~-]+)*"
-                   "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+"
-                   "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")))
-
-(defn- validate-email
-  [email]
-  (and (string? email)
-       (<= (.length ^String email) 254)
-       (some? (re-matches email-regex email))))
+   [:password (pred/max-length 256) "Password must be 256 or fewer characters"]])
 
 (defn user-validations
   ([db]
@@ -35,9 +23,10 @@
                                     (= existing-username (:user existing-user))))
                              #(nil? (db/find-user-by-user-or-email db %)))]
      [[:email pred/present? "Email can't be blank"]
-      [:email validate-email "Email is not valid"]
+      [:email pred/email-address? "Email is not valid"]
+      [:email (pred/max-length 256) "Email must be 256 or fewer characters"]
       [:email existing-email-fn "A user already exists with this email"]
-      [:username #(re-matches #"[a-z0-9_-]+" %)
+      [:username (pred/matches #"[a-z0-9_-]+")
        (str "Username must consist only of lowercase "
             "letters, numbers, hyphens and underscores.")]
       [:username pred/present? "Username can't be blank"]])))

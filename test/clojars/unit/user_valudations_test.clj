@@ -52,6 +52,11 @@
         :username ["Username must consist only of lowercase letters, numbers, hyphens and underscores."]}
        (uv/validate {:email "foo@@"
                      :username "a User"}
+                    (uv/user-validations help/*db*))))
+  (is (match?
+       {:email ["Email must be 256 or fewer characters"]}
+       (uv/validate {:email (format "foo@%s.com" (apply str (repeat 254 "a")))
+                     :username "auser2"}
                     (uv/user-validations help/*db*)))))
 
 (deftest test-new-user-validations
