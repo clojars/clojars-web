@@ -1,3 +1,9 @@
 ;; Configuration reference: https://github.com/rm-hull/nvd-clojure/tree/v3.3.0#configuration-options
 
-{:suppression-file ".nvd-suppressions.xml" }
+{:suppression-file ".nvd-suppressions.xml"
+ ;; This uses a cache of the database so we don't have to download
+ ;; it everytime from the NVD site, which is often overwhelmed. It
+ ;; is maintained by the maintainers of dependency-check, so is kept
+ ;; fairly up to date.
+ :nvd-api
+ {:datafeed {:url "https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/"}}}}
