@@ -6,4 +6,4 @@
  ;; is maintained by the maintainers of dependency-check, so is kept
  ;; fairly up to date.
  :nvd-api
- {:datafeed {:url "https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/"}}}}
+ {:datafeed {:url "https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/"}}}
