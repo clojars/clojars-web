@@ -87,23 +87,25 @@
   (-> (session (help/app))
       (visit "/fake")
       (within [:ul#dependencies]
-        (has (text? "org.clojure/clojure 1.3.0-beta1")))))
+        (has (text? "foo/bar 1.0org.clojure/clojure 1.3.0-beta1")))))
 
 (deftest jars-can-view-dependents
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.2/fake.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.2/test.pom")
+  (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3/test.pom")
   (-> (session (help/app))
       (visit "/fake")
       (within [:ul#dependents]
-        (has (text? "org.clojars.dantheman/test")))))
+        (has (text? "com.dantheman/testorg.clojars.dantheman/test")))))
 
 (deftest jars-can-view-dependents-on-dependents-page
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar" "fake-0.0.2/fake.pom")
   (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.2/test.pom")
+  (inject-artifacts-into-repo! help/*db* "someuser" "test.jar" "test-0.0.3/test.pom")
   (-> (session (help/app))
       (visit "/fake/dependents")
       (within [:div.dependents]
-        (has (text? "0.0.2org.clojars.dantheman/test0.0.2")))))
+        (has (text? "0.0.2com.dantheman/test0.0.3org.clojars.dantheman/test0.0.2")))))
 
 (deftest shadow-jars-have-a-message
   (inject-artifacts-into-repo! help/*db* "someuser" "fake.jar"
