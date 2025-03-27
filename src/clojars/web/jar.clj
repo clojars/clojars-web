@@ -229,6 +229,10 @@
      [:p (safe-link-to (str (jar-url jar) "/versions")
                        (str "Show All Versions (" count " total)"))])))
 
+(defn- sort-deps
+  [deps]
+  (sort-by (juxt :group_name :jar_name) deps))
+
 (defn- dependencies [db {:keys [group_name jar_name version]}]
   (when-some [deps (seq (into []
                               (comp
@@ -241,7 +245,7 @@
     (list
      [:h3 "Dependencies"]
      [:ul#dependencies
-      (for [dep deps]
+      (for [dep (sort-deps deps)]
         [:li (dependency-link db dep)])])))
 
 (defn- get-dependents [db {:keys [group_name jar_name]}]
@@ -257,7 +261,7 @@
       (list
        [:h3 "Dependents (on Clojars)"]
        [:ul#dependents
-        (for [dep (take 10 distinct-deps)]
+        (for [dep (take 10 (sort-deps distinct-deps))]
           [:li (dependent-link dep)])]
        [:p (link-to (str (jar-url jar) "/dependents")
                     (format "All Dependents (%s) for all Versions (%s)"
@@ -377,7 +381,7 @@
           [:h2 (safe-link-to (jar-versioned-url (assoc jar :version version))
                              version)]
           (for [[base-d dep-versions] (->> deps
-                                           (sort-by first)
+                                           (sort-deps)
                                            (group-by #(select-keys % #{:group_name :jar_name})))]
             [:div.dependent-jar
              [:h3 (jar-link base-d)]
