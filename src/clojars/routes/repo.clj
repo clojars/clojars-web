@@ -104,8 +104,7 @@
                      ;; correct dir.
                      (sort #(compare %2 %1) upload-dirs))]
     dir
-    (doto (io/file (FileUtils/getTempDirectory)
-                   (format "upload-%s-%s" (System/currentTimeMillis) (UUID/randomUUID)))
+    (doto (io/file "tmp" (format "upload-%s-%s" (System/currentTimeMillis) (UUID/randomUUID)))
       (FileUtils/forceMkdir))))
 
 (def ^:private ^:dynamic *db*
