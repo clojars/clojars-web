@@ -113,6 +113,7 @@
   (remove-path [_ path]
     (purge cdn-token cdn-url path))
   (path-exists? [_ _])
+  (path-seq [_ _])
   (artifact-url [_ _]))
 
 (defn cdn-storage [error-reporter cdn-token cdn-url]

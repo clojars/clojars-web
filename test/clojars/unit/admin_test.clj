@@ -27,6 +27,8 @@
               *s3-client* s3-client
               admin/*db* help/*db*
               admin/*search* (reify search/Search
+                               (index! [_ _])
+                               (search [_ _ _])
                                (delete! [_ group#]
                                  (swap! *search-removals* conj group#))
                                (delete! [_ group# artifact#]
