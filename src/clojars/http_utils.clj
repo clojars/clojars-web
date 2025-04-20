@@ -29,8 +29,8 @@
   (let [mem-store (aging-session/aging-memory-store
                    :session-atom     session-store-atom
                    :refresh-on-write true
-                   ;; Allow sessions to remain active for 48 hours
-                   :events           [(aging-session-event/expires-after 172800)])
+                   ;; Allow sessions to remain active for 1 hour
+                   :events           [(aging-session-event/expires-after 3600)])
         secure-session (wrap-session f {:cookie-attrs {:secure true
                                                        :http-only true}
                                         :store mem-store})
