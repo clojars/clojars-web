@@ -92,8 +92,8 @@
            {:override-deps
             {;; Addresses CVE-2022-42004, CVE-2022-42003, CVE-2021-46877, CVE-2020-36518
              com.fasterxml.jackson.core/jackson-databind {:mvn/version "2.15.2"}
-             ;; Addresses CVE-2019-10086, CVE-2014-0114
-             commons-beanutils/commons-beanutils {:mvn/version "1.9.4"}
+             ;; Addresses CVE-2019-10086, CVE-2014-0114, CVE-2025-48734
+             commons-beanutils/commons-beanutils {:mvn/version "1.11.0"}
              ;; Addresses CVE-2015-6420
              commons-collections/commons-collections {:mvn/version "3.2.2"}
 
