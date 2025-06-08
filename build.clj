@@ -6,7 +6,7 @@
     LocalDate)))
 
 (def class-dir "target/classes")
-(def basis (b/create-basis {:aliases [:default]}))
+(def basis (b/create-basis {:aliases [:defaults]}))
 (def uber-file "target/clojars-web-standalone.jar")
 
 (defn clean [_]
