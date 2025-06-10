@@ -17,5 +17,5 @@ clojure -Ttools install nvd-clojure/nvd-clojure '{:mvn/version "5.0.0"}' :as nvd
 
 cd "$ROOT"
 clojure -J-Dclojure.main.report=stderr -Tnvd nvd.task/check \
-    :classpath '"'"$(clojure -Spath -A:defaults)"'"' \
+    :classpath '"'"$(clojure -Spath)"'"' \
     :config-filename '".nvd-clojure.edn"'

@@ -1,6 +1,6 @@
 .PHONY: check
 check:
-	clojure -M:defaults:check
+	clojure -M:check
 
 .PHONY: lint
 lint:
@@ -8,7 +8,7 @@ lint:
 
 .PHONY: migrate-db
 migrate-db:
-	clojure -M:defaults:migrate-db
+	clojure -M:migrate-db
 
 .PHONY: nvd-check
 nvd-check:
@@ -16,15 +16,15 @@ nvd-check:
 
 .PHONY: prep-deps
 prep-deps:
-	clojure -A:defaults -X:deps prep
+	clojure -X:deps prep
 
 .PHONY: repl
 repl:
-	clj -A:defaults:dev
+	clj -A:dev
 
 .PHONY: setup-dev-repo
 setup-dev-repo:
-	clojure -M:defaults:setup-dev-repo
+	clojure -M:setup-dev-repo
 
 .PHONY: tag-release
 tag-release:
