@@ -1,6 +1,7 @@
 {:lint-as
  {clojars.remote-service/defendpoint    clojure.core/defn
-  clojure.java.jdbc/with-db-transaction clojure.core/let}
+  clojure.java.jdbc/with-db-transaction clojure.core/let
+  next.jdbc.types/as-other              clojure.core/constantly}
 
  :linters
  {
@@ -18,6 +19,12 @@
              next.jdbc.sql        sql
              next.jdbc.types      jdbc.types}}
 
+  ;; TODO https://github.com/clojars/clojars-web/issues/904
+  :deprecated-var {:exclude {buddy.core.codecs.base64/decode {:namespaces [clojars.routes.token-breach]}
+                             buddy.core.codecs.base64/encode {:namespaces [clojars.web.user
+                                                                           clojars.unit.web.token-breach-test
+                                                                           clojars.integration.uploads-test]}}}
+
   :equals-expected-position {:level :warning}
 
   ;; use false?/true? instead of = false/true
@@ -30,4 +37,9 @@
   :single-key-in {:level :warning}
 
   :unresolved-symbol
-  {:exclude [(clojure.test/is [match?])]}}}
+  {:exclude [(clojure.test/is [match?])]}
+
+  :unresolved-var
+  {:exclude [digest/md5
+             digest/sha-1
+             next.jdbc.types/as-other]}}}

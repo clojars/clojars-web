@@ -4,7 +4,7 @@ check:
 
 .PHONY: lint
 lint:
-	./bin/clj-kondo --lint src test
+	./bin/lint
 
 .PHONY: migrate-db
 migrate-db:
