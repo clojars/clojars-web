@@ -22,7 +22,8 @@
   (pattern [re] (.pattern re))
   (groupnames [_] [])
   re/RegexFragment
-  (static? [_ _] true))
+  (static? [_ _] true)
+  (recursimplify [_ _] (throw (ex-info "Not implemented" {}))))
 
 (def re-legacy-cdn
   "Log format used when we logged from fastly to rackspace cloudfiles"

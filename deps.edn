@@ -43,6 +43,9 @@
   duct/hikaricp-component {:mvn/version "0.1.2"
                            :exclusions [org.slf4j/slf4j-nop]}
 
+  ;; manully imported clj-kondo configs from 2.x branch to .clj-kondo/imports/hiccup/hiccup
+  hiccup/hiccup {:mvn/version "1.0.5"}
+
   kirasystems/aging-session {:mvn/version "0.5.0"
                              :exclusions [org.clojure/clojurescript]}
 
@@ -114,6 +117,7 @@
 
                   eftest/eftest {:mvn/version "0.5.9"}
 
+                  ;; manually imported clj-kondo to .clj-kondo/imports/kerodon/kerodon
                   kerodon/kerodon {:mvn/version "0.9.1"}
 
                   net.polyc0l0r/bote {:mvn/version "0.1.0"}
