@@ -39,7 +39,7 @@ Development
 
 ### Development system
 
-To begin developing, start with a REPL (Note: if you are instead starting a repl from your editor, you will need to include the `:default` and `:dev` aliases).
+To begin developing, start with a REPL (Note: if you are instead starting a repl from your editor, you will need to include the `:dev` alias).
 
 ```sh
 make repl
