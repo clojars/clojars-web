@@ -11,6 +11,7 @@
    [clojars.search :as search]
    [clojars.storage :as storage]
    [clojars.util :as util]
+   [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [compojure.core :as compojure :refer [PUT]]
@@ -58,7 +59,7 @@
 (defn read-metadata [dir]
   (let [md-file (io/file dir metadata-edn)]
     (when (.exists md-file)
-      (read-string (slurp md-file)))))
+      (edn/read-string (slurp md-file)))))
 
 (defn- token-from-session
   [{:as _session :cemerick.friend/keys [identity]}]
