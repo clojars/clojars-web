@@ -44,6 +44,9 @@ function ensure_clj_kondo() {
 
 ensure_clj_kondo
 
-${ROOT}/bin/.cache/clj-kondo-${VERSION}/clj-kondo --lint "$(clojure -A:dev -Spath)" --skip-lint --copy-configs
-${ROOT}/bin/.cache/clj-kondo-${VERSION}/clj-kondo --lint "$(clojure -A:dev -Spath)" --dependencies --parallel
-exec "${ROOT}/bin/.cache/clj-kondo-${VERSION}/clj-kondo" "$@"
+CLJ_KONDO="${ROOT}/bin/.cache/clj-kondo-${VERSION}/clj-kondo"
+CLJ_PATH="$(clojure -A:dev -Spath)"
+
+${CLJ_KONDO} --lint "$(clojure -A:dev -Spath)" --skip-lint --copy-configs
+${CLJ_KONDO} --lint "$(clojure -A:dev -Spath)" --dependencies --parallel
+exec ${CLJ_KONDO} "$@"

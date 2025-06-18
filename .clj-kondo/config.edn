@@ -36,9 +36,6 @@
   ;; warn if assoc-in/get-in/update-in are used with a single key
   :single-key-in {:level :warning}
 
-  :unresolved-symbol
-  {:exclude [(clojure.test/is [match?])]}
-
   :unresolved-var
   {:exclude [digest/md5
              digest/sha-1
