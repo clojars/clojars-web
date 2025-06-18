@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+clojure -Spom
+mkdir -p dependabot
+mv pom.xml dependabot
+
+clojure -X:deps list > dependabot/deps-list.txt
+clojure -X:deps tree > dependabot/deps-tree.txt

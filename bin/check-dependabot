@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Check that project.clj is in sync with the committed dependabot pom.xml.
+
+set -euo pipefail
+
+./bin/sync-dependabot
+if git diff --ignore-all-space --exit-code dependabot/pom.xml ; then
+  echo 'deps.edn and dependabot/pom.xml are in sync.'
+  exit 0
+else
+  echo
+  echo 'deps.edn and dependabot/pom.xml are out of sync! Please run ./bin/sync-dependabot locally and commit the results.'
+  echo 'If this is a PR from dependabot, you must manually update the version in deps.edn'
+  exit 1
+fi
