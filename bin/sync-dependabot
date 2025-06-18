@@ -2,9 +2,10 @@
 
 set -euo pipefail
 
-clojure -Spom
 mkdir -p dependabot
-mv pom.xml dependabot
+cd dependabot
+clojure -X:deps mvn-pom :project \"../deps.edn\"
+cd -
 
 clojure -X:deps list > dependabot/deps-list.txt
 clojure -X:deps tree > dependabot/deps-tree.txt

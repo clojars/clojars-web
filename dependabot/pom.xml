@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <packaging>jar</packaging>
-  <groupId>build</groupId>
-  <artifactId>build</artifactId>
+  <groupId>org.clojars</groupId>
+  <artifactId>clojars-web</artifactId>
   <version>0.1.0</version>
-  <name>build</name>
+  <name>clojars-web</name>
   <dependencies>
     <dependency>
       <groupId>com.cognitect.aws</groupId>
@@ -173,11 +173,6 @@
       <groupId>duct</groupId>
       <artifactId>duct</artifactId>
       <version>0.8.2</version>
-    </dependency>
-    <dependency>
-      <groupId>hiccup</groupId>
-      <artifactId>hiccup</artifactId>
-      <version>1.0.5</version>
     </dependency>
     <dependency>
       <groupId>one-time</groupId>
