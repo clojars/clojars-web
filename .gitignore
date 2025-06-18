@@ -26,9 +26,5 @@ home
 
 .clj-kondo/*
 !.clj-kondo/config.edn
-# TODO remove when upgrading to hiccup 2.x
-!.clj-kondo/imports/hiccup
-# TODO push unstream
-!.clj-kondo/imports/kerodon
 bin/.cache
 .cpcache
