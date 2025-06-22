@@ -37,6 +37,7 @@ jobs:
           command: java -Dconfig.file=dev-resources/elasticmq.conf -jar elasticmq.jar
           background: true
       - run: make migrate-db
+      - run: make check-dependabot
       - run: make lint
       - run: make test
       - store_test_results:

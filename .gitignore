@@ -7,7 +7,7 @@ home
 !/data/.gitkeep
 /native
 /target
-pom.xml
+/pom.xml
 /logs
 
 # IntelliJ IDEA project files
