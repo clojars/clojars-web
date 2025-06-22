@@ -2,4 +2,11 @@
 
 set -euo pipefail
 
-./bin/clj-kondo --lint src:test
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
+
+CLJ_PATH="$(clojure -A:dev -Spath)"
+
+"${ROOT}/bin/clj-kondo" --lint "${CLJ_PATH}" --skip-lint --copy-configs
+"${ROOT}/bin/clj-kondo" --lint "${CLJ_PATH}" --dependencies --parallel
+
+"${ROOT}/bin/clj-kondo" --lint src:test
