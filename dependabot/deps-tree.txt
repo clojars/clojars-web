@@ -61,51 +61,51 @@ org.bouncycastle/bcpkix-jdk18on 1.78
   X org.bouncycastle/bcprov-jdk18on 1.78 :use-top
   . org.bouncycastle/bcutil-jdk18on 1.78
     X org.bouncycastle/bcprov-jdk18on 1.78 :use-top
-ring/ring-jetty-adapter 1.13.0
-  X ring/ring-core 1.13.0 :use-top
-  . org.ring-clojure/ring-jakarta-servlet 1.13.0
-    X ring/ring-core 1.13.0 :use-top
-  . org.eclipse.jetty/jetty-server 11.0.24
-    . org.eclipse.jetty/jetty-http 11.0.24
-      . org.eclipse.jetty/jetty-io 11.0.24
-      . org.eclipse.jetty/jetty-util 11.0.24
-        X org.slf4j/slf4j-api 2.0.9 :use-top
-      X org.slf4j/slf4j-api 2.0.9 :use-top
-    . org.eclipse.jetty/jetty-io 11.0.24
-      . org.eclipse.jetty/jetty-util 11.0.24
-      X org.slf4j/slf4j-api 2.0.9 :use-top
+ring/ring-jetty-adapter 1.13.1
+  X ring/ring-core 1.13.1 :use-top
+  . org.ring-clojure/ring-jakarta-servlet 1.13.1
+    X ring/ring-core 1.13.1 :use-top
+  . org.eclipse.jetty/jetty-server 11.0.25
+    . org.eclipse.jetty/jetty-http 11.0.25
+      . org.eclipse.jetty/jetty-io 11.0.25
+      . org.eclipse.jetty/jetty-util 11.0.25
+        X org.slf4j/slf4j-api 2.0.13 :use-top
+      X org.slf4j/slf4j-api 2.0.13 :use-top
+    . org.eclipse.jetty/jetty-io 11.0.25
+      . org.eclipse.jetty/jetty-util 11.0.25
+      X org.slf4j/slf4j-api 2.0.13 :use-top
     . org.eclipse.jetty.toolchain/jetty-jakarta-servlet-api 5.0.2
-    X org.slf4j/slf4j-api 2.0.9 :use-top
-  . org.eclipse.jetty/jetty-unixdomain-server 11.0.24
-    . org.eclipse.jetty/jetty-server 11.0.24
-    X org.slf4j/slf4j-api 2.0.9 :use-top
-  . org.eclipse.jetty.websocket/websocket-jetty-server 11.0.24
-    . org.eclipse.jetty/jetty-servlet 11.0.24
-      . org.eclipse.jetty/jetty-security 11.0.24
-        . org.eclipse.jetty/jetty-server 11.0.24
-        X org.slf4j/slf4j-api 2.0.9 :use-top
-      X org.slf4j/slf4j-api 2.0.9 :use-top
-    . org.eclipse.jetty/jetty-webapp 11.0.24
-      . org.eclipse.jetty/jetty-servlet 11.0.24
-      . org.eclipse.jetty/jetty-xml 11.0.24
-        . org.eclipse.jetty/jetty-util 11.0.24
-        X org.slf4j/slf4j-api 2.0.9 :use-top
-      X org.slf4j/slf4j-api 2.0.9 :use-top
+    X org.slf4j/slf4j-api 2.0.13 :use-top
+  . org.eclipse.jetty/jetty-unixdomain-server 11.0.25
+    . org.eclipse.jetty/jetty-server 11.0.25
+    X org.slf4j/slf4j-api 2.0.13 :use-top
+  . org.eclipse.jetty.websocket/websocket-jetty-server 11.0.25
+    . org.eclipse.jetty/jetty-servlet 11.0.25
+      . org.eclipse.jetty/jetty-security 11.0.25
+        . org.eclipse.jetty/jetty-server 11.0.25
+        X org.slf4j/slf4j-api 2.0.13 :use-top
+      X org.slf4j/slf4j-api 2.0.13 :use-top
+    . org.eclipse.jetty/jetty-webapp 11.0.25
+      . org.eclipse.jetty/jetty-servlet 11.0.25
+      . org.eclipse.jetty/jetty-xml 11.0.25
+        . org.eclipse.jetty/jetty-util 11.0.25
+        X org.slf4j/slf4j-api 2.0.13 :use-top
+      X org.slf4j/slf4j-api 2.0.13 :use-top
     . org.eclipse.jetty.toolchain/jetty-jakarta-servlet-api 5.0.2
-    . org.eclipse.jetty.websocket/websocket-jetty-api 11.0.24
-    . org.eclipse.jetty.websocket/websocket-jetty-common 11.0.24
-      . org.eclipse.jetty.websocket/websocket-core-common 11.0.24
-        . org.eclipse.jetty/jetty-http 11.0.24
-        . org.eclipse.jetty/jetty-io 11.0.24
-        X org.slf4j/slf4j-api 2.0.9 :use-top
-      . org.eclipse.jetty.websocket/websocket-jetty-api 11.0.24
-    . org.eclipse.jetty.websocket/websocket-servlet 11.0.24
-      . org.eclipse.jetty/jetty-servlet 11.0.24
-      . org.eclipse.jetty.websocket/websocket-core-server 11.0.24
-        . org.eclipse.jetty/jetty-server 11.0.24
-        . org.eclipse.jetty.websocket/websocket-core-common 11.0.24
-      X org.slf4j/slf4j-api 2.0.9 :use-top
-    X org.slf4j/slf4j-api 2.0.9 :use-top
+    . org.eclipse.jetty.websocket/websocket-jetty-api 11.0.25
+    . org.eclipse.jetty.websocket/websocket-jetty-common 11.0.25
+      . org.eclipse.jetty.websocket/websocket-core-common 11.0.25
+        . org.eclipse.jetty/jetty-http 11.0.25
+        . org.eclipse.jetty/jetty-io 11.0.25
+        X org.slf4j/slf4j-api 2.0.13 :use-top
+      . org.eclipse.jetty.websocket/websocket-jetty-api 11.0.25
+    . org.eclipse.jetty.websocket/websocket-servlet 11.0.25
+      . org.eclipse.jetty/jetty-servlet 11.0.25
+      . org.eclipse.jetty.websocket/websocket-core-server 11.0.25
+        . org.eclipse.jetty/jetty-server 11.0.25
+        . org.eclipse.jetty.websocket/websocket-core-common 11.0.25
+      X org.slf4j/slf4j-api 2.0.13 :use-top
+    X org.slf4j/slf4j-api 2.0.13 :use-top
 com.stuartsierra/component 0.3.1
   . com.stuartsierra/dependency 0.2.0
 org.apache.commons/commons-email 1.5
@@ -276,13 +276,13 @@ raven-clj/raven-clj 1.7.0
   . org.clj-commons/clj-http-lite 1.0.13
   . prone/prone 2021-04-23
     . realize/realize 2019-04-24
-ring/ring-core 1.12.1
-  . org.ring-clojure/ring-core-protocols 1.12.1
-  . org.ring-clojure/ring-websocket-protocols 1.12.1
-  . ring/ring-codec 1.2.0 :newer-version
-  . commons-io/commons-io 2.15.1 :newer-version
-  . org.apache.commons/commons-fileupload2-core 2.0.0-M1
-    X commons-io/commons-io 2.13.0 :older-version
+ring/ring-core 1.14.2
+  . org.ring-clojure/ring-core-protocols 1.14.2
+  . org.ring-clojure/ring-websocket-protocols 1.14.2
+  . ring/ring-codec 1.3.0 :newer-version
+  . commons-io/commons-io 2.19.0 :newer-version
+  . org.apache.commons/commons-fileupload2-core 2.0.0-M4
+    . commons-io/commons-io 2.19.0
   . crypto-random/crypto-random 1.2.1
     X commons-codec/commons-codec 1.15 :older-version
   . crypto-equality/crypto-equality 1.0.1
