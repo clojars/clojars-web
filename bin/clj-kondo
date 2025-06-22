@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CLJ_KONDO_VERSION="2025.04.07"
+CLJ_KONDO_VERSION="2025.06.05"
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
 
 function ensure_clj_kondo() {
@@ -43,4 +43,10 @@ function ensure_clj_kondo() {
 }
 
 ensure_clj_kondo
-exec "${ROOT}/bin/.cache/clj-kondo-${VERSION}/clj-kondo" "$@"
+
+CLJ_KONDO="${ROOT}/bin/.cache/clj-kondo-${VERSION}/clj-kondo"
+CLJ_PATH="$(clojure -A:dev -Spath)"
+
+"${CLJ_KONDO}" --lint "${CLJ_PATH}" --skip-lint --copy-configs
+"${CLJ_KONDO}" --lint "${CLJ_PATH}" --dependencies --parallel
+exec "${CLJ_KONDO}" "$@"
