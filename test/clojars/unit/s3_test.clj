@@ -38,15 +38,15 @@
                         (finally
                           (clear-bucket)))))
 
-(deftest put-object+get-object-details-work
+(deftest put-file+get-object-details-work
   (let [s3 (real-s3-client)]
-    (s3/put-object s3 "a-key" (io/input-stream (io/resource "fake.jar")))
+    (s3/put-file s3 "fake.jar" (io/resource "fake.jar"))
     (is (match?
          {:ETag          "d7c2e3e6ed5ab399efcb2fb7d8faa87c"
           :ContentLength 8
-          :ContentType   "application/octet-stream"
+          :ContentType   "application/x-java-archive"
           :AcceptRanges  "bytes"}
-         (s3/get-object-details s3 "a-key")))))
+         (s3/get-object-details s3 "fake.jar")))))
 
 (deftest list-entries-works
   (doseq [[client-type s3] [[:mock (s3/mock-s3-client)] [:real (real-s3-client)]]]

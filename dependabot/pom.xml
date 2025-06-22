@@ -10,7 +10,7 @@
     <dependency>
       <groupId>com.cognitect.aws</groupId>
       <artifactId>ssm</artifactId>
-      <version>847.2.1365.0</version>
+      <version>871.2.31.64</version>
     </dependency>
     <dependency>
       <groupId>buddy</groupId>
@@ -25,18 +25,12 @@
     <dependency>
       <groupId>com.cognitect.aws</groupId>
       <artifactId>api</artifactId>
-      <version>0.8.692</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.cognitect</groupId>
-          <artifactId>http-client</artifactId>
-        </exclusion>
-      </exclusions>
+      <version>0.8.741</version>
     </dependency>
     <dependency>
       <groupId>com.cognitect.aws</groupId>
       <artifactId>endpoints</artifactId>
-      <version>1.1.12.489</version>
+      <version>871.2.31.64</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
@@ -67,7 +61,7 @@
     <dependency>
       <groupId>com.cognitect.aws</groupId>
       <artifactId>sqs</artifactId>
-      <version>847.2.1398.0</version>
+      <version>871.2.29.52</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
@@ -118,11 +112,6 @@
       <groupId>com.github.seancorfield</groupId>
       <artifactId>honeysql</artifactId>
       <version>2.4.1078</version>
-    </dependency>
-    <dependency>
-      <groupId>org.tcrawley</groupId>
-      <artifactId>cognitect-http-client</artifactId>
-      <version>1.11.130</version>
     </dependency>
     <dependency>
       <groupId>org.yaml</groupId>
@@ -272,7 +261,7 @@
     <dependency>
       <groupId>com.cognitect.aws</groupId>
       <artifactId>s3</artifactId>
-      <version>847.2.1398.0</version>
+      <version>871.2.31.64</version>
     </dependency>
     <dependency>
       <groupId>clj-stacktrace</groupId>

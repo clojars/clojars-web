@@ -1,4 +1,4 @@
-com.cognitect.aws/ssm 847.2.1365.0
+com.cognitect.aws/ssm 871.2.31.64
 buddy/buddy-core 1.11.423
   . commons-codec/commons-codec 1.16.0
   X org.bouncycastle/bcpkix-jdk18on 1.75 :use-top
@@ -7,17 +7,19 @@ buddy/buddy-core 1.11.423
 org.clojure/clojure 1.12.1
   . org.clojure/spec.alpha 0.5.238
   . org.clojure/core.specs.alpha 0.4.74
-com.cognitect.aws/api 0.8.692
-  . org.clojure/data.json 2.5.0
-  X org.clojure/tools.logging 1.2.4 :use-top
-  X org.clojure/data.xml 0.2.0-alpha8 :use-top
-  . org.clojure/core.async 1.6.681
-    . org.clojure/tools.analyzer.jvm 1.2.3
-      . org.clojure/tools.analyzer 1.1.1
-      X org.clojure/core.memoize 1.0.253 :older-version
+com.cognitect.aws/api 0.8.741
+  . org.clojure/data.json 2.5.1
+  X org.clojure/tools.logging 1.3.0 :use-top
+  X org.clojure/data.xml 0.2.0-alpha9 :use-top
+  . org.clojure/core.async 1.8.741
+    . org.clojure/tools.analyzer.jvm 1.3.2
+      . org.clojure/tools.analyzer 1.2.0
+      . org.clojure/core.memoize 1.1.266 :newer-version
+        . org.clojure/core.cache 1.1.234
+          . org.clojure/data.priority-map 1.2.0
       . org.ow2.asm/asm 9.2
-      X org.clojure/tools.reader 1.3.6 :older-version
-com.cognitect.aws/endpoints 1.1.12.489
+      . org.clojure/tools.reader 1.5.0 :newer-version
+com.cognitect.aws/endpoints 871.2.31.64
 org.clojure/tools.logging 1.2.4
 duct/hikaricp-component 0.1.2
   X com.stuartsierra/component 0.3.2 :use-top
@@ -35,7 +37,7 @@ valip/valip 0.2.0
       X commons-collections/commons-collections 2.1 :use-top
       . xml-apis/xml-apis 1.0.b2
     X commons-logging/commons-logging 1.0.4 :older-version
-com.cognitect.aws/sqs 847.2.1398.0
+com.cognitect.aws/sqs 871.2.29.52
 org.apache.lucene/lucene-analyzers-common 8.11.4
   X org.apache.lucene/lucene-core 8.11.4 :use-top
 ring/ring-defaults 0.5.0
@@ -65,6 +67,10 @@ ring/ring-jetty-adapter 1.13.0
     X ring/ring-core 1.13.0 :use-top
   . org.eclipse.jetty/jetty-server 11.0.24
     . org.eclipse.jetty/jetty-http 11.0.24
+      . org.eclipse.jetty/jetty-io 11.0.24
+      . org.eclipse.jetty/jetty-util 11.0.24
+        X org.slf4j/slf4j-api 2.0.9 :use-top
+      X org.slf4j/slf4j-api 2.0.9 :use-top
     . org.eclipse.jetty/jetty-io 11.0.24
       . org.eclipse.jetty/jetty-util 11.0.24
       X org.slf4j/slf4j-api 2.0.9 :use-top
@@ -108,21 +114,6 @@ org.apache.commons/commons-email 1.5
 org.postgresql/postgresql 42.7.2
   . org.checkerframework/checker-qual 3.42.0
 com.github.seancorfield/honeysql 2.4.1078
-org.tcrawley/cognitect-http-client 1.11.130
-  . org.eclipse.jetty/jetty-http 11.0.24
-    . org.eclipse.jetty/jetty-io 11.0.24
-    . org.eclipse.jetty/jetty-util 11.0.24
-    X org.slf4j/slf4j-api 2.0.9 :use-top
-  . org.eclipse.jetty/jetty-util 11.0.24
-    X org.slf4j/slf4j-api 2.0.9 :use-top
-  . org.eclipse.jetty/jetty-client 11.0.24
-    . org.eclipse.jetty/jetty-alpn-client 11.0.24
-      . org.eclipse.jetty/jetty-io 11.0.24
-      X org.slf4j/slf4j-api 2.0.9 :use-top
-    . org.eclipse.jetty/jetty-http 11.0.24
-    . org.eclipse.jetty/jetty-io 11.0.24
-    X org.slf4j/slf4j-api 2.0.9 :use-top
-  . org.clojure/core.async 1.6.681
 org.yaml/snakeyaml 1.33
 aero/aero 1.1.6
 clj-http/clj-http 3.12.3
@@ -161,9 +152,9 @@ org.apache.lucene/lucene-queryparser 8.11.4
   . org.apache.lucene/lucene-sandbox 8.11.4
 org.bouncycastle/bcprov-jdk18on 1.78
 ring-middleware-format/ring-middleware-format 0.7.5
-  . org.clojure/core.memoize 1.0.257
+  X org.clojure/core.memoize 1.0.257 :superseded
     . org.clojure/core.cache 1.0.225 :newer-version
-      . org.clojure/data.priority-map 1.1.0
+      X org.clojure/data.priority-map 1.1.0 :parent-omitted
   X ring/ring-core 1.9.5 :use-top
   X cheshire/cheshire 5.10.2 :use-top
   X org.clojure/tools.reader 1.3.6 :superseded
@@ -264,13 +255,13 @@ cheshire/cheshire 5.10.1
   . tigris/tigris 0.1.2
 org.mindrot/jbcrypt 0.4
 com.taoensso/nippy 3.4.2
-  . org.clojure/tools.reader 1.4.2 :newer-version
+  X org.clojure/tools.reader 1.4.2 :superseded
   . com.taoensso/encore 3.112.0
     . org.clojure/tools.reader 1.4.2
     . com.taoensso/truss 1.11.0
   . org.tukaani/xz 1.9
   . io.airlift/aircompressor 0.27
-com.cognitect.aws/s3 847.2.1398.0
+com.cognitect.aws/s3 871.2.31.64
 clj-stacktrace/clj-stacktrace 0.2.8
 org.slf4j/slf4j-api 2.0.13
 org.apache.maven/maven-model 3.8.4
