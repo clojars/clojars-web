@@ -175,6 +175,11 @@
       <version>0.8.2</version>
     </dependency>
     <dependency>
+      <groupId>hiccup</groupId>
+      <artifactId>hiccup</artifactId>
+      <version>1.0.5</version>
+    </dependency>
+    <dependency>
       <groupId>one-time</groupId>
       <artifactId>one-time</artifactId>
       <version>0.7.0</version>
