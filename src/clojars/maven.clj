@@ -199,7 +199,7 @@
 (defn sort-by-version
   "Sorts a sequence of jar maps by maven version ordering."
   [jars]
-  (sort-by :version #(compare-versions %1 %2) jars))
+  (sort-by :version compare-versions jars))
 
 (defn snapshot-version? [^String version]
   (.endsWith version "-SNAPSHOT"))

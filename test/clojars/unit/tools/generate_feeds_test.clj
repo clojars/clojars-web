@@ -20,7 +20,7 @@
    (java.util.zip
     GZIPInputStream)))
 
-(def ^:dynamic fixed-db-time nil)
+(def ^:dynamic *fixed-db-time* nil)
 
 (defn setup-db [f]
   (let [db-time (db/get-time)]
@@ -34,7 +34,7 @@
     ;; Convert to Date to reduce the precision to what we would see when reading
     ;; it from edn. java.sql.Timestamp is a subclass of Date, but has higher
     ;; precision.
-    (binding [fixed-db-time (Date. (.getTime db-time))]
+    (binding [*fixed-db-time* (Date. (.getTime db-time))]
       (f))))
 
 (defn setup-s3 [f]
@@ -59,11 +59,11 @@
     :artifact-id   "fake"
     :versions      ["0.0.3-SNAPSHOT" "0.0.2" "0.0.1"]
     :versions-meta [{:version      "0.0.3-SNAPSHOT"
-                     :release-date fixed-db-time}
+                     :release-date *fixed-db-time*}
                     {:version      "0.0.2"
-                     :release-date fixed-db-time}
+                     :release-date *fixed-db-time*}
                     {:version      "0.0.1"
-                     :release-date fixed-db-time}]}
+                     :release-date *fixed-db-time*}]}
 
    {:description   "TEST"
     :scm           {:connection           "scm:git:git://github.com/fake/test.git"
@@ -76,12 +76,12 @@
     :homepage      "http://example.com"
     :versions      ["0.0.3-SNAPSHOT" "0.0.2" "0.0.1"]
     :versions-meta [{:version      "0.0.3-SNAPSHOT"
-                     :release-date fixed-db-time
+                     :release-date *fixed-db-time*
                      :scm-tag          "70470ff6ae74505bdbfe5955fca6797f613c113c"}
                     {:version      "0.0.2"
-                     :release-date fixed-db-time}
+                     :release-date *fixed-db-time*}
                     {:version      "0.0.1"
-                     :release-date fixed-db-time}]}])
+                     :release-date *fixed-db-time*}]}])
 
 (def expected-jar-list
   '[[fake "0.0.1"]

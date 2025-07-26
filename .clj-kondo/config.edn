@@ -5,6 +5,15 @@
 
  :linters
  {
+
+  ;; warn when using a fully-qualified namespace when there is an alias
+  ;; available
+  :aliased-namespace-symbol {:level :warning}
+
+  ;; warn when using a symbol in a case statement, as the intent is likely to
+  ;; use the resolved value
+  :case-symbol-test {:level :warning}
+
   ;; warn when we'll never reach an else
   :condition-always-true {:level :warning}
 
@@ -25,13 +34,40 @@
                                                                            clojars.unit.web.token-breach-test
                                                                            clojars.integration.uploads-test]}}}
 
+  :dynamic-var-not-earmuffed {:level :warning}
+
   :equals-expected-position {:level :warning}
 
   ;; use false?/true? instead of = false/true
   :equals-false {:level :warning}
   :equals-true  {:level :warning}
 
+  :def-fn {:level :warning}
+
+  ;; warn on explicit nil returns from if (indicating we should use a when)
+  :if-nil-return {:level :warning}
+
+  ;; warn when using a keyword in destructuring
+  :keyword-binding {:level :warning}
+
+  ;; warn when not using dec/inc
+  :minus-one {:level :warning}
+  :plus-one {:level :warning}
+
+  ;; warn when calling reduce without an initial value
+  :reduce-without-init {:level :warning}
+
+  ;; warn when using ->, etc with a single argument
+  :redundant-call {:level :warning}
+
+  ;; warn when wrapping a function in #()/fn where the wrapped function will
+  ;; suffice
+  :redundant-fn-wrapper {:level :warning}
+
+  ;; warn when calling str with a single arg
   :redundant-str-call {:level :warning}
+
+  :self-requiring-namespace {:level :warning}
 
   ;; warn if assoc-in/get-in/update-in are used with a single key
   :single-key-in {:level :warning}
@@ -39,4 +75,8 @@
   :unresolved-var
   {:exclude [digest/md5
              digest/sha-1
-             next.jdbc.types/as-other]}}}
+             next.jdbc.types/as-other]}
+
+  :unused-alias {:level :warning}
+
+  :used-underscored-binding {:level :warning}}}

@@ -337,7 +337,7 @@
     []
     (with-open [index-reader (index-reader index)]
       (let [per-page 24
-            offset (* per-page (- page 1))
+            offset (* per-page (dec page))
 
             {:keys [^TopDocs hits ^IndexSearcher searcher]}
             (-search* index-reader query (* per-page page))

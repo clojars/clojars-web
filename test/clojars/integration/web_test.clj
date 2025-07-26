@@ -78,7 +78,7 @@
       (within [:.page-nav :.current]
         (has (text? "1")))
       (within [:span.desc]
-        (has (text? (reduce str (repeat 20 "Huh")))))
+        (has (text? (apply str (repeat 20 "Huh")))))
 
       (follow "2")
       (within [:.page-description]

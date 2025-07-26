@@ -1,7 +1,7 @@
 (ns clojars.oauth.github
   (:require
    [clojars.oauth.service :as oauth-service]
-   [clojars.remote-service :as remote-service :refer [defendpoint]])
+   [clojars.remote-service :refer [defendpoint]])
   (:import
    (com.github.scribejava.apis
     GitHubApi)

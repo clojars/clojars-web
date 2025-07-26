@@ -371,7 +371,7 @@
         previous-page (if (= 1 current-page)
                         [[:span.previous-page.disabled previous-text]]
                         [[:a.previous-page
-                          {:href (str page-url (- current-page 1))}
+                          {:href (str page-url (dec current-page))}
                           previous-text]])
         before-current (map
                         #(link-to (str page-url %) %)
@@ -387,7 +387,7 @@
         next-page (if (= current-page total-pages)
                     [[:span.next-page.disabled next-text]]
                     [[:a.next-page
-                      {:href (str page-url (+ current-page 1))}
+                      {:href (str page-url (inc current-page))}
                       next-text]])]
     (vec
      (concat main-div previous-page before-current current after-current next-page))))

@@ -14,7 +14,7 @@
 (use-fixtures :once
   help/default-fixture)
 
-(def ^:dynamic lc nil)
+(def ^:dynamic *lc* nil)
 
 (defn- lucene-search-component
   ([]
@@ -29,13 +29,13 @@
 
 (defmacro with-lucene-search-component
   [data & body]
-  `(binding [lc (or lc (lucene-search-component))]
+  `(binding [*lc* (or *lc* (lucene-search-component))]
      (try
        (doseq [artifact# ~data]
-         (search/index! lc artifact#))
+         (search/index! *lc* artifact#))
        ~@body
        (finally
-         (component/stop lc)))))
+         (component/stop *lc*)))))
 
 (def lein-ring
   {:authors "Pinky, The Brain"
@@ -72,14 +72,14 @@
 (deftest weight-by-downloads
   (let [dl-counts {["lein-ring" "lein-ring"] 2
                    ["lein-modules" "lein-modules"] 1}]
-    (binding [lc (lucene-search-component
-                  (fn [g a] (get dl-counts [g a])))]
+    (binding [*lc* (lucene-search-component
+                    (fn [g a] (get dl-counts [g a])))]
       (with-lucene-search-component [lein-ring
                                      lein-modules
                                      c]
         (is (match? [(->result lein-ring)
                      (->result lein-modules)]
-                    (search/search lc "lein" 1)))))))
+                    (search/search *lc* "lein" 1)))))))
 
 (deftest search-by-group-id
   (let [lein-ring (assoc lein-ring :jar_name "foo")
@@ -87,10 +87,10 @@
     (with-lucene-search-component [lein-ring
                                    at-at
                                    c]
-      (is (match? [(->result lein-ring)] (search/search lc "lein-ring" 1)))
-      (is (match? [(->result lein-ring)] (search/search lc "lein" 1)))
-      (is (match? [(->result lein-ring)] (search/search lc "ring" 1)))
-      (is (match? [(->result at-at)]     (search/search lc "at-at" 1))))))
+      (is (match? [(->result lein-ring)] (search/search *lc* "lein-ring" 1)))
+      (is (match? [(->result lein-ring)] (search/search *lc* "lein" 1)))
+      (is (match? [(->result lein-ring)] (search/search *lc* "ring" 1)))
+      (is (match? [(->result at-at)]     (search/search *lc* "at-at" 1))))))
 
 (deftest search-by-artifact-id
   (let [lein-ring (assoc lein-ring :group_name "foo")
@@ -98,10 +98,10 @@
     (with-lucene-search-component [lein-ring
                                    at-at
                                    c]
-      (is (match? [(->result lein-ring)] (search/search lc "lein-ring" 1)))
-      (is (match? [(->result lein-ring)] (search/search lc "lein" 1)))
-      (is (match? [(->result lein-ring)] (search/search lc "ring" 1)))
-      (is (match? [(->result at-at)]     (search/search lc "at-at" 1))))))
+      (is (match? [(->result lein-ring)] (search/search *lc* "lein-ring" 1)))
+      (is (match? [(->result lein-ring)] (search/search *lc* "lein" 1)))
+      (is (match? [(->result lein-ring)] (search/search *lc* "ring" 1)))
+      (is (match? [(->result at-at)]     (search/search *lc* "at-at" 1))))))
 
 (deftest search-by-group+artifact-id-as-single-term
   (let [lein-ring (assoc lein-ring :group_name "org.lein-ring")
@@ -109,13 +109,13 @@
     (with-lucene-search-component [lein-ring
                                    at-at
                                    c]
-      (is (match? [(->result lein-ring)] (search/search lc "lein-ring/lein-ring" 1)))
-      (is (match? [(->result lein-ring)] (search/search lc "org.lein-ring/lein-ring" 1)))
-      (is (match? [(->result lein-ring)] (search/search lc "\"lein-ring/lein-ring\"" 1)))
-      (is (match? [(->result at-at)]     (search/search lc "at-at/at-at" 1)))
-      (is (match? [(->result at-at)]     (search/search lc "lein-ring/at-at" 1)))
-      (is (empty? (search/search lc "lein-ring/nope" 1)))
-      (is (empty? (search/search lc "nope/lein-ring" 1))))))
+      (is (match? [(->result lein-ring)] (search/search *lc* "lein-ring/lein-ring" 1)))
+      (is (match? [(->result lein-ring)] (search/search *lc* "org.lein-ring/lein-ring" 1)))
+      (is (match? [(->result lein-ring)] (search/search *lc* "\"lein-ring/lein-ring\"" 1)))
+      (is (match? [(->result at-at)]     (search/search *lc* "at-at/at-at" 1)))
+      (is (match? [(->result at-at)]     (search/search *lc* "lein-ring/at-at" 1)))
+      (is (empty? (search/search *lc* "lein-ring/nope" 1)))
+      (is (empty? (search/search *lc* "nope/lein-ring" 1))))))
 
 (deftest search-by-description
   (let [lein-ring (merge lein-ring
@@ -123,11 +123,11 @@
         result (->result lein-ring)]
     (with-lucene-search-component [lein-ring
                                    (merge c {:description "some completely unrelated description"})]
-      (is (match? [result] (search/search lc "leiningen" 1)))
-      (is (match? [result] (search/search lc "Leiningen" 1)))
-      (is (match? [result] (search/search lc "ring" 1)))
-      (is (match? [result] (search/search lc "tasks" 1)))
-      (is (match? [result] (search/search lc "Tasks" 1))))))
+      (is (match? [result] (search/search *lc* "leiningen" 1)))
+      (is (match? [result] (search/search *lc* "Leiningen" 1)))
+      (is (match? [result] (search/search *lc* "ring" 1)))
+      (is (match? [result] (search/search *lc* "tasks" 1)))
+      (is (match? [result] (search/search *lc* "Tasks" 1))))))
 
 (deftest search-by-creation-time-in-epoch-milliseconds
   (let [lein-ring-old (merge lein-ring
@@ -145,11 +145,11 @@
                                    lib-foo
                                    c]
       (is (match? (map ->result [lein-ring-new lib-foo])
-                  (search/search lc (format "at:[%s TO %s]" (search/date-in-epoch-ms "2014-01-01T00:00:00Z") (search/date-in-epoch-ms "2016-01-01T00:00:00Z")) 1)))
+                  (search/search *lc* (format "at:[%s TO %s]" (search/date-in-epoch-ms "2014-01-01T00:00:00Z") (search/date-in-epoch-ms "2016-01-01T00:00:00Z")) 1)))
       (is (match? (map ->result [lein-ring-new lib-foo lein-ring-old])
-                  (search/search lc (str "lein " (format "at:[%s TO %s]" (search/date-in-epoch-ms "2014-01-01T00:00:00Z") (search/date-in-epoch-ms "2016-01-01T00:00:00Z"))) 1)))
+                  (search/search *lc* (str "lein " (format "at:[%s TO %s]" (search/date-in-epoch-ms "2014-01-01T00:00:00Z") (search/date-in-epoch-ms "2016-01-01T00:00:00Z"))) 1)))
       (is (match? [(->result lein-ring-new)]
-                  (search/search lc (str "lein AND " (format "at:[%s TO %s]" (search/date-in-epoch-ms "2014-01-01T00:00:00Z") (search/date-in-epoch-ms "2016-01-01T00:00:00Z"))) 1))))))
+                  (search/search *lc* (str "lein AND " (format "at:[%s TO %s]" (search/date-in-epoch-ms "2014-01-01T00:00:00Z") (search/date-in-epoch-ms "2016-01-01T00:00:00Z"))) 1))))))
 
 (deftest search-by-human-readable-creation-time
   (let [lein-ring-old (merge lein-ring
@@ -168,23 +168,23 @@
                                    lib-foo
                                    c]
       (is (match? (map ->result [lein-ring-new lib-foo])
-                  (search/search lc (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z") 1)))
+                  (search/search *lc* (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z") 1)))
       (is (match? (map ->result [lein-ring-new lib-foo lein-ring-old])
-                  (search/search lc (str "lein " (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z")) 1)))
+                  (search/search *lc* (str "lein " (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z")) 1)))
       (is (match? [(->result lein-ring-new)]
-                  (search/search lc (str "lein AND " (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z")) 1)))
+                  (search/search *lc* (str "lein AND " (format "at:[%s TO %s]" "2014-01-01T00:00:00Z" "2016-01-01T00:00:00Z")) 1)))
       (is (match? []
-                  (search/search lc (format "at:[%s TO %s]" "2014-01-01" "2016-FOO") 1))))))
+                  (search/search *lc* (format "at:[%s TO %s]" "2014-01-01" "2016-FOO") 1))))))
 
 (deftest deleting-by-group-id
   (let [another-lein-ring (merge lein-ring {:group_name "lein-ring"
                                             :jar_name "another-lein-ring"})]
     (with-lucene-search-component [lein-ring another-lein-ring]
-      (search/delete! lc "lein-ring")
-      (is (empty? (search/search lc "lein-ring" 1))))))
+      (search/delete! *lc* "lein-ring")
+      (is (empty? (search/search *lc* "lein-ring" 1))))))
 
 (deftest deleting-by-group-id-and-artifact-id
   (let [another-lein-ring (merge lein-ring {:jar_name "another-lein-ring"})]
     (with-lucene-search-component [lein-ring another-lein-ring]
-      (search/delete! lc "lein-ring" "lein-ring")
-      (is (match? [(->result another-lein-ring)] (search/search lc "lein-ring" 1))))))
+      (search/delete! *lc* "lein-ring" "lein-ring")
+      (is (match? [(->result another-lein-ring)] (search/search *lc* "lein-ring" 1))))))
