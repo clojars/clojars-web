@@ -1,5 +1,6 @@
 (ns clojars.routes.repo
   (:require
+   [cheshire.core :as json]
    [clojars.auth :as auth :refer [with-account]]
    [clojars.db :as db]
    [clojars.errors :refer [report-error]]
@@ -145,7 +146,12 @@
      message
      (merge
       {:status 403
-       :status-message (str "Forbidden - " message)}
+       ;;:status-message (str "Forbidden - " message)
+       :headers {"content-type" "application/problem+json"}
+       :body {:type "https://clojars.org/err"
+              :status 403
+              :title message
+              :detail "this is the description"}}
       meta
       (ex-data e-or-message))
      cause)))
@@ -567,9 +573,10 @@
    (PUT ["/:group/:artifact/:version/:filename"
          :group #"[^\.]+" :artifact #"[^/]+" :version #"[^/]+"
          :filename #"[^/]+(\.pom|\.jar|\.sha1|\.md5|\.asc|\.module|\.sig)$"]
-        {body :body session :session {:keys [group artifact version filename]} :params}
-        (binding [*db* db]
-          (handle-versioned-upload storage db body session group artifact version filename)))
+        {body :body session :session {:keys [group artifact version filename]} :params headers :headers}
+     (sc.api/spy (get (keys headers) ""))
+     (binding [*db* db]
+       (handle-versioned-upload storage db body session group artifact version filename)))
    (PUT "*" _ {:status 400 :headers {}})
    (not-found "Page not found")))
 
@@ -610,6 +617,12 @@
         (catch Exception e
           (report-error reporter e nil request-id)
           (let [data (ex-data e)]
+            (sc.api/spy :called)
             {:status (or (:status data) 403)
              :status-message (:status-message data)
-             :body (.getMessage e)}))))))
+             :headers (:headers data)
+             :body (if-some [body (:body data)]
+                     (json/encode body)
+                     (.getMessage e)
+                     )})))))
+  )
