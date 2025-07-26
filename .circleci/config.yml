@@ -31,7 +31,7 @@ jobs:
       - run: apt update && apt install curl --yes && apt install unzip --yes
       - run:
           name: Download ElasticMQ
-          command: curl https://s3-eu-west-1.amazonaws.com/softwaremill-public/elasticmq-server-1.4.2.jar -o elasticmq.jar
+          command: curl https://s3-eu-west-1.amazonaws.com/softwaremill-public/elasticmq-server-1.6.12.jar -o elasticmq.jar
       - run:
           name: Run ElasticMQ
           command: java -Dconfig.file=dev-resources/elasticmq.conf -jar elasticmq.jar
