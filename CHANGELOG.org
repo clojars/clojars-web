@@ -3,6 +3,31 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+* 2025-June
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-06-08.2169][2025-06-08.2169]]
++ [[https://github.com/clojars/clojars-web/commit/baade8967c7be8abd9a9b27499c511efd41f6164][Use correct alias when building uberjar]] ([[https://github.com/tobias][Toby Crawley]], [[https://github.com/frenchy64][Ambrose Bonnaire-Sergeant]])
++ [[https://github.com/clojars/clojars-web/commit/b743735c390542e14fb9c01d4d12ab8fea0153f5][Address CVE-2025-48734]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/3b370ef67a77d9635c5bc477e79ff957bb90b6d0][Upgrade to Clojure 1.12.1]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-06-11.2171][2025-06-11.2171]]
++ [[https://github.com/clojars/clojars-web/commit/d3623de947dcba56392c3e2bc3041ed3c1bf89a5][Inline :defaults in deps.edn]] ([[https://github.com/frenchy64][Ambrose Bonnaire-Sergeant]])
+  We didn't need a separate `:defaults` alias for handling dependency overrides, as we aren't a multi-module build.
++ [[https://github.com/clojars/clojars-web/commit/79dcbc766ca767d85227ceef7a6ffbc52ecf9480][Use edn/read-string to read _metadata.edn]] ([[https://github.com/tobias][Toby Crawley]], [[https://github.com/frenchy64][Ambrose Bonnaire-Sergeant]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-06-22.2181][2025-06-22.2181]]
++ [[https://github.com/clojars/clojars-web/pull/907][Provide a pom.xml so dependabot can detect vulnerable dependencies]] ([[https://github.com/frenchy64][Ambrose Bonnaire-Sergeant]])
++ [[https://github.com/clojars/clojars-web/pull/905][Use deps to infer more accurate linting]] ([[https://github.com/frenchy64][Ambrose Bonnaire-Sergeant]])
++ [[https://github.com/clojars/clojars-web/commit/05599fedfe8ada5f67c33d3d72974b50bde20821][Update to latest Cognitect aws-api]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/0fcafd1a499d7c800d1ed6cff8f127d60930b79a][Update to latest ring-core]] ([[https://github.com/tobias][Toby Crawley]])
+
+* 2025-April
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-04-02.2163][2025-04-02.2163]]
++ [[https://github.com/clojars/clojars-web/commit/318fff4a23feaf6931e326e50d735c6c4363629a][Give more disk space for upload tmp repositorys]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-04-20.2165][2025-04-20.2165]]
++ [[https://github.com/clojars/clojars-web/commit/5d50868decdf95b8014a957f4f88635695dcc3ee][Update session expiration to 1 hour]] ([[https://github.com/tobias][Toby Crawley]])
+  This was to prevent OOMs caused by the atom-based in-memory session store.
+
 * 2025-March
 *** [[https://github.com/clojars/clojars-web/releases/tag/2025-03-26.2161][2025-03-26.2161]]
 + [[https://github.com/clojars/clojars-web/commit/4305d17c2e29547c1e41f06d87eb964b63317187][Alpha sort dependencies & dependents]] ([[https://github.com/tobias][Toby Crawley]])
