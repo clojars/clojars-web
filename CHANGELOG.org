@@ -3,7 +3,7 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
-* 2025-June
+** 2025-June
 *** [[https://github.com/clojars/clojars-web/releases/tag/2025-06-08.2169][2025-06-08.2169]]
 + [[https://github.com/clojars/clojars-web/commit/baade8967c7be8abd9a9b27499c511efd41f6164][Use correct alias when building uberjar]] ([[https://github.com/tobias][Toby Crawley]], [[https://github.com/frenchy64][Ambrose Bonnaire-Sergeant]])
 + [[https://github.com/clojars/clojars-web/commit/b743735c390542e14fb9c01d4d12ab8fea0153f5][Address CVE-2025-48734]] ([[https://github.com/tobias][Toby Crawley]])
@@ -20,7 +20,7 @@ Newest items at the top. Note that updates before 2022-August were copied from
 + [[https://github.com/clojars/clojars-web/commit/05599fedfe8ada5f67c33d3d72974b50bde20821][Update to latest Cognitect aws-api]] ([[https://github.com/tobias][Toby Crawley]])
 + [[https://github.com/clojars/clojars-web/commit/0fcafd1a499d7c800d1ed6cff8f127d60930b79a][Update to latest ring-core]] ([[https://github.com/tobias][Toby Crawley]])
 
-* 2025-April
+** 2025-April
 *** [[https://github.com/clojars/clojars-web/releases/tag/2025-04-02.2163][2025-04-02.2163]]
 + [[https://github.com/clojars/clojars-web/commit/318fff4a23feaf6931e326e50d735c6c4363629a][Give more disk space for upload tmp repositorys]] ([[https://github.com/tobias][Toby Crawley]])
 
@@ -28,7 +28,7 @@ Newest items at the top. Note that updates before 2022-August were copied from
 + [[https://github.com/clojars/clojars-web/commit/5d50868decdf95b8014a957f4f88635695dcc3ee][Update session expiration to 1 hour]] ([[https://github.com/tobias][Toby Crawley]])
   This was to prevent OOMs caused by the atom-based in-memory session store.
 
-* 2025-March
+** 2025-March
 *** [[https://github.com/clojars/clojars-web/releases/tag/2025-03-26.2161][2025-03-26.2161]]
 + [[https://github.com/clojars/clojars-web/commit/4305d17c2e29547c1e41f06d87eb964b63317187][Alpha sort dependencies & dependents]] ([[https://github.com/tobias][Toby Crawley]])
 
