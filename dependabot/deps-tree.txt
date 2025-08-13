@@ -57,10 +57,10 @@ com.github.scribejava/scribejava-apis 8.3.1
     X com.fasterxml.jackson.core/jackson-databind 2.12.3 :use-top
   X com.fasterxml.jackson.core/jackson-databind 2.12.3 :use-top
 digest/digest 1.4.10
-org.bouncycastle/bcpkix-jdk18on 1.78
-  X org.bouncycastle/bcprov-jdk18on 1.78 :use-top
-  . org.bouncycastle/bcutil-jdk18on 1.78
-    X org.bouncycastle/bcprov-jdk18on 1.78 :use-top
+org.bouncycastle/bcpkix-jdk18on 1.78.1
+  X org.bouncycastle/bcprov-jdk18on 1.78.1 :use-top
+  . org.bouncycastle/bcutil-jdk18on 1.78.1
+    X org.bouncycastle/bcprov-jdk18on 1.78.1 :use-top
 ring/ring-jetty-adapter 1.13.1
   X ring/ring-core 1.13.1 :use-top
   . org.ring-clojure/ring-jakarta-servlet 1.13.1
@@ -150,7 +150,7 @@ org.apache.lucene/lucene-queryparser 8.11.4
   X org.apache.lucene/lucene-core 8.11.4 :use-top
   . org.apache.lucene/lucene-queries 8.11.4
   . org.apache.lucene/lucene-sandbox 8.11.4
-org.bouncycastle/bcprov-jdk18on 1.78
+org.bouncycastle/bcprov-jdk18on 1.78.1
 ring-middleware-format/ring-middleware-format 0.7.5
   X org.clojure/core.memoize 1.0.257 :superseded
     . org.clojure/core.cache 1.0.225 :newer-version
