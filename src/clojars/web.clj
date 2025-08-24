@@ -22,7 +22,7 @@
    [clojars.routes.user :as user]
    [clojars.routes.verify :as verify]
    [clojars.web.browse :refer [browse]]
-   [clojars.web.common :refer [html-doc]]
+   [clojars.web.common :as common :refer [html-doc]]
    [clojars.web.dashboard :refer [dashboard index-page]]
    [clojars.web.safe-hiccup :refer [raw]]
    [clojars.web.search :as search]
@@ -36,18 +36,19 @@
    [ring.middleware.not-modified :refer [wrap-not-modified]]
    [ring.util.response :refer [bad-request content-type]]))
 
-(defn try-parse-page
+(defn- try-parse-page
   "Will throw a targeted error if maybe-page doesn't parse as an integer."
   [maybe-page]
-  (try
-    (Integer/parseInt maybe-page)
-    (catch Exception _
-      (throw (ex-info
-              "page must be an integer"
-              {:report? false
-               :title "Bad Request"
-               :error-message "The page query parameter must be an integer."
-               :status 400})))))
+  (when maybe-page
+    (try
+      (Integer/parseInt maybe-page)
+      (catch Exception _
+        (throw (ex-info
+                "page must be an integer"
+                {:report? false
+                 :title "Bad Request"
+                 :error-message "The page query parameter must be an integer."
+                 :status 400}))))))
 
 (defn- main-routes
   [{:as _system :keys [db event-emitter hcaptcha mailer search stats]}]
@@ -60,15 +61,15 @@
               (index-page db stats %))))
      (GET "/search" {:keys [params]}
           (try-account
-           #(let [validated-params (if (:page params)
-                                     (assoc params :page (try-parse-page (:page params)))
-                                     params)]
+           #(let [validated-params (-> params
+                                       (update :page try-parse-page))]
               (search/search search % validated-params))))
      (GET "/projects" {:keys [params]}
           (try-account
-           #(let [validated-params (if (:page params)
-                                     (assoc params :page (try-parse-page (:page params)))
-                                     params)]
+           #(let [validated-params
+                  (-> params
+                      (update :from (partial common/check-no-null-bytes "from"))
+                      (update :page try-parse-page))]
               (browse db % validated-params))))
      (GET "/security" []
           (try-account

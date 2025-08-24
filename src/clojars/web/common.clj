@@ -459,3 +459,18 @@
      (for [[label input] label-input-pairs]
        [:tr [:td label] [:td input]])]
     extra-inputs]))
+
+(defn check-no-null-bytes
+  "Will throw a targeted error if s contains 0x00, as postgres will not allow
+  the null byte in strings."
+  [param-name ^String s]
+  (if (and s
+           (>= (.indexOf s 0x00) 0))
+    (throw (ex-info
+            "value must be a UTF-8 string"
+            {:report? false
+             :title "Bad Request"
+             :error-message (format "The %s parameter must not contain null bytes."
+                                    param-name)
+             :status 400}))
+    s))

@@ -106,3 +106,20 @@
                [:div enlive/first-of-type]
                [:a enlive/first-of-type]]
         (has (text? "tester/tester123a")))))
+
+(deftest browse-page-rejects-invalid-utf-jump
+  (help/add-verified-group "test-user" "tester")
+  (doseq [i (range 100 125)]
+    (db/add-jar
+     help/*db*
+     "test-user"
+     {:name (str "tester" i "a") :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
+  (let [{:keys [response]}
+        (-> (session (help/app))
+            (visit "/projects")
+            (fill-in "Enter a few letters..." (String. (byte-array [0x00])))
+            (press "Jump"))]
+    (is (match?
+         {:status 400
+          :body #"The from parameter must not contain null bytes"}
+         response))))
