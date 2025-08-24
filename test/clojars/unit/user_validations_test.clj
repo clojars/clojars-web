@@ -1,4 +1,4 @@
-(ns clojars.unit.user-valudations-test
+(ns clojars.unit.user-validations-test
   (:require
    [clojars.db :as db]
    [clojars.hcaptcha :as hcaptcha]
@@ -61,7 +61,8 @@
   ;; Tests that we protect against fuzzing on the registration form
   (is (match?
        {:email ["Invalid input"]}
-       ;; This string isn't valid UTF, so will cause postgres to throw
+       ;; This is valid UT, but postgres does not allow null bytes in strings,
+       ;; so will throw
        (uv/validate {:email (String. (byte-array [0x00]))
                      :username "auser2"}
                     (uv/user-validations help/*db*)))))
