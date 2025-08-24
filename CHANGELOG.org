@@ -22,7 +22,7 @@ Newest items at the top. Note that updates before 2022-August were copied from
 
 ** 2025-April
 *** [[https://github.com/clojars/clojars-web/releases/tag/2025-04-02.2163][2025-04-02.2163]]
-+ [[https://github.com/clojars/clojars-web/commit/318fff4a23feaf6931e326e50d735c6c4363629a][Give more disk space for upload tmp repositorys]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/318fff4a23feaf6931e326e50d735c6c4363629a][Give more disk space for upload tmp repositories]] ([[https://github.com/tobias][Toby Crawley]])
 
 *** [[https://github.com/clojars/clojars-web/releases/tag/2025-04-20.2165][2025-04-20.2165]]
 + [[https://github.com/clojars/clojars-web/commit/5d50868decdf95b8014a957f4f88635695dcc3ee][Update session expiration to 1 hour]] ([[https://github.com/tobias][Toby Crawley]])
@@ -357,7 +357,7 @@ This covers changes released in Clojars 149 through 158.
 - [[https://github.com/clojars/clojars-web/issues/814][Dependents of a jar are now shown in the sidebar if they are on Clojars]]
 - Upgraded from Java 11 to Java 17
 - Many dependency upgrades to address CVEs
-- Search was rewritten to use Lucene 8 and retuned to address search quality issues ([[https://github.com/clojars/clojars-web/issues/806][#806]], [[https://github.com/clojars/clojars-web/issues/721][#721]], [[https://github.com/clojars/clojars-web/issues/719][#719]])
+- Search was rewritten to use Lucene 8 and returned to address search quality issues ([[https://github.com/clojars/clojars-web/issues/806][#806]], [[https://github.com/clojars/clojars-web/issues/721][#721]], [[https://github.com/clojars/clojars-web/issues/719][#719]])
 
 ** 2021-September
 *** 148
