@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-TYPOS_VERSION="v1.22.9"
+TYPOS_VERSION="v1.35.5"
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
 
 function ensure_typos() {
