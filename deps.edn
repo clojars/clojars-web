@@ -46,6 +46,8 @@
 
   metosin/malli {:mvn/version "0.15.0"}
 
+  net.cgrand/regex {:mvn/version "1.0.1"}
+
   one-time/one-time {:mvn/version "0.7.0"
                      :exclusions [ ;; not needed on java 17, addresses CWE-120
                                   com.github.jai-imageio/jai-imageio-core
@@ -62,7 +64,7 @@
   ;; CVE-2024-30171, CVE-2024-30172
   org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.78.1"}
   org.bouncycastle/bcprov-jdk18on {:mvn/version "1.78.1"}
-  org.clojure/clojure {:mvn/version "1.12.1"}
+  org.clojure/clojure {:mvn/version "1.12.2"}
   org.clojure/data.xml {:mvn/version "0.2.0-alpha9"}
   org.clojure/tools.logging {:mvn/version "1.2.4"}
   org.clojure/tools.nrepl {:mvn/version "0.2.11"}
@@ -71,8 +73,6 @@
   ;; allows logging to be properly configured instead of going to stdout, and I
   ;; don't know why! - Toby 2024-05-05
   org.slf4j/slf4j-api {:mvn/version "2.0.13"}
-
-  net.cgrand/regex {:mvn/version "1.0.1"}
 
   raven-clj/raven-clj {:mvn/version "1.7.0"}
   ring/ring-core {:mvn/version "1.14.2"}
