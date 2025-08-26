@@ -4,7 +4,7 @@ buddy/buddy-core 1.11.423
   X org.bouncycastle/bcpkix-jdk18on 1.75 :use-top
   X org.bouncycastle/bcprov-jdk18on 1.75 :use-top
   X cheshire/cheshire 5.11.0 :use-top
-org.clojure/clojure 1.12.1
+org.clojure/clojure 1.12.2
   . org.clojure/spec.alpha 0.5.238
   . org.clojure/core.specs.alpha 0.4.74
 com.cognitect.aws/api 0.8.741
