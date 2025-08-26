@@ -110,8 +110,6 @@
            :dev {:extra-deps
                  {clj-commons/pomegranate {:mvn/version "1.2.1"}
 
-                  eftest/eftest {:mvn/version "0.5.9"}
-
                   ;; manually imported clj-kondo to .clj-kondo/imports/kerodon/kerodon
                   kerodon/kerodon {:mvn/version "0.9.1"}
 

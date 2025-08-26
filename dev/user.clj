@@ -8,9 +8,7 @@
    [clojars.db.migrate :as migrate]
    [clojars.email :as email]
    [clojars.s3 :as s3]
-   [clojure.java.io :as io]
    [clojure.tools.namespace.repl :refer [refresh]]
-   [eftest.runner :as eftest]
    [reloaded.repl :refer [system init stop go clear]])
   (:import
    (java.io
@@ -34,20 +32,10 @@
 
 (defn reset []
   (if system
-    (do (clear)
-        (go))
+    (do
+      (clear)
+      (go))
     (refresh)))
-
-(defn test [& tests]
-  (let [tests (if (empty? tests)
-                (eftest/find-tests "test")
-                tests)]
-    (binding [config/*profile* "test"]
-      (eftest/run-tests tests {:report eftest.report.pretty/report
-                               :multithread? false}))))
-
-(when (io/resource "local.clj")
-  (load "local"))
 
 ;; TODO: function to setup fake data (from clojars.dev.setup?)
 
