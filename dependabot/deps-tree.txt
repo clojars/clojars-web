@@ -1,9 +1,9 @@
 com.cognitect.aws/ssm 871.2.31.64
-buddy/buddy-core 1.11.423
-  . commons-codec/commons-codec 1.16.0
-  X org.bouncycastle/bcpkix-jdk18on 1.75 :use-top
-  X org.bouncycastle/bcprov-jdk18on 1.75 :use-top
-  X cheshire/cheshire 5.11.0 :use-top
+buddy/buddy-core 1.12.0-430
+  . commons-codec/commons-codec 1.17.1
+  X org.bouncycastle/bcpkix-jdk18on 1.78.1 :use-top
+  X org.bouncycastle/bcprov-jdk18on 1.78.1 :use-top
+  X cheshire/cheshire 5.13.0 :use-top
 org.clojure/clojure 1.12.2
   . org.clojure/spec.alpha 0.5.238
   . org.clojure/core.specs.alpha 0.4.74
