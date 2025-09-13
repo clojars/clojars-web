@@ -1,6 +1,6 @@
 (ns clojars.unit.web.token-breach-test
   (:require
-   [buddy.core.codecs.base64 :as base64]
+   [buddy.core.codecs :as codecs]
    [buddy.core.dsa :as dsa]
    [buddy.core.keys :as keys]
    [cheshire.core :as json]
@@ -36,7 +36,7 @@
                       token-values)
         payload-str (json/encode payload)
         sig (dsa/sign payload-str {:key privkey :alg :ecdsa+sha256})
-        sig-b64 (String. (base64/encode sig))]
+        sig-b64 (codecs/bytes->b64-str sig)]
     (-> (request :post "/token-breach/github")
         (body payload-str)
         (header "Content-Type" "application/json")

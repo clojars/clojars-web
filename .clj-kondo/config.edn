@@ -28,12 +28,6 @@
              next.jdbc.sql        sql
              next.jdbc.types      jdbc.types}}
 
-  ;; TODO https://github.com/clojars/clojars-web/issues/904
-  :deprecated-var {:exclude {buddy.core.codecs.base64/decode {:namespaces [clojars.routes.token-breach]}
-                             buddy.core.codecs.base64/encode {:namespaces [clojars.web.user
-                                                                           clojars.unit.web.token-breach-test
-                                                                           clojars.integration.uploads-test]}}}
-
   :dynamic-var-not-earmuffed {:level :warning}
 
   :equals-expected-position {:level :warning}

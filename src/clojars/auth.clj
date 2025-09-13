@@ -1,5 +1,6 @@
 (ns clojars.auth
   (:require
+   [buddy.core.codecs :as codecs]
    [cemerick.friend :as friend]
    [cemerick.friend.credentials :as creds]
    [cemerick.friend.util :as friend.util]
@@ -12,8 +13,7 @@
    [one-time.core :as ot]
    [ring.util.request :as req])
   (:import
-   java.sql.Timestamp
-   org.apache.commons.codec.binary.Base64))
+   java.sql.Timestamp))
 
 (set! *warn-on-reflection* true)
 
@@ -78,12 +78,9 @@
              (re-matches #"\s*Basic\s+(.+)" authorization))
     (when-let [[_ username password]
                (try
-                 (-> (re-matches #"\s*Basic\s+(.+)" authorization)
-                     ^String second
-                     (.getBytes "UTF-8")
-                     Base64/decodeBase64
-                     (String. "UTF-8")
-                     (#(re-find #"([^:]*):(.*)" %)))
+                 (let [[_ creds] (re-matches #"\s*Basic\s+(.+)" authorization)
+                       decoded-creds (codecs/b64->str creds)]
+                   (re-find #"([^:]*):(.*)" decoded-creds))
                  (catch Exception e
                    (log/error {:tag :failed-parsing-authorization-header
                                :error e})))]
