@@ -1,6 +1,6 @@
 (ns clojars.web.user
   (:require
-   [buddy.core.codecs.base64 :as base64]
+   [buddy.core.codecs :as codecs]
    [clojars.config :as config]
    [clojars.db :as db :refer [find-group-verification
                               find-groupnames
@@ -308,8 +308,7 @@
                                                :secret otp_secret_key})
         qrcode-b64 (-> qrcode-stream
                        (.toByteArray)
-                       (base64/encode)
-                       (as-> ^bytes % (String. %)))
+                       (codecs/bytes->b64-str))
         heading (format "Two-Factor Authentication (%s)" account)]
     (html-doc
      heading

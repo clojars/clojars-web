@@ -1,5 +1,6 @@
 (ns clojars.integration.uploads-test
   (:require
+   [buddy.core.codecs :as codecs]
    [cemerick.pomegranate.aether :as aether]
    [clj-http.client :as client]
    [clj-http.cookies :as http-cookies]
@@ -13,7 +14,6 @@
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
    [clojars.web.common :as common]
-   [clojure.data.codec.base64 :as base64]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.test :refer [are deftest is testing use-fixtures]]
@@ -39,6 +39,13 @@
   []
   (format "http://localhost:%s/repo"
           help/test-port))
+
+(defn- auth-header
+  [username token]
+  (str "Basic "
+       (codecs/bytes->b64-str
+        (.getBytes (format "%s:%s" username token)
+                   "UTF-8"))))
 
 (defn deploy
   [{:keys [artifact-map coordinates jar-file password pom-file module-file transfer-listener username retain-session?]
@@ -1027,12 +1034,7 @@
     (-> sess
         (visit "/repo/group/artifact/1.0.0/injection.html"
                :request-method :put
-               :headers {"authorization"
-                         (str "Basic "
-                              (String. (base64/encode
-                                        (.getBytes (str "dantheman:" token)
-                                                   "UTF-8"))
-                                       "UTF-8"))}
+               :headers {"authorization" (auth-header "dantheman" token)}
                :body "XSS here")
         (has (status? 400)))))
 
@@ -1040,12 +1042,7 @@
   (let [sess (-> (session (help/app))
                  (register-as "dantheman" "test@example.org" "password"))
         token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
-        headers {"authorization"
-                 (str "Basic "
-                      (String. (base64/encode
-                                (.getBytes (str "dantheman:" token)
-                                           "UTF-8"))
-                               "UTF-8"))}]
+        headers {"authorization" (auth-header "dantheman" token)}]
     (-> sess
         (visit "/repo/../artifact/1.0.0/test.jar" :request-method :put
                :headers headers
@@ -1083,11 +1080,7 @@
                  :content-type "txt/plain"
                  :headers {:content-length 1000
                            :content-type "txt/plain"
-                           :authorization (str "Basic "
-                                               (String. (base64/encode
-                                                         (.getBytes (str "dantheman:" token)
-                                                                    "UTF-8"))
-                                                        "UTF-8"))})
+                           :authorization (auth-header "dantheman" token)})
           (has (status? 403)))))
   (is (not (.exists (io/file (:repo (config)) "group3/artifact3/1.0.0/test.jar")))))
 

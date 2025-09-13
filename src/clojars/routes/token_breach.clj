@@ -1,6 +1,6 @@
 (ns clojars.routes.token-breach
   (:require
-   [buddy.core.codecs.base64 :as base64]
+   [buddy.core.codecs :as codecs]
    [buddy.core.dsa :as dsa]
    [buddy.core.keys :as keys]
    [cheshire.core :as json]
@@ -33,7 +33,7 @@
         key (get-github-key key-id)]
     (when (and body-str key key-sig)
       (dsa/verify body-str
-                  (base64/decode key-sig)
+                  (codecs/b64->bytes key-sig)
                   {:key key :alg :ecdsa+sha256}))))
 
 ;; - add timing logs
