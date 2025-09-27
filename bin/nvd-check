@@ -8,12 +8,17 @@ if [[ -z "${NVD_API_TOKEN}" ]]; then
     exit 1
 fi
 
+if [[ -z "${ANALYZER_OSSINDEX_PASSWORD}" ]]; then
+    echo "ANALYZER_OSSINDEX_USER and ANALYZER_OSSINDEX_PASSWORD not set! See https://ossindex.sonatype.org/doc/auth-required"
+    exit 1
+fi
+
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
 
 
-clojure -Ttools install nvd-clojure/nvd-clojure '{:mvn/version "5.1.0"}' :as nvd
+clojure -Ttools install nvd-clojure/nvd-clojure '{:mvn/version "5.2.0"}' :as nvd
 
 cd "$ROOT"
 clojure -J-Dclojure.main.report=stderr -Tnvd nvd.task/check \
