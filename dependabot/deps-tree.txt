@@ -24,7 +24,7 @@ org.clojure/tools.logging 1.2.4
 duct/hikaricp-component 0.1.2
   X com.stuartsierra/component 0.3.2 :use-top
   . com.zaxxer/HikariCP-java6 2.3.13
-    X org.slf4j/slf4j-api 1.7.10 :use-top
+    X org.slf4j/slf4j-api 1.7.10 :older-version
 com.fasterxml.jackson.core/jackson-databind 2.15.2
   . com.fasterxml.jackson.core/jackson-annotations 2.15.2
   . com.fasterxml.jackson.core/jackson-core 2.15.2
@@ -68,43 +68,43 @@ ring/ring-jetty-adapter 1.13.1
     . org.eclipse.jetty/jetty-http 11.0.25
       . org.eclipse.jetty/jetty-io 11.0.25
       . org.eclipse.jetty/jetty-util 11.0.25
-        X org.slf4j/slf4j-api 2.0.13 :use-top
-      X org.slf4j/slf4j-api 2.0.13 :use-top
+        X org.slf4j/slf4j-api 2.0.13 :older-version
+      X org.slf4j/slf4j-api 2.0.13 :older-version
     . org.eclipse.jetty/jetty-io 11.0.25
       . org.eclipse.jetty/jetty-util 11.0.25
-      X org.slf4j/slf4j-api 2.0.13 :use-top
+      X org.slf4j/slf4j-api 2.0.13 :older-version
     . org.eclipse.jetty.toolchain/jetty-jakarta-servlet-api 5.0.2
-    X org.slf4j/slf4j-api 2.0.13 :use-top
+    X org.slf4j/slf4j-api 2.0.13 :older-version
   . org.eclipse.jetty/jetty-unixdomain-server 11.0.25
     . org.eclipse.jetty/jetty-server 11.0.25
-    X org.slf4j/slf4j-api 2.0.13 :use-top
+    X org.slf4j/slf4j-api 2.0.13 :older-version
   . org.eclipse.jetty.websocket/websocket-jetty-server 11.0.25
     . org.eclipse.jetty/jetty-servlet 11.0.25
       . org.eclipse.jetty/jetty-security 11.0.25
         . org.eclipse.jetty/jetty-server 11.0.25
-        X org.slf4j/slf4j-api 2.0.13 :use-top
-      X org.slf4j/slf4j-api 2.0.13 :use-top
+        X org.slf4j/slf4j-api 2.0.13 :older-version
+      X org.slf4j/slf4j-api 2.0.13 :older-version
     . org.eclipse.jetty/jetty-webapp 11.0.25
       . org.eclipse.jetty/jetty-servlet 11.0.25
       . org.eclipse.jetty/jetty-xml 11.0.25
         . org.eclipse.jetty/jetty-util 11.0.25
-        X org.slf4j/slf4j-api 2.0.13 :use-top
-      X org.slf4j/slf4j-api 2.0.13 :use-top
+        X org.slf4j/slf4j-api 2.0.13 :older-version
+      X org.slf4j/slf4j-api 2.0.13 :older-version
     . org.eclipse.jetty.toolchain/jetty-jakarta-servlet-api 5.0.2
     . org.eclipse.jetty.websocket/websocket-jetty-api 11.0.25
     . org.eclipse.jetty.websocket/websocket-jetty-common 11.0.25
       . org.eclipse.jetty.websocket/websocket-core-common 11.0.25
         . org.eclipse.jetty/jetty-http 11.0.25
         . org.eclipse.jetty/jetty-io 11.0.25
-        X org.slf4j/slf4j-api 2.0.13 :use-top
+        X org.slf4j/slf4j-api 2.0.13 :older-version
       . org.eclipse.jetty.websocket/websocket-jetty-api 11.0.25
     . org.eclipse.jetty.websocket/websocket-servlet 11.0.25
       . org.eclipse.jetty/jetty-servlet 11.0.25
       . org.eclipse.jetty.websocket/websocket-core-server 11.0.25
         . org.eclipse.jetty/jetty-server 11.0.25
         . org.eclipse.jetty.websocket/websocket-core-common 11.0.25
-      X org.slf4j/slf4j-api 2.0.13 :use-top
-    X org.slf4j/slf4j-api 2.0.13 :use-top
+      X org.slf4j/slf4j-api 2.0.13 :older-version
+    X org.slf4j/slf4j-api 2.0.13 :older-version
 com.stuartsierra/component 0.3.1
   . com.stuartsierra/dependency 0.2.0
 org.apache.commons/commons-email 1.5
@@ -262,12 +262,11 @@ com.taoensso/nippy 3.4.2
   . io.airlift/aircompressor 0.27
 com.cognitect.aws/s3 871.2.31.64
 clj-stacktrace/clj-stacktrace 0.2.8
-org.slf4j/slf4j-api 2.0.13
 org.apache.maven/maven-model 3.8.4
   . org.codehaus.plexus/plexus-utils 3.3.0
-ch.qos.logback/logback-classic 1.5.13
-  . ch.qos.logback/logback-core 1.5.13
-  X org.slf4j/slf4j-api 2.0.15 :use-top
+ch.qos.logback/logback-classic 1.5.19
+  . ch.qos.logback/logback-core 1.5.19
+  . org.slf4j/slf4j-api 2.0.17
 org.apache.maven/maven-repository-metadata 3.8.4
   . org.codehaus.plexus/plexus-utils 3.3.0
 raven-clj/raven-clj 1.7.0
