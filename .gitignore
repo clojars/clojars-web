@@ -9,6 +9,7 @@ home
 /target
 /pom.xml
 /logs
+/tmp
 
 # IntelliJ IDEA project files
 *.ipr
@@ -22,6 +23,7 @@ home
 /.lein-repl-history
 /.lein-failures
 /.nrepl-port
+/.projectile-cache.eld
 /local-resources
 
 .clj-kondo/*
