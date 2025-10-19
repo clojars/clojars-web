@@ -191,24 +191,32 @@
                                   :email-or-username)
                       (submit-button "Email me a password reset link"))]))
 
+(defn- send-forgot-password-email
+  [db mailer user details]
+  (let [reset-code (db/set-password-reset-code! db (:user user))
+        base-url (:base-url (config/config))
+        reset-password-url (str base-url "/password-resets/" reset-code)]
+    (log/info {:tag :password-reset-code-generated})
+    (try
+      (mailer (:email user)
+              "Password reset for Clojars"
+              (->> ["Hello,"
+                    (format "We received a request from someone, hopefully you, to reset the password of the clojars user: %s." (:user user))
+                    "To continue with the reset password process, click on the following link:"
+                    reset-password-url
+                    "This link is valid for 24 hours, after which you will need to generate a new one."
+                    (notif-common/details-table details)
+                    "If you didn't reset your password then you can ignore this email."]
+                   (interpose "\n\n")
+                   (apply str)))
+      (catch Exception e
+        (log/error {:tag :failed-password-reset-email
+                    :error e})))))
+
 (defn forgot-password [db mailer {:keys [email-or-username]} details]
   (log/with-context {:email-or-username email-or-username}
     (if-let [user (find-user-by-user-or-email db email-or-username)]
-      (let [reset-code (db/set-password-reset-code! db (:user user))
-            base-url (:base-url (config/config))
-            reset-password-url (str base-url "/password-resets/" reset-code)]
-        (log/info {:tag :password-reset-code-generated})
-        (mailer (:email user)
-                "Password reset for Clojars"
-                (->> ["Hello,"
-                      (format "We received a request from someone, hopefully you, to reset the password of the clojars user: %s." (:user user))
-                      "To continue with the reset password process, click on the following link:"
-                      reset-password-url
-                      "This link is valid for 24 hours, after which you will need to generate a new one."
-                      (notif-common/details-table details)
-                      "If you didn't reset your password then you can ignore this email."]
-                     (interpose "\n\n")
-                     (apply str))))
+      (send-forgot-password-email db mailer user details)
       (log/info {:tag :password-reset-user-not-found})))
   (html-doc "Forgot password?" {}
             [:div.small-section [:h1 "Forgot password?"]

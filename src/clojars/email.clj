@@ -1,5 +1,6 @@
 (ns clojars.email
   (:require
+   [clojars.config :as config]
    [clojars.log :as log]
    [clojure.edn :as edn]
    [clojure.java.io :as io])
@@ -15,29 +16,35 @@
 (def ^:private email-denylist
   (edn/read-string (slurp (io/resource "email-denylist.edn"))))
 
-(defn simple-mailer [{:keys [hostname username password port tls? from]}]
+(defn- build-email
+  [{:keys [hostname username password port tls? from]} ^String to subject message]
+  (if (contains? email-denylist to)
+    (log/info {:status :denylist})
+    (let [mail (doto (SimpleEmail.)
+                 (.setHostName (or hostname "localhost"))
+                 (.setSmtpPort (or port 25))
+                 (.setStartTLSEnabled (boolean tls?))
+                 (.setStartTLSRequired (boolean tls?))
+                 (.setFrom (or from "contact@clojars.org") "Clojars")
+                 (.addTo to)
+                 (.setSubject subject)
+                 (.setMsg message))]
+      (when tls?
+        (.setSslSmtpPort mail (str (or port 25))))
+      (when (and username password)
+        (.setAuthentication mail username password))
+      mail)))
+
+(defn simple-mailer
+  [config]
   (fn [^String to subject message]
     (log/with-context {:tag :email
                        :email-to to
                        :email-subject subject}
       (try
-        (if (contains? email-denylist to)
-          (log/info {:status :denylist})
-          (let [mail (doto (SimpleEmail.)
-                       (.setHostName (or hostname "localhost"))
-                       (.setSmtpPort (or port 25))
-                       (.setStartTLSEnabled (boolean tls?))
-                       (.setStartTLSRequired (boolean tls?))
-                       (.setFrom (or from "contact@clojars.org") "Clojars")
-                       (.addTo to)
-                       (.setSubject subject)
-                       (.setMsg message))]
-            (when tls?
-              (.setSslSmtpPort mail (str (or port 25))))
-            (when (and username password)
-              (.setAuthentication mail username password))
-            (.send mail)
-            (log/info {:status :success})))
+        (let [^SimpleEmail mail (build-email config to subject message)]
+          (.send mail)
+          (log/info {:status :success}))
         (catch Exception e
           (log/error {:status :failed
                       :error e})
@@ -67,5 +74,7 @@
   (defn mock-mailer []
     (expect-mock-emails)
     (fn [to subject message]
-      (swap! mock-emails conj [to subject message])
+      ;; Allows us to test the email generation logic
+      (let [email (build-email (:mail (config/config)) to subject message)]
+        (swap! mock-emails conj [to subject message email]))
       (.countDown ^CountDownLatch @email-latch))))

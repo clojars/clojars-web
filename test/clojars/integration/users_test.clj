@@ -360,6 +360,23 @@
     (is (re-find #"has changed the password on your 'fixture'" body))
     (is (re-find #"Client IP" body))))
 
+(deftest user-can-enter-invalid-email-for-password-reset
+  (email/expect-mock-emails 0)
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password"))
+  ;; force an invalid email address
+  (db/update-user help/*db* "fixture" "" nil)
+  (-> (session (help/app))
+      (visit "/")
+      (follow "login")
+      (follow "Forgot your username or password?")
+      (fill-in "Email or Username" "fixture")
+      (press "Email me a password reset link")
+      (has (status? 200))
+      (within [:p]
+        (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
+  (is (empty? @email/mock-emails)))
+
 (deftest bad-reset-code-shows-message
   (-> (session (help/app))
       (visit "/password-resets/this-code-does-not-exist")
