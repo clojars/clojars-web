@@ -20,7 +20,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.12.2</version>
+      <version>1.12.3</version>
     </dependency>
     <dependency>
       <groupId>com.cognitect.aws</groupId>

@@ -63,7 +63,7 @@
   ;; Override bouncycastle brought in by buddy-core to address CVE-2025-8916
   org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.81"}
   org.bouncycastle/bcprov-jdk18on {:mvn/version "1.81"}
-  org.clojure/clojure {:mvn/version "1.12.2"}
+  org.clojure/clojure {:mvn/version "1.12.3"}
   org.clojure/data.xml {:mvn/version "0.2.0-alpha9"}
   org.clojure/tools.logging {:mvn/version "1.2.4"}
   org.clojure/tools.nrepl {:mvn/version "0.2.11"}
