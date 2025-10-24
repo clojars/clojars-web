@@ -47,8 +47,8 @@
        "Hosting costs sponsored by:"]
       [:div.sponsors-group
        [:div.sponsor
-        (link-to "https://shortcut.com/"
-                 (image "/images/shortcut-logo.png" "Shortcut Software Company"))]]
+        (link-to "https://korey.ai/"
+                 (image "/images/korey-logo.png" "Korey"))]]
       [:div.sponsors-title
        "With in-kind sponsorship from:"]
       [:div.sponsors-group
