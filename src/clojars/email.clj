@@ -42,7 +42,7 @@
                        :email-to to
                        :email-subject subject}
       (try
-        (let [^SimpleEmail mail (build-email config to subject message)]
+        (when-some [^SimpleEmail mail (build-email config to subject message)]
           (.send mail)
           (log/info {:status :success}))
         (catch Exception e
