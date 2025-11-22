@@ -36,6 +36,8 @@
   :equals-false {:level :warning}
   :equals-true  {:level :warning}
 
+  :equals-nil {:level :warning}
+  
   :def-fn {:level :warning}
 
   ;; warn on explicit nil returns from if (indicating we should use a when)

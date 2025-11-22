@@ -15,7 +15,7 @@
   (is (= "/artifact" (common/jar-url {:jar_name "artifact" :group_name "artifact"}))))
 
 (deftest error-list-populates-errors-correctly
-  (is (= nil (common/error-list nil)))
+  (is (nil? (common/error-list nil)))
   (is (=
        [:div#notice.error [:strong "Blistering barnacles!"] "  Something's not shipshape:" [:ul '([:li "error"])]]
        (common/error-list ["error"]))))
