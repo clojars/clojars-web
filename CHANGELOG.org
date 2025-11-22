@@ -3,6 +3,40 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** 2025-November
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-11-20.2208][2025-11-20.2208]]
++ [[https://github.com/clojars/clojars-web/commit/1c950b45c2d24cb230cd033f3a13940968633ba4][Don't try to send email when we haven't built an email object]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/infrastructure/commit/48ddd9c5968d306b2d539473b32a024f9ef80e93][Use Java 25 in production]] ([[https://github.com/tobias][Toby Crawley]])
+  
+** 2025-October
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-10-19.2203][2025-10-19.2203]]
++ [[https://github.com/clojars/clojars-web/commit/43b2f041b4ae994e6c39d07fce5b89b850bc692c][Build with Java 25]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/6524e1f0cfbf086840db8c5334f8530b528438c8][Don't throw when given an invalid email on password reset]] ([[https://github.com/tobias][Toby Crawley]])
+  
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-10-19.2205][2025-10-19.2205]]
++ [[https://github.com/clojars/clojars-web/commit/f9bb6c85b32e248b3d03787add483cc8a2759f9d][Upgrade to Clojure 1.12.3]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/e490258db24d6392ffba06d907ea36ad07e8eca4][Upgrade to logback 1.5.19 to address CVE-2025-11226]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-10-24.2207][2025-10-24.2207]]
++ [[https://github.com/clojars/clojars-web/commit/a53561b74cda4f50842121ce8a6a640d195e1183][Update sponsorship logo for Shortcut/Korey]] (with an [[https://github.com/clojars/clojars-web/commit/d46668f0e1f535f803ae2b8e110ffcef5ab9f124][additional fix]]) ([[https://github.com/tobias][Toby Crawley]])
+  
+** 2025-September
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-09-01.2195][2025-09-01.2195]]
++ [[https://github.com/clojars/clojars-web/commit/cb3f1ba63c4c573a19a7d986916c4246561a7d22][Upgrade bouncycastle to address CVE-2025-8916]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-09-13.2198][2025-09-13.2198]]
++ [[https://github.com/clojars/clojars-web/pull/912][Use non-deprecated buddy base64 functions]] ([[https://github.com/tobias][Toby Crawley]])
+
+** 2025-August
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-08-13.2187][2025-08-13.2187]]
++ [[https://github.com/clojars/clojars-web/commit/3b5dda44e3bdc2903c9c50fca2a3786d6995213a][Update to the latest bouncycastle]] ([[https://github.com/tobias][Toby Crawley]])
+  
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-08-24.2191][2025-08-24.2191]]
++ [[https://github.com/clojars/clojars-web/commit/a72af40bb3427fc1f7e8ec83b330943ce7abac45][Prevent null characters from triggering errors on project browse]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-08-25.2193][2025-08-25.2193]]
++ [[https://github.com/clojars/clojars-web/commit/a84e8b935965c699130c1659bf87d9a4f6a6a65c][Update to Clojure 1.12.2]] ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2025-June
 *** [[https://github.com/clojars/clojars-web/releases/tag/2025-06-08.2169][2025-06-08.2169]]
 + [[https://github.com/clojars/clojars-web/commit/baade8967c7be8abd9a9b27499c511efd41f6164][Use correct alias when building uberjar]] ([[https://github.com/tobias][Toby Crawley]], [[https://github.com/frenchy64][Ambrose Bonnaire-Sergeant]])
