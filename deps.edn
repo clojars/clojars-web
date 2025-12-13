@@ -76,7 +76,7 @@
   ;; 12, and we need to remain on Jetty 11 as Jetty 12 breaks
   ;; clojars.ring-servlet-patch. More research is needed to figure out why and
   ;; how we can still send a response message with Jetty 12.
-  ring/ring-jetty-adapter {:mvn/version "1.13.1"}
+  ring/ring-jetty-adapter ^:antq/exclude {:mvn/version "1.13.1"}
   ring-jetty-component/ring-jetty-component {:mvn/version "0.3.1"}
   ring-middleware-format/ring-middleware-format {:mvn/version "0.7.5"}
 
@@ -88,7 +88,8 @@
   ;; Addresses CVE-2019-10086, CVE-2014-0114, CVE-2025-48734
   commons-beanutils/commons-beanutils {:mvn/version "1.11.0"}
   ;; Addresses CVE-2015-6420
-  commons-collections/commons-collections {:mvn/version "3.2.2"}
+  ;; Excluded form antq checking as it wants to upgrade to 20040616, which is actually a downgrade
+  commons-collections/commons-collections ^:antq/exclude {:mvn/version "3.2.2"}
 
   ;; Addresses CVE-2015-0886
   org.mindrot/jbcrypt {:mvn/version "0.4"}
