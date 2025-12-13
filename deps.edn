@@ -11,27 +11,27 @@
 
   buddy/buddy-core {:mvn/version "1.12.0-430"}
 
-  ch.qos.logback/logback-classic {:mvn/version "1.5.19"}
-  cheshire/cheshire {:mvn/version "5.10.1"}
-  clj-http/clj-http {:mvn/version "3.12.3"}
+  ch.qos.logback/logback-classic {:mvn/version "1.5.22"}
+  cheshire/cheshire {:mvn/version "6.1.0"}
+  clj-http/clj-http {:mvn/version "3.13.1"}
   clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
   com.cemerick/friend {:mvn/version "0.2.3"
                        :exclusions [ ;; not used, excluded to address CVE-2007-1652, CVE-2007-1651
                                     org.openid4java/openid4java-nodeps
                                     ;; not used, excluded to address CVE-2012-0881, CVE-2013-4002, CVE-2009-2625
                                     net.sourceforge.nekohtml/nekohtml]}
-  com.cognitect.aws/api {:mvn/version "0.8.741"}
-  com.cognitect.aws/endpoints {:mvn/version "871.2.31.64"}
-  com.cognitect.aws/s3 {:mvn/version "871.2.31.64"}
-  com.cognitect.aws/sqs {:mvn/version "871.2.29.52"}
-  com.cognitect.aws/ssm {:mvn/version "871.2.31.64"}
-  com.github.scribejava/scribejava-apis {:mvn/version "8.3.1"}
-  com.github.seancorfield/honeysql {:mvn/version "2.4.1078"}
-  com.github.seancorfield/next.jdbc {:mvn/version "1.3.925"}
-  com.stuartsierra/component {:mvn/version "0.3.1"}
+  com.cognitect.aws/api {:mvn/version "0.8.774"}
+  com.cognitect.aws/endpoints {:mvn/version "871.2.40.4"}
+  com.cognitect.aws/s3 {:mvn/version "871.2.40.4"}
+  com.cognitect.aws/sqs {:mvn/version "871.2.34.1"}
+  com.cognitect.aws/ssm {:mvn/version "871.2.38.3"}
+  com.github.scribejava/scribejava-apis {:mvn/version "8.3.3"}
+  com.github.seancorfield/honeysql {:mvn/version "2.7.1364"}
+  com.github.seancorfield/next.jdbc {:mvn/version "1.3.1070"}
+  com.stuartsierra/component {:mvn/version "1.2.0"}
   ;; Override the version brought in by aging-session to address CVE-2020-24164
   ;; & CVE-2024-36124
-  com.taoensso/nippy {:mvn/version "3.4.2"}
+  com.taoensso/nippy {:mvn/version "3.6.0"}
 
   digest/digest {:mvn/version "1.4.10"}
   duct/duct {:mvn/version "0.8.2"}
@@ -44,39 +44,39 @@
   kirasystems/aging-session {:mvn/version "0.5.0"
                              :exclusions [org.clojure/clojurescript]}
 
-  metosin/malli {:mvn/version "0.15.0"}
+  metosin/malli {:mvn/version "0.20.0"}
 
   net.cgrand/regex {:mvn/version "1.0.1"}
 
-  one-time/one-time {:mvn/version "0.7.0"
+  one-time/one-time {:mvn/version "0.8.0"
                      :exclusions [ ;; not needed on java 17, addresses CWE-120
                                   com.github.jai-imageio/jai-imageio-core
                                   ;; not used, addresses CVE-2020-11987, CVE-2019-17566
                                   org.apache.xmlgraphics/batik-dom
                                   org.apache.xmlgraphics/batik-svggen]}
-  org.apache.commons/commons-email {:mvn/version "1.5"}
+  org.apache.commons/commons-email {:mvn/version "1.6.0"}
   org.apache.lucene/lucene-core {:mvn/version "8.11.4"}
   org.apache.lucene/lucene-analyzers-common {:mvn/version "8.11.4"}
   org.apache.lucene/lucene-queryparser {:mvn/version "8.11.4"}
-  org.apache.maven/maven-model {:mvn/version "3.8.4"}
-  org.apache.maven/maven-repository-metadata {:mvn/version "3.8.4"}
+  org.apache.maven/maven-model {:mvn/version "3.9.11"}
+  org.apache.maven/maven-repository-metadata {:mvn/version "3.9.11"}
   ;; Override bouncycastle brought in by buddy-core to address CVE-2025-8916
-  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.81"}
-  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.81"}
-  org.clojure/clojure {:mvn/version "1.12.3"}
+  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.83"}
+  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.83"}
+  org.clojure/clojure {:mvn/version "1.12.4"}
   org.clojure/data.xml {:mvn/version "0.2.0-alpha9"}
-  org.clojure/tools.logging {:mvn/version "1.2.4"}
-  org.clojure/tools.nrepl {:mvn/version "0.2.11"}
-  org.postgresql/postgresql {:mvn/version "42.7.2"}
+  org.clojure/tools.logging {:mvn/version "1.3.0"}
+  org.clojure/tools.nrepl {:mvn/version "0.2.13"}
+  org.postgresql/postgresql {:mvn/version "42.7.8"}
 
   raven-clj/raven-clj {:mvn/version "1.7.0"}
-  ring/ring-core {:mvn/version "1.14.2"}
-  ring/ring-defaults {:mvn/version "0.5.0"}
+  ring/ring-core {:mvn/version "1.15.3"}
+  ring/ring-defaults {:mvn/version "0.7.0"}
   ;; This version is out of sync from ring-core, since ring-core brings in Jetty
   ;; 12, and we need to remain on Jetty 11 as Jetty 12 breaks
   ;; clojars.ring-servlet-patch. More research is needed to figure out why and
   ;; how we can still send a response message with Jetty 12.
-  ring/ring-jetty-adapter {:mvn/version "1.13.1"}
+  ring/ring-jetty-adapter ^:antq/exclude {:mvn/version "1.13.1"}
   ring-jetty-component/ring-jetty-component {:mvn/version "0.3.1"}
   ring-middleware-format/ring-middleware-format {:mvn/version "0.7.5"}
 
@@ -84,34 +84,35 @@
 
   ;; # Address CVEs
   ;; Addresses CVE-2022-42004, CVE-2022-42003, CVE-2021-46877, CVE-2020-36518
-  com.fasterxml.jackson.core/jackson-databind {:mvn/version "2.15.2"}
+  com.fasterxml.jackson.core/jackson-databind {:mvn/version "2.20.1"}
   ;; Addresses CVE-2019-10086, CVE-2014-0114, CVE-2025-48734
   commons-beanutils/commons-beanutils {:mvn/version "1.11.0"}
   ;; Addresses CVE-2015-6420
-  commons-collections/commons-collections {:mvn/version "3.2.2"}
+  ;; Excluded form antq checking as it wants to upgrade to 20040616, which is actually a downgrade
+  commons-collections/commons-collections ^:antq/exclude {:mvn/version "3.2.2"}
 
   ;; Addresses CVE-2015-0886
   org.mindrot/jbcrypt {:mvn/version "0.4"}
   ;; Addresses CVE-2022-25857, CVE-2022-38749, CVE-2022-41854, CVE-2022-38751, CVE-2022-38752, CVE-2022-38750
   org.yaml/snakeyaml {:mvn/version "1.33"}}
 
- :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.5"}}
+ :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.11"}}
                    :ns-default build}
 
            :check {:extra-deps {athos/clj-check {:git/url "https://github.com/athos/clj-check.git"
-                                                 :sha "0ca84df1357d71429243b99908303f45a934654c"}}
+                                                 :sha "d997df866b2a04b7ce7b17533093ee0a2e2cb729"}}
                    :main-opts ["-m" "clj-check.check"]}
 
            :dev {:extra-deps
-                 {clj-commons/pomegranate {:mvn/version "1.2.1"}
+                 {clj-commons/pomegranate {:mvn/version "1.2.25"}
 
                   ;; manually imported clj-kondo to .clj-kondo/imports/kerodon/kerodon
                   kerodon/kerodon {:mvn/version "0.9.1"}
 
                   net.polyc0l0r/bote {:mvn/version "0.1.0"}
-                  nubank/matcher-combinators {:mvn/version "3.8.6"}
+                  nubank/matcher-combinators {:mvn/version "3.9.2"}
 
-                  org.clojure/tools.namespace {:mvn/version "1.2.0"}
+                  org.clojure/tools.namespace {:mvn/version "1.5.0"}
 
                   reloaded.repl/reloaded.repl {:mvn/version "0.2.4"}
 
@@ -123,5 +124,5 @@
            :setup-dev-repo {:main-opts ["-m" "clojars.tools.setup-dev"]}
 
            :test {:extra-deps
-                  {lambdaisland/kaocha {:mvn/version "1.85.1342"}}
+                  {lambdaisland/kaocha {:mvn/version "1.91.1392"}}
                   :main-opts ["-m" "kaocha.runner"]}}}

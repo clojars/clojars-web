@@ -1,3 +1,7 @@
+.PHONY: antq
+antq:
+	./bin/antq
+
 .PHONY: check
 check:
 	clojure -M:check

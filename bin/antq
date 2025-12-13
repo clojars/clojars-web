@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#
+# Checks for stale dependencies using https://github.com/liquidz/antq
+
+clojure -Ttools install-latest :lib com.github.liquidz/antq :as antq
+
+clojure -Tantq outdated "$@"
