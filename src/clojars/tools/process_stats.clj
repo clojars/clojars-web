@@ -20,7 +20,9 @@
 (extend-type Pattern
   re/RegexValue
   (pattern [re] (.pattern re))
-  (groupnames [_] []))
+  (groupnames [_] [])
+  (match-empty? [_] false)
+  (firsts [_] nil))
 
 (def re-legacy-cdn
   "Log format used when we logged from fastly to rackspace cloudfiles"
