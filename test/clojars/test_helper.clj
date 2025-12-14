@@ -24,7 +24,7 @@
    (java.io
     File)
    (org.apache.lucene.store
-    RAMDirectory)
+    ByteBuffersDirectory)
    (org.apache.maven.wagon.providers.http
     HttpWagon)))
 
@@ -108,7 +108,7 @@
 (declare ^:dynamic test-port)
 
 (defn memory-index []
-  (RAMDirectory.))
+  (ByteBuffersDirectory.))
 
 (declare ^:dynamic system)
 

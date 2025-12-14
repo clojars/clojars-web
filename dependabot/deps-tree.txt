@@ -37,9 +37,9 @@ valip/valip 0.2.0
       X commons-collections/commons-collections 2.1 :use-top
       . xml-apis/xml-apis 1.0.b2
     X commons-logging/commons-logging 1.0.4 :older-version
+org.apache.lucene/lucene-analysis-common 10.3.2
+  X org.apache.lucene/lucene-core 10.3.2 :use-top
 com.cognitect.aws/sqs 871.2.34.1
-org.apache.lucene/lucene-analyzers-common 8.11.4
-  X org.apache.lucene/lucene-core 8.11.4 :use-top
 ring/ring-defaults 0.7.0
   X ring/ring-core 1.15.1 :use-top
   . ring/ring-ssl 0.4.0
@@ -143,11 +143,16 @@ ring-jetty-component/ring-jetty-component 0.3.1
   . suspendable/suspendable 0.1.1
     X com.stuartsierra/component 0.2.3 :use-top
 commons-collections/commons-collections 3.2.2
-org.apache.lucene/lucene-core 8.11.4
-org.apache.lucene/lucene-queryparser 8.11.4
-  X org.apache.lucene/lucene-core 8.11.4 :use-top
-  . org.apache.lucene/lucene-queries 8.11.4
-  . org.apache.lucene/lucene-sandbox 8.11.4
+org.apache.lucene/lucene-core 10.3.2
+org.apache.lucene/lucene-queryparser 10.3.2
+  X org.apache.lucene/lucene-core 10.3.2 :use-top
+  . org.apache.lucene/lucene-queries 10.3.2
+    X org.apache.lucene/lucene-core 10.3.2 :use-top
+  . org.apache.lucene/lucene-sandbox 10.3.2
+    X org.apache.lucene/lucene-core 10.3.2 :use-top
+    . org.apache.lucene/lucene-queries 10.3.2
+    . org.apache.lucene/lucene-facet 10.3.2
+      X org.apache.lucene/lucene-core 10.3.2 :use-top
 org.bouncycastle/bcprov-jdk18on 1.83
 ring-middleware-format/ring-middleware-format 0.7.5
   X org.clojure/core.memoize 1.0.257 :superseded
