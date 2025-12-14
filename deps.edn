@@ -46,7 +46,7 @@
 
   metosin/malli {:mvn/version "0.20.0"}
 
-  net.cgrand/regex {:mvn/version "1.0.1"}
+  net.cgrand/regex {:mvn/version "1.1.0"}
 
   one-time/one-time {:mvn/version "0.8.0"
                      :exclusions [ ;; not needed on java 17, addresses CWE-120
