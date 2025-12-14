@@ -59,14 +59,14 @@
       <version>0.2.0</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-analysis-common</artifactId>
+      <version>10.3.2</version>
+    </dependency>
+    <dependency>
       <groupId>com.cognitect.aws</groupId>
       <artifactId>sqs</artifactId>
       <version>871.2.34.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-analyzers-common</artifactId>
-      <version>8.11.4</version>
     </dependency>
     <dependency>
       <groupId>ring</groupId>
@@ -141,12 +141,12 @@
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
-      <version>8.11.4</version>
+      <version>10.3.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-queryparser</artifactId>
-      <version>8.11.4</version>
+      <version>10.3.2</version>
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>

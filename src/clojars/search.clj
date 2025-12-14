@@ -338,15 +338,13 @@
     (with-open [index-reader (index-reader index)]
       (let [per-page 24
             offset (* per-page (dec page))
-
-            {:keys [^TopDocs hits ^IndexSearcher searcher]}
-            (-search* index-reader query (* per-page page))
-
+            {:keys [^TopDocs hits]} (-search* index-reader query (* per-page page))
+            stored-fields (.storedFields index-reader)
             results (for [^ScoreDoc hit (take per-page (drop offset (.scoreDocs hits)))]
-                      (parse-doc (.doc searcher (.doc hit)) (.score hit)))]
+                      (parse-doc (.document stored-fields (.doc hit)) (.score hit)))]
         (doall
          (with-meta results
-           {:total-hits       (.-value (.totalHits hits))
+           {:total-hits       (.value (.totalHits hits))
             :max-score        (reduce max 0 (map :score results))
             :results-per-page per-page
             :offset           offset}))))))
@@ -359,12 +357,14 @@
   ([n {:keys [index]} query]
    (with-open [index-reader (index-reader index)]
      (let [{:keys [^TopDocs hits ^IndexSearcher searcher query]}
-           (-search* index-reader query 24)]
+           (-search* index-reader query 24)
+
+           stored-fields (.storedFields index-reader)]
        (println query)
        (run!
         (fn [^ScoreDoc sd]
           (println
-           (.get (.doc searcher (.-doc sd)) "id")
+           (.get (.document stored-fields (.doc sd)) "id")
            (.explain searcher query (.-doc sd))))
         (take n (.scoreDocs hits)))))))
 
