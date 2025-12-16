@@ -1,10 +1,10 @@
 (ns clojars.web.token
   (:require
    [clojars.auth :as auth]
-   [clojars.web.common :refer [flash format-timestamp form-table html-doc error-list]]
-   [clojars.web.safe-hiccup :refer [form-to]]
+   [clojars.web.common :refer [error-list flash form-table form-to
+                               format-timestamp html-doc]]
    [clojure.string :as str]
-   [hiccup.form :refer [check-box drop-down label text-field submit-button]]))
+   [hiccup.form :refer [check-box drop-down label submit-button text-field]]))
 
 (defn- new-token-message
   [{:keys [name token]}]

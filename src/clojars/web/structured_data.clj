@@ -3,8 +3,8 @@
   See https://developers.google.com/structured-data/"
   (:require
    [cheshire.core :as json]
-   [clojars.web.safe-hiccup :as hiccup]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [hiccup2.core :as h]))
 
 (def common
   "Common ld-json attributes"
@@ -14,7 +14,7 @@
   "Takes a map m, converts it to JSON, and puts it inside
   an application/ld+json script tag."
   [m]
-  (hiccup/raw
+  (h/raw
    (str "<script type=\"application/ld+json\">"
         (json/generate-string (merge common m))
         "</script>")))

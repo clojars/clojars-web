@@ -1,11 +1,12 @@
 (ns clojars.web.group
   (:require
    [clojars.db :as db]
-   [clojars.web.common :refer [audit-table form-table html-doc jar-link user-link error-list verified-group-badge-small]]
-   [clojars.web.safe-hiccup :refer [form-to]]
+   [clojars.web.common :refer [audit-table error-list form-table form-to
+                               html-doc jar-link user-link
+                               verified-group-badge-small]]
    [clojars.web.structured-data :as structured-data]
    [hiccup.element :refer [unordered-list]]
-   [hiccup.form :refer [text-field hidden-field select-options]]))
+   [hiccup.form :refer [hidden-field select-options text-field]]))
 
 (defn- scope-options
   [db account groupname actives all-group-jars]

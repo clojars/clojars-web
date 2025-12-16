@@ -186,7 +186,7 @@ duct/duct 0.8.2
   . medley/medley 0.8.3
   . meta-merge/meta-merge 1.0.0
   X ring/ring-core 1.5.0 :use-top
-hiccup/hiccup 1.0.5
+hiccup/hiccup 2.0.0
 one-time/one-time 0.8.0
   X commons-codec/commons-codec 1.15 :older-version
   X ring/ring-codec 1.2.0 :superseded
