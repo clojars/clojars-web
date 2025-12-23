@@ -1,5 +1,4 @@
 (ns clojars.search
-  (:refer-clojure :exclude [index])
   (:require
    [clojars.config :refer [config]]
    [clojars.db :as db]

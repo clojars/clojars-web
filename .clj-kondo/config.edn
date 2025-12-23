@@ -60,6 +60,9 @@
   ;; suffice
   :redundant-fn-wrapper {:level :warning}
 
+  ;; warn when binding symbols to themselves
+  :redundant-let-binding {:level :warning}
+  
   ;; warn when calling str with a single arg
   :redundant-str-call {:level :warning}
 
@@ -76,3 +79,4 @@
   :unused-alias {:level :warning}
 
   :used-underscored-binding {:level :warning}}}
+
