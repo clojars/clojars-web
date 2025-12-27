@@ -7,15 +7,15 @@
    [clojars.file-utils :as fu]
    [clojars.maven :as maven]
    [clojars.stats :as stats]
-   [clojars.web.common :refer [audit-table html-doc jar-link
-                               tag jar-url jar-name jar-versioned-url group-is-name?
-                               user-link jar-fork? jar-notice single-fork-notice
-                               simple-date verified-group-badge safe-link-to]]
+   [clojars.web.common :refer [audit-table group-is-name? html-doc jar-fork?
+                               jar-link jar-name jar-notice jar-url
+                               jar-versioned-url safe-link-to simple-date single-fork-notice tag user-link
+                               verified-group-badge]]
    [clojars.web.helpers :as helpers]
    [clojars.web.structured-data :as structured-data]
    [clojure.set :as set]
-   [hiccup.core]
    [hiccup.element :refer [link-to]]
+   [hiccup2.core :as h]
    [ring.util.codec :refer [url-encode]])
   (:import
    (java.net
@@ -268,7 +268,6 @@
                             (count distinct-deps)
                             version-count))]))))
 
-
 (defn homepage [{:keys [homepage]}]
   (when homepage
     (list
@@ -450,11 +449,11 @@
 
 (defn make-latest-version-svg [db group-id artifact-id]
   (let [jar (find-jar db group-id artifact-id)]
-    (hiccup.core/html
-     "<?xml version=\"1.0\" standalone=\"no\"?>"
-     "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
- \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">"
-     (svg-template (jar-name jar) (:version jar)))))
+    (str (h/html
+          (h/raw "<?xml version=\"1.0\" standalone=\"no\"?>")
+          (h/raw "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
+ \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">")
+          (svg-template (jar-name jar) (:version jar))))))
 
 (defn make-latest-version-json
   "Return the latest version of a JAR as JSON"

@@ -4,7 +4,6 @@
    [clojars.retry :as retry]
    [clojars.s3 :as s3]
    [clojars.web.common :as common]
-   [clojars.web.safe-hiccup :as safe-hiccup]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [hiccup.element :as el])
@@ -64,24 +63,24 @@
 (defn- generate-index
   ^String
   [path entries]
-  (safe-hiccup/html5
-   {:lang "en"}
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
-    [:title (format "Clojars Repository: %s" (or path "/"))]]
-   [:body
-    [:header
-     [:h1 (or path "/")]]
-    [:hr]
-    [:main
-     [:pre#contents
-      (when (some? path)
-        (list
-         (el/link-to "../" "../")
-         "\n"))
-      (mapcat entry-line entries)]]
-    [:hr]]))
+  (str (common/html5
+        {:lang "en"}
+        [:head
+         [:meta {:charset "utf-8"}]
+         [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+         [:title (format "Clojars Repository: %s" (or path "/"))]]
+        [:body
+         [:header
+          [:h1 (or path "/")]]
+         [:hr]
+         [:main
+          [:pre#contents
+           (when (some? path)
+             (list
+              (el/link-to "../" "../")
+              "\n"))
+           (mapcat entry-line entries)]]
+         [:hr]])))
 
 (defn- sort-entries
   [entries]

@@ -67,7 +67,7 @@ duct/hikaricp-component 0.1.2  (EPL-1.0)
 environ/environ 1.1.0  (EPL-1.0)
 fipp/fipp 0.6.29  (EPL-1.0)
 funcool/cuerdas 2.2.0  (BSD (2-Clause))
-hiccup/hiccup 1.0.5 
+hiccup/hiccup 2.0.0  (EPL-1.0)
 instaparse/instaparse 1.4.8  (EPL-1.0)
 io.airlift/aircompressor 2.0.2  (Apache-2.0)
 javax.xml.bind/jaxb-api 2.3.0  (CDDL 1.1)

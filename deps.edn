@@ -39,7 +39,7 @@
                            :exclusions [org.slf4j/slf4j-nop]}
 
   ;; manually imported clj-kondo configs from 2.x branch to .clj-kondo/imports/hiccup/hiccup
-  hiccup/hiccup {:mvn/version "1.0.5"}
+  hiccup/hiccup {:mvn/version "2.0.0"}
 
   kirasystems/aging-session {:mvn/version "0.5.0"
                              :exclusions [org.clojure/clojurescript]}

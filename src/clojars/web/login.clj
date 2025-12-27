@@ -1,12 +1,10 @@
 (ns clojars.web.login
   (:require
-   [clojars.web.common :refer [html-doc flash]]
+   [clojars.web.common :refer [flash form-to html-doc]]
    [clojars.web.helpers :as helpers]
-   [clojars.web.safe-hiccup :refer [form-to]]
    [clojure.string :as str]
    [hiccup.element :refer [link-to]]
-   [hiccup.form :refer [label text-field
-                        password-field submit-button]]))
+   [hiccup.form :refer [label password-field submit-button text-field]]))
 
 (defn login-form [login_failed username message]
   (html-doc "Login" {}

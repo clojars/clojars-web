@@ -166,7 +166,7 @@
     <dependency>
       <groupId>hiccup</groupId>
       <artifactId>hiccup</artifactId>
-      <version>1.0.5</version>
+      <version>2.0.0</version>
     </dependency>
     <dependency>
       <groupId>one-time</groupId>
