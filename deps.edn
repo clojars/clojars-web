@@ -11,7 +11,7 @@
 
   buddy/buddy-core {:mvn/version "1.12.0-430"}
 
-  ch.qos.logback/logback-classic {:mvn/version "1.5.22"}
+  ch.qos.logback/logback-classic {:mvn/version "1.5.23"}
   cheshire/cheshire {:mvn/version "6.1.0"}
   clj-http/clj-http {:mvn/version "3.13.1"}
   clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
@@ -21,13 +21,13 @@
                                     ;; not used, excluded to address CVE-2012-0881, CVE-2013-4002, CVE-2009-2625
                                     net.sourceforge.nekohtml/nekohtml]}
   com.cognitect.aws/api {:mvn/version "0.8.774"}
-  com.cognitect.aws/endpoints {:mvn/version "871.2.40.4"}
-  com.cognitect.aws/s3 {:mvn/version "871.2.40.4"}
+  com.cognitect.aws/endpoints {:mvn/version "871.2.40.17"}
+  com.cognitect.aws/s3 {:mvn/version "871.2.40.9"}
   com.cognitect.aws/sqs {:mvn/version "871.2.34.1"}
   com.cognitect.aws/ssm {:mvn/version "871.2.38.3"}
   com.github.scribejava/scribejava-apis {:mvn/version "8.3.3"}
   com.github.seancorfield/honeysql {:mvn/version "2.7.1364"}
-  com.github.seancorfield/next.jdbc {:mvn/version "1.3.1070"}
+  com.github.seancorfield/next.jdbc {:mvn/version "1.3.1086"}
   com.stuartsierra/component {:mvn/version "1.2.0"}
   ;; Override the version brought in by aging-session to address CVE-2020-24164
   ;; & CVE-2024-36124
@@ -58,14 +58,14 @@
   org.apache.lucene/lucene-core {:mvn/version "10.3.2"}
   org.apache.lucene/lucene-analysis-common {:mvn/version "10.3.2"}
   org.apache.lucene/lucene-queryparser {:mvn/version "10.3.2"}
-  org.apache.maven/maven-model {:mvn/version "3.9.11"}
-  org.apache.maven/maven-repository-metadata {:mvn/version "3.9.11"}
+  org.apache.maven/maven-model {:mvn/version "3.9.12"}
+  org.apache.maven/maven-repository-metadata {:mvn/version "3.9.12"}
   ;; Override bouncycastle brought in by buddy-core to address CVE-2025-8916
   org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.83"}
   org.bouncycastle/bcprov-jdk18on {:mvn/version "1.83"}
   org.clojure/clojure {:mvn/version "1.12.4"}
-  org.clojure/data.xml {:mvn/version "0.2.0-alpha9"}
-  org.clojure/tools.logging {:mvn/version "1.3.0"}
+  org.clojure/data.xml {:mvn/version "0.2.0-alpha10"}
+  org.clojure/tools.logging {:mvn/version "1.3.1"}
   org.clojure/tools.nrepl {:mvn/version "0.2.13"}
   org.postgresql/postgresql {:mvn/version "42.7.8"}
 
