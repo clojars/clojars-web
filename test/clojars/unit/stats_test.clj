@@ -50,10 +50,10 @@
     (is (= 5 (stats/download-count stats "c" "z")))))
 
 (deftest format-stats-with-commas
-  (is "0" (stats/format-stats 0))
-  (is "1" (stats/format-stats 1))
-  (is "-1" (stats/format-stats -1))
-  (is "1" (stats/format-stats 1.25129))
-  (is "999" (stats/format-stats 999))
-  (is "1,000" (stats/format-stats 1000))
-  (is "2,123,512" (stats/format-stats 2123512)))
+  (is (= "0" (stats/format-stats 0)))
+  (is (= "1" (stats/format-stats 1)))
+  (is (= "-1" (stats/format-stats -1)))
+  (is (= "1" (stats/format-stats 1.25129)))
+  (is (= "999" (stats/format-stats 999)))
+  (is (= "1,000" (stats/format-stats 1000)))
+  (is (= "2,123,512" (stats/format-stats 2123512))))

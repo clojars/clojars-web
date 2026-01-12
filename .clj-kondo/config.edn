@@ -60,8 +60,14 @@
   ;; suffice
   :redundant-fn-wrapper {:level :warning}
 
+  ;; Warn on format strings w/o format directives
+  :redundant-format {:level :warning}
+  
   ;; warn when binding symbols to themselves
   :redundant-let-binding {:level :warning}
+
+  ;; Warn when we cast/coerce a value that is already of the intended type
+  :redundant-primitive-coercion {:level :warning}
   
   ;; warn when calling str with a single arg
   :redundant-str-call {:level :warning}
@@ -78,5 +84,8 @@
 
   :unused-alias {:level :warning}
 
+  ;; Warn when we exclude a var from clojure that we don't actually use in the ns
+  :unused-excluded-var {:level :warning}
+  
   :used-underscored-binding {:level :warning}}}
 

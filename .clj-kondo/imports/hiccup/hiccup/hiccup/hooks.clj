@@ -1,6 +1,7 @@
 (ns hiccup.hooks
-  (:require [clj-kondo.hooks-api :as api]
-            [clojure.set :as set]))
+  (:require
+   [clj-kondo.hooks-api :as api]
+   [clojure.set :as set]))
 
 ;; See https://github.com/clj-kondo/clj-kondo/blob/master/doc/hooks.md
 
@@ -16,7 +17,7 @@
 (defn- count-args [arity]
   (let [args (first (api/sexpr arity))]
     (if (= '& (fnext (reverse args)))
-      true ; unbounded args
+      true ;; unbounded args
       (count args))))
 
 (defn- dummy-arity [arg-count]
