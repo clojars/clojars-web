@@ -6,12 +6,10 @@ set -e
 
 clojars_jar=$1
 indexer_jar=$2
-# was the index_dir, see below
-ignored=$3
-repo=$4
+repo=$3
 
 CLOJARS_ENVIRONMENT=production
-S3_REPO_BUCKET=clojars-repo-production
+S3_INDEX_BUCKET=clojars-maven-index-production
 
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -24,7 +22,7 @@ java "${JAVA_OPTS[@]}" -cp $clojars_jar clojure.main -m clojars.tools.export-pom
 
 # We only need the existing index files from s3
 echo "Syncing index from s3..."
-aws s3 sync "s3://$S3_REPO_BUCKET/.index/" "$repo/.index"
+aws s3 sync "s3://$S3_INDEX_BUCKET/" "$repo/.index"
 
 # generate the index shards
 # 
@@ -58,14 +56,6 @@ for sum in @(*.gz.md5|*.gz.sha1); do
 done
 popd
 
-# upload new shards and sums to s3
 echo "Uploading index shards to s3..."
-java "${JAVA_OPTS[@]}" -cp $clojars_jar clojure.main -m clojars.tools.upload-repo-s3 $repo \
-     $S3_REPO_BUCKET .index :gen-index 2> /dev/null
-
-# remove old shards and sums from s3
-echo "Deleting stale shards and checksums from s3..."
-java "${JAVA_OPTS[@]}" -cp $clojars_jar clojure.main -m clojars.tools.remove-deletions-s3 $repo \
-     $S3_REPO_BUCKET \
-     .index 2> /dev/null
+aws s3 sync --acl public-read --delete "$repo/.index/" "s3://$S3_INDEX_BUCKET/" 
 
