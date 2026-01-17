@@ -16,18 +16,31 @@ dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 source "$dir/set_default_java_opts.bash"
 
-# synchronize the repo bucket locally
-# we only need the existing index, the poms, and maven-metadata.xml files
-aws s3 sync "s3://$S3_REPO_BUCKET/" "$repo" \
-    --exclude "*" \
-    --include "*.pom" \
-    --include "*.xml" \
-    --include ".index/*"
+# Generate the pseudo-repo locally. We just need the pom files, and we export
+# those from the db to avoid the cost of sync'ing the full bucket every run.
+echo "Exporting poms..."
+java "${JAVA_OPTS[@]}" -cp $clojars_jar clojure.main -m clojars.tools.export-poms $repo
+
+# We only need the existing index files from s3
+echo "Syncing index from s3..."
+aws s3 sync "s3://$S3_REPO_BUCKET/.index/" "$repo/.index"
 
 # generate the index shards
-java "${JAVA_OPTS[@]}" -jar $indexer_jar -n clojars -i $index_dir -d $repo/.index -r $repo -s -q -t min -l -c -k 50
+echo "Generating index..."
+java "${JAVA_OPTS[@]}" -jar $indexer_jar \
+    --name clojars \
+    --type min \
+    --index $index_dir \
+    --destination $repo/.index \
+    --repository $repo \
+    --checksums \
+    --quiet \
+    --chunks \
+    --keep 50
 
-# remove old sums locally (the indexer removes old shards itself, but doesn't remove the sums for those shards)
+# remove old sums locally (the indexer removes old shards itself, but doesn't
+# remove the sums for those shards)
+echo "Removing stale checksum files..."
 shopt -s extglob
 pushd $repo/.index
 for sum in @(*.gz.md5|*.gz.sha1); do
@@ -39,10 +52,12 @@ done
 popd
 
 # upload new shards and sums to s3
+echo "Uploading index shards to s3..."
 java "${JAVA_OPTS[@]}" -cp $clojars_jar clojure.main -m clojars.tools.upload-repo-s3 $repo \
      $S3_REPO_BUCKET .index :gen-index 2> /dev/null
 
 # remove old shards and sums from s3
+echo "Deleting stale shards and checksums from s3..."
 java "${JAVA_OPTS[@]}" -cp $clojars_jar clojure.main -m clojars.tools.remove-deletions-s3 $repo \
      $S3_REPO_BUCKET \
      .index 2> /dev/null
