@@ -6,7 +6,8 @@ set -e
 
 clojars_jar=$1
 indexer_jar=$2
-index_dir=$3
+# was the index_dir, see below
+ignored=$3
 repo=$4
 
 CLOJARS_ENVIRONMENT=production
@@ -26,6 +27,12 @@ echo "Syncing index from s3..."
 aws s3 sync "s3://$S3_REPO_BUCKET/.index/" "$repo/.index"
 
 # generate the index shards
+# 
+# We use a temp dir for the index, as reusing the index results in an exception
+# (see https://github.com/apache/maven-indexer/issues/720). This means that
+# indexing is slightly slower (~45s longer), since it rebuilds the full index
+# every time.
+index_dir=$(mktemp --directory)
 echo "Generating index..."
 java "${JAVA_OPTS[@]}" -jar $indexer_jar \
     --name clojars \
