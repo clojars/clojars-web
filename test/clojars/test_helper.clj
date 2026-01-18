@@ -23,6 +23,12 @@
   (:import
    (java.io
     File)
+   (java.nio.file
+    Files)
+   (java.nio.file.attribute
+    FileAttribute)
+   (org.apache.commons.io
+    FileUtils)
    (org.apache.lucene.store
     ByteBuffersDirectory)
    (org.apache.maven.wagon.providers.http
@@ -220,3 +226,11 @@
     (aws/invoke (:s3 client) {:op      :CreateBucket
                               :request {:Bucket bucket}})
     client))
+
+(defn create-tmp-dir
+  "Creates a temporary directory with the given prefix, and sets it to be
+  recursively deleted on JVM exit."
+  [prefix]
+  (let [dir (.toFile (Files/createTempDirectory prefix (make-array FileAttribute 0)))]
+    (FileUtils/forceDeleteOnExit dir)
+    dir))
