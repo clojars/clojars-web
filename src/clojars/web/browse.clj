@@ -7,7 +7,7 @@
                                collection-fork-notice
                                verified-group-badge]]
    [clojars.web.structured-data :as structured-data]
-   [hiccup.form :refer [label submit-button text-field submit-button]]
+   [hiccup.form :refer [label submit-button text-field]]
    [ring.util.response :refer [redirect]]))
 
 (defn browse-page [db account page per-page]

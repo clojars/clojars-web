@@ -10,6 +10,9 @@
   ;; available
   :aliased-namespace-symbol {:level :warning}
 
+  ;; warn when a referred var is used via the ns alias
+  :aliased-referred-var {:level :warning}
+  
   ;; warn when using a symbol in a case statement, as the intent is likely to
   ;; use the resolved value
   :case-symbol-test {:level :warning}
@@ -43,6 +46,9 @@
   ;; warn on explicit nil returns from if (indicating we should use a when)
   :if-nil-return {:level :warning}
 
+  ;; warn when message passed to is macro is a non-string
+  :is-message-not-string {:level :warning}
+  
   ;; warn when using a keyword in destructuring
   :keyword-binding {:level :warning}
 

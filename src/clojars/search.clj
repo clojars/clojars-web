@@ -281,7 +281,7 @@
   "Replaces human readable time range in query with epoch milliseconds"
   ^String [query]
   (let [matches (re-find #"at:\[(.*) TO (.*)\]" query)]
-    (if (or (nil? matches) (not= (count matches) 3))
+    (if (or (nil? matches) (not= 3 (count matches)))
       query
       (try (->> (lucene-time-syntax (nth matches 1) (nth matches 2))
                 (str/replace query (nth matches 0)))

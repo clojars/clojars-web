@@ -38,8 +38,8 @@
        (EasyAuthenticationHandlerFactory.
         (reify UsernamePasswordValidator
           (login [_ username password]
-            (when (or (not= username "username")
-                      (not= password "password"))
+            (when (or (not= "username" username)
+                      (not= "password" password))
               (throw (LoginFailedException.)))))))
       (.start server)
       ((email/simple-mailer {:host "localhost"
