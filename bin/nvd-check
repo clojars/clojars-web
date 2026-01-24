@@ -18,7 +18,7 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
 
 
-clojure -Ttools install nvd-clojure/nvd-clojure '{:mvn/version "5.2.0"}' :as nvd
+clojure -Ttools install nvd-clojure/nvd-clojure '{:mvn/version "5.3.0"}' :as nvd
 
 cd "$ROOT"
 clojure -J-Dclojure.main.report=stderr -Tnvd nvd.task/check \
