@@ -3,6 +3,26 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** 2026-January
+*** [[https://github.com/clojars/clojars-web/releases/tag/2026-01-17.2229][2026-01-17.2229]]
++ [[https://github.com/clojars/clojars-web/pull/921][Use database data for Maven indexing]]. This uses the exported POMs from the DB instead of syncing down POMs from S3 to reduce AWS costs. ([[https://github.com/tobias][Toby Crawley]])
+
+** 2025-December
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-12-13.2215][2025-12-13.2215]]
++ [[https://github.com/clojars/clojars-web/pull/913][Upgrade many stale dependencies; add antq make target]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-12-14.2217][2025-12-14.2217]]
++ [[https://github.com/clojars/clojars-web/pull/918][Upgrade to lucene 10.x]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/71a7f1733c8955e7cf1f9ef4df1849f7882b4743][Upgrade regex to 1.1.0]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/commit/5b722e16d530ce57d86727b36d498ad5b7227592][Address lint errors with regex upgrade]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-12-14.2218][2025-12-14.2218]]
++ [[https://github.com/clojars/clojars-web/commit/be3e0a1c5d83e27636d18ccc93f30e24ae600f45][Upgrade to clj-kondo 2026.01.12]] ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2025-12-31.2221][2025-12-31.2221]]
++ [[https://github.com/clojars/clojars-web/commit/6008d9b73add2c38c0c738eb47203be9b01278cc][Update stale dependencies]] ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2025-November
 *** [[https://github.com/clojars/clojars-web/releases/tag/2025-11-20.2208][2025-11-20.2208]]
 + [[https://github.com/clojars/clojars-web/commit/1c950b45c2d24cb230cd033f3a13940968633ba4][Don't try to send email when we haven't built an email object]] ([[https://github.com/tobias][Toby Crawley]])
