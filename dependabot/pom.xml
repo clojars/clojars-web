@@ -30,7 +30,7 @@
     <dependency>
       <groupId>com.cognitect.aws</groupId>
       <artifactId>endpoints</artifactId>
-      <version>871.2.40.17</version>
+      <version>871.2.41.10</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.20.1</version>
+      <version>2.21.0</version>
     </dependency>
     <dependency>
       <groupId>valip</groupId>
@@ -106,12 +106,12 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.7.8</version>
+      <version>42.7.9</version>
     </dependency>
     <dependency>
       <groupId>com.github.seancorfield</groupId>
       <artifactId>honeysql</artifactId>
-      <version>2.7.1364</version>
+      <version>2.7.1368</version>
     </dependency>
     <dependency>
       <groupId>org.yaml</groupId>
@@ -276,7 +276,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.5.23</version>
+      <version>1.5.25</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
