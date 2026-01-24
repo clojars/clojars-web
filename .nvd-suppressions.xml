@@ -45,4 +45,12 @@
      <cve>CVE-2024-6763</cve>
   </suppress>
 
+  <suppress>
+    <notes><![CDATA[
+    This CVE only impacts us if we decompress user-supplied data and use a shared
+    decompression buffer, and we do neither. We only use aircompressor via nippy.
+    ]]></notes>
+    <cve>CVE-2025-67721</cve>
+  </suppress>
+
 </suppressions>
