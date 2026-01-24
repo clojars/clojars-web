@@ -45,13 +45,4 @@
      <cve>CVE-2024-6763</cve>
   </suppress>
 
-<suppress>
-     <notes><![CDATA[
-     This CVE only impacts projects using http replication, which we don't do. We can't
-     upgrade to get rid of this CVE without rebuilding our indexing code, as it requires
-     upgrading to Lucene 9 (we are on 8 currently).
-     ]]></notes>
-     <cve>CVE-2024-45772</cve>
-  </suppress>
-
 </suppressions>
