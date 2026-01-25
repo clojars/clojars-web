@@ -56,7 +56,7 @@
   (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
   (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
 
-  (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/transit+json"]]
+  (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/yaml" "application/transit+json"]]
     (testing f
       (is (= f (help/get-content-type (get-api [:groups "org.clojars.dantheman"] {:accept f}))))))
 
@@ -152,7 +152,7 @@
       (inject-artifacts-into-repo! db "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom"))
 
     (testing "Every supported content-type works"
-      (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/transit+json"]]
+      (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/yaml" "application/transit+json"]]
         (testing f
           (let [res (get-release-feed start-inst {:accept f})]
             (is (= f (help/get-content-type res)))

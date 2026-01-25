@@ -45,7 +45,9 @@
                              :exclusions [org.clojure/clojurescript]}
 
   metosin/malli {:mvn/version "0.20.0"}
-
+  metosin/muuntaja {:mvn/version "0.6.11"}
+  metosin/muuntaja-yaml {:mvn/version "0.6.11"}
+  
   net.cgrand/regex {:mvn/version "1.1.0"}
 
   one-time/one-time {:mvn/version "0.8.0"
@@ -78,7 +80,6 @@
   ;; how we can still send a response message with Jetty 12.
   ring/ring-jetty-adapter ^:antq/exclude {:mvn/version "1.13.1"}
   ring-jetty-component/ring-jetty-component {:mvn/version "0.3.1"}
-  ring-middleware-format/ring-middleware-format {:mvn/version "0.7.5"}
 
   valip/valip {:mvn/version "0.2.0"}
 
@@ -92,9 +93,7 @@
   commons-collections/commons-collections ^:antq/exclude {:mvn/version "3.2.2"}
 
   ;; Addresses CVE-2015-0886
-  org.mindrot/jbcrypt {:mvn/version "0.4"}
-  ;; Addresses CVE-2022-25857, CVE-2022-38749, CVE-2022-41854, CVE-2022-38751, CVE-2022-38752, CVE-2022-38750
-  org.yaml/snakeyaml {:mvn/version "1.33"}}
+  org.mindrot/jbcrypt {:mvn/version "0.4"}}
 
  :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.12"}}
                    :ns-default build}
