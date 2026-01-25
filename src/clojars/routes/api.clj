@@ -6,7 +6,12 @@
    [clojure.set :as set]
    [compojure.core :as compojure :refer [ANY context GET]]
    [compojure.route :refer [not-found]]
-   [ring.middleware.format-response :refer [wrap-restful-response]]
+   [muuntaja.core :as muuntaja]
+   [muuntaja.format.edn :as edn-format]
+   [muuntaja.format.json :as json-format]
+   [muuntaja.format.transit :as transit-format]
+   [muuntaja.format.yaml :as yaml-format]
+   [muuntaja.middleware :refer [wrap-format]]
    [ring.util.response :as ring.util])
   (:import
    (java.sql
@@ -96,8 +101,16 @@
             (ANY "*" _
                  (not-found nil)))))
 
+(def ^:private formats-config
+  {"application/edn"          edn-format/format
+   "application/json"         (assoc json-format/format
+                                     :encoder-opts {:date-format "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"})
+   "application/transit+json" transit-format/json-format
+   ;; Legacy content-type, but it is what we have supported since 2015
+   "application/x-yaml"       yaml-format/format
+   "application/yaml"         yaml-format/format})
+
 (defn routes [db stats]
   (-> (handler db stats)
       (wrap-cors-headers)
-      (wrap-restful-response :formats [:json :edn :yaml :transit-json]
-                             :format-options {:json {:date-format "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"}})))
+      (wrap-format (assoc muuntaja/default-options :formats formats-config))))
