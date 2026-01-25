@@ -12,7 +12,9 @@ Newest items at the top. Note that updates before 2022-August were copied from
 + [[https://github.com/clojars/clojars-web/commit/9d13237c6e40cce7a4905d23cffb61e1cd316b1b][Update to nvd-clojure 5.3.0]] ([[https://github.com/tobias][Toby Crawley]])
 + [[https://github.com/clojars/clojars-web/commit/b07eaddf9bf69c490c6a2ccaa0ffae68844da409][Update to latest clj-kondo]] ([[https://github.com/tobias][Toby Crawley]])
 
-
+*** [[https://github.com/clojars/clojars-web/releases/tag/2026-01-25.2239][2026-01-25.2239]]  
++ [[https://github.com/clojars/clojars-web/pull/922][Use muuntaja instead of ring-middleware-format for formatting]] ([[https://github.com/tobias][Toby Crawley]])
+  
 ** 2025-December
 
 *** [[https://github.com/clojars/clojars-web/releases/tag/2025-12-13.2215][2025-12-13.2215]]
