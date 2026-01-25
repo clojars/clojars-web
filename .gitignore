@@ -11,6 +11,8 @@ home
 /logs
 /tmp
 
+/.envrc.local
+
 # IntelliJ IDEA project files
 *.ipr
 *.iws
