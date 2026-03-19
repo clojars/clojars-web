@@ -50,6 +50,11 @@
   
   net.cgrand/regex {:mvn/version "1.1.0"}
 
+  ;; This fork of http-kit supports :status-message to allow us to
+  ;; continue to send custom status messages on deploy failure.
+  ;; See https://github.com/clojars/http-kit
+  net.clojars.internal/http-kit {:mvn/version "2.9.0-beta3-clojars-03"}
+  
   one-time/one-time {:mvn/version "0.8.0"
                      :exclusions [ ;; not needed on java 17, addresses CWE-120
                                   com.github.jai-imageio/jai-imageio-core
@@ -74,12 +79,6 @@
   raven-clj/raven-clj {:mvn/version "1.7.0"}
   ring/ring-core {:mvn/version "1.15.3"}
   ring/ring-defaults {:mvn/version "0.7.0"}
-  ;; This version is out of sync from ring-core, since ring-core brings in Jetty
-  ;; 12, and we need to remain on Jetty 11 as Jetty 12 breaks
-  ;; clojars.ring-servlet-patch. More research is needed to figure out why and
-  ;; how we can still send a response message with Jetty 12.
-  ring/ring-jetty-adapter ^:antq/exclude {:mvn/version "1.13.1"}
-  ring-jetty-component/ring-jetty-component {:mvn/version "0.3.1"}
 
   valip/valip {:mvn/version "0.2.0"}
 

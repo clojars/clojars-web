@@ -89,14 +89,14 @@
       <version>1.4.10</version>
     </dependency>
     <dependency>
+      <groupId>net.clojars.internal</groupId>
+      <artifactId>http-kit</artifactId>
+      <version>2.9.0-beta3-clojars-03</version>
+    </dependency>
+    <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk18on</artifactId>
       <version>1.83</version>
-    </dependency>
-    <dependency>
-      <groupId>ring</groupId>
-      <artifactId>ring-jetty-adapter</artifactId>
-      <version>1.13.1</version>
     </dependency>
     <dependency>
       <groupId>com.stuartsierra</groupId>
@@ -127,11 +127,6 @@
       <groupId>clj-http</groupId>
       <artifactId>clj-http</artifactId>
       <version>3.13.1</version>
-    </dependency>
-    <dependency>
-      <groupId>ring-jetty-component</groupId>
-      <artifactId>ring-jetty-component</artifactId>
-      <version>0.3.1</version>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
