@@ -80,8 +80,7 @@ org.bouncycastle/bcpkix-jdk18on 1.83
 com.stuartsierra/component 1.2.0
   . com.stuartsierra/dependency 1.0.0
 org.apache.commons/commons-email 1.6.0
-  . com.sun.mail/jakarta.mail 1.6.7
-    . com.sun.activation/jakarta.activation 1.2.1
+  X com.sun.mail/jakarta.mail 1.6.7 :use-top
 org.postgresql/postgresql 42.7.9
   . org.checkerframework/checker-qual 3.52.0
 com.github.seancorfield/honeysql 2.7.1368
@@ -221,6 +220,8 @@ ch.qos.logback/logback-classic 1.5.25
   . org.slf4j/slf4j-api 2.0.17
 org.apache.maven/maven-repository-metadata 3.9.12
   . org.codehaus.plexus/plexus-utils 3.6.0
+com.sun.mail/jakarta.mail 1.6.8
+  . com.sun.activation/jakarta.activation 1.2.1
 raven-clj/raven-clj 1.7.0
   X cheshire/cheshire 5.11.0 :use-top
   . org.clj-commons/clj-http-lite 1.0.13
