@@ -46,10 +46,8 @@
               dbtype host port dbname user password))))
 
 (defn translate [config]
-  (let [{:keys [port bind db]} config]
-    (-> config
-        (assoc :http {:port port :host bind})
-        (assoc-in [:db :uri] (jdbc-url db)))))
+  (let [{:keys [db]} config]
+    (assoc-in config [:db :uri] (jdbc-url db))))
 
 (defn- load-config
   [profile]

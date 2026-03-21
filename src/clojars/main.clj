@@ -41,7 +41,7 @@
           error-reporter (error-reporter config)
           system (component/start (prod-system config error-reporter))]
       (err/set-default-exception-handler error-reporter)
-      (info "starting jetty on" (str "http://" (:bind config) ":" (:port config)))
+      (info "starting http-kit on" (format "http://%s:%s" (-> config :http :host) (-> config :http :port)))
       (admin/init (get-in system [:db :spec])
                   (:search system)
                   (:storage system)))

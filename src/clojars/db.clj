@@ -57,6 +57,7 @@
     "help"
     "images"
     "index"
+    "internal"
     "jar"
     "jars"
     "js"

@@ -7,6 +7,7 @@
    [clojars.dev.setup :as setup]
    [clojars.email :as email]
    [clojars.errors :as errors]
+   [clojars.http-kit :as http-kit]
    [clojars.oauth.service :as oauth-service]
    [clojars.s3 :as s3]
    [clojars.search :as search]
@@ -146,8 +147,7 @@
 (defn run-test-app
   [f]
   (with-test-system*
-    #(let [server (get-in system [:http :server])
-           port (-> server .getConnectors first .getLocalPort)]
+    #(let [port (http-kit/get-port (:http system))]
        (binding [test-port port]
          (f)))))
 

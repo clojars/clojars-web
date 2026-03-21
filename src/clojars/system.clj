@@ -3,6 +3,7 @@
    [clojars.email :refer [simple-mailer]]
    [clojars.event :as event]
    [clojars.hcaptcha :as hcaptcha]
+   [clojars.http-kit :as http-kit]
    [clojars.notifications :as notifications]
    ;; for defmethods
    [clojars.notifications.admin]
@@ -14,7 +15,6 @@
    [clojars.oauth.gitlab :as gitlab]
    [clojars.remote-service :as remote-service]
    [clojars.repo-indexing :as repo-indexing]
-   [clojars.ring-servlet-patch :as patch]
    [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.stats :refer [artifact-stats]]
@@ -23,8 +23,7 @@
    [com.stuartsierra.component :as component]
    [duct.component.endpoint :refer [endpoint-component]]
    [duct.component.handler :refer [handler-component]]
-   [duct.component.hikaricp :refer [hikaricp]]
-   [ring.component.jetty :refer [jetty-server]]))
+   [duct.component.hikaricp :refer [hikaricp]]))
 
 (defrecord StorageComponent [error-reporter delegate on-disk-repo repo-bucket cdn-token cdn-url]
   storage/Storage
@@ -69,7 +68,6 @@
 
 (defn new-system [config]
   (let [{:as config :keys [github-oauth gitlab-oauth]} config]
-    (patch/monkey-patch-update-servlet-response-to-send-status-message)
     (-> (merge
          (base-system config)
          (component/system-map
@@ -84,7 +82,7 @@
           :event-emitter  (event/new-sqs-emitter (:event-queue config))
           :event-receiver (event/new-sqs-receiver (:event-queue config))
           :hcaptcha       (hcaptcha/new-hcaptcha (:hcaptcha config))
-          :http           (jetty-server (:http config))
+          :http           (http-kit/new-server (:http config))
           :http-client    (remote-service/new-http-remote-service)
           :mailer         (simple-mailer (:mail config))
           :notifications  (notifications/notification-component)

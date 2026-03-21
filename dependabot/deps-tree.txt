@@ -73,54 +73,10 @@ com.github.scribejava/scribejava-apis 8.3.3
     X com.fasterxml.jackson.core/jackson-databind 2.14.0 :use-top
   X com.fasterxml.jackson.core/jackson-databind 2.14.0 :use-top
 digest/digest 1.4.10
+net.clojars.internal/http-kit 2.9.0-beta3-clojars-03
 org.bouncycastle/bcpkix-jdk18on 1.83
   . org.bouncycastle/bcutil-jdk18on 1.83
     X org.bouncycastle/bcprov-jdk18on 1.83 :use-top
-ring/ring-jetty-adapter 1.13.1
-  X ring/ring-core 1.13.1 :use-top
-  . org.ring-clojure/ring-jakarta-servlet 1.13.1
-    X ring/ring-core 1.13.1 :use-top
-  . org.eclipse.jetty/jetty-server 11.0.25
-    . org.eclipse.jetty/jetty-http 11.0.25
-      . org.eclipse.jetty/jetty-io 11.0.25
-      . org.eclipse.jetty/jetty-util 11.0.25
-        X org.slf4j/slf4j-api 2.0.13 :older-version
-      X org.slf4j/slf4j-api 2.0.13 :older-version
-    . org.eclipse.jetty/jetty-io 11.0.25
-      . org.eclipse.jetty/jetty-util 11.0.25
-      X org.slf4j/slf4j-api 2.0.13 :older-version
-    . org.eclipse.jetty.toolchain/jetty-jakarta-servlet-api 5.0.2
-    X org.slf4j/slf4j-api 2.0.13 :older-version
-  . org.eclipse.jetty/jetty-unixdomain-server 11.0.25
-    . org.eclipse.jetty/jetty-server 11.0.25
-    X org.slf4j/slf4j-api 2.0.13 :older-version
-  . org.eclipse.jetty.websocket/websocket-jetty-server 11.0.25
-    . org.eclipse.jetty/jetty-servlet 11.0.25
-      . org.eclipse.jetty/jetty-security 11.0.25
-        . org.eclipse.jetty/jetty-server 11.0.25
-        X org.slf4j/slf4j-api 2.0.13 :older-version
-      X org.slf4j/slf4j-api 2.0.13 :older-version
-    . org.eclipse.jetty/jetty-webapp 11.0.25
-      . org.eclipse.jetty/jetty-servlet 11.0.25
-      . org.eclipse.jetty/jetty-xml 11.0.25
-        . org.eclipse.jetty/jetty-util 11.0.25
-        X org.slf4j/slf4j-api 2.0.13 :older-version
-      X org.slf4j/slf4j-api 2.0.13 :older-version
-    . org.eclipse.jetty.toolchain/jetty-jakarta-servlet-api 5.0.2
-    . org.eclipse.jetty.websocket/websocket-jetty-api 11.0.25
-    . org.eclipse.jetty.websocket/websocket-jetty-common 11.0.25
-      . org.eclipse.jetty.websocket/websocket-core-common 11.0.25
-        . org.eclipse.jetty/jetty-http 11.0.25
-        . org.eclipse.jetty/jetty-io 11.0.25
-        X org.slf4j/slf4j-api 2.0.13 :older-version
-      . org.eclipse.jetty.websocket/websocket-jetty-api 11.0.25
-    . org.eclipse.jetty.websocket/websocket-servlet 11.0.25
-      . org.eclipse.jetty/jetty-servlet 11.0.25
-      . org.eclipse.jetty.websocket/websocket-core-server 11.0.25
-        . org.eclipse.jetty/jetty-server 11.0.25
-        . org.eclipse.jetty.websocket/websocket-core-common 11.0.25
-      X org.slf4j/slf4j-api 2.0.13 :older-version
-    X org.slf4j/slf4j-api 2.0.13 :older-version
 com.stuartsierra/component 1.2.0
   . com.stuartsierra/dependency 1.0.0
 org.apache.commons/commons-email 1.6.0
@@ -152,11 +108,6 @@ clj-http/clj-http 3.13.1
   . slingshot/slingshot 0.12.2
   . potemkin/potemkin 0.4.7
     . riddley/riddley 0.1.12
-ring-jetty-component/ring-jetty-component 0.3.1
-  X com.stuartsierra/component 0.3.1 :use-top
-  X ring/ring-jetty-adapter 1.4.0 :use-top
-  . suspendable/suspendable 0.1.1
-    X com.stuartsierra/component 0.2.3 :use-top
 commons-collections/commons-collections 3.2.2
 org.apache.lucene/lucene-core 10.3.2
 org.apache.lucene/lucene-queryparser 10.3.2
