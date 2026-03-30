@@ -36,7 +36,8 @@
   ;; Override the version brought in by aging-session to address CVE-2020-24164
   ;; & CVE-2024-36124
   com.taoensso/nippy {:mvn/version "3.6.0"}
-
+  comb/comb {:mvn/version "1.0.0"}
+  
   digest/digest {:mvn/version "1.4.10"}
   duct/duct {:mvn/version "0.8.2"}
   duct/hikaricp-component {:mvn/version "0.1.2"

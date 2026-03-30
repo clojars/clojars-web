@@ -1,5 +1,6 @@
 (ns clojars.routes.repo
   (:require
+   [cheshire.core :as json]
    [clojars.auth :as auth :refer [with-account]]
    [clojars.db :as db]
    [clojars.errors :refer [report-error]]
@@ -14,6 +15,7 @@
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.string :as str]
+   [comb.template :as comb]
    [compojure.core :as compojure :refer [PUT]]
    [compojure.route :refer [not-found]]
    [ring.util.codec :as codec]
@@ -112,51 +114,103 @@
   "Used to avoid passing the db to every fn that needs to audit."
   nil)
 
-(defn- throw-invalid
-  ([tag message]
-   (throw-invalid tag message nil))
-  ([tag message meta]
-   (throw-invalid tag message meta nil))
-  ([tag message meta cause]
-   ;; don't log again if we threw this exception before
-   (when-not (:throw-invalid? meta)
-     (log/audit *db* {:tag tag
-                      :message message})
-     (log/info {:status :failed
-                :message message}))
-   (throw
-    (ex-info message (merge {:report? false
-                             :throw-invalid? true}
-                            meta)
-             cause))))
+(def ^:private failure-details
+  ;; These use comb for templating, and can access any key in the metadata passed to throw-invalid
+  {:central-shadow                 {:title   "Cannot shadow Maven Central"
+                                    :details "shadowing Maven Central artifacts is not allowed. See https://bit.ly/3rTLqxZ"}
+   :central-shadow-check-failure   {:title   "Maven Central shadow check failed"
+                                    :details "failed to contact Maven Central to verify project name. See https://bit.ly/3rTLqxZ"}
+   :gradle-module-invalid          {:title   "Invalid Gradle module"
+                                    :details "failed to parse Gradle module. Message: <%= message %>"}
+   :gradle-module-mismatch-group   {:title   "Invalid Gradle module"
+                                    :details "the component group in the gradle module (<%= module-value %>) does not match the group you are deploying to (<%= value %>)"}
+   :gradle-module-mismatch-module  {:title   "Invalid Gradle module"
+                                    :details "the component module in the gradle module (<%= module-value %>) does not match the module you are deploying to (<%= value %>)"}
+   :gradle-module-mismatch-version {:title   "Invalid Gradle module"
+                                    :details "the component version in the gradle module (<%= module-value %>) does not match the version you are deploying to (<%= value %>)"}
+   :group-no-access                {:title   "Deploy group not accessible"
+                                    :details "You don't have access to the '<%= group %>/<%= project %>' project"}
+   :group-non-existent             {:title   "Deploy group does not exist"
+                                    :details "Group '<%= group %>' doesn't exist. See https://bit.ly/3MuKGXO"}
+   :group-non-verified             {:title   "Deploy group isn't verified"
+                                    :details "Group '<%= group %>' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"}
+   :group-requires-mfa             {:title   "Deploy group requires MFA"
+                                    :details "The group '<%= group %>' requires you to have two-factor auth enabled to deploy. See https://bit.ly/45qrtA8"}
+   :file-invalid-checksum          {:title   "Invalid checksum"
+                                    :details "invalid <%= checksum-type %> checksum for <%= filename %>"}
+   :file-missing-checksum          {:title   "File missing checksum"
+                                    :details "no checksums provided for <%= filename %>"}
+   :file-missing-signature         {:title   "File missing signature"
+                                    :details "file <%= filename %> has no signature"}
+   :maven-metadata-file-invalid    {:title   "Invalid maven-metadata.xml file"
+                                    :details "failed to parse maven-metadata.xml file. Message: <%= message %>"}
+   :pom-file-invalid               {:title   "Invalid POM file"
+                                    :details "failed to parse POM file. Message: <%= message %>"}
+   :pom-file-mismatch-group        {:title   "Invalid POM file"
+                                    :details "the group in the pom (<%= pom-value %>) does not match the group you are deploying to (<%= value %>)"}
+   :pom-file-mismatch-name         {:title   "Invalid POM file"
+                                    :details "the name in the pom (<%= pom-value %>) does not match the name you are deploying to (<%= value %>)"}
+   :pom-file-mismatch-version      {:title   "Invalid POM file"
+                                    :details "the version in the pom (<%= pom-value %>) does not match the version you are deploying to (<%= value %>)"}
+   :pom-file-missing               {:title   "Missing POM file"
+                                    :details "No POM file was uploaded"}
+   :pom-file-missing-license       {:title   "Invalid POM file"
+                                    :details "the POM file does not include a license. See https://bit.ly/3PQunZU"}
+   :project-name-invalid           {:title   "Invalid project name"
+                                    :details "project names must consist solely of lowercase letters, numbers, hyphens and underscores. See https://bit.ly/3MuL20A"}
+   :redeploy-non-snapshot          {:title   "Non-SNAPSHOT redeploy"
+                                    :details "redeploying non-snapshots is not allowed. See https://bit.ly/3EYzhwT"}
+   :token-single-use-used          {:title   "Deploy token used"
+                                    :details "The provided single-use token has already been used"}
+   :token-scope-mismatch           {:title   "Deploy token scope mismatch"
+                                    :details "The provided token's scope doesn't allow deploying this artifact. See https://bit.ly/3LmCclv"}
+   :unknown-upload-error           {:title   "Unknown error"
+                                    :details "Unknown error. Message: <%= message %>"}
+   :version-invalid                {:title   "Invalid version"
+                                    :details "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX"}})
 
-(defn- throw-forbidden
-  [e-or-message meta]
-  (let [throwable? (instance? Throwable e-or-message)
-        [message cause] (if throwable?
-                          [(.getMessage ^Throwable e-or-message)
-                           (.getCause ^Throwable e-or-message)]
-                          [e-or-message])]
-    (when throwable?
-      (log/error {:tag :upload-exception
-                  :error e-or-message}))
-    (throw-invalid
-     :deploy-forbidden
-     message
-     (merge
-      {:status 403
-       :status-message (str "Forbidden - " message)}
-      meta
-      (ex-data e-or-message))
-     cause)))
+(defn- failure-tag->title+message
+  [tag meta]
+  (when-some [{:keys [title details]} (get failure-details tag)]
+    [(comb/eval title meta) (comb/eval details meta)]))
+
+(defn- throw-invalid
+  ([tag]
+   (throw-invalid tag nil))
+  ([tag meta]
+   (throw-invalid tag meta nil))
+  ([tag meta cause]
+   (let [[title message] (failure-tag->title+message tag meta)
+         status (or (:status meta) 403)]
+     ;; don't log again if we threw this exception before
+     (when-not (:throw-invalid? meta)
+       (log/audit *db* {:tag tag
+                        :message message})
+       (log/info {:status :failed
+                  :message message}))
+     (throw
+      (ex-info message
+               (merge {:report? false
+                       :throw-invalid? true
+                       :status status
+                       :status-message (str "Forbidden - " message)
+                       :headers {"content-type" "application/problem+json"}
+                       ;; Generate an RFC 9457 problem details response. This will be parsed on
+                       ;; the client by:
+                       ;; https://github.com/apache/maven-resolver/blob/master/maven-resolver-spi/src/main/java/org/eclipse/aether/spi/connector/transport/http/RFC9457/RFC9457Parser.java
+                       :body {:type   "https://clojars.org/validation-error"
+                              :status status
+                              :title  title
+                              :detail message}}
+                      meta)
+               cause)))))
 
 (defn- check-group+project [db account group artifact]
   (try
     (db/check-group+project db account group artifact)
     (catch Exception e
-      (throw-forbidden e
-                       {:account account
-                        :group group}))))
+      (let [meta (ex-data e)]
+        (throw-invalid (:error-tag meta) meta e)))))
 
 (defn upload-request [db groupname artifact version timestamp-version session f]
   (with-account
@@ -210,26 +264,25 @@
              tx)
            (file-seq dir)))))
 
-(defn- validate-regex [x re message]
+(defn- validate-regex
+  [x re failure-tag]
   (when-not (re-matches re x)
-    (throw-invalid :regex-validation-failed
-                   message {:value x
-                            :regex re})))
+    (throw-invalid failure-tag {:value x
+                                :regex re})))
 
 (defn- validate-pom-entry [pom-data key value]
-  (when-not (= (key pom-data) value)
-    (throw-invalid
-     :pom-entry-mismatch
-     (format "the %s in the pom (%s) does not match the %s you are deploying to (%s)"
-             (name key) (key pom-data) (name key) value)
-     {:pom pom-data})))
+  (let [pom-value (key pom-data)]
+    (when-not (=  pom-value value)
+      (throw-invalid
+       (keyword (str "pom-file-mismatch-" (name key)))
+       {:pom       pom-data
+        :pom-value pom-value
+        :value     value}))))
 
 (defn- validate-pom-license
   [pom]
   (when (empty? (:licenses pom))
-    (throw-invalid
-     :missing-license
-     "the POM file does not include a license. See https://bit.ly/3PQunZU")))
+    (throw-invalid :pom-file-missing-license)))
 
 (defn- validate-pom [pom group name version]
   (validate-pom-entry pom :group group)
@@ -243,9 +296,9 @@
   (let [actual (get-in module ks)]
     (when-not (= actual expected)
       (throw-invalid
-       :module-entry-mismatch
-       (format "the %s in the gradle module (%s) does not match the coordinate you are deploying to (%s)"
-               (str/join " " (map name ks)) actual expected)))))
+       (keyword (str "gradle-module-mismatch-" (name (peek ks))))
+       {:module-value actual
+        :value        expected}))))
 
 (defn- validate-module [module group name version]
   (validate-module-entry module [:component :group] group)
@@ -255,8 +308,7 @@
 (defn assert-non-redeploy [db group-id artifact-id version]
   (when (and (not (maven/snapshot-version? version))
              (db/find-jar db group-id artifact-id version))
-    (throw-invalid :non-snapshot-redeploy
-                   "redeploying non-snapshots is not allowed. See https://bit.ly/3EYzhwT")))
+    (throw-invalid :redeploy-non-snapshot)))
 
 (defn assert-non-central-shadow [group-id artifact-id]
   (when-not (maven/can-shadow-maven? group-id artifact-id)
@@ -266,12 +318,8 @@
                   ;; report both failures to reach central and shadow attempts to sentry
                   :report? true}]
         (if (= :failure ret)
-          (throw-invalid :central-shadow-check-failure
-                         "failed to contact Maven Central to verify project name. See https://bit.ly/3rTLqxZ"
-                         (assoc meta :status 503))
-          (throw-invalid :central-shadow
-                         "shadowing Maven Central artifacts is not allowed. See https://bit.ly/3rTLqxZ"
-                         meta))))))
+          (throw-invalid :central-shadow-check-failure (assoc meta :status 503))
+          (throw-invalid :central-shadow meta))))))
 
 (defn validate-checksums [artifacts]
   (doseq [^File f artifacts]
@@ -284,14 +332,15 @@
                ;; Same for SSH signed files
                (not (match-file-name #"\.sig$" f)))
       (throw-invalid :file-missing-checksum
-                     (format "no checksums provided for %s" (.getName f))
-                     {:file f}))
+                     {:file     f
+                      :filename (.getName f)}))
     ;; verify provided checksums are valid
     (doseq [type [:md5 :sha1]]
       (when (not (fu/valid-checksum-file? f type false))
         (throw-invalid :file-invalid-checksum
-                       (format "invalid %s checksum for %s" type (.getName f))
-                       {:file f})))))
+                       {:checksum-type (name type)
+                        :file          f
+                        :filename      (.getName f)})))))
 
 (defn- assert-signatures [suffix artifacts]
   ;; if any signatures exist, require them for every artifact
@@ -301,7 +350,8 @@
               :when (not (suffix-matcher f))
               :when (not (.exists (io/file (str (.getAbsolutePath f) suffix))))]
         (throw-invalid :file-missing-signature
-                       (format "%s has no signature" (.getName f)) {:file f})))))
+                       {:file     f
+                        :filename (.getName f)})))))
 
 (defn- validate-jar-name+version
   [name version]
@@ -310,18 +360,14 @@
   ;; If you want loosen these please include in your proposal the
   ;; ramifications on usability, security and compatibility with filesystems,
   ;; OSes, URLs and tools.
-  (validate-regex name maven/group+jar-name-regex
-                  (str "project names must consist solely of lowercase "
-                       "letters, numbers, hyphens and underscores. See https://bit.ly/3MuL20A"))
+  (validate-regex name maven/group+jar-name-regex :project-name-invalid)
 
   ;; Maven's pretty accepting of version numbers, but so far in 2.5 years
   ;; bar one broken non-ascii exception only these characters have been used.
   ;; Even if we manage to support obscure characters some filesystems do not
   ;; and some tools fail to escape URLs properly.  So to keep things nice and
   ;; compatible for everyone let's lock it down.
-  (validate-regex version maven/version-regex
-                  (str "version strings must consist solely of letters, "
-                       "numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX")))
+  (validate-regex version maven/version-regex :version-invalid))
 
 (defn validate-deploy [db dir pom module {:keys [group name version]}]
   (validate-jar-name+version name version)
@@ -373,9 +419,9 @@
     (let [pom (try
                 (maven/pom-to-map pom-file)
                 (catch Exception e
-                  (throw-invalid :invalid-pom-file
-                                 (str "invalid pom file: " (.getMessage e))
-                                 {:file pom-file}
+                  (throw-invalid :pom-file-invalid
+                                 {:file    pom-file
+                                  :message (.getMessage e)}
                                  e)))
 
           module-file (find-module dir)
@@ -383,9 +429,9 @@
                    (when module-file
                      (gradle/module-to-map module-file))
                    (catch Exception e
-                     (throw-invalid :invalid-module-file
-                                    (str "invalid gradle module file: " (.getMessage e))
-                                    {:file module-file})))
+                     (throw-invalid :gradle-module-invalid
+                                    {:file    module-file
+                                     :message (.getMessage e)})))
 
           {:keys [group group-path name version] :as posted-metadata}
           (read-metadata dir)
@@ -399,9 +445,9 @@
         (try
           (maven/read-metadata md-file)
           (catch Exception e
-            (throw-invalid :invalid-maven-metadata-file
-                           "Failed to parse maven-metadata.xml"
-                           {:file md-file}
+            (throw-invalid :maven-metadata-file-invalid
+                           {:file    md-file
+                            :message (.getMessage e)}
                            e)))
 
         ;; If that succeeds, we create checksums for it
@@ -425,7 +471,7 @@
           (log/info {:tag :deploy-indexed}))
         (spit (io/file dir ".finalized") "")
         (emit-deploy-events db event-emitter (assoc posted-metadata :deployer-username account))))
-    (throw-invalid :missing-pom-file "no pom file was uploaded")))
+    (throw-invalid :pom-file-missing)))
 
 (defn- deploy-finalized? [dir]
   (.exists (io/file dir ".finalized")))
@@ -456,8 +502,8 @@
 (defn- maybe-assert-token-matches-group+artifact
   [session group artifact]
   (when-not (token-session-matches-group-artifact? session group artifact)
-    (throw-forbidden
-     "The provided token's scope doesn't allow deploying this artifact. See https://bit.ly/3LmCclv"
+    (throw-invalid
+     :token-scope-mismatch
      {:group group
       :artifact artifact})))
 
@@ -469,20 +515,16 @@
     ;; the deploy is finalized
     (when (and (= "used" (:single_use token))
                (nil? (:token-id (read-metadata upload-dir))))
-      (throw-forbidden
-       "The provided single-use token has already been used"
-       {}))))
+      (throw-invalid :token-single-use-used))))
 
 (defn- maybe-assert-user-has-mfa-enabled
   [db account groupname]
   (let [group-settings (db/get-group-settings db groupname)]
     (when (and (:require_mfa_to_deploy group-settings)
                (not (db/user-has-mfa? db account)))
-      (throw-forbidden
-       (format "The group '%s' requires you to have two-factor auth enabled to deploy. See https://bit.ly/45qrtA8"
-               groupname)
-       {:group groupname
-        :username account}))))
+      (throw-invalid :group-requires-mfa
+                     {:group groupname
+                      :username account}))))
 
 (defn- handle-versioned-upload [storage db body session group artifact version filename]
   (let [groupname (fu/path->group group)
@@ -549,18 +591,23 @@
                          (finalize-deploy storage db event-emitter search
                                           session account upload-dir)
                          (catch Exception e
-                           (throw-forbidden
-                            e
+                           (log/error {:tag   :upload-exception
+                                       :error e})
+                           (throw-invalid
+                            :unknown-upload-error
                             (merge
-                             {:account account
-                              :group group
+                             {:account  account
+                              :group    group
                               :artifact artifact
+                              :message  (.getMessage e)
                               ;; This will cause exceptions that /aren't/ from a
                               ;; throw-* call to be reported to sentry, etc
                               ;; since the data for those will have :report?
                               ;; false
-                              :report? true}
-                             (ex-data e))))))))))
+                              :report?  true
+                              :status   500}
+                             (ex-data e))
+                            e))))))))
               {:status 201
                :headers {}
                :body nil}))))
@@ -612,4 +659,7 @@
           (let [data (ex-data e)]
             {:status (or (:status data) 403)
              :status-message (:status-message data)
-             :body (.getMessage e)}))))))
+             :headers (:headers data)
+             :body (if-some [body (:body data)]
+                     (json/encode body)
+                     (.getMessage e))}))))))

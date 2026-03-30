@@ -220,6 +220,7 @@ ch.qos.logback/logback-classic 1.5.25
   . org.slf4j/slf4j-api 2.0.17
 org.apache.maven/maven-repository-metadata 3.9.12
   . org.codehaus.plexus/plexus-utils 3.6.0
+comb/comb 1.0.0
 com.sun.mail/jakarta.mail 1.6.8
   . com.sun.activation/jakarta.activation 1.2.1
 raven-clj/raven-clj 1.7.0
