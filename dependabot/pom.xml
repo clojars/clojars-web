@@ -279,6 +279,11 @@
       <version>3.9.12</version>
     </dependency>
     <dependency>
+      <groupId>comb</groupId>
+      <artifactId>comb</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+    <dependency>
       <groupId>com.sun.mail</groupId>
       <artifactId>jakarta.mail</artifactId>
       <version>1.6.8</version>

@@ -971,14 +971,17 @@
   can still be deployed to non-verified groups."
   [db account groupname jarname]
   (let [jar-actives (jar-active-usernames db groupname jarname)
-        err (fn [msg]
-              (throw (ex-info msg {:account account
-                                   :group groupname})))]
+        err (fn [error-tag]
+              (throw (ex-info "Group/project error"
+                              {:account   account
+                               :error-tag error-tag
+                               :group     groupname
+                               :project   jarname})))]
     (cond
       ;; group exists, but user doesn't have rights to deploy to the given project
       (and (seq jar-actives)
            (not (contains? jar-actives account)))
-      (err (format "You don't have access to the '%s/%s' project" groupname jarname))
+      (err :group-no-access)
 
       ;; group/jar exists, so new versions can be deployed
       (jar-exists db groupname jarname)
@@ -986,11 +989,11 @@
 
       ;; group doesn't exist, reject since we no longer auto-create groups
       (empty? jar-actives)
-      (err (format "Group '%s' doesn't exist. See https://bit.ly/3MuKGXO" groupname))
+      (err :group-non-existent)
 
       ;; group isn't verified, so new jars/projects can't be deployed to it
       (not (find-group-verification db groupname))
-      (err (format "Group '%s' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO" groupname)))))
+      (err :group-non-verified))))
 
 (defn add-group
   "Adds a new group entry without any checks other than if it exists
