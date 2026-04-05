@@ -962,11 +962,51 @@
                                            :basic-auth ["dantheman" token]
                                            :throw-exceptions false}))))
         failure-body (json/parse-string (:body failure-response) true)]
-
+    (is (= "application/problem+json" (get-in failure-response [:headers "Content-Type"])))
     (is (match?
          {:detail  "the group in the pom (new-group) does not match the group you are deploying to (org.clojars.dantheman)"
           :status  403
           :title   "Invalid POM file"
+          :type    "https://clojars.org/validation-error"}
+         failure-body))))
+
+;; TODO: (toby) remove this test once we can upgrade to a version of pomegranate that
+;; honors problem details
+(deftest deploy-requires-token
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [add-checksums (partial mapcat (fn [[f no-version?]]
+                                        [[f no-version?]
+                                         [(tmp-checksum-file f :md5) no-version?]
+                                         [(tmp-checksum-file f :sha1) no-version?]]))
+        files (add-checksums [[(tmp-file
+                                (io/file (io/resource "test.jar")) "test-0.0.1.jar")]
+                              [(tmp-file
+                                (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
+                                                  {:groupId "new-group"})
+                                "test-0.0.1.pom")]
+                              [(tmp-file
+                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                "maven-metadata.xml")
+                               :no-version]])
+        ;; we use clj-http here instead of aether to be able to get the problem details
+        [failure-response] (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
+                             (filterv
+                              #(= 401 (:status %))
+                              (for [[f no-version?] files]
+                                (http/put (format "%s/org/clojars/dantheman/test/%s%s"
+                                                  (repo-url)
+                                                  (if no-version? "" "0.0.1/")
+                                                  (.getName f))
+                                          {:body f
+                                           :basic-auth ["dantheman" "not-a-token"]
+                                           :throw-exceptions false}))))
+        failure-body (json/parse-string (:body failure-response) true)]
+    (is (= "application/problem+json" (get-in failure-response [:headers "Content-Type"])))
+    (is (match?
+         {:detail  "a deploy token is required to deploy. See https://bit.ly/3LmCclv"
+          :status  401
+          :title   "No deploy token provided"
           :type    "https://clojars.org/validation-error"}
          failure-body))))
 

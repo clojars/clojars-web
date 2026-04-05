@@ -144,6 +144,8 @@
                                     :details "file <%= filename %> has no signature"}
    :maven-metadata-file-invalid    {:title   "Invalid maven-metadata.xml file"
                                     :details "failed to parse maven-metadata.xml file. Message: <%= message %>"}
+   :password-not-token             {:title   "No deploy token provided"
+                                    :details "a deploy token is required to deploy. See https://bit.ly/3LmCclv"}
    :pom-file-invalid               {:title   "Invalid POM file"
                                     :details "failed to parse POM file. Message: <%= message %>"}
    :pom-file-mismatch-group        {:title   "Invalid POM file"
@@ -169,10 +171,34 @@
    :version-invalid                {:title   "Invalid version"
                                     :details "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX"}})
 
-(defn- failure-tag->title+message
+(defn- failure-tag->title
   [tag meta]
-  (when-some [{:keys [title details]} (get failure-details tag)]
-    [(comb/eval title meta) (comb/eval details meta)]))
+  (when-some [{:keys [title]} (get failure-details tag)]
+    (comb/eval title meta)))
+
+(defn- failure-tag->message
+  [tag meta]
+  (when-some [{:keys [details]} (get failure-details tag)]
+    (comb/eval details meta)))
+
+(defn- rfc-9457-response
+  [status tag meta]
+  (let [message (failure-tag->message tag meta)]
+    {:status status
+     :status-message (format "%s - %s"
+                             (if (= 401 status)
+                               "Unauthorized"
+                               "Forbidden")
+                             message)
+     :headers {"content-type" "application/problem+json"}
+     ;; Generate an RFC 9457 problem details response. This will be parsed on
+     ;; the client by:
+     ;; https://github.com/apache/maven-resolver/blob/master/maven-resolver-spi/src/main/java/org/eclipse/aether/spi/connector/transport/http/RFC9457/RFC9457Parser.java
+     :body (json/encode
+            {:type   "https://clojars.org/validation-error"
+             :status status
+             :title  (failure-tag->title tag meta)
+             :detail message})}))
 
 (defn- throw-invalid
   ([tag]
@@ -180,7 +206,7 @@
   ([tag meta]
    (throw-invalid tag meta nil))
   ([tag meta cause]
-   (let [[title message] (failure-tag->title+message tag meta)
+   (let [message (failure-tag->message tag meta)
          status (or (:status meta) 403)]
      ;; don't log again if we threw this exception before
      (when-not (:throw-invalid? meta)
@@ -191,17 +217,8 @@
      (throw
       (ex-info message
                (merge {:report? false
-                       :throw-invalid? true
-                       :status status
-                       :status-message (str "Forbidden - " message)
-                       :headers {"content-type" "application/problem+json"}
-                       ;; Generate an RFC 9457 problem details response. This will be parsed on
-                       ;; the client by:
-                       ;; https://github.com/apache/maven-resolver/blob/master/maven-resolver-spi/src/main/java/org/eclipse/aether/spi/connector/transport/http/RFC9457/RFC9457Parser.java
-                       :body {:type   "https://clojars.org/validation-error"
-                              :status status
-                              :title  title
-                              :detail message}}
+                       :throw-invalid? true}
+                      (rfc-9457-response status tag meta)
                       meta)
                cause)))))
 
@@ -639,14 +656,13 @@
     (if (auth/unauthed-or-token-request? req)
       (f req)
       (let [{:keys [username]} (auth/parse-authorization-header (get-in req [:headers "authorization"]))
-            message "a deploy token is required to deploy. See https://bit.ly/3LmCclv"]
+            message (failure-tag->message :password-not-token nil)]
         (log/audit db {:tag :deploy-password-rejection
                        :message message
                        :username username})
         (log/info {:tag :deploy-password-rejection
                    :username username})
-        {:status 401
-         :status-message (format "Unauthorized - %s" message)}))))
+        (rfc-9457-response 401 :password-not-token nil)))))
 
 (defn wrap-exceptions [app reporter]
   (fn [req]
@@ -660,6 +676,5 @@
             {:status (or (:status data) 403)
              :status-message (:status-message data)
              :headers (:headers data)
-             :body (if-some [body (:body data)]
-                     (json/encode body)
-                     (.getMessage e))}))))))
+             :body (or (:body data)
+                       (.getMessage e))}))))))
