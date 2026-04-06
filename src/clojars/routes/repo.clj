@@ -81,34 +81,38 @@
                   :token-id token-id)]
     (spit (io/file dir metadata-edn) (pr-str metadata))))
 
+(defn- equal-if-present
+  [a b]
+  (if (and a b) (= a b) true))
+
 (defn find-upload-dir
-  ^File [group artifact version timestamp-version {:keys [upload-dirs]}]
-  (if-let [dir (some (fn [dir]
-                       (let [dir (io/file dir)
-                             metadata (read-metadata dir)
-                             if= #(if (and %1 %2) (= %1 %2) true)]
-                         (when (and dir (.exists dir)
-                                    (= [group artifact] ((juxt :group :name) metadata))
-                                    (if= (:version metadata) version)
-                                    (if= (:timestamp-version metadata) timestamp-version))
-                           dir)))
-                     ;; We reverse sort the upload dirs to get the newer dirs
-                     ;; first (the dir name includes the creation time in
-                     ;; millis). This is a specific fix for #849 to allow
-                     ;; multiple deploys of different versions in the same
-                     ;; session to succeed.
-                     ;;
-                     ;; They would fail occasionally depending on the natural
-                     ;; sort of the upload-dirs. When we are finalizing a
-                     ;; deploy, we don't have the version, since the finalize is
-                     ;; triggered by the maven-metadata.xml upload, which isn't
-                     ;; versioned. This means we use whatever dir for the
-                     ;; group+artifact that we find first, which may not be the
-                     ;; correct dir.
-                     (sort #(compare %2 %1) upload-dirs))]
-    dir
-    (doto (io/file "tmp" (format "upload-%s-%s" (System/currentTimeMillis) (UUID/randomUUID)))
-      (FileUtils/forceMkdir))))
+  ^File [group artifact version timestamp-version session]
+  (let [token-id (:id (token-from-session session))
+        parent-upload-dir (io/file "tmp"
+                                   group
+                                   artifact
+                                   (format "token-%s" token-id))
+        upload-dirs (.listFiles parent-upload-dir)]
+    (if-let [dir (some (fn [^File dir]
+                         (let [metadata (read-metadata dir)]
+                           (when (and dir
+                                      (.exists dir)
+                                      (equal-if-present (:version metadata) version)
+                                      (equal-if-present (:timestamp-version metadata)
+                                                        timestamp-version))
+                             dir)))
+                       ;; We reverse sort the upload dirs to get the newer dirs
+                       ;; first (the dir name includes the creation time in
+                       ;; millis). When we are finalizing a deploy, we don't
+                       ;; have the version, since the finalize is triggered by
+                       ;; the maven-metadata.xml upload, which isn't versioned.
+                       ;; This means we use whatever dir for the group+artifact
+                       ;; that we find first, which may not be the correct dir.
+                       (sort #(compare %2 %1) upload-dirs))]
+      dir
+      (doto (io/file parent-upload-dir
+                     (format "%s-%s" (System/currentTimeMillis) (UUID/randomUUID)))
+        (FileUtils/forceMkdir)))))
 
 (def ^:private ^:dynamic *db*
   "Used to avoid passing the db to every fn that needs to audit."
@@ -247,8 +251,6 @@
           (log/info {:status :success})
           {:status 201
            :headers {}
-           :session (update session
-                            :upload-dirs (fnil conj #{}) (.getAbsolutePath upload-dir))
            :body nil})))))
 
 (defn find-pom
@@ -289,7 +291,7 @@
 
 (defn- validate-pom-entry [pom-data key value]
   (let [pom-value (key pom-data)]
-    (when-not (=  pom-value value)
+    (when-not (= pom-value value)
       (throw-invalid
        (keyword (str "pom-file-mismatch-" (name key)))
        {:pom       pom-data
@@ -325,6 +327,17 @@
 (defn assert-non-redeploy [db group-id artifact-id version]
   (when (and (not (maven/snapshot-version? version))
              (db/find-jar db group-id artifact-id version))
+    (throw-invalid :redeploy-non-snapshot)))
+
+(defn assert-non-versioned-file-overwrite
+  "Prevents sending the same versioned file (jar, module, pom, or their
+  checksums/signatures) more than once to the same upload dir. This prevents
+  redeploying the same version shortly after it was first deployed. This is
+  needed since we don't store the upload dir in the session, as http cookies
+  are no longer stable across the same maven http-transport deploy session."
+  [version ^File file]
+  (when (and (not (maven/snapshot-version? version))
+             (.exists file))
     (throw-invalid :redeploy-non-snapshot)))
 
 (defn assert-non-central-shadow [group-id artifact-id]
@@ -558,7 +571,9 @@
        (maybe-assert-single-use-token-unused session upload-dir)
        (maybe-assert-user-has-mfa-enabled db account groupname)
        (write-metadata session upload-dir groupname group artifact version timestamp-version)
-       (let [file (try-save-to-file (io/file upload-dir group artifact version filename) body)]
+       (let [file (io/file upload-dir group artifact version filename)]
+         (assert-non-versioned-file-overwrite version file)
+         (try-save-to-file file body)
          (when (deploy-finalized? upload-dir)
            ;; a deploy should never get this far with a bad group,
            ;; but since this includes the group authorization check,

@@ -760,6 +760,40 @@
   ;; This test throws on failure, so we have this assertion to satisfy kaocha
   (is true))
 
+(deftest deploy-spanning-multiple-sessions-works
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password"))
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
+        add-checksums (partial mapcat (fn [[f no-version?]]
+                                        [[f no-version?]
+                                         [(tmp-checksum-file f :md5) no-version?]
+                                         [(tmp-checksum-file f :sha1) no-version?]]))
+        files (add-checksums [[(tmp-file
+                                (io/file (io/resource "test.jar")) "test-0.0.3-%.jar")]
+                              [(tmp-file
+                                (help/rewrite-pom (io/file (io/resource "test-0.0.3-SNAPSHOT/test.pom"))
+                                                  {:groupId "org.clojars.dantheman"})
+                                "test-0.0.3-%.pom")]
+                              [(tmp-file
+                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
+                                "maven-metadata.xml")
+                               :no-version]])
+        versioned-name #(str/replace (.getName %1) #"%" %2)]
+    ;; we use clj-http here instead of aether to have control over the cookies,
+    ;; and reset the cookie store for each file to exercise the very worst case;
+    ;; every file is in a new session
+    (doseq [[f no-version?] files]
+      (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
+        (http/put (format "%s/org/clojars/dantheman/test/%s%s"
+                          (repo-url)
+                          (if no-version? "" "0.0.3-SNAPSHOT/")
+                          (versioned-name f "20170505.125640-1"))
+                  {:body f
+                   :throw-entire-message? true
+                   :basic-auth ["dantheman" token]}))))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
+
 (deftest user-can-deploy-with-classifiers
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
@@ -827,26 +861,29 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
         pom (io/file (io/resource "test-0.0.1/test.pom"))]
-    (doseq [suffix ["asc" "sig"]]
+    (doseq [suffix ["asc" "sig"]
+            :let [version (format "0.0.1-%s" suffix)
+                  pom-name (format "test-%s.pom" version)]]
       (testing (format "with a suffix of .%s" suffix)
         (is (thrown-with-msg?
              DeploymentException
-             #"test-0.0.1.pom has no signature"
+             #"test-0\.0\.1-.*\.pom has no signature"
               (deploy
-               {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+               {:coordinates ['org.clojars.dantheman/test version]
                 :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
-                               [:extension "pom"] pom
+                               [:extension "pom"] (help/rewrite-pom pom
+                                                                    {:version version})
                                ;; any content will do since we don't validate signatures
                                [:extension (format "jar.%s" suffix)] pom}
-                :password token})))))
+                :password token}))))
 
-    (help/match-audit {:username "dantheman"}
-                      {:user "dantheman"
-                       :group_name "org.clojars.dantheman"
-                       :jar_name "test"
-                       :version "0.0.1"
-                       :message "file test-0.0.1.pom has no signature"
-                       :tag "file-missing-signature"})))
+      (help/match-audit {:username "dantheman"}
+                        {:user "dantheman"
+                         :group_name "org.clojars.dantheman"
+                         :jar_name "test"
+                         :version version
+                         :message (format "file %s has no signature" pom-name)
+                         :tag "file-missing-signature"}))))
 
 (deftest anonymous-cannot-deploy
   (is (thrown-with-msg?
