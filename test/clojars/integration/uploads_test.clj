@@ -11,7 +11,7 @@
    [clojars.email :as email]
    [clojars.file-utils :as fu]
    [clojars.http-utils :refer [clear-sessions!]]
-   [clojars.integration.steps :refer [create-deploy-token login-as register-as]]
+   [clojars.integration.steps :refer [create-deploy-token create-deploy-token* login-as register-as]]
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
    [clojars.web.common :as common]
