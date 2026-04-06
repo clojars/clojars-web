@@ -110,7 +110,8 @@
                        :user "dantheman"
                        :group_name "org.clojars.dantheman"
                        :jar_name "test"
-                       :version "0.0.1"})
+                       :version "0.0.1"
+                       :token_id "FIXME"})
 
     (-> (session (help/app))
         (visit "/groups/org.clojars.dantheman")

@@ -433,7 +433,8 @@
 (defn- finalize-deploy
   [storage db event-emitter search session account ^File dir]
   (if-let [pom-file (find-pom dir)]
-    (let [pom (try
+    (let [token-id (:id (token-from-session session))
+          pom (try
                 (maven/pom-to-map pom-file)
                 (catch Exception e
                   (throw-invalid :pom-file-invalid
@@ -481,11 +482,14 @@
 
         (db/add-jar db account pom)
         (maybe-consume-single-use-token db session)
-        (log/audit db {:tag :deployed})
-        (log/info {:tag :deploy-finalized})
+        (log/audit db {:tag :deployed
+                       :token_id token-id})
+        (log/info {:tag :deploy-finalized
+                   :token_id token-id})
         (future
           (search/index! search (db/find-jar db group name version))
-          (log/info {:tag :deploy-indexed}))
+          (log/info {:tag :deploy-indexed
+                     :token-id token-id}))
         (spit (io/file dir ".finalized") "")
         (emit-deploy-events db event-emitter (assoc posted-metadata :deployer-username account))))
     (throw-invalid :pom-file-missing)))

@@ -439,6 +439,7 @@
     [:tr
      [:th "Tag"]
      [:th "User"]
+     [:th "Token ID"]
      [:th "Artifact"]
      [:th "Message"]
      [:th "Timestamp"]]
@@ -446,6 +447,7 @@
       [:tr
        [:td [:pre (:tag audit)]]
        [:td (when (:user audit) (user-link (:user audit)))]
+       [:td (:token_id audit)]
        [:td (link-project audit)]
        [:td (linkify (:message audit))]
        [:td (:created audit)]])]])
