@@ -433,8 +433,7 @@
 (defn- finalize-deploy
   [storage db event-emitter search session account ^File dir]
   (if-let [pom-file (find-pom dir)]
-    (let [token-id (:id (token-from-session session))
-          pom (try
+    (let [pom (try
                 (maven/pom-to-map pom-file)
                 (catch Exception e
                   (throw-invalid :pom-file-invalid
@@ -455,7 +454,8 @@
           (read-metadata dir)
 
           md-file (io/file dir group-path name "maven-metadata.xml")]
-      (log/with-context {:version version}
+      (log/with-context {:version version
+                         :token-id (:id (token-from-session session))}
         ;; since we trigger on maven-metadata.xml, we don't actually
         ;; have the sums for it because they are uploaded *after* the
         ;; metadata file itself. This means that it's possible for a
@@ -482,14 +482,11 @@
 
         (db/add-jar db account pom)
         (maybe-consume-single-use-token db session)
-        (log/audit db {:tag :deployed
-                       :token_id token-id})
-        (log/info {:tag :deploy-finalized
-                   :token_id token-id})
+        (log/audit db {:tag :deployed})
+        (log/info {:tag :deploy-finalized})
         (future
           (search/index! search (db/find-jar db group name version))
-          (log/info {:tag :deploy-indexed
-                     :token-id token-id}))
+          (log/info {:tag :deploy-indexed}))
         (spit (io/file dir ".finalized") "")
         (emit-deploy-events db event-emitter (assoc posted-metadata :deployer-username account))))
     (throw-invalid :pom-file-missing)))

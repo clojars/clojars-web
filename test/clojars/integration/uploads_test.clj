@@ -84,7 +84,7 @@
 (deftest user-can-register-and-deploy
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
+  (let [{:keys [token token-id]} (create-deploy-token* (session (help/app)) "dantheman" "password" "testing")
         now (db/get-time)]
     (with-redefs [db/get-time (constantly now)]
       (deploy
@@ -111,7 +111,7 @@
                        :group_name "org.clojars.dantheman"
                        :jar_name "test"
                        :version "0.0.1"
-                       :token_id "FIXME"})
+                       :token_id token-id})
 
     (-> (session (help/app))
         (visit "/groups/org.clojars.dantheman")

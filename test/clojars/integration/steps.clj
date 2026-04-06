@@ -45,9 +45,9 @@
        (fill-in-captcha)
        (press "Register"))))
 
-(defn create-deploy-token
+(defn create-deploy-token*
   ([state user password token-name]
-   (create-deploy-token state user password token-name {}))
+   (create-deploy-token* state user password token-name {}))
   ([state user password token-name {:keys [expires-in scope single-use?]}]
    (-> state
        (login-as user password)
@@ -59,9 +59,15 @@
        (cond-> expires-in (choose "Expires in" expires-in))
        (press "Create Token")
        :enlive
-       (enlive/select [:div.new-token :> :pre])
-       (first)
-       (enlive/text))))
+       ((fn [e]
+          {:token-id (-> e (enlive/select [:div.token-id :> :pre]) first enlive/text)
+           :token (-> e (enlive/select [:div.new-token :> :pre]) first enlive/text)})))))
+
+(defn create-deploy-token
+  ([state user password token-name]
+   (create-deploy-token state user password token-name {}))
+  ([state user password token-name opts]
+   (:token (create-deploy-token* state user password token-name opts))))
 
 (defn enable-mfa
   [state user password]
