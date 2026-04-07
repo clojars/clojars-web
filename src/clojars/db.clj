@@ -865,10 +865,10 @@
                 :single_use (jdbc.types/as-other (if single-use?
                                                    "yes"
                                                    "no"))
-                :expires_at expires-at}]
-    (sql/insert! db :deploy_tokens
-                 (update record :token bcrypt))
-    record))
+                :expires_at expires-at}
+        {:deploy_tokens/keys [id]} (sql/insert! db :deploy_tokens
+                                                (update record :token bcrypt))]
+    (assoc record :token_id id)))
 
 (defn find-deploy-tokens-for-user
   [db user-id]

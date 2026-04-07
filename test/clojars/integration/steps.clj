@@ -60,7 +60,7 @@
        (press "Create Token")
        :enlive
        ((fn [e]
-          {:token-id (-> e (enlive/select [:div.token-id :> :pre]) first enlive/text)
+          {:token-id (-> e (enlive/select [:div.token-id :> :pre]) first enlive/text Integer/parseInt)
            :token (-> e (enlive/select [:div.new-token :> :pre]) first enlive/text)})))))
 
 (defn create-deploy-token

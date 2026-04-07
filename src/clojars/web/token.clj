@@ -7,17 +7,17 @@
    [hiccup.form :refer [check-box drop-down label text-field submit-button]]))
 
 (defn- new-token-message
-  [{:keys [name token id]}]
+  [{:keys [name token token_id]}]
   (when token
     (list
      [:p (format "Your new deploy token '%s' with id '%s' has been created. It will only be shown this one time, so be sure to copy it now:"
                  name
-                 id)]
+                 token_id)]
      [:div.new-token
       [:pre token]]
      [:p "Token ID:"]
      [:div.token-id
-      [:pre id]])))
+      [:pre token_id]])))
 
 (defn- scope
   [{:keys [group_name jar_name]}]

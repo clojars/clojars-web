@@ -94,7 +94,8 @@
 (defn- add-token-id-to-audit-table
   [tx]
   (db/do-commands tx
-                  ["alter table audit add column token_id integer references deploy_tokens(id)"]))
+                  ["alter table audit add column token_id integer" ; references deploy_tokens(id)
+                   ]))
 
 (defn- add-single-use-to-tokens
   [tx]
