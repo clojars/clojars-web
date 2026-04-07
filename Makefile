@@ -53,3 +53,7 @@ sync-dependabot:
 .PHONY: check-dependabot
 check-dependabot:
 	./bin/check-dependabot
+
+.PHONY: setup-dev
+setup-dev:
+	clojure -M -m clojars.tools.setup-dev
