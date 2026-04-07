@@ -1,7 +1,6 @@
 (ns clojars.web.group-verification
   (:require
-   [clojars.web.common :refer [error-flash flash html-doc]]
-   [clojars.web.safe-hiccup :refer [form-to]]
+   [clojars.web.common :refer [error-flash flash form-to html-doc]]
    [hiccup.element :refer [link-to unordered-list]]
    [hiccup.form :refer [label submit-button text-field]]))
 

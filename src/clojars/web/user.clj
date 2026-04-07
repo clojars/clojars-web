@@ -2,26 +2,20 @@
   (:require
    [buddy.core.codecs :as codecs]
    [clojars.config :as config]
-   [clojars.db :as db :refer [find-group-verification
-                              find-groupnames
-                              find-user-by-user-or-email
-                              jars-by-username
-                              update-user
+   [clojars.db :as db :refer [find-group-verification find-groupnames
+                              find-user-by-user-or-email jars-by-username update-user
                               update-user-notifications]]
    [clojars.event :as event]
    [clojars.hcaptcha :as hcaptcha]
    [clojars.log :as log]
    [clojars.notifications.common :as notif-common]
    [clojars.user-validations :as uv]
-   [clojars.web.common :refer [html-doc error-list form-table jar-link
-                               flash group-link verified-group-badge-small]]
-   [clojars.web.safe-hiccup :refer [form-to]]
+   [clojars.web.common :refer [error-list flash form-table form-to group-link
+                               html-doc jar-link verified-group-badge-small]]
    [clojure.string :as str]
    [hiccup.element :refer [unordered-list]]
-   [hiccup.form :refer [label text-field
-                        password-field
-                        submit-button
-                        email-field]]
+   [hiccup.form :refer [email-field label password-field submit-button
+                        text-field]]
    [one-time.qrgen :as qrgen]
    [ring.util.response :refer [redirect]])
   (:import

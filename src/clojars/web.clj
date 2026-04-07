@@ -9,7 +9,8 @@
    [clojars.friend.oauth.github :as github]
    [clojars.friend.oauth.gitlab :as gitlab]
    [clojars.friend.registration :as registration]
-   [clojars.http-utils :refer [wrap-secure-session wrap-additional-security-headers]]
+   [clojars.http-utils :refer [wrap-additional-security-headers
+                               wrap-secure-session]]
    [clojars.log :as log]
    [clojars.middleware :refer [wrap-ignore-trailing-slash]]
    [clojars.routes.api :as api]
@@ -22,9 +23,8 @@
    [clojars.routes.user :as user]
    [clojars.routes.verify :as verify]
    [clojars.web.browse :refer [browse]]
-   [clojars.web.common :as common :refer [html-doc]]
+   [clojars.web.common :as common :refer [html-doc raw]]
    [clojars.web.dashboard :refer [dashboard index-page]]
-   [clojars.web.safe-hiccup :refer [raw]]
    [clojars.web.search :as search]
    [clojure.java.io :as io]
    [compojure.core :refer [ANY context GET PUT routes]]
@@ -55,30 +55,30 @@
   (let [db (:spec db)]
     (routes
      (GET "/" _
-          (try-account
-           #(if %
-              (dashboard db %)
-              (index-page db stats %))))
+       (try-account
+        #(if %
+           (dashboard db %)
+           (index-page db stats %))))
      (GET "/search" {:keys [params]}
-          (try-account
-           #(let [validated-params (-> params
-                                       (update :page try-parse-page))]
-              (search/search search % validated-params))))
+       (try-account
+        #(let [validated-params (-> params
+                                    (update :page try-parse-page))]
+           (search/search search % validated-params))))
      (GET "/projects" {:keys [params]}
-          (try-account
-           #(let [validated-params
-                  (-> params
-                      (update :from (partial common/check-no-null-bytes "from"))
-                      (update :page try-parse-page))]
-              (browse db % validated-params))))
+       (try-account
+        #(let [validated-params
+               (-> params
+                   (update :from (partial common/check-no-null-bytes "from"))
+                   (update :page try-parse-page))]
+           (browse db % validated-params))))
      (GET "/security" []
-          (try-account
-           #(html-doc "Security" {:account %}
-                      (raw (slurp (io/resource "security.html"))))))
+       (try-account
+        #(html-doc "Security" {:account %}
+                   (raw (slurp (io/resource "security.html"))))))
      (GET "/dmca" []
-          (try-account
-           #(html-doc "DMCA" {:account %}
-                      (raw (slurp (io/resource "dmca.html"))))))
+       (try-account
+        #(html-doc "DMCA" {:account %}
+                   (raw (slurp (io/resource "dmca.html"))))))
      session/routes
      (group/routes db event-emitter)
      (artifact/routes db stats)
@@ -90,12 +90,12 @@
      (api/routes db stats)
      (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
      (ANY "*" _
-          (try-account
-           #(not-found
-             (html-doc "Page not found" {:account %}
-                       [:div.small-section
-                        [:h1 "Page not found"]
-                        [:p "Thundering typhoons!  I think we lost it.  Sorry!"]])))))))
+       (try-account
+        #(not-found
+          (html-doc "Page not found" {:account %}
+                    [:div.small-section
+                     [:h1 "Page not found"]
+                     [:p "Thundering typhoons!  I think we lost it.  Sorry!"]])))))))
 
 (def ^:private defaults-config
   (-> ring-defaults/secure-site-defaults
@@ -149,19 +149,19 @@
   (let [db (:spec db)]
     (routes
      (-> (context
-          "/repo" _
-          (-> (repo/routes storage db event-emitter search)
-              (friend/authenticate
-               {:credential-fn (auth/token-credential-fn db)
-                :workflows [(workflows/http-basic :realm "clojars")]
-                :allow-anon? false
-                :unauthenticated-handler
-                (partial workflows/http-basic-deny "clojars")})
-              (repo/wrap-reject-non-token db)
-              (repo/wrap-exceptions error-reporter)
-              (repo/wrap-file (:repo (config)))
-              (log/wrap-request-context)
-              (repo/wrap-reject-double-dot)))
+           "/repo" _
+           (-> (repo/routes storage db event-emitter search)
+               (friend/authenticate
+                {:credential-fn (auth/token-credential-fn db)
+                 :workflows [(workflows/http-basic :realm "clojars")]
+                 :allow-anon? false
+                 :unauthenticated-handler
+                 (partial workflows/http-basic-deny "clojars")})
+               (repo/wrap-reject-non-token db)
+               (repo/wrap-exceptions error-reporter)
+               (repo/wrap-file (:repo (config)))
+               (log/wrap-request-context)
+               (repo/wrap-reject-double-dot)))
          (wrap-secure-session))
      (-> (token-breach/routes db event-emitter)
          (wrap-exceptions error-reporter)

@@ -3,14 +3,14 @@
    [clojars.db :as db]
    [clojars.maven :as maven]
    [clojars.web.helpers :as helpers]
-   [clojars.web.safe-hiccup :refer [form-to html5 raw]]
    [clojars.web.structured-data :as structured-data]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [hiccup.core :refer [html]]
-   [hiccup.element :refer [link-to unordered-list image]]
+   [hiccup.element :refer [image link-to unordered-list]]
    [hiccup.page :refer [include-css include-js]]
+   [hiccup2.core :as h]
+   [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
    [ring.util.codec :refer [url-encode]])
   (:import
    (java.text
@@ -18,10 +18,44 @@
 
 (set! *warn-on-reflection* true)
 
+;; Helper functions to replace safe-hiccup functionality
+(defn raw
+  "Mark a string as raw HTML (not to be escaped)"
+  [s]
+  (h/raw s))
+
+(defmacro html5
+  "Create a HTML5 document with the supplied contents."
+  [options & contents]
+  (if-not (map? options)
+    `(html5 {} ~options ~@contents)
+    `(let [options# ~options]
+       (h/html {:mode :html}
+               (raw "<!DOCTYPE html>")
+               [:html {:lang (options# :lang)} ~@contents]))))
+
+(defmacro form-to
+  "Create a form that points to a particular method and route.
+  Automatically includes anti-forgery token for non-GET requests.
+  For methods other than GET/POST (e.g. PUT, DELETE), converts to POST
+  and adds a hidden _method field for the actual method.
+  e.g. (form-to [:put \"/post\"] ...)"
+  [method-action & body]
+  `(let [[method# action#] ~method-action
+         needs-method-override?# (not (contains? #{:head :get :post} method#))]
+     (if (contains? #{:head :get} method#)
+       [:form {:method (name method#) :action action#} ~@body]
+       (into [:form {:method "post" :action action#}
+              [:input {:type "hidden" :name "__anti-forgery-token" :value *anti-forgery-token*}]]
+             (concat
+              (when needs-method-override?#
+                [[:input {:type "hidden" :name "_method" :value (str/upper-case (name method#))}]])
+              [~@body])))))
+
 (defn when-ie [& contents]
   (str
    "<!--[if lt IE 9]>"
-   (html contents)
+   (str (h/html contents))
    "<![endif]-->"))
 
 (defn footer
@@ -89,159 +123,159 @@
     [:footer.row]))
 
 (defn html-doc [title ctx & body]
-  (html5 {:lang "en"}
-         [:head
-          [:meta {:charset "utf-8"}]
-          [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
-          [:link {:type "application/opensearchdescription+xml"
-                  :title "Clojars"
-                  :href "/opensearch.xml"
-                  :rel "search"}]
-          [:link {:href "/favicon.ico"
-                  :rel "shortcut icon"}]
-          (structured-data/meta-tags (assoc ctx :title (if title
-                                                         title
-                                                         "Clojars"))) ;; TODO: talk about whether we should refactor signature of html-doc
-          [:title
-           (when title
-             (str title " - "))
-           "Clojars"]
-          (map #(include-css (str "/stylesheets/" %))
+  (str (html5 {:lang "en"}
+              [:head
+               [:meta {:charset "utf-8"}]
+               [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+               [:link {:type "application/opensearchdescription+xml"
+                       :title "Clojars"
+                       :href "/opensearch.xml"
+                       :rel "search"}]
+               [:link {:href "/favicon.ico"
+                       :rel "shortcut icon"}]
+               (structured-data/meta-tags (assoc ctx :title (if title
+                                                              title
+                                                              "Clojars"))) ;; TODO: talk about whether we should refactor signature of html-doc
+               [:title
+                (when title
+                  (str title " - "))
+                "Clojars"]
+               (map #(include-css (str "/stylesheets/" %))
                ;; Bootstrap was customized to only include the 'grid' styles
                ;; (then the default colors were removed)
                ;; more info: http://getbootstrap.com/css/#grid
-               ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-          (raw (when-ie (include-js "/js/html5.js")))
-          (include-js "/js/jquery-3.6.0.min.js")
-          (include-js "/js/coordinates.js")
-          (for [path (:extra-js ctx)]
-            (include-js path))]
-         [:body.container-fluid
-          [:div#content-wrapper
-           [:header.small-header.row
-            [:div.home.col-xs-6.col-sm-3
-             (link-to "/" (helpers/retinized-image "/images/clojars-logo-tiny.png" "Clojars"))
-             [:h1 (link-to "/" "Clojars")]]
-            [:div.col-xs-6.col-sm-3
-             [:form {:action "/search"}
-              [:input {:type "search"
-                       :name "q"
-                       :id "search"
-                       :class "search"
-                       :placeholder "Search projects..."
-                       :value (:query ctx)
-                       :required true}]]]
-            [:nav.navigation.main-navigation.col-xs-12.col-sm-6
-             (if (:account ctx)
-               (unordered-list
-                [(link-to "/" "dashboard")
-                 (link-to "/logout" "logout")])
-               (unordered-list
-                [(link-to "/login" "login")
-                 (link-to "/register" "register")]))]]
-           (when (:account ctx)
-             [:div.row
-              [:nav.navigation.secondary-navigation.col-xs-24.col-sm-12
-               (unordered-list
-                [(link-to "/verify/group" "group verification")
-                 (link-to "/notification-preferences" "notification prefs")
-                 (link-to "/mfa" "two-factor auth")
-                 (link-to "/profile" "profile")
-                 (link-to "/tokens" "deploy tokens")])]])
-           body
-           (footer (get ctx :footer-links? true))]]))
+                    ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
+               (raw (when-ie (include-js "/js/html5.js")))
+               (include-js "/js/jquery-3.6.0.min.js")
+               (include-js "/js/coordinates.js")
+               (for [path (:extra-js ctx)]
+                 (include-js path))]
+              [:body.container-fluid
+               [:div#content-wrapper
+                [:header.small-header.row
+                 [:div.home.col-xs-6.col-sm-3
+                  (link-to "/" (helpers/retinized-image "/images/clojars-logo-tiny.png" "Clojars"))
+                  [:h1 (link-to "/" "Clojars")]]
+                 [:div.col-xs-6.col-sm-3
+                  [:form {:action "/search"}
+                   [:input {:type "search"
+                            :name "q"
+                            :id "search"
+                            :class "search"
+                            :placeholder "Search projects..."
+                            :value (:query ctx)
+                            :required true}]]]
+                 [:nav.navigation.main-navigation.col-xs-12.col-sm-6
+                  (if (:account ctx)
+                    (unordered-list
+                     [(link-to "/" "dashboard")
+                      (link-to "/logout" "logout")])
+                    (unordered-list
+                     [(link-to "/login" "login")
+                      (link-to "/register" "register")]))]]
+                (when (:account ctx)
+                  [:div.row
+                   [:nav.navigation.secondary-navigation.col-xs-24.col-sm-12
+                    (unordered-list
+                     [(link-to "/verify/group" "group verification")
+                      (link-to "/notification-preferences" "notification prefs")
+                      (link-to "/mfa" "two-factor auth")
+                      (link-to "/profile" "profile")
+                      (link-to "/tokens" "deploy tokens")])]])
+                body
+                (footer (get ctx :footer-links? true))]])))
 
 (defn html-doc-with-large-header [title ctx & body]
-  (html5 {:lang "en"}
-         [:head
-          [:meta {:charset "utf-8"}]
-          [:link {:type "application/opensearchdescription+xml"
-                  :title "Clojars"
-                  :href "/opensearch.xml"
-                  :rel "search"}]
+  (str (html5 {:lang "en"}
+              [:head
+               [:meta {:charset "utf-8"}]
+               [:link {:type "application/opensearchdescription+xml"
+                       :title "Clojars"
+                       :href "/opensearch.xml"
+                       :rel "search"}]
 
-          [:link {:rel "apple-touch-icon" :sizes "57x57" :href "/apple-touch-icon-57x57.png?v=47K2kprJd7"}]
-          [:link {:rel "apple-touch-icon" :sizes "60x60" :href "/apple-touch-icon-60x60.png?v=47K2kprJd7"}]
-          [:link {:rel "apple-touch-icon" :sizes "72x72" :href "/apple-touch-icon-72x72.png?v=47K2kprJd7"}]
-          [:link {:rel "apple-touch-icon" :sizes "76x76" :href "/apple-touch-icon-76x76.png?v=47K2kprJd7"}]
-          [:link {:rel "apple-touch-icon" :sizes "114x114" :href "/apple-touch-icon-114x114.png?v=47K2kprJd7"}]
-          [:link {:rel "apple-touch-icon" :sizes "120x120" :href "/apple-touch-icon-120x120.png?v=47K2kprJd7"}]
-          [:link {:rel "apple-touch-icon" :sizes "144x144" :href "/apple-touch-icon-144x144.png?v=47K2kprJd7"}]
-          [:link {:rel "apple-touch-icon" :sizes "152x152" :href "/apple-touch-icon-152x152.png?v=47K2kprJd7"}]
-          [:link {:rel "icon" :type "image/png" :href "/favicon-32x32.png?v=47K2kprJd7" :sizes "32x32"}]
-          [:link {:rel "icon" :type "image/png" :href "/favicon-96x96.png?v=47K2kprJd7" :sizes "96x96"}]
-          [:link {:rel "icon" :type "image/png" :href "/favicon-16x16.png?v=47K2kprJd7" :sizes "16x16"}]
-          [:link {:rel "manifest" :href "/manifest.json?v=47K2kprJd7"}]
-          [:link {:rel "shortcut icon" :href "/favicon.ico?v=47K2kprJd7"}]
-          [:meta {:name "apple-mobile-web-app-title" :content "Clojars"}]
-          [:meta {:name "application-name" :content "Clojars"}]
-          [:meta {:name "msapplication-TileColor" :content "#da532c"}]
-          [:meta {:name "msapplication-TileImage" :content "/mstile-144x144.png?v=47K2kprJd7"}]
-          [:meta {:name "theme-color" :content "#ffffff"}]
+               [:link {:rel "apple-touch-icon" :sizes "57x57" :href "/apple-touch-icon-57x57.png?v=47K2kprJd7"}]
+               [:link {:rel "apple-touch-icon" :sizes "60x60" :href "/apple-touch-icon-60x60.png?v=47K2kprJd7"}]
+               [:link {:rel "apple-touch-icon" :sizes "72x72" :href "/apple-touch-icon-72x72.png?v=47K2kprJd7"}]
+               [:link {:rel "apple-touch-icon" :sizes "76x76" :href "/apple-touch-icon-76x76.png?v=47K2kprJd7"}]
+               [:link {:rel "apple-touch-icon" :sizes "114x114" :href "/apple-touch-icon-114x114.png?v=47K2kprJd7"}]
+               [:link {:rel "apple-touch-icon" :sizes "120x120" :href "/apple-touch-icon-120x120.png?v=47K2kprJd7"}]
+               [:link {:rel "apple-touch-icon" :sizes "144x144" :href "/apple-touch-icon-144x144.png?v=47K2kprJd7"}]
+               [:link {:rel "apple-touch-icon" :sizes "152x152" :href "/apple-touch-icon-152x152.png?v=47K2kprJd7"}]
+               [:link {:rel "icon" :type "image/png" :href "/favicon-32x32.png?v=47K2kprJd7" :sizes "32x32"}]
+               [:link {:rel "icon" :type "image/png" :href "/favicon-96x96.png?v=47K2kprJd7" :sizes "96x96"}]
+               [:link {:rel "icon" :type "image/png" :href "/favicon-16x16.png?v=47K2kprJd7" :sizes "16x16"}]
+               [:link {:rel "manifest" :href "/manifest.json?v=47K2kprJd7"}]
+               [:link {:rel "shortcut icon" :href "/favicon.ico?v=47K2kprJd7"}]
+               [:meta {:name "apple-mobile-web-app-title" :content "Clojars"}]
+               [:meta {:name "application-name" :content "Clojars"}]
+               [:meta {:name "msapplication-TileColor" :content "#da532c"}]
+               [:meta {:name "msapplication-TileImage" :content "/mstile-144x144.png?v=47K2kprJd7"}]
+               [:meta {:name "theme-color" :content "#ffffff"}]
 
-          [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
-          (structured-data/meta-tags (assoc ctx :title (if title
-                                                         title
-                                                         "Clojars")))
-          [:title
-           (when title
-             (str title " - "))
-           "Clojars"]
-          (map #(include-css (str "/stylesheets/" %))
+               [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
+               (structured-data/meta-tags (assoc ctx :title (if title
+                                                              title
+                                                              "Clojars")))
+               [:title
+                (when title
+                  (str title " - "))
+                "Clojars"]
+               (map #(include-css (str "/stylesheets/" %))
                ;; Bootstrap was customized to only include the 'grid' styles
                ;; (then the default colors were removed)
                ;; more info: http://getbootstrap.com/css/#grid
-               ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-          (raw (when-ie (include-js "/js/html5.js")))]
-         [:body.container-fluid
-          [:div.hero.row
-           [:header
-            [:div.home.col-xs-12.col-sm-6
-             (link-to "/" (helpers/retinized-image "/images/clojars-logo.png" "Clojars"))
-             [:h1
-              (link-to "/" "Clojars")]]
-            [:nav.navigation.main-navigation.col-xs-12.col-sm-6
-             (if (:account ctx)
-               (unordered-list
-                [(link-to "/" "dashboard")
-                 (link-to "/profile" "profile")
-                 (link-to "/logout" "logout")])
-               (unordered-list
-                [(link-to "/login" "login")
-                 (link-to "/register" "register")]))]
-            [:h2.hero-text.row
-             [:span.col-md-12
-              [:span.heavy "Clojars"]
-              " is an "
-              [:span.heavy "easy to use"]
-              " community repository for "]
-             [:span.col-md-12
-              " open source Clojure libraries."]]]
-           [:div.search-form-container.col-xs-12
-            [:form {:action "/search"}
-             [:input {:type "search"
-                      :name "q"
-                      :id "search"
-                      :placeholder "Search projects..."
-                      :value (:query ctx)
-                      :autofocus true
-                      :required true}]
-             [:input {:id "search-button"
-                      :value "Search"
-                      :type "submit"}]]]
-           [:h2.getting-started.row
-            [:span.col-md-12
-             "To get started pushing your own project "
-             (link-to "/register" "register")
-             " and then"]
-            [:span.col-md-12
-             " check out the "
-             (link-to "https://github.com/clojars/clojars-web/wiki/Tutorial" "tutorial")
-             ". Alternatively, "
-             (link-to "/projects" "browse the repository")
-             "."]]]
-          body
-          (footer (get ctx :footer-links? true))]))
+                    ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
+               (raw (when-ie (include-js "/js/html5.js")))]
+              [:body.container-fluid
+               [:div.hero.row
+                [:header
+                 [:div.home.col-xs-12.col-sm-6
+                  (link-to "/" (helpers/retinized-image "/images/clojars-logo.png" "Clojars"))
+                  [:h1
+                   (link-to "/" "Clojars")]]
+                 [:nav.navigation.main-navigation.col-xs-12.col-sm-6
+                  (if (:account ctx)
+                    (unordered-list
+                     [(link-to "/" "dashboard")
+                      (link-to "/profile" "profile")
+                      (link-to "/logout" "logout")])
+                    (unordered-list
+                     [(link-to "/login" "login")
+                      (link-to "/register" "register")]))]
+                 [:h2.hero-text.row
+                  [:span.col-md-12
+                   [:span.heavy "Clojars"]
+                   " is an "
+                   [:span.heavy "easy to use"]
+                   " community repository for "]
+                  [:span.col-md-12
+                   " open source Clojure libraries."]]]
+                [:div.search-form-container.col-xs-12
+                 [:form {:action "/search"}
+                  [:input {:type "search"
+                           :name "q"
+                           :id "search"
+                           :placeholder "Search projects..."
+                           :value (:query ctx)
+                           :autofocus true
+                           :required true}]
+                  [:input {:id "search-button"
+                           :value "Search"
+                           :type "submit"}]]]
+                [:h2.getting-started.row
+                 [:span.col-md-12
+                  "To get started pushing your own project "
+                  (link-to "/register" "register")
+                  " and then"]
+                 [:span.col-md-12
+                  " check out the "
+                  (link-to "https://github.com/clojars/clojars-web/wiki/Tutorial" "tutorial")
+                  ". Alternatively, "
+                  (link-to "/projects" "browse the repository")
+                  "."]]]
+               body
+               (footer (get ctx :footer-links? true))])))
 
 (defn- flash*
   [class & msgs]
@@ -260,7 +294,7 @@
      (unordered-list errors)]))
 
 (defn tag [s]
-  (raw (html [:span.tag s])))
+  (raw (str (h/html [:span.tag s]))))
 
 (defn jar-url [jar]
   (if (= (:group_name jar) (:jar_name jar))
