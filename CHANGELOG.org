@@ -11,6 +11,9 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-04-06.2250][2026-04-06.2250]]
 + [[https://github.com/clojars/clojars-web/commit/e8e99c83332dae3d21cce6c707875a31d1bcc784][Allow deploys to span HTTP sessions]]. This fix was needed to support tooling that doesn't use the same session cookie across the deploy. ([[https://github.com/tobias][Toby Crawley]])
 
+*** [[https://github.com/clojars/clojars-web/releases/tag/2026-04-11.2252][2026-04-11.2252]]
++ [[https://github.com/clojars/clojars-web/commit/d12c255601e495edc57d3062fc4a81cce5f428e2][Use fork of one-time library for MFA token creation]]. This is to remove a dependency on a lib that requires loading from jitpack.io, and is dependent on vulnerable versions of batik. ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2026-March
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-03-21.2243][2026-03-21.2243]]
 + [[https://github.com/clojars/clojars-web/pull/923][Use]] a [[https://github.com/clojars/http-kit][fork]] of http-kit instead of Jetty. This reduces our dependency load, and removes Jetty as a source of CVEs. We have a fork of http-kit to support custom status messages. ([[https://github.com/tobias][Toby Crawley]])
