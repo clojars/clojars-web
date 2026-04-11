@@ -1,6 +1,6 @@
 com.cognitect.aws/ssm 871.2.38.3
 buddy/buddy-core 1.12.0-430
-  . commons-codec/commons-codec 1.17.1
+  X commons-codec/commons-codec 1.17.1 :superseded
   X org.bouncycastle/bcpkix-jdk18on 1.78.1 :use-top
   X org.bouncycastle/bcprov-jdk18on 1.78.1 :use-top
   X cheshire/cheshire 5.13.0 :use-top
@@ -53,6 +53,10 @@ valip/valip 0.2.0
       X commons-collections/commons-collections 2.1 :use-top
       . xml-apis/xml-apis 1.0.b2
     X commons-logging/commons-logging 1.0.4 :older-version
+net.clojars.internal/one-time 0.9.0-clojars-02
+  . commons-codec/commons-codec 1.17.2 :newer-version
+  X ring/ring-codec 1.2.0 :superseded
+  . io.nayuki/qrcodegen 1.6.0
 org.apache.lucene/lucene-analysis-common 10.3.2
   X org.apache.lucene/lucene-core 10.3.2 :use-top
 com.cognitect.aws/sqs 871.2.34.1
@@ -134,16 +138,6 @@ duct/duct 0.8.2
   . meta-merge/meta-merge 1.0.0
   X ring/ring-core 1.5.0 :use-top
 hiccup/hiccup 1.0.5
-one-time/one-time 0.8.0
-  X commons-codec/commons-codec 1.15 :older-version
-  X ring/ring-codec 1.2.0 :superseded
-  . com.google.zxing/javase 3.5.0
-    . com.google.zxing/core 3.5.0
-    . com.beust/jcommander 1.82
-    X com.github.jai-imageio/jai-imageio-core 1.4.0 :excluded
-  . com.github.kenglxn.qrgen/javase 2.6.0
-    . com.github.kenglxn.qrgen/core 2.6.0
-      X com.google.zxing/core 3.3.0 :older-version
 kirasystems/aging-session 0.5.0
   X ring/ring-core 1.7.1 :use-top
   . buddy/buddy-auth 2.2.0

@@ -1,10 +1,7 @@
 {:paths ["src" "resources"]
  :mvn/repos
  {"central" {:url "https://repo1.maven.org/maven2/"}
-  "clojars" {:url "https://repo.clojars.org/"}
-  ;; Needed for com.github.kenglxn.qrgen/javase, which is a dependency of one-time.
-  ;; See https://github.com/kenglxn/QRGen/issues/61
-  "jitpack" {:url "https://jitpack.io/"}}
+  "clojars" {:url "https://repo.clojars.org/"}}
 
  :deps
  {aero/aero {:mvn/version "1.1.6"}
@@ -59,13 +56,15 @@
   ;; continue to send custom status messages on deploy failure.
   ;; See https://github.com/clojars/http-kit
   net.clojars.internal/http-kit {:mvn/version "2.9.0-beta3-clojars-03"}
-  
-  one-time/one-time {:mvn/version "0.8.0"
-                     :exclusions [ ;; not needed on java 17, addresses CWE-120
-                                  com.github.jai-imageio/jai-imageio-core
-                                  ;; not used, addresses CVE-2020-11987, CVE-2019-17566
-                                  org.apache.xmlgraphics/batik-dom
-                                  org.apache.xmlgraphics/batik-svggen]}
+  ;; This fork is so we can have a version of one-time that uses
+  ;; https://github.com/nayuki/QR-Code-generator instead of
+  ;; https://github.com/kenglxn/QRGen, as the latter is deployed to jitpack.io,
+  ;; requiring an additional repo, and has vulnerable dependencies. It can't be
+  ;; a git dep, as it uses a lein project.clj instead of deps.edn. We can remove
+  ;; this and go back to the canonical release once 0.9.0 is released
+  ;; officially (see https://github.com/suvash/one-time/issues/27)
+  net.clojars.internal/one-time {:mvn/version "0.9.0-clojars-02"}
+
   org.apache.commons/commons-email {:mvn/version "1.6.0"}
   org.apache.lucene/lucene-core {:mvn/version "10.3.2"}
   org.apache.lucene/lucene-analysis-common {:mvn/version "10.3.2"}
