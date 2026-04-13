@@ -20,9 +20,9 @@
 
 (deftest admin-can-add-member-to-group
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
+      (register-as "dantheman" "test@example.org" "password1234")
       ((fn [session] (email/expect-mock-emails 2) session))
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
@@ -60,9 +60,9 @@
 
 (deftest admin-can-toggle-member-to-admin
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
+      (register-as "dantheman" "test@example.org" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       (press "Add Permission")
@@ -87,7 +87,7 @@
 
   (email/expect-mock-emails 2)
   (-> (session (help/app))
-      (login-as "dantheman" "password")
+      (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (press "Toggle Admin")
       (within [:table.group-member-list
@@ -121,9 +121,9 @@
 
 (deftest admin-can-add-admin-to-group
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
+      (register-as "dantheman" "test@example.org" "password1234")
       ((fn [session] (email/expect-mock-emails 2) session))
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
@@ -162,9 +162,9 @@
 
 (deftest admin-can-remove-user-from-group
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
+      (register-as "dantheman" "test@example.org" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       ((fn [session] (email/expect-mock-emails 2) session))
@@ -194,7 +194,7 @@
 
 (deftest user-must-exist-to-be-added-to-group
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
+      (register-as "dantheman" "test@example.org" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       (press "Add Permission")
@@ -203,9 +203,9 @@
 
 (deftest user-can-be-scoped-to-jars
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
+      (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
   (db/add-jar help/*db* "dantheman"
               {:group "org.clojars.dantheman"
@@ -216,7 +216,7 @@
                :name "test2"
                :version "0.0.1"})
   (-> (session (help/app))
-      (login-as "dantheman" "password")
+      (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       (check [:#admin])
@@ -254,16 +254,16 @@
 
 (deftest user-can-be-toggled-with-scoping
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
+      (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
   (db/add-jar help/*db* "dantheman"
               {:group "org.clojars.dantheman"
                :name "test"
                :version "0.0.1"})
   (-> (session (help/app))
-      (login-as "dantheman" "password")
+      (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       (check [:#admin])
@@ -300,11 +300,11 @@
 
 (deftest user-can-be-scoped-to-new-jar
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
+      (register-as "dantheman" "test@example.org" "password1234"))
   (-> (session (help/app))
-      (login-as "dantheman" "password")
+      (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       (check [:#admin])
@@ -326,11 +326,11 @@
 
 (deftest user-cannot-be-scoped-to-jar-when-is-all-scoped
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "fixture2" "fixture2@example.org" "password"))
+      (register-as "fixture2" "fixture2@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
+      (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
   (db/add-jar help/*db* "dantheman"
               {:group "org.clojars.dantheman"
@@ -338,7 +338,7 @@
                :version "0.0.1"})
   (testing "As admin for all scope"
     (-> (session (help/app))
-        (login-as "dantheman" "password")
+        (login-as "dantheman" "password1234")
         (visit "/groups/org.clojars.dantheman")
         (fill-in [:#username] "fixture")
         (check [:#admin])
@@ -375,7 +375,7 @@
 
   (testing "As member for all scope"
     (-> (session (help/app))
-        (login-as "dantheman" "password")
+        (login-as "dantheman" "password1234")
         (visit "/groups/org.clojars.dantheman")
         (fill-in [:#username] "fixture2")
         (press "Add Permission")
@@ -411,25 +411,25 @@
 
 (deftest user-cannot-be-scoped-to-all-when-caller-is-scoped-to-jar
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "fixture2" "fixture@example.org" "password"))
+      (register-as "fixture2" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
+      (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
   (db/add-jar help/*db* "dantheman"
               {:group "org.clojars.dantheman"
                :name "test"
                :version "0.0.1"})
   (-> (session (help/app))
-      (login-as "dantheman" "password")
+      (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       (choose [:#scope_to_jar_select] "test")
       (check [:#admin])
       (press "Add Permission"))
   (-> (session (help/app))
-      (login-as "fixture" "password")
+      (login-as "fixture" "password1234")
       ;; The UI hides invalid options from us, so we have to make the request
       ;; manually
       (p/request "/groups" :request-method :post
@@ -439,11 +439,11 @@
 
 (deftest user-cannot-be-scoped-to-jar-that-caller-does-not-have-access-to
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "fixture2" "fixture@example.org" "password"))
+      (register-as "fixture2" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
+      (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
   (db/add-jar help/*db* "dantheman"
               {:group "org.clojars.dantheman"
@@ -454,14 +454,14 @@
                :name "test2"
                :version "0.0.1"})
   (-> (session (help/app))
-      (login-as "dantheman" "password")
+      (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "fixture")
       (choose [:#scope_to_jar_select] "test")
       (check [:#admin])
       (press "Add Permission"))
   (-> (session (help/app))
-      (login-as "fixture" "password")
+      (login-as "fixture" "password1234")
       ;; The UI hides invalid options from us, so we have to make the request
       ;; manually
       (p/request "/groups" :request-method :post
@@ -472,11 +472,11 @@
 
 (deftest user-cannot-be-scoped-to-all-when-is-jar-scoped
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "fixture2" "fixture2@example.org" "password"))
+      (register-as "fixture2" "fixture2@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
+      (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
   (db/add-jar help/*db* "dantheman"
               {:group "org.clojars.dantheman"
@@ -484,7 +484,7 @@
                :version "0.0.1"})
   (testing "As admin for jar scope"
     (-> (session (help/app))
-        (login-as "dantheman" "password")
+        (login-as "dantheman" "password1234")
         (visit "/groups/org.clojars.dantheman")
         (fill-in [:#username] "fixture")
         (choose [:#scope_to_jar_select] "test")
@@ -520,7 +520,7 @@
 
   (testing "As member for jar scope"
     (-> (session (help/app))
-        (login-as "dantheman" "password")
+        (login-as "dantheman" "password1234")
         (visit "/groups/org.clojars.dantheman")
         (fill-in [:#username] "fixture2")
         (choose [:#scope_to_jar_select] "test")

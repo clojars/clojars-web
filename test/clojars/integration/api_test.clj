@@ -50,7 +50,7 @@
 
 (deftest an-api-test
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
+      (register-as "dantheman" "test@example.org" "password1234"))
   (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.1/test.pom")
   (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.2/test.pom")
   (inject-artifacts-into-repo! (get-in help/system [:db :spec]) "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
@@ -145,7 +145,7 @@
     (with-redefs [db/get-time (fn []
                                 (Timestamp. (swap! curr-time inc)))]
       (-> (session (help/app))
-          (register-as "dantheman" "test@example.org" "password"))
+          (register-as "dantheman" "test@example.org" "password1234"))
       (inject-artifacts-into-repo! db "dantheman" "test.jar" "test-0.0.1/test.pom")
       (inject-artifacts-into-repo! db "dantheman" "test.jar" "test-0.0.2/test.pom")
       (inject-artifacts-into-repo! db "dantheman" "test.jar" "test-0.0.3-SNAPSHOT/test.pom")
@@ -247,7 +247,7 @@
     (with-redefs [db/get-time (fn []
                                 (Timestamp. @curr-time))]
       (-> (session (help/app))
-          (register-as "dantheman" "test@example.org" "password"))
+          (register-as "dantheman" "test@example.org" "password1234"))
       ;; Given: four artifacts, two of which were released in the same ms
       (swap! curr-time inc)
       (inject-artifacts-into-repo! db "dantheman" "test.jar" "test-0.0.1/test.pom")

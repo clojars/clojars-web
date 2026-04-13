@@ -20,7 +20,7 @@
 
 (deftest user-cant-login-with-bad-user-pass-combo
   (-> (session (help/app))
-      (login-as "fixture@example.org" "password")
+      (login-as "fixture@example.org" "password1234")
       (follow-redirect)
       (has (status? 200))
       (within [:div :p.error]
@@ -29,10 +29,10 @@
 (deftest user-can-login-and-logout
   (let [app (help/app)]
     (-> (session app)
-        (register-as "fixture" "fixture@example.org" "password"))
+        (register-as "fixture" "fixture@example.org" "password1234"))
     (doseq [login ["fixture"]]
       (-> (session app)
-          (login-as login "password")
+          (login-as login "password1234")
           (follow-redirect)
           (has (status? 200))
           (within [:.light-article :> :h1]
@@ -46,8 +46,8 @@
 (deftest user-cant-login-with-deploy-token
   (let [app (help/app)
         _ (-> (session app)
-              (register-as "fixture" "fixture@example.org" "password"))
-        token (create-deploy-token (session app) "fixture" "password" "testing")]
+              (register-as "fixture" "fixture@example.org" "password1234"))
+        token (create-deploy-token (session app) "fixture" "password1234" "testing")]
     (-> (session app)
         (login-as "fixture" token)
         (follow-redirect)
@@ -58,10 +58,10 @@
 (deftest user-with-password-wipe-gets-message
   (let [app (help/app)]
     (-> (session app)
-        (register-as "fixture" "fixture@example.org" "password"))
+        (register-as "fixture" "fixture@example.org" "password1234"))
     (sql/update! help/*db* :users {:password ""} {db/user-column "fixture"})
     (-> (session app)
-        (login-as "fixture" "password")
+        (login-as "fixture" "password1234")
         (follow-redirect)
         (has (status? 200))
         (within [:div :p.error]
@@ -70,11 +70,11 @@
 (deftest login-with-mfa
   (let [app (help/app)]
     (-> (session app)
-        (register-as "fixture" "fixture@example.org" "password"))
-    (let [[otp-secret recovery-code] (enable-mfa (session app) "fixture" "password")]
+        (register-as "fixture" "fixture@example.org" "password1234"))
+    (let [[otp-secret recovery-code] (enable-mfa (session app) "fixture" "password1234")]
       (testing "with valid token"
         (-> (session app)
-            (login-as "fixture" "password" (ot/get-totp-token otp-secret))
+            (login-as "fixture" "password1234" (ot/get-totp-token otp-secret))
             (follow-redirect)
             (has (status? 200))
             (within [:.light-article :> :h1]
@@ -82,7 +82,7 @@
       (testing "with a token that is too old"
         (let [the-past (Date. (- (System/currentTimeMillis) 31000))]
           (-> (session app)
-              (login-as "fixture" "password" (ot/get-totp-token otp-secret {:date the-past}))
+              (login-as "fixture" "password1234" (ot/get-totp-token otp-secret {:date the-past}))
               (follow-redirect)
               (has (status? 200))
               (within [:div :p.error]
@@ -90,28 +90,28 @@
       (testing "with a token that is in the future"
         (let [the-future (Date. (+ (System/currentTimeMillis) 31000))]
           (-> (session app)
-              (login-as "fixture" "password" (ot/get-totp-token otp-secret {:date the-future}))
+              (login-as "fixture" "password1234" (ot/get-totp-token otp-secret {:date the-future}))
               (follow-redirect)
               (has (status? 200))
               (within [:div :p.error]
                 (has (text? "Incorrect username, password, or two-factor code."))))))
       (testing "with invalid token"
         (-> (session app)
-            (login-as "fixture" "password" "1")
+            (login-as "fixture" "password1234" "1")
             (follow-redirect)
             (has (status? 200))
             (within [:div :p.error]
               (has (text? "Incorrect username, password, or two-factor code.")))))
       (testing "with recovery code"
         (-> (session app)
-            (login-as "fixture" "password" recovery-code)
+            (login-as "fixture" "password1234" recovery-code)
             (follow-redirect)
             (has (status? 200))
             (within [:.light-article :> :h1]
               (has (text? "Dashboard (fixture)"))))
         ;; mfa is now disabled, so login w/o an otp works
         (-> (session app)
-            (login-as "fixture" "password")
+            (login-as "fixture" "password1234")
             (follow-redirect)
             (has (status? 200))
             (within [:.light-article :> :h1]

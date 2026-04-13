@@ -19,7 +19,7 @@
 (deftest added-users-can-be-found
   (let [email "test@example.com"
         name "testuser"
-        password "password"]
+        password "password1234"]
     (db/add-user help/*db* email name password)
     (are [x] (match? {:email email
                       :user name}
@@ -34,7 +34,7 @@
 (deftest added-users-can-be-found-by-password-reset-code-except-when-expired
   (let [email "test@example.com"
         name "testuser"
-        password "password"]
+        password "password1234"]
     (db/add-user help/*db* email name password)
     (let [reset-code (db/set-password-reset-code! help/*db* "testuser")]
       (is (match? {:email email
@@ -47,7 +47,7 @@
 (deftest renamed-users-can-be-found
   (let [email "test@example.com"
         name "testuser"
-        password "password"
+        password "password1234"
         created-at (Timestamp. 0)
         name2 "testuser2"]
     (help/with-time created-at
@@ -64,10 +64,10 @@
 (deftest updated-users-can-be-found
   (let [email "test@example.com"
         name "testuser"
-        password "password"
+        password "password1234"
         created-at (Timestamp. 0)
         email2 "test2@example.com"
-        password2 "password2"]
+        password2 "password1234b"]
     (help/with-time created-at
       (db/add-user help/*db* email name password)
       (help/with-time (Timestamp. 1)
@@ -80,7 +80,7 @@
 (deftest update-user-works-when-password-is-blank
   (let [email "test@example.com"
         name "testuser"
-        password "password"
+        password "password1234"
         email2 "test2@example.com"
         password2 ""]
     (db/add-user help/*db* email name password)
@@ -93,7 +93,7 @@
 (deftest added-users-are-added-only-to-their-net-and-org-clojars-group-as-admins-and-those-groups-are-verified
   (let [email "test@example.com"
         name "testuser"
-        password "password"]
+        password "password1234"]
     (db/add-user help/*db* email name password)
     (is (= ["testuser"] (db/group-adminnames help/*db* (str "org.clojars." name) db/SCOPE-ALL)))
     (is (= ["testuser"] (db/group-activenames help/*db* (str "org.clojars." name))))
@@ -107,7 +107,7 @@
 (deftest members-can-be-added-to-groups
   (let [email "test@example.com"
         name "testuser"
-        password "password"]
+        password "password1234"]
     (db/add-user help/*db* email name password)
     (db/add-member help/*db* "test-group" db/SCOPE-ALL name "some-dude")
     (is (= ["testuser"] (db/group-activenames help/*db* "test-group")))
@@ -125,7 +125,7 @@
 (deftest admins-can-be-added-to-groups
   (let [email "test@example.com"
         name "testadmin"
-        password "password"]
+        password "password1234"]
     (db/add-user help/*db* email name password)
     (db/add-admin help/*db* "test-group" db/SCOPE-ALL name "some-dude")
     (is (= ["testadmin"] (db/group-activenames help/*db* "test-group")))

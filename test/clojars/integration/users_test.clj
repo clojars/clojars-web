@@ -19,7 +19,7 @@
 
 (deftest user-can-register
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
+      (register-as "dantheman" "test@example.org" "password1234")
       (follow-redirect)
       (has (status? 200))
       (within [:div.light-article :> :h1]
@@ -27,7 +27,7 @@
 
 (deftest user-registering-with-upcase-email-gets-downcased
   (-> (session (help/app))
-      (register-as "dantheman" "Test@example.org" "password")
+      (register-as "dantheman" "Test@example.org" "password1234")
       (follow-redirect)
       (has (status? 200))
       (within [:div.light-article :> :h1]
@@ -36,33 +36,33 @@
 
 (deftest user-registering-with-email-of-existing-user-shows-error
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
+      (register-as "dantheman" "test@example.org" "password1234")
       (follow-redirect)
       (has (status? 200))
       (within [:div.light-article :> :h1]
         (has (text? "Dashboard (dantheman)"))))
   (-> (session (help/app))
-      (register-as "dantheman2" "test@example.org" "password")
+      (register-as "dantheman2" "test@example.org" "password1234")
       (has (status? 200))
       (within [:div.error :ul :li]
         (has (text? "A user already exists with this email")))))
 
 (deftest user-registering-with-upcase-email-of-existing-user-shows-error
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
+      (register-as "dantheman" "test@example.org" "password1234")
       (follow-redirect)
       (has (status? 200))
       (within [:div.light-article :> :h1]
         (has (text? "Dashboard (dantheman)"))))
   (-> (session (help/app))
-      (register-as "dantheman2" "Test@example.org" "password")
+      (register-as "dantheman2" "Test@example.org" "password1234")
       (has (status? 200))
       (within [:div.error :ul :li]
         (has (text? "A user already exists with this email")))))
 
 (deftest bad-registration-info-should-show-error
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
       (visit "/")
       (follow "register")
@@ -76,7 +76,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Password can't be blankPassword must be 8 characters or longer")))
+        (has (text? "Password can't be blankPassword must be 12 characters or longer")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "dantheman")
@@ -88,7 +88,7 @@
       (within [:div.error :ul :li]
         (has (text? "Password must be 256 or fewer characters")))
 
-      (fill-in "Password" "password")
+      (fill-in "Password" "password1234")
       (fill-in "Email" "test@example.com")
       (fill-in "Username" "dantheman")
       (fill-in-captcha)
@@ -101,8 +101,8 @@
 
       (fill-in "Email" "")
       (fill-in "Username" "dantheman")
-      (fill-in "Password" "password")
-      (fill-in "Confirm password" "password")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
       (fill-in-captcha)
       (press "Register")
       (has (status? 200))
@@ -111,8 +111,8 @@
 
       (fill-in "Email" "not-an-email@adf@")
       (fill-in "Username" "dantheman")
-      (fill-in "Password" "password")
-      (fill-in "Confirm password" "password")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
       (fill-in-captcha)
       (press "Register")
       (has (status? 200))
@@ -122,8 +122,8 @@
       (fill-in "Email" (apply str "too-long@foo."
                               (repeat 250 "a")))
       (fill-in "Username" "dantheman")
-      (fill-in "Password" "password")
-      (fill-in "Confirm password" "password")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
       (fill-in-captcha)
       (press "Register")
       (has (status? 200))
@@ -132,16 +132,16 @@
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "")
-      (fill-in "Password" "password")
-      (fill-in "Confirm password" "password")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
       (fill-in-captcha)
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
         (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.Username can't be blank")))
       (fill-in "Username" "<script>")
-      (fill-in "Password" "password")
-      (fill-in "Confirm password" "password")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
       (fill-in-captcha)
       (press "Register")
       (has (status? 200))
@@ -149,8 +149,8 @@
         (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.")))
 
       (fill-in "Username" "fixture")
-      (fill-in "Password" "password")
-      (fill-in "Confirm password" "password")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
       (fill-in-captcha)
       (press "Register")
       (has (status? 200))
@@ -158,16 +158,16 @@
         (has (text? "Username is already taken")))
 
       (fill-in "Username" "fixture2")
-      (fill-in "Password" "password")
-      (fill-in "Confirm password" "password")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
       (fill-in-captcha "bad-value")
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
         (has (text? "Captcha response is invalid.")))
       (fill-in "Username" "fixture2")
-      (fill-in "Password" "password")
-      (fill-in "Confirm password" "password")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
       (fill-in-captcha "")
       (press "Register")
       (has (status? 200))
@@ -177,13 +177,13 @@
 (deftest user-can-update-info
   (email/expect-mock-emails 3)
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password")
+      (register-as "fixture" "fixture@example.org" "password1234")
       (follow-redirect)
       (follow "profile")
       (fill-in "Email" "fixture2@example.org")
-      (fill-in "Current password" "password")
-      (fill-in "New password" "password2")
-      (fill-in "Confirm new password" "password2")
+      (fill-in "Current password" "password1234")
+      (fill-in "New password" "password1234b")
+      (fill-in "Confirm new password" "password1234b")
       (press "Update")
       (follow-redirect)
       (within [:div#notice]
@@ -193,7 +193,7 @@
       (has (status? 200))
       (within [:nav [:li enlive/first-child] :a]
         (has (text? "login")))
-      (login-as "fixture" "password2")
+      (login-as "fixture" "password1234b")
       (follow-redirect)
       (has (status? 200))
       (within [:div.light-article :> :h1]
@@ -206,11 +206,11 @@
 (deftest user-can-update-just-email
   (email/expect-mock-emails 2)
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password")
+      (register-as "fixture" "fixture@example.org" "password1234")
       (follow-redirect)
       (follow "profile")
       (fill-in "Email" "fixture2@example.org")
-      (fill-in "Current password" "password")
+      (fill-in "Current password" "password1234")
       (press "Update")
       (follow-redirect)
       (within [:div#notice]
@@ -229,13 +229,13 @@
 
 (deftest user-cannot-update-email-to-another-users-email
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
-      (register-as "fixture2" "fixture2@example.org" "password")
+      (register-as "fixture2" "fixture2@example.org" "password1234")
       (follow-redirect)
       (follow "profile")
       (fill-in "Email" "fixture@example.org")
-      (fill-in "Current password" "password")
+      (fill-in "Current password" "password1234")
       (press "Update")
       (within [:div.error :ul :li]
         (has (text? "A user already exists with this email")))))
@@ -243,12 +243,12 @@
 (deftest user-can-update-just-password
   (email/expect-mock-emails 1)
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password")
+      (register-as "fixture" "fixture@example.org" "password1234")
       (follow-redirect)
       (follow "profile")
-      (fill-in "Current password" "password")
-      (fill-in "New password" "password2")
-      (fill-in "Confirm new password" "password2")
+      (fill-in "Current password" "password1234")
+      (fill-in "New password" "password1234b")
+      (fill-in "Confirm new password" "password1234b")
       (press "Update")
       (follow-redirect)
       (within [:div#notice]
@@ -258,7 +258,7 @@
       (has (status? 200))
       (within [:nav [:li enlive/first-child] :a]
         (has (text? "login")))
-      (login-as "fixture" "password2")
+      (login-as "fixture" "password1234b")
       (follow-redirect)
       (has (status? 200))
       (within [:div.light-article :> :h1]
@@ -272,7 +272,7 @@
 
 (deftest bad-update-info-should-show-error
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password")
+      (register-as "fixture" "fixture@example.org" "password1234")
       (follow-redirect)
       (follow "profile")
       (has (status? 200))
@@ -291,21 +291,21 @@
       (within [:div.error :ul :li]
         (has (text? "Current password is incorrect")))
 
-      (fill-in "New password" "newpassword")
-      (fill-in "Confirm new password" "newpassword")
+      (fill-in "New password" "newpassword1")
+      (fill-in "Confirm new password" "newpassword1")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
         (has (text? "Current password can't be blankCurrent password is incorrect")))
 
-      (fill-in "Current password" "password")
-      (fill-in "New password" "newpassword")
+      (fill-in "Current password" "password1234")
+      (fill-in "New password" "newpassword1")
       (press "Update")
       (has (status? 200))
       (within [:div.error :ul :li]
         (has (text? "Password and confirm password must match")))
 
-      (fill-in "Current password" "password")
+      (fill-in "Current password" "password1234")
       (fill-in "Email" "")
       (press "Update")
       (has (status? 200))
@@ -315,7 +315,7 @@
 (deftest user-can-get-new-password
   (email/expect-mock-emails 1)
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   (-> (session (help/app))
       (visit "/")
       (follow "login")
@@ -363,7 +363,7 @@
 (deftest user-can-enter-invalid-email-for-password-reset
   (email/expect-mock-emails 0)
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
+      (register-as "fixture" "fixture@example.org" "password1234"))
   ;; force an invalid email address
   (db/update-user help/*db* "fixture" "" nil)
   (-> (session (help/app))
@@ -386,15 +386,15 @@
 
 (deftest users-can-be-viewed
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password")
+      (register-as "dantheman" "test@example.org" "password1234")
       (visit "/users/dantheman")
       (within [:div.light-article :> :h1]
         (has (text? "dantheman")))))
 
 (deftest user-is-emailed-when-activating-and-deactivating-mfa
   (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password"))
-  (let [[otp-secret] (enable-mfa (session (help/app)) "fixture" "password")
+      (register-as "fixture" "fixture@example.org" "password1234"))
+  (let [[otp-secret] (enable-mfa (session (help/app)) "fixture" "password1234")
         _ (is (true? (email/wait-for-mock-emails)))
         [address title body] (first @email/mock-emails)]
     (is (= "fixture@example.org" address))
@@ -403,7 +403,7 @@
 
     (testing "when manually disabled"
       (email/expect-mock-emails 1)
-      (disable-mfa (session (help/app)) "fixture" "password" otp-secret)
+      (disable-mfa (session (help/app)) "fixture" "password1234" otp-secret)
       (is (true? (email/wait-for-mock-emails)))
       (let [[address title body] (first @email/mock-emails)]
         (is (= "fixture@example.org" address))
@@ -414,8 +414,8 @@
 
     (testing "when recovery code used"
       (email/expect-mock-emails 2)
-      (let [[_otp-secret recovery-code] (enable-mfa (session (help/app)) "fixture" "password")]
-        (login-as (session (help/app)) "fixture" "password" recovery-code)
+      (let [[_otp-secret recovery-code] (enable-mfa (session (help/app)) "fixture" "password1234")]
+        (login-as (session (help/app)) "fixture" "password1234" recovery-code)
         ;; wait for the enable then recovery emails to be sent
         (is (true? (email/wait-for-mock-emails)))
         (let [[address title body] (second @email/mock-emails)]
