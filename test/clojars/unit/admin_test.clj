@@ -36,7 +36,7 @@
               admin/*storage* (storage/multi-storage
                                (storage/fs-storage (:repo config))
                                (storage/s3-storage s3-client))]
-      (db/add-user admin/*db* "testuser@example.com" "testuser" "password")
+      (db/add-user admin/*db* "testuser@example.com" "testuser" "password1234")
       (help/add-verified-group "testuser" "org.ham")
       (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "1" :description "delete me"})
       (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "2" :description ""})

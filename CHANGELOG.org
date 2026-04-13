@@ -5,6 +5,9 @@ Newest items at the top. Note that updates before 2022-August were copied from
 
 ** 2026-April
 
+*** Unreleased
++ [[https://github.com/clojars/clojars-web/pull/934][Increase minimum password length from 8 to 12 characters]] ([[https://github.com/danielcompton][Daniel Compton]])
+
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-04-05.2249][2026-04-05.2249]]
 + [[https://github.com/clojars/clojars-web/commit/55fc4e3a741a69b84c37c4451966fe931231639c][Fix problem detail response when deploy attempted with non-token value]] ([[https://github.com/tobias][Toby Crawley]])
 

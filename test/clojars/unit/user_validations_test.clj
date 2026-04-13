@@ -12,12 +12,12 @@
   help/with-clean-database)
 
 (deftest test-password-validations
-  (is (nil? (uv/validate {:password "abcdefgh"} (uv/password-validations "abcdefgh"))))
+  (is (nil? (uv/validate {:password "abcdefghijkl"} (uv/password-validations "abcdefghijkl"))))
   (is (match?
-       {:password ["Password must be 8 characters or longer"]}
+       {:password ["Password must be 12 characters or longer"]}
        (uv/validate {:password "a"} (uv/password-validations "a"))))
   (is (match?
-       {:password ["Password must be 8 characters or longer"
+       {:password ["Password must be 12 characters or longer"
                    "Password and confirm password must match"]}
        (uv/validate {:password "a"} (uv/password-validations "b"))))
   (let [long-password (apply str (repeat 257 "a"))]
@@ -29,7 +29,7 @@
   (is (nil? (uv/validate {:email "foo@example.com"
                           :username "auser"}
                          (uv/user-validations help/*db*))))
-  (db/add-user help/*db* "foo@example.com" "auser" "password1")
+  (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
   (is (match?
        {:email ["A user already exists with this email"]}
        (uv/validate {:email "foo@example.com"
@@ -75,73 +75,73 @@
                                       {:success (= "valid" (get-in request-info [:form-params :response]))}))
       (is (nil?
            (uv/validate {:email "foo@example.com"
-                         :password "password1"
+                         :password "password1234a"
                          :username "auser"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1"))))
+                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
       (is (match?
            {:captcha ["Captcha response is invalid."]}
            (uv/validate {:email "foo@example.com"
-                         :password "password1"
+                         :password "password1234a"
                          :username "auser"
                          :captcha "invalid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1"))))
+                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
       (is (match?
            {:password ["Password can't be blank"
-                       "Password must be 8 characters or longer"
+                       "Password must be 12 characters or longer"
                        "Password and confirm password must match"]}
            (uv/validate {:email "foo@example.com"
                          :password ""
                          :username "auser"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1"))))
-      (db/add-user help/*db* "foo@example.com" "auser" "password1")
+                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
+      (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
       (is (match?
            {:username ["Username is already taken"]
             :email ["A user already exists with this email"]}
            (uv/validate {:email "foo@example.com"
-                         :password "password1"
+                         :password "password1234a"
                          :username "auser"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1"))))
+                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
       (is (match?
            {:username ["Username is already taken"]}
            (uv/validate {:email "foo2@example.com"
-                         :password "password1"
+                         :password "password1234a"
                          :username "admin"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1"))))
+                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
       (db/add-group help/*db* "auser" "agroup")
       (is (match?
            {:username ["Username is already taken"]}
            (uv/validate {:email "foo2@example.com"
-                         :password "password1"
+                         :password "password1234a"
                          :username "agroup"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1")))))))
+                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a")))))))
 
 (deftest test-reset-password-validations
-  (db/add-user help/*db* "foo@example.com" "auser" "password1")
+  (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
   (let [reset-code (db/set-password-reset-code! help/*db* "auser")]
     (is (nil?
          (uv/validate {:reset-code reset-code
-                       :password "password1"}
-                      (uv/reset-password-validations help/*db* "password1"))))
+                       :password "password1234a"}
+                      (uv/reset-password-validations help/*db* "password1234a"))))
     (is (match?
          {:reset-code ["Reset code can't be blank."]}
          (uv/validate {:reset-code ""
-                       :password "password1"}
-                      (uv/reset-password-validations help/*db* "password1"))))
+                       :password "password1234a"}
+                      (uv/reset-password-validations help/*db* "password1234a"))))
     (is (match?
          {:reset-code ["The reset code does not exist or it has expired."]}
          (uv/validate {:reset-code "foo"
-                       :password "password1"}
-                      (uv/reset-password-validations help/*db* "password1"))))))
+                       :password "password1234a"}
+                      (uv/reset-password-validations help/*db* "password1234a"))))))
 
 (deftest current-password-validations
-  (db/add-user help/*db* "foo@example.com" "auser" "password1")
+  (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
   (is (nil?
-       (uv/validate {:current-password "password1"}
+       (uv/validate {:current-password "password1234a"}
                     (uv/current-password-validations help/*db* "auser"))))
   (is (match?
        {:current-password ["Current password can't be blank"

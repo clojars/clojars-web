@@ -15,7 +15,7 @@
 (defn session
   []
   (let [session (-> (kerodon/session (help/app))
-                    (register-as "dantheman" "test@example.org" "password"))]
+                    (register-as "dantheman" "test@example.org" "password1234"))]
     (email/expect-mock-emails 1)
     session))
 

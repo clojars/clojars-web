@@ -10,7 +10,7 @@
 
 (defn password-validations
   [confirm]
-  [[:password (pred/min-length 8) "Password must be 8 characters or longer"]
+  [[:password (pred/min-length 12) "Password must be 12 characters or longer"]
    [:password #(= % confirm) "Password and confirm password must match"]
    [:password (pred/max-length 256) "Password must be 256 or fewer characters"]])
 

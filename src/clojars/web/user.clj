@@ -49,6 +49,7 @@
                                    :placeholder "bob"}
                                   :username)
                       (label :password "Password")
+                      [:p.hint "Must be at least 12 characters."]
                       (password-field {:placeholder "keep it secret, keep it safe"
                                        :required true}
                                       :password)
@@ -87,6 +88,7 @@
                (label :current-password "Current password")
                (password-field :current-password)
                (label :password "New password")
+               [:p.hint "Must be at least 12 characters."]
                (password-field :password)
                (label :confirm "Confirm new password")
                (password-field :confirm)
@@ -238,6 +240,7 @@
                                      :disabled "disabled"}
                                     :ignored-email)
                         (label :password "New password")
+                        [:p.hint "Must be at least 12 characters."]
                         (password-field {:placeholder "keep it secret, keep it safe"
                                          :required true}
                                         :password)

@@ -39,14 +39,14 @@
         (reify UsernamePasswordValidator
           (login [_ username password]
             (when (or (not= "username" username)
-                      (not= "password" password))
+                      (not= "password1234" password))
               (throw (LoginFailedException.)))))))
       (.start server)
       ((email/simple-mailer {:host "localhost"
                              :port (.getPort server)
                              :from "example@example.org"
                              :username "username"
-                             :password "password"})
+                             :password "password1234"})
        "to@example.org"
        "the subject"
        "A message")
