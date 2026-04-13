@@ -2,7 +2,6 @@
   (:require
    [buddy.core.codecs :as codecs]
    [cemerick.pomegranate.aether :as aether]
-   [cheshire.core :as json]
    [clj-http.client :as http]
    [clj-http.cookies :as http-cookies]
    [clj-http.core :as http-core]
@@ -195,7 +194,7 @@
 
         (is (thrown-with-msg?
              DeploymentException
-             #"Forbidden - The provided token's scope doesn't allow deploying this artifact"
+             #"status=403,.*detail='The provided token's scope doesn't allow deploying this artifact"
               (deploy
                {:coordinates '[org.dantheman/test "0.0.2"]
                 :jar-file (io/file (io/resource "test.jar"))
@@ -221,7 +220,7 @@
 
         (is (thrown-with-msg?
              DeploymentException
-             #"Forbidden - The provided token's scope doesn't allow deploying this artifact"
+             #"status=403,.*detail='The provided token's scope doesn't allow deploying this artifact"
               (deploy
                {:coordinates '[org.clojars.dantheman/test2 "0.0.1"]
                 :jar-file (io/file (io/resource "test.jar"))
@@ -279,7 +278,7 @@
       (help/with-time (Timestamp. (+ (.getTime (db/get-time)) (* 2 1000 60 60))) ;; 2 hours
         (is (thrown-with-msg?
              DeploymentException
-             #"401 Unauthorized"
+             #"401.*Unauthorized"
               (deploy
                {:coordinates '[org.clojars.dantheman/test "0.0.2"]
                 :jar-file (io/file (io/resource "test.jar"))
@@ -302,7 +301,7 @@
     (db/disable-deploy-token db (:id db-token))
     (is (thrown-with-msg?
          DeploymentException
-         #"401 Unauthorized"
+         #"401.*Unauthorized"
           (deploy
            {:coordinates '[org.clojars.dantheman/test "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -414,7 +413,7 @@
       (register-as "fixture" "fixture@example.org" "password"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
-                          #"Forbidden - You don't have access to the 'org\.clojars\.fixture/test' project"
+                          #"status=403,.*detail='You don't have access to the 'org\.clojars\.fixture/test' project"
           (deploy
            {:coordinates '[org.clojars.fixture/test "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -478,7 +477,7 @@
     (testing "User can't deploy to another project in the group if it only has rights to a single project"
       (is (thrown-with-msg?
            DeploymentException
-           #"Forbidden - You don't have access to the 'org.clojars.fixture/test2' project"
+           #"status=403,.*detail='You don't have access to the 'org.clojars.fixture/test2' project"
             (deploy
              {:coordinates '[org.clojars.fixture/test2 "0.0.1"]
               :jar-file (io/file (io/resource "test.jar"))
@@ -492,7 +491,7 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
-                          #"Forbidden - Group 'new-group' doesn't exist. See https://bit.ly/3MuKGXO"
+                          #"status=403,.*detail='Group 'new-group' doesn't exist. See https://bit.ly/3MuKGXO"
           (deploy
            {:coordinates '[new-group/test "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -552,7 +551,7 @@
     (db/add-admin help/*db* "legacy-group" db/SCOPE-ALL "dantheman" "testing")
 
     (is (thrown-with-msg? DeploymentException
-                          #"Forbidden - Group 'legacy-group' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"
+                          #"status=403,.*detail='Group 'legacy-group' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"
           (deploy
            {:coordinates '[legacy-group/test "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -579,7 +578,7 @@
       :password  token})
     (is (thrown-with-msg?
          DeploymentException
-         #"Forbidden - redeploying non-snapshots"
+         #"status=403,.*detail='redeploying non-snapshots"
           (deploy
            {:coordinates '[org.clojars.dantheman/test "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -600,7 +599,7 @@
     (help/add-verified-group "dantheman" "org.tcrawley")
     (is (thrown-with-msg?
          DeploymentException
-         #"Forbidden - shadowing Maven Central"
+         #"status=403, title='Cannot shadow Maven Central"
           (deploy
            {:coordinates '[org.tcrawley/dynapath "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -638,7 +637,7 @@
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg?
          DeploymentException
-         #"Forbidden - the POM file does not include a license"
+         #"status=403,.*detail='the POM file does not include a license"
           (deploy
            {:coordinates '[org.clojars.dantheman/test "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -888,7 +887,7 @@
 (deftest anonymous-cannot-deploy
   (is (thrown-with-msg?
        DeploymentException
-       #"Unauthorized"
+       #"status=401, title='No deploy token provided"
         (deploy
          {:coordinates '[org.clojars.dantheman/test "1.0.0"]
           :jar-file (io/file (io/resource "test.jar"))
@@ -899,7 +898,7 @@
 (deftest bad-login-cannot-deploy
   (is (thrown-with-msg?
        DeploymentException
-       #"Unauthorized - a deploy token is required to deploy"
+       #"status=401,.*detail='a deploy token is required to deploy"
         (deploy
          {:coordinates '[org.clojars.dantheman/test "1.0.0"]
           :jar-file (io/file (io/resource "test.jar"))
@@ -917,7 +916,7 @@
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg?
          DeploymentException
-         #"Forbidden - the group in the pom \(org.clojars.dantheman\) does not match the group you are deploying to \(net.clojars.dantheman\)"
+         #"status=403,.*detail='the group in the pom \(org.clojars.dantheman\) does not match the group you are deploying to \(net.clojars.dantheman\)"
           (deploy
            {:coordinates '[net.clojars.dantheman/test "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -934,7 +933,7 @@
 
     (is (thrown-with-msg?
          DeploymentException
-         #"Forbidden - the name in the pom \(test\) does not match the name you are deploying to \(toast\)"
+         #"status=403,.*detail='the name in the pom \(test\) does not match the name you are deploying to \(toast\)"
           (deploy
            {:coordinates '[org.clojars.dantheman/toast "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -951,7 +950,7 @@
 
     (is (thrown-with-msg?
          DeploymentException
-         #"Forbidden - the version in the pom \(0.0.1\) does not match the version you are deploying to \(1.0.0\)"
+         #"status=403,.*detail='the version in the pom \(0.0.1\) does not match the version you are deploying to \(1.0.0\)"
           (deploy
            {:coordinates '[org.clojars.dantheman/test "1.0.0"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -966,94 +965,13 @@
                        :message "the version in the pom (0.0.1) does not match the version you are deploying to (1.0.0)"
                        :tag "pom-file-mismatch-version"})))
 
-;; TODO: (toby) remove this test once we can upgrade to a version of pomegranate that
-;; honors problem details
-(deftest deploy-requires-path-to-match-pom-problem-details
-  (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
-        add-checksums (partial mapcat (fn [[f no-version?]]
-                                        [[f no-version?]
-                                         [(tmp-checksum-file f :md5) no-version?]
-                                         [(tmp-checksum-file f :sha1) no-version?]]))
-        files (add-checksums [[(tmp-file
-                                (io/file (io/resource "test.jar")) "test-0.0.1.jar")]
-                              [(tmp-file
-                                (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                                  {:groupId "new-group"})
-                                "test-0.0.1.pom")]
-                              [(tmp-file
-                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
-                                "maven-metadata.xml")
-                               :no-version]])
-        ;; we use clj-http here instead of aether to be able to get the problem details
-        [failure-response] (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
-                             (filterv
-                              #(= 403 (:status %))
-                              (for [[f no-version?] files]
-                                (http/put (format "%s/org/clojars/dantheman/test/%s%s"
-                                                  (repo-url)
-                                                  (if no-version? "" "0.0.1/")
-                                                  (.getName f))
-                                          {:body f
-                                           :basic-auth ["dantheman" token]
-                                           :throw-exceptions false}))))
-        failure-body (json/parse-string (:body failure-response) true)]
-    (is (= "application/problem+json" (get-in failure-response [:headers "Content-Type"])))
-    (is (match?
-         {:detail  "the group in the pom (new-group) does not match the group you are deploying to (org.clojars.dantheman)"
-          :status  403
-          :title   "Invalid POM file"
-          :type    "https://clojars.org/validation-error"}
-         failure-body))))
-
-;; TODO: (toby) remove this test once we can upgrade to a version of pomegranate that
-;; honors problem details
-(deftest deploy-requires-token
-  (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password"))
-  (let [add-checksums (partial mapcat (fn [[f no-version?]]
-                                        [[f no-version?]
-                                         [(tmp-checksum-file f :md5) no-version?]
-                                         [(tmp-checksum-file f :sha1) no-version?]]))
-        files (add-checksums [[(tmp-file
-                                (io/file (io/resource "test.jar")) "test-0.0.1.jar")]
-                              [(tmp-file
-                                (help/rewrite-pom (io/file (io/resource "test-0.0.1/test.pom"))
-                                                  {:groupId "new-group"})
-                                "test-0.0.1.pom")]
-                              [(tmp-file
-                                (io/file (io/resource "test-0.0.1/maven-metadata.xml"))
-                                "maven-metadata.xml")
-                               :no-version]])
-        ;; we use clj-http here instead of aether to be able to get the problem details
-        [failure-response] (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
-                             (filterv
-                              #(= 401 (:status %))
-                              (for [[f no-version?] files]
-                                (http/put (format "%s/org/clojars/dantheman/test/%s%s"
-                                                  (repo-url)
-                                                  (if no-version? "" "0.0.1/")
-                                                  (.getName f))
-                                          {:body f
-                                           :basic-auth ["dantheman" "not-a-token"]
-                                           :throw-exceptions false}))))
-        failure-body (json/parse-string (:body failure-response) true)]
-    (is (= "application/problem+json" (get-in failure-response [:headers "Content-Type"])))
-    (is (match?
-         {:detail  "a deploy token is required to deploy. See https://bit.ly/3LmCclv"
-          :status  401
-          :title   "No deploy token provided"
-          :type    "https://clojars.org/validation-error"}
-         failure-body))))
-
 (deftest deploy-requires-path-to-match-module
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg?
          DeploymentException
-         #"Forbidden - the component group in the gradle module \(org.clojars.dantheman\) does not match the group you are deploying to \(net.clojars.dantheman\)"
+         #"status=403,.*detail='the component group in the gradle module \(org.clojars.dantheman\) does not match the group you are deploying to \(net.clojars.dantheman\)"
           (deploy
            {:coordinates '[net.clojars.dantheman/test "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -1071,7 +989,7 @@
 
     (is (thrown-with-msg?
          DeploymentException
-         #"Forbidden - the component module in the gradle module \(test\) does not match the module you are deploying to \(toast\)"
+         #"status=403,.*detail='the component module in the gradle module \(test\) does not match the module you are deploying to \(toast\)"
           (deploy
            {:coordinates '[org.clojars.dantheman/toast "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -1089,7 +1007,7 @@
 
     (is (thrown-with-msg?
          DeploymentException
-         #"Forbidden - the component version in the gradle module \(0.0.1\) does not match the version you are deploying to \(1.0.0\)"
+         #"status=403,.*detail='the component version in the gradle module \(0.0.1\) does not match the version you are deploying to \(1.0.0\)"
           (deploy
            {:coordinates '[org.clojars.dantheman/test "1.0.0"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -1110,7 +1028,7 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
-                          #"Forbidden - project names must consist solely of lowercase"
+                          #"status=403,.*detail='project names must consist solely of lowercase"
           (deploy
            {:coordinates '[org.clojars.dantheman/teST "0.0.1"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -1131,7 +1049,7 @@
       (register-as "dantheman" "test@example.org" "password"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")]
     (is (thrown-with-msg? DeploymentException
-                          #"Forbidden - version strings must consist solely of letters"
+                          #"status=403,.*detail='version strings must consist solely of letters"
           (deploy
            {:coordinates '[org.clojars.dantheman/test "1.α.0"]
             :jar-file (io/file (io/resource "test.jar"))
@@ -1143,7 +1061,6 @@
                       {:user "dantheman"
                        :group_name "org.clojars.dantheman"
                        :jar_name "test"
-                       :version "1.α.0"
                        :message "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX"
                        :tag "version-invalid"})))
 
@@ -1343,7 +1260,7 @@
     (testing "deploying without mfa fails"
       (is (thrown-with-msg?
            DeploymentException
-           #"403 Forbidden - .* requires you to have two-factor auth enabled to deploy"
+           #"status=403,.*detail='.* requires you to have two-factor auth enabled to deploy"
             (deploy
              {:coordinates '[org.clojars.dantheman/test "0.0.2"]
               :jar-file (io/file (io/resource "test.jar"))

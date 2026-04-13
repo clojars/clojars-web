@@ -85,34 +85,41 @@
   [a b]
   (if (and a b) (= a b) true))
 
+
+(def ^:private upload-dir-lock (Object.))
+
 (defn find-upload-dir
   ^File [group artifact version timestamp-version session]
-  (let [token-id (:id (token-from-session session))
-        parent-upload-dir (io/file "tmp"
-                                   group
-                                   artifact
-                                   (format "token-%s" token-id))
-        upload-dirs (.listFiles parent-upload-dir)]
-    (if-let [dir (some (fn [^File dir]
-                         (let [metadata (read-metadata dir)]
-                           (when (and dir
-                                      (.exists dir)
-                                      (equal-if-present (:version metadata) version)
-                                      (equal-if-present (:timestamp-version metadata)
-                                                        timestamp-version))
-                             dir)))
-                       ;; We reverse sort the upload dirs to get the newer dirs
-                       ;; first (the dir name includes the creation time in
-                       ;; millis). When we are finalizing a deploy, we don't
-                       ;; have the version, since the finalize is triggered by
-                       ;; the maven-metadata.xml upload, which isn't versioned.
-                       ;; This means we use whatever dir for the group+artifact
-                       ;; that we find first, which may not be the correct dir.
-                       (sort #(compare %2 %1) upload-dirs))]
-      dir
-      (doto (io/file parent-upload-dir
-                     (format "%s-%s" (System/currentTimeMillis) (UUID/randomUUID)))
-        (FileUtils/forceMkdir)))))
+  ;; Lock to prevent concurrent artifact uploads for the same deploy from
+  ;; creating two different upload dirs. HttpTransporter uploads some artifacts
+  ;; in parallel.
+  (locking upload-dir-lock
+    (let [token-id (:id (token-from-session session))
+          parent-upload-dir (io/file "tmp"
+                                     group
+                                     artifact
+                                     (format "token-%s" token-id))
+          upload-dirs (.listFiles parent-upload-dir)]
+      (if-let [dir (some (fn [^File dir]
+                           (let [metadata (read-metadata dir)]
+                             (when (and dir
+                                        (.exists dir)
+                                        (equal-if-present (:version metadata) version)
+                                        (equal-if-present (:timestamp-version metadata)
+                                                          timestamp-version))
+                               dir)))
+                         ;; We reverse sort the upload dirs to get the newer dirs
+                         ;; first (the dir name includes the creation time in
+                         ;; millis). When we are finalizing a deploy, we don't
+                         ;; have the version, since the finalize is triggered by
+                         ;; the maven-metadata.xml upload, which isn't versioned.
+                         ;; This means we use whatever dir for the group+artifact
+                         ;; that we find first, which may not be the correct dir.
+                         (sort #(compare %2 %1) upload-dirs))]
+        dir
+        (doto (io/file parent-upload-dir
+                       (format "%s-%s" (System/currentTimeMillis) (UUID/randomUUID)))
+          (FileUtils/forceMkdir))))))
 
 (def ^:private ^:dynamic *db*
   "Used to avoid passing the db to every fn that needs to audit."
