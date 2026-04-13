@@ -106,7 +106,7 @@
                    :main-opts ["-m" "clj-check.check"]}
 
            :dev {:extra-deps
-                 {clj-commons/pomegranate {:mvn/version "1.2.25"}
+                 {clj-commons/pomegranate {:mvn/version "1.3.26"}
 
                   ;; manually imported clj-kondo to .clj-kondo/imports/kerodon/kerodon
                   kerodon/kerodon {:mvn/version "0.9.1"}
