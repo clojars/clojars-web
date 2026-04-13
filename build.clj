@@ -24,7 +24,11 @@
   (b/uber {:class-dir class-dir
            :uber-file uber-file
            :basis basis
-           :main 'clojars.main}))
+           :main 'clojars.main
+           ;; xml-apis ships a `license/` directory that collides with a
+           ;; top-level `LICENSE` file from another lib on case-insensitive
+           ;; filesystems (e.g. default macOS).
+           :exclude ["^license/.*"]}))
 
 (defn tag-release [_]
   (let [version (format "%s.%s" (LocalDate/now) (b/git-count-revs nil))]
