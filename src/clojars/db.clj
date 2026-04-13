@@ -865,10 +865,10 @@
                 :single_use (jdbc.types/as-other (if single-use?
                                                    "yes"
                                                    "no"))
-                :expires_at expires-at}]
-    (sql/insert! db :deploy_tokens
-                 (update record :token bcrypt))
-    record))
+                :expires_at expires-at}
+        {:deploy_tokens/keys [id]} (sql/insert! db :deploy_tokens
+                                                (update record :token bcrypt))]
+    (assoc record :token_id id)))
 
 (defn find-deploy-tokens-for-user
   [db user-id]
@@ -912,17 +912,18 @@
                {:id token-id
                 :token_hash nil}))
 
-(defn add-audit [db tag username group-name jar-name version message]
+(defn add-audit [db tag username token-id group-name jar-name version message]
   (sql/insert! db :audit
                {:tag        tag
                 user-column username
                 :group_name group-name
                 :jar_name   jar-name
                 :version    version
-                :message    message}))
+                :message    message
+                :token_id   token-id}))
 
 (defn find-audit
-  [db {:keys [username group-name jar-name version]}]
+  [db {:keys [username group-name jar-name version token-id]}]
   (when-some [where (cond
                       version    [:and
                                   [:= :group_name group-name]
@@ -933,6 +934,7 @@
                                   [:= :jar_name jar-name]]
                       group-name [:= :group_name group-name]
                       username   [:= :user username]
+                      token-id   [:= :token_id token-id]
                       :else      nil)]
     (q db
        {:select :*

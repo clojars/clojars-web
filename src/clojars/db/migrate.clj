@@ -91,6 +91,12 @@
                         "tag text not null,"
                         "created timestamp not null default current_timestamp)")]))
 
+(defn- add-token-id-to-audit-table
+  [tx]
+  (db/do-commands tx
+                  ["alter table audit add column token_id integer" ; references deploy_tokens(id)
+                   ]))
+
 (defn- add-single-use-to-tokens
   [tx]
   (db/do-commands tx
@@ -150,6 +156,7 @@
    #'add-hash-to-deploy-tokens-table
    #'add-group-verifications-table
    #'add-audit-table
+   #'add-token-id-to-audit-table
    #'add-single-use-to-tokens
    #'add-expires-at-to-tokens
    #'add-send-deploy-emails-to-users

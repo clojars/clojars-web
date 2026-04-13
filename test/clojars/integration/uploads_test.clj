@@ -11,7 +11,7 @@
    [clojars.email :as email]
    [clojars.file-utils :as fu]
    [clojars.http-utils :refer [clear-sessions!]]
-   [clojars.integration.steps :refer [create-deploy-token login-as register-as]]
+   [clojars.integration.steps :refer [create-deploy-token create-deploy-token* login-as register-as]]
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
    [clojars.web.common :as common]
@@ -84,7 +84,7 @@
 (deftest user-can-register-and-deploy
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password"))
-  (let [token (create-deploy-token (session (help/app)) "dantheman" "password" "testing")
+  (let [{:keys [token token-id]} (create-deploy-token* (session (help/app)) "dantheman" "password" "testing")
         now (db/get-time)]
     (with-redefs [db/get-time (constantly now)]
       (deploy
@@ -110,7 +110,8 @@
                        :user "dantheman"
                        :group_name "org.clojars.dantheman"
                        :jar_name "test"
-                       :version "0.0.1"})
+                       :version "0.0.1"
+                       :token_id token-id})
 
     (-> (session (help/app))
         (visit "/groups/org.clojars.dantheman")

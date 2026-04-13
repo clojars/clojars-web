@@ -7,13 +7,17 @@
    [hiccup.form :refer [check-box drop-down label text-field submit-button]]))
 
 (defn- new-token-message
-  [{:keys [name token]}]
+  [{:keys [name token token_id]}]
   (when token
     (list
-     [:p (format "Your new deploy token '%s' has been created. It will only be shown this one time, so be sure to copy it now:"
-                 name)]
+     [:p (format "Your new deploy token '%s' with id '%s' has been created. It will only be shown this one time, so be sure to copy it now:"
+                 name
+                 token_id)]
      [:div.new-token
-      [:pre token]])))
+      [:pre token]]
+     [:p "Token ID:"]
+     [:div.token-id
+      [:pre token_id]])))
 
 (defn- scope
   [{:keys [group_name jar_name]}]
@@ -95,6 +99,7 @@
        [:table.table.deploy-tokens
         [:thead
          [:tr
+          [:th "Token ID"]
           [:th "Token Name"]
           [:th "Scope"]
           [:th "Single Use?"]
@@ -114,6 +119,7 @@
                                                 (when expired? "token-expired")
                                                 (when used? "token-used")]))]]
            [:tr {:class classes}
+            [:td.id (:id token)]
             [:td.name (:name token)]
             [:td.scope (scope token)]
             [:td.single-use (:single_use token)]

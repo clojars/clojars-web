@@ -467,7 +467,8 @@
           (read-metadata dir)
 
           md-file (io/file dir group-path name "maven-metadata.xml")]
-      (log/with-context {:version version}
+      (log/with-context {:version version
+                         :token-id (:id (token-from-session session))}
         ;; since we trigger on maven-metadata.xml, we don't actually
         ;; have the sums for it because they are uploaded *after* the
         ;; metadata file itself. This means that it's possible for a

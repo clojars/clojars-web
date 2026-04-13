@@ -194,7 +194,7 @@
                                      :version "1.0"})
 
   ;; And: and audit record
-  (db/add-audit admin/*db* "testing" "testuser" nil nil nil "a message")
+  (db/add-audit admin/*db* "testing" "testuser" nil nil nil nil "a message")
 
   (let [user-id      (:id (db/find-user admin/*db* "testuser"))
 

@@ -64,8 +64,8 @@
 
 (defn audit
   [db m]
-  (let [{:keys [group artifact message tag username version]} (merge *context* m)]
-    (db/add-audit db (name tag) username group artifact version message)))
+  (let [{:keys [group artifact message tag username token-id version]} (merge *context* m)]
+    (db/add-audit db (name tag) username token-id group artifact version message)))
 
 (defn trace-id
   []
