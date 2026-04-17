@@ -9,6 +9,7 @@
                               update-user
                               update-user-notifications]]
    [clojars.event :as event]
+   [clojars.http-utils :as http-utils]
    [clojars.hcaptcha :as hcaptcha]
    [clojars.log :as log]
    [clojars.notifications.common :as notif-common]
@@ -100,7 +101,8 @@
     (str/lower-case (str/trim email))))
 
 (defn update-profile
-  [db event-emitter account {:keys [email current-password password confirm] :as params} details]
+  [db event-emitter account {:keys [email current-password password confirm] :as params} details
+   keep-session-key]
   (let [email (normalize-email email)]
     (log/with-context {:tag :update-profile
                        :username account}
@@ -128,6 +130,7 @@
                                 :old-email old-email}
                                details)))
           (when password-changed?
+            (http-utils/clear-sessions-for-user! account :keep-session-key keep-session-key)
             (event/emit event-emitter :password-changed
                         (merge {:username account}
                                details)))
@@ -268,6 +271,7 @@
         (reset-password-form db reset-code (apply concat (vals errors))))
       (let [{username :user} (db/find-user-by-password-reset-code db reset-code)]
         (db/reset-user-password db username reset-code password)
+        (http-utils/clear-sessions-for-user! username)
         (log/info {:status :success
                    :username username})
         (event/emit event-emitter :password-changed
