@@ -203,6 +203,29 @@
            "Your Clojars password was changed"}
          (into #{} (map second) @email/mock-emails))))
 
+(deftest password-change-from-profile-invalidates-other-sessions
+  (let [primary (-> (session (help/app))
+                    (register-as "fixture" "fixture@example.org" "password1234")
+                    (follow-redirect))
+        other (-> (session (help/app))
+                  (login-as "fixture" "password1234")
+                  (follow-redirect))
+        primary (-> primary
+                    (follow "profile")
+                    (fill-in "Email" "fixture@example.org")
+                    (fill-in "Current password" "password1234")
+                    (fill-in "New password" "password1234b")
+                    (fill-in "Confirm new password" "password1234b")
+                    (press "Update")
+                    (follow-redirect))]
+    (is (re-find #"Profile updated" (-> primary :response :body)))
+    (-> other
+        (visit "/profile")
+        (has (status? 302)))
+    (-> primary
+        (visit "/profile")
+        (has (status? 200)))))
+
 (deftest user-can-update-just-email
   (email/expect-mock-emails 2)
   (-> (session (help/app))

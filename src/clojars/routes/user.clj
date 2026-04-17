@@ -123,7 +123,8 @@
           #(view/profile-form % (db/find-user db %) flash)))
    (POST "/profile" {:as request :keys [params]}
          (auth/with-account
-           #(view/update-profile db event-emitter % params (common/request-details request))))
+           #(view/update-profile db event-emitter % params (common/request-details request)
+                                 (:session/key request))))
 
    (GET "/mfa" {:keys [flash]}
         (auth/with-account

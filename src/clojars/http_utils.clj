@@ -25,6 +25,45 @@
   []
   (reset! session-store-atom {}))
 
+(defn- ring-session-from-store-entry
+  "The aging-session store maps session keys to `SessionEntry` records (or
+  equivalent maps) holding the Ring session map under `:value`."
+  [entry]
+  (:value entry))
+
+(defn- session-username
+  "Returns the Clojars username for a Ring session authenticated via Friend,
+  or nil if unauthenticated.
+
+  Friend 0.2.x stores `::identity` as `{:authentications {id auth-map ...}
+  :current id}`. Some tests use a flat `{:username ...}` map for convenience."
+  [ring-session]
+  (let [friend-id (:cemerick.friend/identity ring-session)]
+    (when friend-id
+      (cond
+        (string? friend-id) friend-id
+        (and (map? friend-id) (:authentications friend-id) (:current friend-id))
+        (:username (get (:authentications friend-id) (:current friend-id)))
+        (map? friend-id) (:username friend-id)))))
+
+(defn clear-sessions-for-user!
+  "Removes all server-side sessions whose Friend identity is `username`.
+  When `keep-session-key` is provided (the Ring `:session/key` for the current
+  request), that session is retained so the browser that performed a profile
+  password change stays signed in."
+  [username & {:keys [keep-session-key]}]
+  (swap! session-store-atom
+         (fn [sessions]
+           (reduce-kv
+            (fn [m k entry]
+              (let [ring-session (ring-session-from-store-entry entry)
+                    auth-user (session-username ring-session)]
+                (if (and auth-user (= auth-user username) (not= k keep-session-key))
+                  m
+                  (assoc m k entry))))
+            {}
+            sessions))))
+
 (defn wrap-secure-session [f]
   (let [mem-store (aging-session/aging-memory-store
                    :session-atom     session-store-atom
