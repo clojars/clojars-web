@@ -1,5 +1,11 @@
 <configuration debug="false">
 
+  <!-- Suppress logback's internal status output. In the uberjar, logback
+       can't read its version from the merged manifest and spuriously logs
+       "Versions of logback-core and logback-classic are different!", which
+       causes it to dump its full internal status on startup. -->
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
   <appender name="EDNL" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${log.dir:-logs}/clojars.ednl</file>
     <!-- Handling rotation here instead of via logrotate in the server config to avoid restarting the process -->
