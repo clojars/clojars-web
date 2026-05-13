@@ -9,8 +9,7 @@
    [clojure.test :refer [deftest is testing use-fixtures]]
    [kerodon.core :refer [fill-in follow follow-redirect
                          press session visit within]]
-   [kerodon.test :refer [has status? text? value?]]
-   [net.cgrand.enlive-html :as enlive]))
+   [kerodon.test :refer [has status? text? value?]]))
 
 (use-fixtures :each
   help/default-fixture
@@ -187,12 +186,9 @@
       (press "Update")
       (follow-redirect)
       (within [:div#notice]
-        (has (text? "Profile updated.")))
-      (follow "logout")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:nav [:li enlive/first-child] :a]
-        (has (text? "login")))
+        (has (text? "Your password was updated. Please log in again.")))
+      (within [:div.small-section :> :h1]
+        (has (text? "Login")))
       (login-as "fixture" "password1234b")
       (follow-redirect)
       (has (status? 200))
@@ -252,12 +248,9 @@
       (press "Update")
       (follow-redirect)
       (within [:div#notice]
-        (has (text? "Profile updated.")))
-      (follow "logout")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:nav [:li enlive/first-child] :a]
-        (has (text? "login")))
+        (has (text? "Your password was updated. Please log in again.")))
+      (within [:div.small-section :> :h1]
+        (has (text? "Login")))
       (login-as "fixture" "password1234b")
       (follow-redirect)
       (has (status? 200))
@@ -269,6 +262,76 @@
     (is (= "Your Clojars password was changed" title))
     (is (re-find #"has changed the password on your 'fixture'" body))
     (is (re-find #"Client IP" body))))
+
+(deftest changing-password-invalidates-other-sessions
+  (let [app (help/app)
+        ;; Session A registers and stays logged in.
+        session-a (-> (session app)
+                      (register-as "fixture" "fixture@example.org" "password1234")
+                      (follow-redirect))
+        ;; Session B logs in concurrently as the same user.
+        session-b (-> (session app)
+                      (login-as "fixture" "password1234")
+                      (follow-redirect))]
+    (-> session-b
+        (visit "/profile")
+        (has (status? 200))
+        (within [:title]
+          (has (text? "Profile (fixture) - Clojars"))))
+    ;; Change password from session A.
+    (-> session-a
+        (visit "/profile")
+        (fill-in "Current password" "password1234")
+        (fill-in "New password" "password1234b")
+        (fill-in "Confirm new password" "password1234b")
+        (press "Update")
+        (follow-redirect)
+        (within [:div.small-section :> :h1]
+          (has (text? "Login"))))
+    ;; Session B should now be logged out — visiting /profile redirects to /login.
+    (-> session-b
+        (visit "/profile")
+        (follow-redirect)
+        (within [:div.small-section :> :h1]
+          (has (text? "Login"))))))
+
+(deftest password-reset-invalidates-existing-sessions
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password1234"))
+  (let [app (help/app)
+        ;; Existing logged-in session before the reset.
+        session-a (-> (session app)
+                      (login-as "fixture" "password1234")
+                      (follow-redirect))]
+    (-> session-a
+        (visit "/profile")
+        (has (status? 200)))
+    ;; Trigger the reset flow and submit a new password.
+    (-> (session app)
+        (visit "/")
+        (follow "login")
+        (follow "Forgot your username or password?")
+        (fill-in "Email or Username" "fixture")
+        (press "Email me a password reset link"))
+    (let [[_ _ message] (first @email/mock-emails)
+          [_ reset-password-link]
+          (re-find
+           #"To continue with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
+           message)]
+      (-> (session app)
+          (visit reset-password-link)
+          (fill-in "New password" "password1234c")
+          (fill-in "Confirm new password" "password1234c")
+          (press "Update my password")
+          (follow-redirect)
+          (within [:div.small-section :> :h1]
+            (has (text? "Login")))))
+    ;; Session A is no longer authenticated.
+    (-> session-a
+        (visit "/profile")
+        (follow-redirect)
+        (within [:div.small-section :> :h1]
+          (has (text? "Login"))))))
 
 (deftest bad-update-info-should-show-error
   (-> (session (help/app))

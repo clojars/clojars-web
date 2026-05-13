@@ -25,6 +25,19 @@
   []
   (reset! session-store-atom {}))
 
+(defn delete-sessions-for-user!
+  "Deletes all active sessions for `username`. Used to invalidate other
+  active sessions after a password change so an attacker who got in via
+  the old password is kicked out."
+  [username]
+  (swap! session-store-atom
+         (fn [sessions]
+           (into {}
+                 (remove (fn [[_ entry]]
+                           (= username
+                              (get-in entry [:value :cemerick.friend/identity :current]))))
+                 sessions))))
+
 (defn wrap-secure-session [f]
   (let [mem-store (aging-session/aging-memory-store
                    :session-atom     session-store-atom
