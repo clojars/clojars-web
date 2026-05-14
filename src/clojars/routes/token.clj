@@ -2,7 +2,9 @@
   (:require
    [clojars.auth :as auth]
    [clojars.db :as db]
+   [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.routes.common :as common]
    [clojars.web.token :as view]
    [clojure.string :as str]
    [compojure.core :as compojure :refer [GET POST DELETE]]
@@ -33,12 +35,23 @@
           (+ (* (Integer/parseInt expires-in-hours) ms-per-hour))
           (Timestamp.)))))
 
-(defn- create-token [db token-name scope single-use? expires-in]
+(defn- create-token [db event-emitter request]
   (auth/with-account
     (fn [account]
-      (let [[group-name jar-name] (parse-scope scope)
-            token (db/add-deploy-token db account token-name group-name jar-name
-                                       single-use? (calculate-expires-at expires-in))]
+      (let [{:keys [name scope single_use expires_in]} (:params request)
+            single-use? (boolean single_use)
+            [group-name jar-name] (parse-scope scope)
+            expires-at (calculate-expires-at expires_in)
+            token-record (db/add-deploy-token db account name group-name jar-name
+                                                single-use? expires-at)]
+        (event/emit event-emitter :deploy-token-created
+                    (merge {:username     account
+                            :token-name   name
+                            :group-name   group-name
+                            :jar-name     jar-name
+                            :single-use?  single-use?
+                            :expires-at   expires-at}
+                           (common/request-details request)))
         (log/info {:tag :create-token
                    :username account
                    :status :success})
@@ -46,7 +59,7 @@
                           (db/find-user-tokens-by-username db account)
                           (db/jars-by-username db account)
                           (db/find-groupnames db account)
-                          {:new-token token})))))
+                          {:new-token token-record})))))
 
 (defn- find-token [db token-id]
   (when-let [id-int (try
@@ -75,11 +88,11 @@
               (assoc (redirect "/tokens")
                      :flash "Token not found."))))))))
 
-(defn routes [db]
+(defn routes [db event-emitter]
   (compojure/routes
    (GET ["/tokens"] {:keys [flash]}
         (get-tokens db flash))
-   (POST ["/tokens"] [name scope single_use expires_in]
-         (create-token db name scope single_use expires_in))
+   (POST ["/tokens"] {:as request}
+         (create-token db event-emitter request))
    (DELETE ["/tokens/:id", :id #"[0-9]+"] [id]
            (disable-token db id))))

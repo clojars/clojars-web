@@ -1166,6 +1166,8 @@
       (fill-in [:#username] "donthemon")
       (press "Add Permission"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
+    (email/expect-mock-emails 1)
+    (is (true? (email/wait-for-mock-emails)))
     (email/expect-mock-emails 2)
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
@@ -1222,6 +1224,8 @@
       (fill-in [:#username] "donthemon")
       (press "Add Permission"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
+    (email/expect-mock-emails 1)
+    (is (true? (email/wait-for-mock-emails)))
     (email/expect-mock-emails 1)
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
