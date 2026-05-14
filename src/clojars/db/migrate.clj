@@ -144,7 +144,7 @@
 (defn- enable-send-deploy-emails-for-existing-users
   [tx]
   (db/do-commands tx
-                  ["update users set send_deploy_emails = true where send_deploy_emails = false"]))
+                  ["update users set send_deploy_emails = true where send_deploy_emails = false and created < '2022-03-14'"]))
 
 (def migrations
   [#'initial-schema
