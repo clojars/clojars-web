@@ -78,9 +78,9 @@ com.github.scribejava/scribejava-apis 8.3.3
   X com.fasterxml.jackson.core/jackson-databind 2.14.0 :use-top
 digest/digest 1.4.10
 net.clojars.internal/http-kit 2.9.0-beta3-clojars-03
-org.bouncycastle/bcpkix-jdk18on 1.83
-  . org.bouncycastle/bcutil-jdk18on 1.83
-    X org.bouncycastle/bcprov-jdk18on 1.83 :use-top
+org.bouncycastle/bcpkix-jdk18on 1.84
+  . org.bouncycastle/bcutil-jdk18on 1.84
+    X org.bouncycastle/bcprov-jdk18on 1.84 :use-top
 com.stuartsierra/component 1.2.0
   . com.stuartsierra/dependency 1.0.0
 org.apache.commons/commons-email 1.6.0
@@ -121,7 +121,7 @@ org.apache.lucene/lucene-queryparser 10.3.2
     . org.apache.lucene/lucene-queries 10.3.2
     . org.apache.lucene/lucene-facet 10.3.2
       X org.apache.lucene/lucene-core 10.3.2 :use-top
-org.bouncycastle/bcprov-jdk18on 1.83
+org.bouncycastle/bcprov-jdk18on 1.84
 duct/duct 0.8.2
   . org.clojure/tools.macro 0.1.5
   X com.stuartsierra/component 0.3.1 :use-top
