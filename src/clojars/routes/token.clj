@@ -2,7 +2,9 @@
   (:require
    [clojars.auth :as auth]
    [clojars.db :as db]
+   [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.routes.common :as common]
    [clojars.web.token :as view]
    [clojure.string :as str]
    [compojure.core :as compojure :refer [GET POST DELETE]]
@@ -33,15 +35,24 @@
           (+ (* (Integer/parseInt expires-in-hours) ms-per-hour))
           (Timestamp.)))))
 
-(defn- create-token [db token-name scope single-use? expires-in]
+(defn- create-token [db event-emitter token-name scope single-use? expires-in details]
   (auth/with-account
     (fn [account]
       (let [[group-name jar-name] (parse-scope scope)
+            expires-at (calculate-expires-at expires-in)
             token (db/add-deploy-token db account token-name group-name jar-name
-                                       single-use? (calculate-expires-at expires-in))]
+                                       single-use? expires-at)]
         (log/info {:tag :create-token
                    :username account
                    :status :success})
+        (event/emit event-emitter :token-created
+                    (merge {:username account
+                            :token-name token-name
+                            :group-name group-name
+                            :jar-name jar-name
+                            :single-use? (boolean single-use?)
+                            :expires-at expires-at}
+                           details))
         (view/show-tokens account
                           (db/find-user-tokens-by-username db account)
                           (db/jars-by-username db account)
@@ -75,11 +86,12 @@
               (assoc (redirect "/tokens")
                      :flash "Token not found."))))))))
 
-(defn routes [db]
+(defn routes [db event-emitter]
   (compojure/routes
    (GET ["/tokens"] {:keys [flash]}
         (get-tokens db flash))
-   (POST ["/tokens"] [name scope single_use expires_in]
-         (create-token db name scope single_use expires_in))
+   (POST ["/tokens"] {:as request {:keys [name scope single_use expires_in]} :params}
+         (create-token db event-emitter name scope single_use expires_in
+                       (common/request-details request)))
    (DELETE ["/tokens/:id", :id #"[0-9]+"] [id]
            (disable-token db id))))
