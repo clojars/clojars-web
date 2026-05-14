@@ -94,6 +94,11 @@
       <version>1.4.10</version>
     </dependency>
     <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>3.6.1</version>
+    </dependency>
+    <dependency>
       <groupId>net.clojars.internal</groupId>
       <artifactId>http-kit</artifactId>
       <version>2.9.0-beta3-clojars-03</version>
