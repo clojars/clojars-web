@@ -96,8 +96,8 @@
             result (json/parse-string (:body resp) true)]
         (is (= 400 (:status resp)))
         (is (= "application/json" (help/get-content-type resp)))
-        (is (not (nil? (:error result))))
-        (is (not (nil? (:error-id result))))))
+        (is (some? (:error result)))
+        (is (some? (:error-id result)))))
 
     (testing "invalid query syntax returns error"
       (let [resp (do-search :json "test+AND" {:throw-exceptions false})

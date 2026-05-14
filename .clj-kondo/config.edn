@@ -56,6 +56,10 @@
   :minus-one {:level :warning}
   :plus-one {:level :warning}
 
+  :missing-protocol-method-arity {:level :warning}
+  
+  :not-nil? {:level :warning}
+  
   ;; warn when calling reduce without an initial value
   :reduce-without-init {:level :warning}
 
