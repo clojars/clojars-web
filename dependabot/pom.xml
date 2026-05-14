@@ -20,7 +20,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.12.4</version>
+      <version>1.12.5</version>
     </dependency>
     <dependency>
       <groupId>com.cognitect.aws</groupId>
@@ -94,6 +94,11 @@
       <version>1.4.10</version>
     </dependency>
     <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>3.6.1</version>
+    </dependency>
+    <dependency>
       <groupId>net.clojars.internal</groupId>
       <artifactId>http-kit</artifactId>
       <version>2.9.0-beta3-clojars-03</version>
@@ -101,7 +106,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk18on</artifactId>
-      <version>1.83</version>
+      <version>1.84</version>
     </dependency>
     <dependency>
       <groupId>com.stuartsierra</groupId>
@@ -116,7 +121,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.7.9</version>
+      <version>42.7.11</version>
     </dependency>
     <dependency>
       <groupId>com.github.seancorfield</groupId>
@@ -151,7 +156,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
-      <version>1.83</version>
+      <version>1.84</version>
     </dependency>
     <dependency>
       <groupId>duct</groupId>

@@ -4,7 +4,7 @@ buddy/buddy-core 1.12.0-430
   X org.bouncycastle/bcpkix-jdk18on 1.78.1 :use-top
   X org.bouncycastle/bcprov-jdk18on 1.78.1 :use-top
   X cheshire/cheshire 5.13.0 :use-top
-org.clojure/clojure 1.12.4
+org.clojure/clojure 1.12.5
   . org.clojure/spec.alpha 0.5.238
   . org.clojure/core.specs.alpha 0.4.74
 com.cognitect.aws/api 0.8.774
@@ -77,16 +77,16 @@ com.github.scribejava/scribejava-apis 8.3.3
     X com.fasterxml.jackson.core/jackson-databind 2.14.0 :use-top
   X com.fasterxml.jackson.core/jackson-databind 2.14.0 :use-top
 digest/digest 1.4.10
+org.codehaus.plexus/plexus-utils 3.6.1
 net.clojars.internal/http-kit 2.9.0-beta3-clojars-03
-org.bouncycastle/bcpkix-jdk18on 1.83
-  . org.bouncycastle/bcutil-jdk18on 1.83
-    X org.bouncycastle/bcprov-jdk18on 1.83 :use-top
+org.bouncycastle/bcpkix-jdk18on 1.84
+  . org.bouncycastle/bcutil-jdk18on 1.84
+    X org.bouncycastle/bcprov-jdk18on 1.84 :use-top
 com.stuartsierra/component 1.2.0
   . com.stuartsierra/dependency 1.0.0
 org.apache.commons/commons-email 1.6.0
   X com.sun.mail/jakarta.mail 1.6.7 :use-top
-org.postgresql/postgresql 42.7.9
-  . org.checkerframework/checker-qual 3.52.0
+org.postgresql/postgresql 42.7.11
 com.github.seancorfield/honeysql 2.7.1368
 aero/aero 1.1.6
 clj-http/clj-http 3.13.1
@@ -122,7 +122,7 @@ org.apache.lucene/lucene-queryparser 10.3.2
     . org.apache.lucene/lucene-queries 10.3.2
     . org.apache.lucene/lucene-facet 10.3.2
       X org.apache.lucene/lucene-core 10.3.2 :use-top
-org.bouncycastle/bcprov-jdk18on 1.83
+org.bouncycastle/bcprov-jdk18on 1.84
 duct/duct 0.8.2
   . org.clojure/tools.macro 0.1.5
   X com.stuartsierra/component 0.3.1 :use-top
@@ -208,12 +208,12 @@ com.taoensso/nippy 3.6.0
 com.cognitect.aws/s3 871.2.40.9
 clj-stacktrace/clj-stacktrace 0.2.8
 org.apache.maven/maven-model 3.9.12
-  . org.codehaus.plexus/plexus-utils 3.6.0
+  X org.codehaus.plexus/plexus-utils 3.6.0 :use-top
 ch.qos.logback/logback-classic 1.5.25
   . ch.qos.logback/logback-core 1.5.25
   . org.slf4j/slf4j-api 2.0.17
 org.apache.maven/maven-repository-metadata 3.9.12
-  . org.codehaus.plexus/plexus-utils 3.6.0
+  X org.codehaus.plexus/plexus-utils 3.6.0 :use-top
 comb/comb 1.0.0
 com.sun.mail/jakarta.mail 1.6.8
   . com.sun.activation/jakarta.activation 1.2.1

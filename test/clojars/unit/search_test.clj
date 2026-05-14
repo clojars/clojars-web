@@ -25,6 +25,8 @@
                            :stats (reify stats/Stats
                                     (download-count [_t g a]
                                       (download-counts g a))
+                                    (download-count [_t g a _v]
+                                      (download-counts g a))
                                     (total-downloads [_t] 100))))))
 
 (defmacro with-lucene-search-component
