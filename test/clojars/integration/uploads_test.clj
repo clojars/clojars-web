@@ -855,18 +855,36 @@
   ;; This test throws on failure, so we have this assertion to satisfy kaocha
   (is true))
 
+(deftest user-can-deploy-with-gpg-and-ssh-signatures
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password1234"))
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")
+        pom (io/file (io/resource "test-0.0.1/test.pom"))]
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+      :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
+                     [:extension "pom"] pom
+                     ;; any content will do since we don't validate signatures
+                     [:extension "jar.asc"] pom
+                     [:extension "pom.asc"] pom
+                     [:extension "jar.sig"] pom
+                     [:extension "pom.sig"] pom}
+      :password token}))
+  ;; This test throws on failure, so we have this assertion to satisfy kaocha
+  (is true))
+
 (deftest missing-signature-fails-the-deploy
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")
         pom (io/file (io/resource "test-0.0.1/test.pom"))]
-    (doseq [suffix ["asc" "sig"]
+    (doseq [[type suffix] [["GPG" "asc"] ["SSH" "sig"]]
             :let [version (format "0.0.1-%s" suffix)
                   pom-name (format "test-%s.pom" version)]]
       (testing (format "with a suffix of .%s" suffix)
         (is (thrown-with-msg?
              DeploymentException
-             #"test-0\.0\.1-.*\.pom has no signature"
+             (re-pattern (format "test-0\\.0\\.1-.*\\.pom has no %s signature" type))
               (deploy
                {:coordinates ['org.clojars.dantheman/test version]
                 :artifact-map {[:extension "jar"] (io/file (io/resource "test.jar"))
@@ -881,7 +899,7 @@
                          :group_name "org.clojars.dantheman"
                          :jar_name "test"
                          :version version
-                         :message (format "file %s has no signature" pom-name)
+                         :message (format "file %s has no %s signature" pom-name type)
                          :tag "file-missing-signature"}))))
 
 (deftest anonymous-cannot-deploy

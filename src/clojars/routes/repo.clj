@@ -152,7 +152,7 @@
    :file-missing-checksum          {:title   "File missing checksum"
                                     :details "no checksums provided for <%= filename %>"}
    :file-missing-signature         {:title   "File missing signature"
-                                    :details "file <%= filename %> has no signature"}
+                                    :details "file <%= filename %> has no <%= signature-type %> signature"}
    :maven-metadata-file-invalid    {:title   "Invalid maven-metadata.xml file"
                                     :details "failed to parse maven-metadata.xml file. Message: <%= message %>"}
    :password-not-token             {:title   "No deploy token provided"
@@ -379,16 +379,20 @@
                         :file          f
                         :filename      (.getName f)})))))
 
-(defn- assert-signatures [suffix artifacts]
+(defn- assert-signatures
+  [signature-type suffix other-signature-suffixes artifacts]
   ;; if any signatures exist, require them for every artifact
-  (let [suffix-matcher (partial match-file-name (re-pattern (format "\\%s$" suffix)))]
+  (let [suffix-matcher (partial match-file-name (re-pattern (format "\\%s$" suffix)))
+        other-suffixes-matcher (apply some-fn (mapv #(partial match-file-name (re-pattern (format "\\%s$" %))) other-signature-suffixes))]
     (when (some suffix-matcher artifacts)
       (doseq [^File f artifacts
               :when (not (suffix-matcher f))
+              :when (not (other-suffixes-matcher f))
               :when (not (.exists (io/file (str (.getAbsolutePath f) suffix))))]
         (throw-invalid :file-missing-signature
-                       {:file     f
-                        :filename (.getName f)})))))
+                       {:file           f
+                        :filename       (.getName f)
+                        :signature-type signature-type})))))
 
 (defn- validate-jar-name+version
   [name version]
@@ -416,8 +420,9 @@
 
   (let [artifacts (find-artifacts dir)]
     (validate-checksums artifacts)
-    (assert-signatures ".asc" (remove (partial match-file-name "maven-metadata.xml") artifacts))
-    (assert-signatures ".sig" (remove (partial match-file-name "maven-metadata.xml") artifacts))))
+    (let [files-sans-metadata (remove (partial match-file-name "maven-metadata.xml") artifacts)]
+      (assert-signatures "GPG" ".asc" #{".sig"} files-sans-metadata)
+      (assert-signatures "SSH" ".sig" #{".asc"} files-sans-metadata))))
 
 (defmacro profile [meta & body]
   `(let [start# (System/currentTimeMillis)]
