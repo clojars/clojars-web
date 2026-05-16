@@ -22,7 +22,7 @@
     (notifications/handler
      {:db help/*db*
       :mailer (fn [to subj msg]
-                 (swap! sent conj [to subj msg]))}
+                (swap! sent conj [to subj msg]))}
      :deploy-token-created
      {:username    "fixture"
       :token-name  "my-laptop"
@@ -36,10 +36,10 @@
     (is (= 1 (count @sent)))
     (let [[to subject body] (first @sent)]
       (is (= "fixture@example.org" to))
-      (is (= "A new deploy token was created on your Clojars account" subject))
+      (is (= "A deploy token was created on your Clojars account" subject))
       (is (re-find #"Hello," body))
       (is (re-find #"my-laptop" body))
-      (is (re-find #"Scope: \*" body))
+      (is (re-find #"Scope: \* \(any group/artifact you have access to\)" body))
       (is (re-find #"Single use: no" body))
       (is (re-find #"Expires: never" body))
       (is (re-find #"127.0.0.1" body))

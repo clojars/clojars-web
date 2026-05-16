@@ -2,9 +2,9 @@
   (:require
    [clojars.db :as db]
    [clojars.email :as email]
+   [clojars.integration.steps :refer [create-deploy-token]]
    ;; for defmethod side effects when handler runs
    [clojars.notifications.token]
-   [clojars.integration.steps :refer [create-deploy-token]]
    [clojars.test-helper :as help]
    [clojure.test :refer [deftest is use-fixtures]]
    [kerodon.core :refer [session]]))
@@ -20,10 +20,10 @@
   (is (true? (email/wait-for-mock-emails)))
   (let [[to subject body] (first @email/mock-emails)]
     (is (= "fixture@example.org" to))
-    (is (= "A new deploy token was created on your Clojars account" subject))
+    (is (= "A deploy token was created on your Clojars account" subject))
     (is (re-find #"Hello," body))
     (is (re-find #"my-laptop" body))
-    (is (re-find #"Scope: \*" body))
+    (is (re-find #"Scope: \* \(any group/artifact you have access to\)" body))
     (is (re-find #"Single use: no" body))
     (is (re-find #"Expires: never" body))
     (is (re-find #"https://clojars.org/tokens" body))
