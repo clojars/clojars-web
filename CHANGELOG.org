@@ -9,6 +9,9 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-05-15.2269][2026-05-15.2269]] 
   + [[https://github.com/clojars/clojars-web/pull/934][Increase minimum password length from 8 to 12 characters]] ([[https://github.com/danielcompton][Daniel Compton]])
   + [[https://github.com/clojars/clojars-web/pull/948][Allow deploys that contain both GPG and SSH signatures]] ([[https://github.com/tobias][Toby Crawley]])
+    
+*** [[https://github.com/clojars/clojars-web/releases/tag/2026-05-16.2273][2026-05-16.2273]] 
+  + [[https://github.com/clojars/clojars-web/pull/945][Send email when deploy token created]] ([[https://github.com/ispandey81][Indra]])
 
 ** 2026-April
 
