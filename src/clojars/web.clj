@@ -86,7 +86,7 @@
      ;; since they both catch /:identifier
      (user/routes db event-emitter hcaptcha mailer)
      (verify/routes db event-emitter)
-     (token/routes db)
+     (token/routes db event-emitter)
      (api/routes db stats)
      (PUT "*" _ {:status 405 :headers {} :body "Did you mean to use /repo?"})
      (ANY "*" _
