@@ -1165,10 +1165,10 @@
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "donthemon")
       (press "Add Permission"))
+  (email/expect-mock-emails 1)
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
     ;; Creating a token sends an email. Wait for it here (not checked here;
     ;; see deploy_token_creation_test) so the checks below are only deploy emails.
-    (email/expect-mock-emails 1)
     (is (true? (email/wait-for-mock-emails)))
     (email/expect-mock-emails 2)
     (deploy
