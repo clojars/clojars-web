@@ -13,6 +13,9 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-05-16.2273][2026-05-16.2273]] 
   + [[https://github.com/clojars/clojars-web/pull/945][Send email when deploy token created]] ([[https://github.com/ispandey81][Indra]])
 
+*** [[https://github.com/clojars/clojars-web/releases/tag/2026-05-24.2278][2026-05-24.2278]] 
+  + [[https://github.com/clojars/clojars-web/pull/949][Improve layout of group verification and MFA pages]] ([[https://github.com/tobias][Toby Crawley]])
+    
 ** 2026-April
 
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-04-05.2249][2026-04-05.2249]]
