@@ -3,7 +3,6 @@
    [buddy.core.codecs :as codecs]
    [cemerick.friend :as friend]
    [cemerick.friend.credentials :as creds]
-   [cemerick.friend.util :as friend.util]
    [cemerick.friend.workflows :as workflows]
    [clojars.db :as db]
    [clojars.event :as event]
@@ -11,7 +10,8 @@
    [clojars.util :as util]
    [clojure.string :as str]
    [one-time.core :as ot]
-   [ring.util.request :as req])
+   [ring.util.request :as req]
+   [ring.util.response :as response])
   (:import
    java.sql.Timestamp))
 
@@ -39,37 +39,98 @@
     (friend/throw-unauthorized friend/*identity*
                                {:cemerick.friend/required-roles group})))
 
+(defn- verify-password
+  [db username password]
+  (when-not (str/blank? password)
+    (let [user (db/find-user db username)]
+      (when (and (not (str/blank? (:password user)))
+                 (creds/bcrypt-verify password (:password user)))
+        user))))
+
+(defn valid-totp-token?
+  [otp {:as _user :keys [otp_secret_key]}]
+  (when-let [otp-n (-> otp
+                       (str/replace #"\s+" "")
+                       (util/parse-long))]
+    (ot/is-valid-totp-token? otp-n otp_secret_key)))
+
+(defn- validate-otp
+  [db
+   event-emitter
+   {:as user
+    recovery-code :otp_recovery_code
+    username :user}
+   otp]
+  (if (creds/bcrypt-verify otp recovery-code)
+    (do
+      (db/disable-otp! db username)
+      (event/emit event-emitter :mfa-deactivated
+                  {:username username
+                   :source :recovery-code})
+      true)
+    (valid-totp-token? otp user)))
+
 (defn- get-param
   [key form-params params]
   (or (get form-params (name key)) (get params key "")))
 
-;; copied from cemerick.friend/workflows and modified to support MFA
+(defn- make-auth
+  [username]
+  (log/info {:status :success})
+  (workflows/make-auth {:username username}
+                       {::friend/workflow          :interactive-form
+                        ::friend/redirect-on-auth? true}))
+
+(defn- verify-password-step
+  [db {:as _request :keys [form-params params session]}]
+  (let [username (get-param :username form-params params)
+        password (get-param :password form-params params)]
+    (log/with-context {:tag      :authentication
+                       :username username
+                       :type     :password}
+      (if-some [{:as _user :keys [otp_active]} (verify-password db username password)]
+        (if otp_active
+          (do
+            (log/info {:status :pending-mfa})
+            (-> (response/redirect "/login/mfa")
+                (assoc :session (assoc session ::pending-mfa-username username))))
+          (make-auth username))
+        (do
+          (log/info {:status :failed
+                     :reason :password-incorrect})
+          (response/redirect (format "/login?login_failed=Y&username=%s" username)))))))
+
+(defn- verify-mfa-step
+  [db event-emitter {:as _request :keys [form-params params session]}]
+  (if-some [username (::pending-mfa-username session)]
+    (let [otp  (get-param :otp form-params params)
+          user (db/find-user db username)]
+      (log/with-context {:tag      :authentication
+                         :username username
+                         :type     :mfa}
+        (if (validate-otp db event-emitter user otp)
+          (make-auth username)
+          (do
+            (log/info {:status :failed
+                       :reason :otp-incorrect})
+            (response/redirect "/login/mfa?otp_failed=Y")))))
+    ;; No pending username — someone hit /login/mfa directly
+    (response/redirect "/login")))
+
+(defn pending-mfa?
+  [session]
+  (some? (::pending-mfa-username session)))
+
 (defn interactive-form-with-mfa-workflow
-  [& {:keys [redirect-on-auth?] :as form-config
-      :or {redirect-on-auth? true}}]
-  (fn [{:keys [request-method params form-params] :as request}]
-    (when (and (= (friend.util/gets :login-uri
-                                    form-config
-                                    (::friend/auth-config request))
-                  (req/path-info request))
-               (= :post request-method))
-      (let [creds {:username (get-param :username form-params params)
-                   :password (get-param :password form-params params)
-                   :otp (get-param :otp form-params params)}
-            {:keys [username password]} creds]
-        (if-let [user-record (and username password
-                                  ((friend.util/gets :credential-fn
-                                                     form-config
-                                                     (::friend/auth-config request))
-                                   (with-meta creds {::friend/workflow :interactive-form})))]
-          (workflows/make-auth user-record
-                               {::friend/workflow :interactive-form
-                                ::friend/redirect-on-auth? redirect-on-auth?})
-          ((or (friend.util/gets :login-failure-handler
-                                 form-config
-                                 (::friend/auth-config request))
-               #'workflows/interactive-login-redirect)
-           (update request ::friend/auth-config merge form-config)))))))
+  [db event-emitter]
+  (fn [{:as request :keys [request-method]}]
+    (when (= :post request-method)
+      (let [path (req/path-info request)]
+        (case path
+          "/login"     (verify-password-step db request)
+          "/login/mfa" (verify-mfa-step db event-emitter request)
+          ;; else
+          nil)))))
 
 (defn parse-authorization-header
   "Parses a Basic auth header into username and password."
@@ -140,46 +201,3 @@
                            :message "The given token either doesn't exist, isn't yours, or is disabled"})
             (log/info {:status :failed
                        :reason :invalid-token})))))))
-
-(defn valid-totp-token?
-  [otp {:as _user :keys [otp_secret_key]}]
-  (when-let [otp-n (-> otp
-                       (str/replace #"\s+" "")
-                       (util/parse-long))]
-    (ot/is-valid-totp-token? otp-n otp_secret_key)))
-
-(defn- validate-otp
-  [db
-   event-emitter
-   {:as user
-    recovery-code :otp_recovery_code
-    username :user}
-   otp]
-  (if (creds/bcrypt-verify otp recovery-code)
-    (do
-      (db/disable-otp! db username)
-      (event/emit event-emitter :mfa-deactivated
-                  {:username username
-                   :source :recovery-code})
-      true)
-    (valid-totp-token? otp user)))
-
-(defn password-credential-fn [db event-emitter]
-  (fn [{:keys [username password otp]}]
-    (log/with-context {:tag :authentication
-                       :username username
-                       :type :password
-                       :otp? (boolean otp)}
-      (if (not (str/blank? password))
-        (let [{:as user :keys [otp_active]} (db/find-user db username)]
-          (if (and (not (str/blank? (:password user)))
-                   (creds/bcrypt-verify password (:password user))
-                   (or (not otp_active)
-                       (validate-otp db event-emitter user otp)))
-            (do
-              (log/info {:status :success})
-              {:username username})
-            (log/info {:status :failed
-                       :reason :password-or-otp-incorrect})))
-        (log/info {:status :failed
-                   :reason :password-blank})))))
