@@ -30,20 +30,10 @@
     error   (error-flash [:h2 error]
                          (flash-details flash-data))))
 
-(def ^:private common-help
-  [[:p "See "
-    (link-to "https://github.com/clojars/clojars-web/wiki/Verified-Group-Names"
-             "the wiki")
-    " for more details on verified group names."]
-   [:p "Please "
-    (link-to "https://github.com/clojars/administration/issues/new/choose"
-             "an issue")
-    " if you run in to any problems verifying your group name."]])
-
 (defn- TXT-help
   [account]
   (let [txt-record [:code (format "\"clojars %s\"" account)]]
-    (list*
+    (list
      [:p "In order to verify a reverse-domain-based group that is based on a domain
   you control, you'll need to create a TXT DNS record on the domain of "
       txt-record
@@ -59,13 +49,12 @@
       " to the example.com domain."]
      [:p "Do a search for "
       [:code "TXT DNS <your DNS provider>"]
-      " if you are unsure how to add a TXT DNS record for your domain."]
-     common-help)))
+      " if you are unsure how to add a TXT DNS record for your domain."])))
 
 (defn- vcs-help
   [account]
   (let [repo-name (format "clojars-%s" account)]
-    (list*
+    (list
      [:p "Clojars supports groups that are based on a GitHub or Gitlab
       organization. For example, if you own "
       [:code "https://github.com/example-org/"] " or "
@@ -87,11 +76,10 @@
      [:p [:strong "Note:"]
       "You can also use this method to verify domains based on your github
       username, but you can also verify those by using the \"Login with GitHub\"
-      or \"Login with Gitlab\" feature on the Clojars login page."]
-     common-help)))
+      or \"Login with Gitlab\" feature on the Clojars login page."])))
 
 (def ^:private parent-help
-  (list*
+  (list
    [:p "A subgroup is based on a (potential) subdomain of another group. To
   verify it, the parent group has to be verified."]
    [:p "This will create the group if it doesn't already exist, and can also
@@ -103,8 +91,7 @@
     ", then you can use this verification option."]
    [:p "If you haven't verified the parent group and don't need to, you can
    verify the group using the TXT record method above, but note that the TXT
-   record will need to be on the corresponding subdomain."]
-   common-help))
+   record will need to be on the corresponding subdomain."]))
 
 (defn index
   [account flash-data]
@@ -115,41 +102,55 @@
      [:div.col-xs-6
       [:h1 heading]
       (format-flash flash-data)
+      [:div.help
+       [:p "See "
+        (link-to "https://github.com/clojars/clojars-web/wiki/Verified-Group-Names"
+                 "the wiki")
+        " for more details on verified group names. Please file "
+        (link-to "https://github.com/clojars/administration/issues/new/choose"
+                 "an issue")
+        " if you run in to any problems verifying your group name."]]
+      [:hr]
       [:div.via-txt
        [:h2 "Verification by TXT Record"]
-       [:details.help
-        [:summary "Help"]
-        (TXT-help account)]
-       (form-to [:post "/verify/group/txt"]
-                (label :group "Group name")
-                (text-field {:required    true
-                             :placeholder "com.example"}
-                            :group)
-                (label :domain "Domain with TXT record")
-                (text-field {:required    true
-                             :placeholder "example.com"}
-                            :domain)
-                (submit-button "Verify Group"))]
+       [:div.row
+        [:div.col-xs-5
+         (form-to [:post "/verify/group/txt"]
+                  (label :group "Group name")
+                  (text-field {:required    true
+                               :placeholder "com.example"}
+                              :group)
+                  (label :domain "Domain with TXT record")
+                  (text-field {:required    true
+                               :placeholder "example.com"}
+                              :domain)
+                  (submit-button "Verify Group"))]
+        [:div.col-xs-7
+         [:div.help (TXT-help account)]]]]
+      [:hr]
       [:div.via-vcs
        [:h2 "Verification of GitHub/Gitlab Repo Groups"]
-       [:details.help
-        [:summary "Help"]
-        (vcs-help account)]
-       (form-to [:post "/verify/group/vcs"]
-                (label :url "Verification Repository URL")
-                (text-field {:required    true
-                             :placeholder (format "https://github.com/example/clojars-%s"
-                                                  account)}
-                            :url)
-                (submit-button "Verify Groups"))]
+       [:div.row
+        [:div.col-xs-5
+         (form-to [:post "/verify/group/vcs"]
+                  (label :url "Verification Repository URL")
+                  (text-field {:required    true
+                               :placeholder (format "https://github.com/example/clojars-%s"
+                                                    account)}
+                              :url)
+                  (submit-button "Verify Groups"))]
+        [:div.col-xs-7
+         [:div.help (vcs-help account)]]]]
+      [:hr]
       [:div.via-parent
        [:h2 "Verification by Parent Group"]
-       [:details.help
-        [:summary "Help"]
-        parent-help]
-       (form-to [:post "/verify/group/parent"]
-                (label :group "Group name")
-                (text-field {:required    true
-                             :placeholder "com.example.ham"}
-                            :group)
-                (submit-button "Verify Group"))]])))
+       [:div.row
+        [:div.col-xs-5
+         (form-to [:post "/verify/group/parent"]
+                  (label :group "Group name")
+                  (text-field {:required    true
+                               :placeholder "com.example.ham"}
+                              :group)
+                  (submit-button "Verify Group"))]
+        [:div.col-xs-7
+         [:div.help parent-help]]]]])))
