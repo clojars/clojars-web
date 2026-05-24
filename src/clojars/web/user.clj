@@ -300,8 +300,8 @@
      heading
      {:account account}
      [:div.small-section
-      (flash flash-msg)
       [:h1 heading]
+      (flash flash-msg)
       [:div.help
        [:p
         "With two-factor authentication, you can set up a Time-based One Time Password (TOTP) device "
