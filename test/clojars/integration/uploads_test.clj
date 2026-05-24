@@ -1160,16 +1160,23 @@
 (deftest deploy-sends-notification-emails
   (-> (session (help/app))
       (register-as "donthemon" "test2@example.org" "password1234"))
+
+  (email/expect-mock-emails 2)
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "donthemon")
       (press "Add Permission"))
+  ;; Adding a user to a group sends emails to both the adder and the addee, so
+  ;; we clear away those
+  (is (true? (email/wait-for-mock-emails)))
+
   (email/expect-mock-emails 1)
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
     ;; Creating a token sends an email. Wait for it here (not checked here;
     ;; see deploy_token_creation_test) so the checks below are only deploy emails.
     (is (true? (email/wait-for-mock-emails)))
+
     (email/expect-mock-emails 2)
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
@@ -1220,16 +1227,23 @@
       (visit "/notification-preferences")
       (uncheck "Receive deploy notification emails?")
       (press "Update"))
+
+  (email/expect-mock-emails 2)
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234")
       (visit "/groups/org.clojars.dantheman")
       (fill-in [:#username] "donthemon")
       (press "Add Permission"))
+  ;; Adding a user to a group sends emails to both the adder and the addee, so
+  ;; we clear away those
+  (is (true? (email/wait-for-mock-emails)))
+
+  (email/expect-mock-emails 1)
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
     ;; Same as deploy-sends-notification-emails:
     ;; wait for the token-creation email, then check only the deploy email.
-    (email/expect-mock-emails 1)
     (is (true? (email/wait-for-mock-emails)))
+
     (email/expect-mock-emails 1)
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
