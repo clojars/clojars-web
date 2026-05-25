@@ -6,6 +6,9 @@
  :linters
  {
 
+  ;; warn when an ns is aliased as its full name
+  :alias-same-as-ns {:level :warning}
+  
   ;; warn when using a fully-qualified namespace when there is an alias
   ;; available
   :aliased-namespace-symbol {:level :warning}
@@ -20,6 +23,9 @@
   ;; warn when we'll never reach an else
   :condition-always-true {:level :warning}
 
+  ;; warn when let bindings can be replaced by cond->
+  :conditional-build-up {:level :warning}
+  
   :consistent-alias
   {:aliases {clojure.string str
 
@@ -46,6 +52,9 @@
   ;; warn on explicit nil returns from if (indicating we should use a when)
   :if-nil-return {:level :warning}
 
+  ;; suggest (or x y) over (if x x y)
+  :if-x-x-y {:level :warning}
+  
   ;; warn when message passed to is macro is a non-string
   :is-message-not-string {:level :warning}
   

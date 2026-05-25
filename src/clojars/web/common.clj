@@ -99,9 +99,7 @@
                   :rel "search"}]
           [:link {:href "/favicon.ico"
                   :rel "shortcut icon"}]
-          (structured-data/meta-tags (assoc ctx :title (if title
-                                                         title
-                                                         "Clojars"))) ;; TODO: talk about whether we should refactor signature of html-doc
+          (structured-data/meta-tags (assoc ctx :title (or title "Clojars"))) ;; TODO: talk about whether we should refactor signature of html-doc
           [:title
            (when title
              (str title " - "))
@@ -180,9 +178,7 @@
           [:meta {:name "theme-color" :content "#ffffff"}]
 
           [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
-          (structured-data/meta-tags (assoc ctx :title (if title
-                                                         title
-                                                         "Clojars")))
+          (structured-data/meta-tags (assoc ctx :title (or title "Clojars")))
           [:title
            (when title
              (str title " - "))
