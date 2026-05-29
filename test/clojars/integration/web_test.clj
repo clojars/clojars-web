@@ -7,7 +7,7 @@
    [clojars.log :as log]
    [clojars.test-helper :as help]
    [clojars.web.dashboard :as dashboard]
-   [clojure.test :refer [deftest is use-fixtures]]
+   [clojure.test :refer [deftest is testing use-fixtures]]
    [kerodon.core :refer [fill-in follow-redirect follow press
                          session visit within]]
    [kerodon.test :refer [has text?]]
@@ -60,7 +60,11 @@
         (m/via json/decode
                {"explanation"
                 "{:schema [:map-of :keyword :string], :value {:q [\"b\"]}, :errors ({:path [1], :in [:q], :schema :string, :value [\"b\"]})}"})}
-       (search-request "q[]=b"))))
+       (search-request "q[]=b")))
+
+  (doseq [page [-1 0]]
+    (testing (format "with page %s" page)
+      (is (= 400 (:status (search-request (format "page=%s" page))))))))
 
 (deftest browse-page-renders-multiple-pages
   (help/add-verified-group "test-user" "tester")
@@ -123,3 +127,20 @@
          {:status 400
           :body #"The from parameter must not contain null bytes"}
          response))))
+
+(defn- browse-request
+  [page]
+  (-> (format "http://localhost:%s/projects?page=%s"
+              help/test-port
+              page)
+      (http/get {:throw-exceptions false})))
+
+(deftest browse-page-rejects-invalid-page
+  (doseq [page [-1 0]]
+    (testing (format "with page %s" page)
+      (let [resp (browse-request page)]
+        (is (= 400 (:status resp)))))))
+
+(deftest browse-page-allows-valid-page
+  (let [resp (browse-request 1)]
+    (is (= 200 (:status resp)))))

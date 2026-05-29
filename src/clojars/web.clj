@@ -36,19 +36,23 @@
    [ring.middleware.not-modified :refer [wrap-not-modified]]
    [ring.util.response :refer [bad-request content-type]]))
 
-(defn- try-parse-page
-  "Will throw a targeted error if maybe-page doesn't parse as an integer."
-  [maybe-page]
-  (when maybe-page
-    (try
-      (Integer/parseInt maybe-page)
-      (catch Exception _
-        (throw (ex-info
-                "page must be an integer"
-                {:report? false
-                 :title "Bad Request"
-                 :error-message "The page query parameter must be an integer."
-                 :status 400}))))))
+(let [throw* #(throw (ex-info
+                      "page must be an positive integer"
+                      {:report? false
+                       :title "Bad Request"
+                       :error-message "The page query parameter must be a positive integer."
+                       :status 400}))]
+  (defn- try-parse-page
+    "Will throw a targeted error if maybe-page doesn't parse as a positive integer."
+    [maybe-page]
+    (when maybe-page
+      (let [page (try
+                   (Integer/parseInt maybe-page)
+                   (catch Exception _
+                     (throw*)))]
+        (when (<= page 0)
+          (throw*))
+        page))))
 
 (defn- main-routes
   [{:as _system :keys [db event-emitter hcaptcha mailer search stats]}]
