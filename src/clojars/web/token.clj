@@ -37,18 +37,18 @@
      [["*" ""]]
      groups)))
 
-(def ^:private expiry-options
+(def expiry-options
   [["Never"   ""]
-   ["1 Hour"  "1"]
-   ["1 Day"   "24"]
-   ["1 Week"  "168"]
-   ["30 days" "720"]
-   ["90 days" "2160"]])
+   ["1 Hour"  1]
+   ["1 Day"   24]
+   ["1 Week"  168]
+   ["30 days" 720]
+   ["90 days" 2160]])
 
 (defn show-tokens
   ([account tokens jars groups]
    (show-tokens account tokens jars groups nil))
-  ([account tokens jars groups {:keys [error message new-token]}]
+  ([account tokens jars groups {:keys [errors message new-token]}]
    (let [heading (format "Deploy Tokens (%s)" account)]
      (html-doc
       heading
@@ -57,7 +57,7 @@
        :extra-js ["/js/tokens.js"]}
       [:div
        [:h1 heading]
-       (error-list (when error [error]))
+       (error-list errors)
        (flash message)
        (flash (new-token-message new-token))]
       [:div.col-xs-12.col-sm-12

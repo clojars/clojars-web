@@ -29,37 +29,78 @@
 (let [ms-per-hour (* 1000 60 60)]
   (defn- calculate-expires-at
     [expires-in-hours]
-    (when-not (str/blank? expires-in-hours)
+    (when (some? expires-in-hours)
       (-> (db/get-time)
           (.getTime)
           (+ (* (Integer/parseInt expires-in-hours) ms-per-hour))
           (Timestamp.)))))
 
+(defn- show-tokens
+  [db account options]
+  (view/show-tokens
+   account
+   (db/find-user-tokens-by-username db account)
+   (db/jars-by-username db account)
+   (db/find-groupnames db account)
+   options))
+
+(defn- create-token*
+  [db event-emitter account request]
+  (let [{:keys [name scope single_use expires_in]} (:params request)
+        single-use? (boolean single_use)
+        [group-name jar-name] (parse-scope scope)
+        expires-at (calculate-expires-at expires_in)
+        token-record (db/add-deploy-token db account name group-name jar-name
+                                          single-use? expires-at)]
+    (event/emit event-emitter :deploy-token-created
+                (merge {:username     account
+                        :token-name   name
+                        :group-name   group-name
+                        :jar-name     jar-name
+                        :single-use?  single-use?
+                        :expires-at   expires-at}
+                       (common/request-details request)))
+    (log/info {:tag :create-token
+               :username account
+               :status :success})
+    (show-tokens db account {:new-token token-record})))
+
+(defn- validate-scope
+  [db username scope]
+  (let [[group-name jar-name] (parse-scope scope)]
+    (if (and group-name jar-name)
+      (contains? (db/jar-active-usernames db group-name jar-name) username)
+      true)))
+
+(defn create-token-schema
+  [db username]
+  [:map
+   [:name common/non-empty-string-schema]
+   [:scope [:and
+            [:or
+             common/empty-string-schema
+             [:re {:error/message {:en "should be of the form 'group/*' or 'group/project'"}}
+              #"^[a-z0-9_.-]+/(\*|[a-z0-9_.-]+)$"]]
+            [:fn {:error/message {:en "should be for a group & project you have access to"}}
+             (partial validate-scope db username)]]]
+   [:single_use {:optional true} :boolean]
+   [:expires_in [:or
+                 common/empty-string-schema
+                 (into [:enum]
+                       (comp
+                        (map peek)
+                        (filter int?))
+                       view/expiry-options)]]])
+
 (defn- create-token [db event-emitter request]
   (auth/with-account
     (fn [account]
-      (let [{:keys [name scope single_use expires_in]} (:params request)
-            single-use? (boolean single_use)
-            [group-name jar-name] (parse-scope scope)
-            expires-at (calculate-expires-at expires_in)
-            token-record (db/add-deploy-token db account name group-name jar-name
-                                                single-use? expires-at)]
-        (event/emit event-emitter :deploy-token-created
-                    (merge {:username     account
-                            :token-name   name
-                            :group-name   group-name
-                            :jar-name     jar-name
-                            :single-use?  single-use?
-                            :expires-at   expires-at}
-                           (common/request-details request)))
-        (log/info {:tag :create-token
-                   :username account
-                   :status :success})
-        (view/show-tokens account
-                          (db/find-user-tokens-by-username db account)
-                          (db/jars-by-username db account)
-                          (db/find-groupnames db account)
-                          {:new-token token-record})))))
+      (common/coerce-params
+       (create-token-schema db account)
+       request
+       (partial create-token* db event-emitter account)
+       (fn [explanation]
+         (show-tokens db account {:errors (common/malli-error-list explanation)}))))))
 
 (defn- find-token [db token-id]
   (when-let [id-int (try

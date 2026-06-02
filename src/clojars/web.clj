@@ -2,7 +2,6 @@
   (:require
    [cemerick.friend :as friend]
    [cemerick.friend.workflows :as workflows]
-   [cheshire.core :as json]
    [clojars.auth :as auth :refer [try-account]]
    [clojars.config :refer [config]]
    [clojars.errors :refer [wrap-exceptions]]
@@ -14,6 +13,7 @@
    [clojars.middleware :refer [wrap-ignore-trailing-slash]]
    [clojars.routes.api :as api]
    [clojars.routes.artifact :as artifact]
+   [clojars.routes.common :as routes.common]
    [clojars.routes.group :as group]
    [clojars.routes.repo :as repo]
    [clojars.routes.session :as session]
@@ -33,8 +33,7 @@
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.defaults :as ring-defaults]
    [ring.middleware.flash :refer [wrap-flash]]
-   [ring.middleware.not-modified :refer [wrap-not-modified]]
-   [ring.util.response :refer [bad-request content-type]]))
+   [ring.middleware.not-modified :refer [wrap-not-modified]]))
 
 (let [throw* #(throw (ex-info
                       "page must be an positive integer"
@@ -131,13 +130,7 @@
   (fn [{:as req :keys [params]}]
     (if (m/validate params-schema params)
       (f req)
-      (let [explanation (pr-str (m/explain params-schema params))]
-        (log/warn {:tag         :invalid-params
-                   :explanation explanation})
-        (-> {:explanation explanation}
-            (json/encode)
-            (bad-request)
-            (content-type "application/json"))))))
+      (routes.common/reject-params (m/explain params-schema params)))))
 
 (defn clojars-app
   [{:as system
