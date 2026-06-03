@@ -3,6 +3,7 @@
    [clojars.email :refer [simple-mailer]]
    [clojars.event :as event]
    [clojars.hcaptcha :as hcaptcha]
+   [clojars.hibp :as hibp]
    [clojars.http-kit :as http-kit]
    [clojars.notifications :as notifications]
    ;; for defmethods
@@ -82,6 +83,7 @@
           :event-emitter  (event/new-sqs-emitter (:event-queue config))
           :event-receiver (event/new-sqs-receiver (:event-queue config))
           :hcaptcha       (hcaptcha/new-hcaptcha (:hcaptcha config))
+          :hibp           (hibp/new-hibp)
           :http           (http-kit/new-server (:http config))
           :http-client    (remote-service/new-http-remote-service)
           :mailer         (simple-mailer (:mail config))
@@ -92,7 +94,7 @@
         (component/system-using
          {:app            [:clojars-app]
           :clojars-app    [:db :github :gitlab :error-reporter :event-emitter :hcaptcha
-                           :http-client :mailer :stats :search :storage]
+                           :hibp :http-client :mailer :stats :search :storage]
           :event-emitter  [:error-reporter]
           :http           [:app]
           :notifications  [:db :mailer]

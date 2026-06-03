@@ -54,3 +54,14 @@
      username)
     (common/details-table data)
     common/did-not-take-action]))
+
+(defmethod notifications/notification :password-compromised
+  [_type mailer {:as _user username :user email :email} _data]
+  (notifications/send
+   mailer email "Your Clojars password has been reset"
+   [(format
+     "We detected that the password on your '%s' Clojars account has appeared in a known public data breach (see https://haveibeenpwned.com/Passwords)."
+     username)
+    "To protect your account, we have cleared the password. You will need to choose a new one before you can log in again."
+    "To set a new password, visit https://clojars.org/forgot-password and follow the instructions in the email we send you."
+    "We did not log you in. The login attempt that triggered this email used a known-compromised password, but we cannot tell whether it was you or someone using a leaked password. If it was you, please pick a new, unique password. If it wasn't, this email is your signal that the password should not be used anywhere."]))

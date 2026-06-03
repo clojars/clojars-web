@@ -100,7 +100,7 @@
     (str/lower-case (str/trim email))))
 
 (defn update-profile
-  [db event-emitter account {:keys [email current-password password confirm] :as params} details]
+  [db event-emitter hibp account {:keys [email current-password password confirm] :as params} details]
   (let [email (normalize-email email)]
     (log/with-context {:tag :update-profile
                        :username account}
@@ -112,7 +112,7 @@
                                     (uv/user-validations db account)
                                     (uv/current-password-validations db account)
                                     (when-not (str/blank? password)
-                                      (uv/password-validations confirm))))]
+                                      (uv/password-validations hibp confirm))))]
         (do
           (log/info {:status :failed
                      :reason :validation-failed})
@@ -256,12 +256,12 @@
                 [:h1 "Reset your password"]
                 [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"]))))
 
-(defn reset-password [db event-emitter reset-code {:keys [password confirm]} details]
+(defn reset-password [db event-emitter hibp reset-code {:keys [password confirm]} details]
   (log/with-context {:tag :reset-password
                      :reset-code reset-code}
     (if-let [errors (uv/validate {:password password
                                   :reset-code reset-code}
-                                 (uv/reset-password-validations db confirm))]
+                                 (uv/reset-password-validations db hibp confirm))]
       (do
         (log/info {:status :failed
                    :reason :validation-failed})

@@ -126,7 +126,6 @@
   [db query-data]
   (jdbc/execute! db (hsql/format query-data {:quoted true})))
 
-
 (def user-column
   "user is a reserved word, so we have to quote it."
   "\"user\"")
@@ -814,6 +813,15 @@
   [db username]
   (sql/update! db :users
                {:password_reset_code nil}
+               {user-column username}))
+
+(defn clear-password!
+  "Wipes a user's password so they can no longer log in. They must use the
+  forgot-password flow to set a new one. Used when we detect a compromised
+  password at login time."
+  [db username]
+  (sql/update! db :users
+               {:password ""}
                {user-column username}))
 
 (defn set-otp-secret-key!

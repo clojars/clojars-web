@@ -7,6 +7,7 @@
    [cemerick.friend.workflows :as workflows]
    [clojars.db :as db]
    [clojars.event :as event]
+   [clojars.hibp :as hibp]
    [clojars.log :as log]
    [clojars.util :as util]
    [clojure.string :as str]
@@ -164,7 +165,23 @@
       true)
     (valid-totp-token? otp user)))
 
-(defn password-credential-fn [db event-emitter]
+(defn- handle-compromised-password!
+  "When a user logs in with a password that is known to HIBP, wipe the stored
+  password so the account can no longer be logged into, and emit an event so
+  the user is notified by email. They must use the forgot-password flow to
+  set a new (un-pwned) password. Returns nil so the caller treats this as a
+  failed login."
+  [db event-emitter username]
+  (db/clear-password! db username)
+  (log/audit db {:tag :password-compromised
+                 :message "Password matched a known data breach (HIBP); password cleared and reset required."})
+  (log/info {:status :failed
+             :reason :password-compromised})
+  (event/emit event-emitter :password-compromised
+              {:username username})
+  nil)
+
+(defn password-credential-fn [db event-emitter hibp]
   (fn [{:keys [username password otp]}]
     (log/with-context {:tag :authentication
                        :username username
@@ -176,9 +193,11 @@
                    (creds/bcrypt-verify password (:password user))
                    (or (not otp_active)
                        (validate-otp db event-emitter user otp)))
-            (do
-              (log/info {:status :success})
-              {:username username})
+            (if (hibp/pwned? hibp password)
+              (handle-compromised-password! db event-emitter username)
+              (do
+                (log/info {:status :success})
+                {:username username}))
             (log/info {:status :failed
                        :reason :password-or-otp-incorrect})))
         (log/info {:status :failed

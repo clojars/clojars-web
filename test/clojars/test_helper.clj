@@ -7,6 +7,7 @@
    [clojars.dev.setup :as setup]
    [clojars.email :as email]
    [clojars.errors :as errors]
+   [clojars.hibp :as hibp]
    [clojars.http-kit :as http-kit]
    [clojars.oauth.service :as oauth-service]
    [clojars.s3 :as s3]
@@ -122,6 +123,12 @@
 (defn app []
   (web/clojars-app system))
 
+(defn mark-pwned!
+  "Marks `password` (and optionally more) as compromised in the mock HIBP
+  client for the duration of the current test."
+  [& passwords]
+  (swap! (:pwned-passwords (:hibp system)) into (zipmap passwords (repeat 1))))
+
 (defn- with-test-system*
   [f]
   (binding [config/*profile* "test"]
@@ -131,6 +138,7 @@
                       (assoc (system/new-system (config/config))
                              :repo-bucket (s3/mock-s3-client)
                              :error-reporter (quiet-reporter)
+                             :hibp (hibp/new-mock-hibp (atom {}))
                              :index-factory memory-index
                              :mailer (email/mock-mailer)
                              :stats (no-stats)

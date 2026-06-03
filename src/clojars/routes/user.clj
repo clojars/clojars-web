@@ -116,52 +116,52 @@
         (assoc (redirect "/mfa")
                :flash "Password incorrect.")))))
 
-(defn routes [db event-emitter hcaptcha mailer]
+(defn routes [db event-emitter hcaptcha hibp mailer]
   (compojure/routes
    (GET "/profile" {:keys [flash]}
-        (auth/with-account
-          #(view/profile-form % (db/find-user db %) flash)))
+     (auth/with-account
+       #(view/profile-form % (db/find-user db %) flash)))
    (POST "/profile" {:as request :keys [params]}
-         (auth/with-account
-           #(view/update-profile db event-emitter % params (common/request-details request))))
+     (auth/with-account
+       #(view/update-profile db event-emitter hibp % params (common/request-details request))))
 
    (GET "/mfa" {:keys [flash]}
-        (auth/with-account
-          #(view/mfa % (db/find-user db %) flash)))
+     (auth/with-account
+       #(view/mfa % (db/find-user db %) flash)))
    (POST "/mfa" {:keys [params]}
-         (auth/with-account
-           #(create-mfa db % (db/find-user db %) params)))
+     (auth/with-account
+       #(create-mfa db % (db/find-user db %) params)))
    (PUT "/mfa" {:as request :keys [params]}
-        (auth/with-account
-          #(confirm-mfa db event-emitter %
-                        (db/find-user db %) params (common/request-details request))))
+     (auth/with-account
+       #(confirm-mfa db event-emitter %
+                     (db/find-user db %) params (common/request-details request))))
    (DELETE "/mfa" {:as request :keys [params]}
-           (auth/with-account
-             #(disable-mfa db event-emitter % (db/find-user db %) params (common/request-details request))))
+     (auth/with-account
+       #(disable-mfa db event-emitter % (db/find-user db %) params (common/request-details request))))
 
    (GET "/notification-preferences" {:keys [flash]}
-        (auth/with-account
-          #(view/notifications-form % (db/find-user db %) flash)))
+     (auth/with-account
+       #(view/notifications-form % (db/find-user db %) flash)))
    (POST "/notification-preferences" {:keys [params]}
-         (auth/with-account
-           #(view/update-notifications db % params)))
+     (auth/with-account
+       #(view/update-notifications db % params)))
 
    (GET "/register" {:keys [params flash]}
-        (http-utils/with-extra-csp-srcs hcaptcha/hcaptcha-csp
-          (view/register-form hcaptcha params flash)))
+     (http-utils/with-extra-csp-srcs hcaptcha/hcaptcha-csp
+       (view/register-form hcaptcha params flash)))
 
    (GET "/forgot-password" _
-        (view/forgot-password-form))
+     (view/forgot-password-form))
    (POST "/forgot-password" {:as request :keys [params]}
-         (view/forgot-password db mailer params (common/request-details request)))
+     (view/forgot-password db mailer params (common/request-details request)))
 
    (GET "/password-resets/:reset-code" [reset-code]
-        (view/reset-password-form db reset-code))
+     (view/reset-password-form db reset-code))
 
    (POST "/password-resets/:reset-code" {:as request {:keys [reset-code password confirm]} :params}
-         (view/reset-password db event-emitter reset-code {:password password :confirm confirm} (common/request-details request)))
+     (view/reset-password db event-emitter hibp reset-code {:password password :confirm confirm} (common/request-details request)))
 
    (GET "/users/:username" [username]
-        (show db username))
+     (show db username))
    (GET "/:username" [username]
-        (show db username))))
+     (show db username))))

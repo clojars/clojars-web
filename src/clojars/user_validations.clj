@@ -3,16 +3,30 @@
    [cemerick.friend.credentials :as creds]
    [clojars.db :as db]
    [clojars.hcaptcha :as hcaptcha]
+   [clojars.hibp :as hibp]
    [clojars.log :as log]
    [clojure.string :as str]
    [valip.core :as valip]
    [valip.predicates :as pred]))
 
+(defn- not-pwned?
+  [hibp password]
+  ;; Skip the HIBP call if the password will be rejected by length anyway.
+  ;; valip runs every predicate even when earlier ones fail, so without this
+  ;; guard, every too-short password would still trigger an HTTP call.
+  (or (not (string? password))
+      (< (count password) 12)
+      (> (count password) 256)
+      (not (hibp/pwned? hibp password))))
+
 (defn password-validations
-  [confirm]
+  [hibp confirm]
   [[:password (pred/min-length 12) "Password must be 12 characters or longer"]
    [:password #(= % confirm) "Password and confirm password must match"]
-   [:password (pred/max-length 256) "Password must be 256 or fewer characters"]])
+   [:password (pred/max-length 256) "Password must be 256 or fewer characters"]
+   [:password (partial not-pwned? hibp)
+    (str "Password has appeared in a known data breach (see https://haveibeenpwned.com/Passwords). "
+         "Please choose a different password.")]])
 
 (defn user-validations
   ([db]
@@ -37,22 +51,22 @@
   [[:captcha (partial hcaptcha/valid-response? hcaptcha) "Captcha response is invalid."]])
 
 (defn new-user-validations
-  [db hcaptcha confirm]
+  [db hcaptcha hibp confirm]
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (db/reserved-names %)
                                 (db/find-user db %)
                                 (seq (db/group-activenames db %))))
             "Username is already taken"]]
           (user-validations db)
-          (password-validations confirm)
+          (password-validations hibp confirm)
           (captcha-validations hcaptcha)))
 
 (defn reset-password-validations
-  [db confirm]
+  [db hibp confirm]
   (concat
    [[:reset-code pred/present? "Reset code can't be blank."]
     [:reset-code #(or (str/blank? %) (db/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]]
-   (password-validations confirm)))
+   (password-validations hibp confirm)))
 
 (defn- correct-password?
   [db username current-password]

@@ -9,7 +9,7 @@
    [clojars.web.user :refer [register-form normalize-email]]))
 
 (defn register
-  [db hcaptcha {:keys [confirm email h-captcha-response password username]}]
+  [db hcaptcha hibp {:keys [confirm email h-captcha-response password username]}]
   (let [email (normalize-email email)]
     (log/with-context {:email email
                        :username username
@@ -18,7 +18,7 @@
                                     :email    email
                                     :password password
                                     :username username}
-                                   (uv/new-user-validations db hcaptcha confirm))]
+                                   (uv/new-user-validations db hcaptcha hibp confirm))]
         (do
           (log/info {:status :validation-failed})
           (http-utils/with-extra-csp-srcs
@@ -33,8 +33,8 @@
           (log/info {:status :success})
           (workflow/make-auth {:identity username :username username}))))))
 
-(defn workflow [db hcaptcha]
+(defn workflow [db hcaptcha hibp]
   (fn [{:keys [uri request-method params]}]
     (when (and (= "/register" uri)
                (= :post request-method))
-      (register db hcaptcha params))))
+      (register db hcaptcha hibp params))))

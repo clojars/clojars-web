@@ -1,9 +1,10 @@
 (ns clojars.integration.sessions-test
   (:require
    [clojars.db :as db]
+   [clojars.email :as email]
    [clojars.integration.steps :refer [create-deploy-token enable-mfa login-as register-as]]
    [clojars.test-helper :as help]
-   [clojure.test :refer [deftest testing use-fixtures]]
+   [clojure.test :refer [deftest is testing use-fixtures]]
    [kerodon.core :refer [follow follow-redirect session within]]
    [kerodon.test :refer [has status? text?]]
    [net.cgrand.enlive-html :as enlive]
@@ -24,7 +25,7 @@
       (follow-redirect)
       (has (status? 200))
       (within [:div :p.error]
-        (has (text? "Incorrect username, password, or two-factor code.Make sure that you are using your username, and not your email to log in.")))))
+              (has (text? "Incorrect username, password, or two-factor code.Make sure that you are using your username, and not your email to log in.")))))
 
 (deftest user-can-login-and-logout
   (let [app (help/app)]
@@ -36,12 +37,12 @@
           (follow-redirect)
           (has (status? 200))
           (within [:.light-article :> :h1]
-            (has (text? "Dashboard (fixture)")))
+                  (has (text? "Dashboard (fixture)")))
           (follow "logout")
           (follow-redirect)
           (has (status? 200))
           (within [:nav [:li enlive/first-child] :a]
-            (has (text? "login")))))))
+                  (has (text? "login")))))))
 
 (deftest user-cant-login-with-deploy-token
   (let [app (help/app)
@@ -53,7 +54,7 @@
         (follow-redirect)
         (has (status? 200))
         (within [:div :p.error]
-          (has (text? "Incorrect username, password, or two-factor code."))))))
+                (has (text? "Incorrect username, password, or two-factor code."))))))
 
 (deftest user-with-password-wipe-gets-message
   (let [app (help/app)]
@@ -65,7 +66,7 @@
         (follow-redirect)
         (has (status? 200))
         (within [:div :p.error]
-          (has (text? "Incorrect username, password, or two-factor code."))))))
+                (has (text? "Incorrect username, password, or two-factor code."))))))
 
 (deftest login-with-mfa
   (let [app (help/app)]
@@ -78,7 +79,7 @@
             (follow-redirect)
             (has (status? 200))
             (within [:.light-article :> :h1]
-              (has (text? "Dashboard (fixture)")))))
+                    (has (text? "Dashboard (fixture)")))))
       (testing "with a token that is too old"
         (let [the-past (Date. (- (System/currentTimeMillis) 31000))]
           (-> (session app)
@@ -86,7 +87,7 @@
               (follow-redirect)
               (has (status? 200))
               (within [:div :p.error]
-                (has (text? "Incorrect username, password, or two-factor code."))))))
+                      (has (text? "Incorrect username, password, or two-factor code."))))))
       (testing "with a token that is in the future"
         (let [the-future (Date. (+ (System/currentTimeMillis) 31000))]
           (-> (session app)
@@ -94,25 +95,58 @@
               (follow-redirect)
               (has (status? 200))
               (within [:div :p.error]
-                (has (text? "Incorrect username, password, or two-factor code."))))))
+                      (has (text? "Incorrect username, password, or two-factor code."))))))
       (testing "with invalid token"
         (-> (session app)
             (login-as "fixture" "password1234" "1")
             (follow-redirect)
             (has (status? 200))
             (within [:div :p.error]
-              (has (text? "Incorrect username, password, or two-factor code.")))))
+                    (has (text? "Incorrect username, password, or two-factor code.")))))
       (testing "with recovery code"
         (-> (session app)
             (login-as "fixture" "password1234" recovery-code)
             (follow-redirect)
             (has (status? 200))
             (within [:.light-article :> :h1]
-              (has (text? "Dashboard (fixture)"))))
+                    (has (text? "Dashboard (fixture)"))))
         ;; mfa is now disabled, so login w/o an otp works
         (-> (session app)
             (login-as "fixture" "password1234")
             (follow-redirect)
             (has (status? 200))
             (within [:.light-article :> :h1]
-              (has (text? "Dashboard (fixture)"))))))))
+                    (has (text? "Dashboard (fixture)"))))))))
+
+(deftest login-with-pwned-password-clears-password-and-emails-user
+  (let [app (help/app)
+        password "password1234"]
+    (-> (session app)
+        (register-as "fixture" "fixture@example.org" password))
+    ;; Mark the password as compromised in the mock HIBP client.
+    (help/mark-pwned! password)
+    (email/expect-mock-emails 1)
+    (-> (session app)
+        (login-as "fixture" password)
+        (follow-redirect)
+        (has (status? 200))
+        (within [:div :p.error]
+                (has (text? "Incorrect username, password, or two-factor code."))))
+    (testing "the stored password is cleared so the account is locked"
+      (let [user (db/find-user help/*db* "fixture")]
+        (is (or (nil? (:password user))
+                (= "" (:password user))))))
+    (testing "the user receives a notification email"
+      (is (email/wait-for-mock-emails))
+      (let [[to subject body] (first @email/mock-emails)]
+        (is (= "fixture@example.org" to))
+        (is (= "Your Clojars password has been reset" subject))
+        (is (re-find #"known public data breach" body))
+        (is (re-find #"forgot-password" body))))
+    (testing "subsequent login with the same password still fails"
+      (-> (session app)
+          (login-as "fixture" password)
+          (follow-redirect)
+          (has (status? 200))
+          (within [:div :p.error]
+                  (has (text? "Incorrect username, password, or two-factor code.")))))))

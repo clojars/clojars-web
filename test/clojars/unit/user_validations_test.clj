@@ -2,6 +2,7 @@
   (:require
    [clojars.db :as db]
    [clojars.hcaptcha :as hcaptcha]
+   [clojars.hibp :as hibp]
    [clojars.remote-service :as remote-service]
    [clojars.test-helper :as help]
    [clojars.user-validations :as uv]
@@ -11,19 +12,30 @@
 (use-fixtures :each
   help/with-clean-database)
 
+(defn- mock-hibp [& pwned]
+  (hibp/new-mock-hibp (atom (zipmap pwned (repeat 1)))))
+
 (deftest test-password-validations
-  (is (nil? (uv/validate {:password "abcdefghijkl"} (uv/password-validations "abcdefghijkl"))))
-  (is (match?
-       {:password ["Password must be 12 characters or longer"]}
-       (uv/validate {:password "a"} (uv/password-validations "a"))))
-  (is (match?
-       {:password ["Password must be 12 characters or longer"
-                   "Password and confirm password must match"]}
-       (uv/validate {:password "a"} (uv/password-validations "b"))))
-  (let [long-password (apply str (repeat 257 "a"))]
+  (let [hibp (mock-hibp)]
+    (is (nil? (uv/validate {:password "abcdefghijkl"} (uv/password-validations hibp "abcdefghijkl"))))
     (is (match?
-         {:password ["Password must be 256 or fewer characters"]}
-         (uv/validate {:password long-password} (uv/password-validations long-password))))))
+         {:password ["Password must be 12 characters or longer"]}
+         (uv/validate {:password "a"} (uv/password-validations hibp "a"))))
+    (is (match?
+         {:password ["Password must be 12 characters or longer"
+                     "Password and confirm password must match"]}
+         (uv/validate {:password "a"} (uv/password-validations hibp "b"))))
+    (let [long-password (apply str (repeat 257 "a"))]
+      (is (match?
+           {:password ["Password must be 256 or fewer characters"]}
+           (uv/validate {:password long-password} (uv/password-validations hibp long-password)))))))
+
+(deftest test-pwned-password-rejected
+  (let [hibp (mock-hibp "leaked-password-123")]
+    (is (match?
+         {:password [#"known data breach"]}
+         (uv/validate {:password "leaked-password-123"}
+                      (uv/password-validations hibp "leaked-password-123"))))))
 
 (deftest test-user-validations
   (is (nil? (uv/validate {:email "foo@example.com"
@@ -69,7 +81,8 @@
 
 (deftest test-new-user-validations
   (remote-service/with-mocking
-    (let [hcaptcha-service (hcaptcha/new-mock-hcaptcha)]
+    (let [hcaptcha-service (hcaptcha/new-mock-hcaptcha)
+          hibp (mock-hibp)]
       (remote-service/set-responder '-validate-hcaptcha-response
                                     (fn [request-info]
                                       {:success (= "valid" (get-in request-info [:form-params :response]))}))
@@ -78,14 +91,14 @@
                          :password "password1234a"
                          :username "auser"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
+                        (uv/new-user-validations help/*db* hcaptcha-service hibp "password1234a"))))
       (is (match?
            {:captcha ["Captcha response is invalid."]}
            (uv/validate {:email "foo@example.com"
                          :password "password1234a"
                          :username "auser"
                          :captcha "invalid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
+                        (uv/new-user-validations help/*db* hcaptcha-service hibp "password1234a"))))
       (is (match?
            {:password ["Password can't be blank"
                        "Password must be 12 characters or longer"
@@ -94,7 +107,7 @@
                          :password ""
                          :username "auser"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
+                        (uv/new-user-validations help/*db* hcaptcha-service hibp "password1234a"))))
       (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
       (is (match?
            {:username ["Username is already taken"]
@@ -103,14 +116,14 @@
                          :password "password1234a"
                          :username "auser"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
+                        (uv/new-user-validations help/*db* hcaptcha-service hibp "password1234a"))))
       (is (match?
            {:username ["Username is already taken"]}
            (uv/validate {:email "foo2@example.com"
                          :password "password1234a"
                          :username "admin"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
+                        (uv/new-user-validations help/*db* hcaptcha-service hibp "password1234a"))))
       (db/add-group help/*db* "auser" "agroup")
       (is (match?
            {:username ["Username is already taken"]}
@@ -118,25 +131,26 @@
                          :password "password1234a"
                          :username "agroup"
                          :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a")))))))
+                        (uv/new-user-validations help/*db* hcaptcha-service hibp "password1234a")))))))
 
 (deftest test-reset-password-validations
   (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
-  (let [reset-code (db/set-password-reset-code! help/*db* "auser")]
+  (let [reset-code (db/set-password-reset-code! help/*db* "auser")
+        hibp (mock-hibp)]
     (is (nil?
          (uv/validate {:reset-code reset-code
                        :password "password1234a"}
-                      (uv/reset-password-validations help/*db* "password1234a"))))
+                      (uv/reset-password-validations help/*db* hibp "password1234a"))))
     (is (match?
          {:reset-code ["Reset code can't be blank."]}
          (uv/validate {:reset-code ""
                        :password "password1234a"}
-                      (uv/reset-password-validations help/*db* "password1234a"))))
+                      (uv/reset-password-validations help/*db* hibp "password1234a"))))
     (is (match?
          {:reset-code ["The reset code does not exist or it has expired."]}
          (uv/validate {:reset-code "foo"
                        :password "password1234a"}
-                      (uv/reset-password-validations help/*db* "password1234a"))))))
+                      (uv/reset-password-validations help/*db* hibp "password1234a"))))))
 
 (deftest current-password-validations
   (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
