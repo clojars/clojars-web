@@ -38,6 +38,9 @@ jobs:
           background: true
       - run: make migrate-db
       - run: make check-dependabot
+      - run:
+          name: Check formatting
+          command: ./scripts/lint
       - run: make lint
       - run: make test
       - store_test_results:

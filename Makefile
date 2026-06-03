@@ -10,6 +10,10 @@ check:
 lint:
 	./bin/lint
 
+.PHONY: tidy
+tidy:
+	./scripts/tidy
+
 .PHONY: migrate-db
 migrate-db:
 	clojure -M:migrate-db
