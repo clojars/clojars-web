@@ -29,7 +29,7 @@
 
 (defn show-group
   [db account groupname & errors]
-  (let [actives (db/group-actives db groupname)
+  (let [actives (db/group-all-actives db groupname)
         actives-for-user (db/group-actives-for-user db groupname account)
         user-admin-scopes (into #{}
                                 (comp

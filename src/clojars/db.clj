@@ -389,16 +389,6 @@
       (first)
       (some?)))
 
-(defn group-actives
-  [db groupname]
-  (q db
-     {:select :*
-      :from :permissions
-      :where [:and
-              [:= :group_name groupname]
-              [:not [:is :inactive true]]]
-      :order-by [:user :scope]}))
-
 (defn group-actives-for-user
   [db groupname username]
   (q db
