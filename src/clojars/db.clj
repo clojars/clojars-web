@@ -374,21 +374,6 @@
              [:= :admin true]
              [:not [:is :inactive true]]]})))
 
-(defn user-has-all-scope?
-  [db username groupname]
-  (-> (q db
-         {:select :user
-          :from :permissions
-          :where
-          [:and
-           [:= :group_name groupname]
-           [:= :user username]
-           [:not [:is :inactive true]]
-           [:= :scope SCOPE-ALL]]
-          :limit 1})
-      (first)
-      (some?)))
-
 (defn group-actives-for-user
   [db groupname username]
   (q db
