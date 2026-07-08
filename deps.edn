@@ -8,7 +8,7 @@
 
   buddy/buddy-core {:mvn/version "1.12.0-430"}
 
-  ch.qos.logback/logback-classic {:mvn/version "1.5.25"}
+  ch.qos.logback/logback-classic {:mvn/version "1.5.37"}
   cheshire/cheshire {:mvn/version "6.1.0"}
   clj-http/clj-http {:mvn/version "3.13.1"}
   clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
