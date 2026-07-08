@@ -80,7 +80,7 @@
   org.clojure/tools.nrepl {:mvn/version "0.2.13"}
   ;; Override plexus-utils brought in by maven-model & maven-repository-metadata to address CVE-2025-67030
   org.codehaus.plexus/plexus-utils {:mvn/version "3.6.1"}
-  org.postgresql/postgresql {:mvn/version "42.7.11"}
+  org.postgresql/postgresql {:mvn/version "42.7.13"}
 
   raven-clj/raven-clj {:mvn/version "1.7.0"}
   ring/ring-core {:mvn/version "1.15.3"}

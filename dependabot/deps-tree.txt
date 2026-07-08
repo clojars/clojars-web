@@ -86,7 +86,8 @@ com.stuartsierra/component 1.2.0
   . com.stuartsierra/dependency 1.0.0
 org.apache.commons/commons-email 1.6.0
   X com.sun.mail/jakarta.mail 1.6.7 :use-top
-org.postgresql/postgresql 42.7.11
+org.postgresql/postgresql 42.7.13
+  . org.checkerframework/checker-qual 3.55.1
 com.github.seancorfield/honeysql 2.7.1368
 aero/aero 1.1.6
 clj-http/clj-http 3.13.1
