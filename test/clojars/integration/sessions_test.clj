@@ -24,7 +24,7 @@
       (follow-redirect)
       (has (status? 200))
       (within [:div :p.error]
-        (has (text? "Incorrect username, password, or two-factor code.Make sure that you are using your username, and not your email to log in.")))))
+        (has (text? "Incorrect username or password.Make sure that you are using your username, and not your email to log in.")))))
 
 (deftest user-can-login-and-logout
   (let [app (help/app)]
@@ -53,7 +53,7 @@
         (follow-redirect)
         (has (status? 200))
         (within [:div :p.error]
-          (has (text? "Incorrect username, password, or two-factor code."))))))
+          (has (text? "Incorrect username or password."))))))
 
 (deftest user-with-password-wipe-gets-message
   (let [app (help/app)]
@@ -65,7 +65,7 @@
         (follow-redirect)
         (has (status? 200))
         (within [:div :p.error]
-          (has (text? "Incorrect username, password, or two-factor code."))))))
+          (has (text? "Incorrect username or password."))))))
 
 (deftest login-with-mfa
   (let [app (help/app)]
@@ -85,23 +85,23 @@
               (login-as "fixture" "password1234" (ot/get-totp-token otp-secret {:date the-past}))
               (follow-redirect)
               (has (status? 200))
-              (within [:div :p.error]
-                (has (text? "Incorrect username, password, or two-factor code."))))))
+              (within [:p.error]
+                (has (text? "Incorrect two-factor code."))))))
       (testing "with a token that is in the future"
         (let [the-future (Date. (+ (System/currentTimeMillis) 31000))]
           (-> (session app)
               (login-as "fixture" "password1234" (ot/get-totp-token otp-secret {:date the-future}))
               (follow-redirect)
               (has (status? 200))
-              (within [:div :p.error]
-                (has (text? "Incorrect username, password, or two-factor code."))))))
+              (within [:p.error]
+                (has (text? "Incorrect two-factor code."))))))
       (testing "with invalid token"
         (-> (session app)
             (login-as "fixture" "password1234" "1")
             (follow-redirect)
             (has (status? 200))
-            (within [:div :p.error]
-              (has (text? "Incorrect username, password, or two-factor code.")))))
+            (within [:p.error]
+              (has (text? "Incorrect two-factor code.")))))
       (testing "with recovery code"
         (-> (session app)
             (login-as "fixture" "password1234" recovery-code)

@@ -14,15 +14,18 @@
 
 (defn login-as
   ([state user password]
-   (login-as state user password nil))
-  ([state user password otp]
    (-> state
        (visit "/")
        (follow "login")
        (fill-in "Username" user)
        (fill-in "Password" password)
-       (cond-> otp (fill-in "Two-Factor Code" otp))
-       (press "Login"))))
+       (press "Login")))
+  ([state user password otp]
+   (-> state
+       (login-as user password)
+       (follow-redirect)
+       (fill-in "Two-Factor Code" otp)
+       (press "Continue"))))
 
 (defn fill-in-captcha
   ([state]

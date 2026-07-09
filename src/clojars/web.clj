@@ -172,8 +172,7 @@
          (log/wrap-request-context))
      (-> (main-routes system)
          (friend/authenticate
-          {:credential-fn (auth/password-credential-fn db event-emitter)
-           :workflows [(auth/interactive-form-with-mfa-workflow)
+          {:workflows [(auth/interactive-form-with-mfa-workflow db event-emitter)
                        (registration/workflow db hcaptcha)
                        (github/workflow github http-client db)
                        (gitlab/workflow gitlab http-client db)]})
