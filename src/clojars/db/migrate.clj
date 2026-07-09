@@ -141,6 +141,11 @@
   (db/do-commands tx
                   ["create index jars_idx_created on jars (created)"]))
 
+(defn- enable-send-deploy-emails-for-existing-users
+  [tx]
+  (db/do-commands tx
+                  ["update users set send_deploy_emails = true where send_deploy_emails = false and created < '2022-03-14'"]))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -157,7 +162,8 @@
    #'add-group-settings-table
    #'rename-groups-to-permissions
    #'add-scope-to-permissions
-   #'add-created-index-to-jars-table])
+   #'add-created-index-to-jars-table
+   #'enable-send-deploy-emails-for-existing-users])
 
 (defn migrate [db]
   (db/do-commands db
