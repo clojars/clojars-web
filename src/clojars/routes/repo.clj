@@ -127,60 +127,66 @@
 
 (def ^:private failure-details
   ;; These use comb for templating, and can access any key in the metadata passed to throw-invalid
-  {:central-shadow                 {:title   "Cannot shadow Maven Central"
-                                    :details "shadowing Maven Central artifacts is not allowed. See https://bit.ly/3rTLqxZ"}
-   :central-shadow-check-failure   {:title   "Maven Central shadow check failed"
-                                    :details "failed to contact Maven Central to verify project name. See https://bit.ly/3rTLqxZ"}
-   :gradle-module-invalid          {:title   "Invalid Gradle module"
-                                    :details "failed to parse Gradle module. Message: <%= message %>"}
-   :gradle-module-mismatch-group   {:title   "Invalid Gradle module"
-                                    :details "the component group in the gradle module (<%= module-value %>) does not match the group you are deploying to (<%= value %>)"}
-   :gradle-module-mismatch-module  {:title   "Invalid Gradle module"
-                                    :details "the component module in the gradle module (<%= module-value %>) does not match the module you are deploying to (<%= value %>)"}
-   :gradle-module-mismatch-version {:title   "Invalid Gradle module"
-                                    :details "the component version in the gradle module (<%= module-value %>) does not match the version you are deploying to (<%= value %>)"}
-   :group-no-access                {:title   "Deploy group not accessible"
-                                    :details "You don't have access to the '<%= group %>/<%= project %>' project"}
-   :group-non-existent             {:title   "Deploy group does not exist"
-                                    :details "Group '<%= group %>' doesn't exist. See https://bit.ly/3MuKGXO"}
-   :group-non-verified             {:title   "Deploy group isn't verified"
-                                    :details "Group '<%= group %>' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"}
-   :group-requires-mfa             {:title   "Deploy group requires MFA"
-                                    :details "The group '<%= group %>' requires you to have two-factor auth enabled to deploy. See https://bit.ly/45qrtA8"}
-   :file-invalid-checksum          {:title   "Invalid checksum"
-                                    :details "invalid <%= checksum-type %> checksum for <%= filename %>"}
-   :file-missing-checksum          {:title   "File missing checksum"
-                                    :details "no checksums provided for <%= filename %>"}
-   :file-missing-signature         {:title   "File missing signature"
-                                    :details "file <%= filename %> has no <%= signature-type %> signature"}
-   :maven-metadata-file-invalid    {:title   "Invalid maven-metadata.xml file"
-                                    :details "failed to parse maven-metadata.xml file. Message: <%= message %>"}
-   :password-not-token             {:title   "No deploy token provided"
-                                    :details "a deploy token is required to deploy. See https://bit.ly/3LmCclv"}
-   :pom-file-invalid               {:title   "Invalid POM file"
-                                    :details "failed to parse POM file. Message: <%= message %>"}
-   :pom-file-mismatch-group        {:title   "Invalid POM file"
-                                    :details "the group in the pom (<%= pom-value %>) does not match the group you are deploying to (<%= value %>)"}
-   :pom-file-mismatch-name         {:title   "Invalid POM file"
-                                    :details "the name in the pom (<%= pom-value %>) does not match the name you are deploying to (<%= value %>)"}
-   :pom-file-mismatch-version      {:title   "Invalid POM file"
-                                    :details "the version in the pom (<%= pom-value %>) does not match the version you are deploying to (<%= value %>)"}
-   :pom-file-missing               {:title   "Missing POM file"
-                                    :details "No POM file was uploaded"}
-   :pom-file-missing-license       {:title   "Invalid POM file"
-                                    :details "the POM file does not include a license. See https://bit.ly/3PQunZU"}
-   :project-name-invalid           {:title   "Invalid project name"
-                                    :details "project names must consist solely of lowercase letters, numbers, hyphens and underscores. See https://bit.ly/3MuL20A"}
-   :redeploy-non-snapshot          {:title   "Non-SNAPSHOT redeploy"
-                                    :details "redeploying non-snapshots is not allowed. See https://bit.ly/3EYzhwT"}
-   :token-single-use-used          {:title   "Deploy token used"
-                                    :details "The provided single-use token has already been used"}
-   :token-scope-mismatch           {:title   "Deploy token scope mismatch"
-                                    :details "The provided token's scope doesn't allow deploying this artifact. See https://bit.ly/3LmCclv"}
-   :unknown-upload-error           {:title   "Unknown error"
-                                    :details "Unknown error. Message: <%= message %>"}
-   :version-invalid                {:title   "Invalid version"
-                                    :details "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX"}})
+  {:central-shadow                         {:title   "Cannot shadow Maven Central"
+                                            :details "shadowing Maven Central artifacts is not allowed. See https://bit.ly/3rTLqxZ"}
+   :central-shadow-check-failure           {:title   "Maven Central shadow check failed"
+                                            :details "failed to contact Maven Central to verify project name. See https://bit.ly/3rTLqxZ"}
+   :gradle-module-invalid                  {:title   "Invalid Gradle module"
+                                            :details "failed to parse Gradle module. Message: <%= message %>"}
+   :gradle-module-mismatch-group           {:title   "Invalid Gradle module"
+                                            :details "the component group in the gradle module (<%= module-value %>) does not match the group you are deploying to (<%= value %>)"}
+   :gradle-module-mismatch-module          {:title   "Invalid Gradle module"
+                                            :details "the component module in the gradle module (<%= module-value %>) does not match the module you are deploying to (<%= value %>)"}
+   :gradle-module-mismatch-version         {:title   "Invalid Gradle module"
+                                            :details "the component version in the gradle module (<%= module-value %>) does not match the version you are deploying to (<%= value %>)"}
+   :group-no-access                        {:title   "Deploy group not accessible"
+                                            :details "You don't have access to the '<%= group %>/<%= project %>' project"}
+   :group-non-existent                     {:title   "Deploy group does not exist"
+                                            :details "Group '<%= group %>' doesn't exist. See https://bit.ly/3MuKGXO"}
+   :group-non-verified                     {:title   "Deploy group isn't verified"
+                                            :details "Group '<%= group %>' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"}
+   :group-requires-mfa                     {:title   "Deploy group requires MFA"
+                                            :details "The group '<%= group %>' requires you to have two-factor auth enabled to deploy. See https://bit.ly/45qrtA8"}
+   :file-invalid-checksum                  {:title   "Invalid checksum"
+                                            :details "invalid <%= checksum-type %> checksum for <%= filename %>"}
+   :file-missing-checksum                  {:title   "File missing checksum"
+                                            :details "no checksums provided for <%= filename %>"}
+   :file-missing-signature                 {:title   "File missing signature"
+                                            :details "file <%= filename %> has no <%= signature-type %> signature"}
+   :maven-metadata-file-invalid            {:title   "Invalid maven-metadata.xml file"
+                                            :details "failed to parse maven-metadata.xml file. Message: <%= message %>"}
+   :password-not-token                     {:title   "No deploy token provided"
+                                            :details "a deploy token is required to deploy. See https://bit.ly/3LmCclv"}
+   :pom-file-latest-metaversion-dependency {:title   "Invalid POM file"
+                                            :details "the POM file includes a dependency with a version of 'LATEST' or 'RELEASE'. See https://bit.ly/44Z4Ggp"}
+   :pom-file-invalid                       {:title   "Invalid POM file"
+                                            :details "failed to parse POM file. Message: <%= message %>"}
+   :pom-file-mismatch-group                {:title   "Invalid POM file"
+                                            :details "the group in the pom (<%= pom-value %>) does not match the group you are deploying to (<%= value %>)"}
+   :pom-file-mismatch-name                 {:title   "Invalid POM file"
+                                            :details "the name in the pom (<%= pom-value %>) does not match the name you are deploying to (<%= value %>)"}
+   :pom-file-mismatch-version              {:title   "Invalid POM file"
+                                            :details "the version in the pom (<%= pom-value %>) does not match the version you are deploying to (<%= value %>)"}
+   :pom-file-missing                       {:title   "Missing POM file"
+                                            :details "No POM file was uploaded"}
+   :pom-file-missing-license               {:title   "Invalid POM file"
+                                            :details "the POM file does not include a license. See https://bit.ly/3PQunZU"}
+   :pom-file-range-dependency              {:title   "Invalid POM file"
+                                            :details "the POM file includes a dependency with a version range. See https://bit.ly/44Z4Ggp"}
+   :pom-file-snapshot-dependency           {:title   "Invalid POM file"
+                                            :details "the POM file includes a dependency with a SNAPSHOT version. See https://bit.ly/44Z4Ggp"}
+   :project-name-invalid                   {:title   "Invalid project name"
+                                            :details "project names must consist solely of lowercase letters, numbers, hyphens and underscores. See https://bit.ly/3MuL20A"}
+   :redeploy-non-snapshot                  {:title   "Non-SNAPSHOT redeploy"
+                                            :details "redeploying non-snapshots is not allowed. See https://bit.ly/3EYzhwT"}
+   :token-single-use-used                  {:title   "Deploy token used"
+                                            :details "The provided single-use token has already been used"}
+   :token-scope-mismatch                   {:title   "Deploy token scope mismatch"
+                                            :details "The provided token's scope doesn't allow deploying this artifact. See https://bit.ly/3LmCclv"}
+   :unknown-upload-error                   {:title   "Unknown error"
+                                            :details "Unknown error. Message: <%= message %>"}
+   :version-invalid                        {:title   "Invalid version"
+                                            :details "version strings must consist solely of letters, numbers, dots, pluses, hyphens and underscores. See https://bit.ly/3Kf5KzX"}})
 
 (defn- failure-tag->title
   [tag meta]
@@ -310,11 +316,22 @@
   (when (empty? (:licenses pom))
     (throw-invalid :pom-file-missing-license)))
 
+(defn- validate-pom-dpendendencies
+  [{:as _pom :keys [dependencies]} version]
+  (when (some #(maven/latest-metaversion-version? (:version %)) dependencies)
+    (throw-invalid :pom-file-latest-metaversion-dependency))
+  (when (some #(maven/range-version? (:version %)) dependencies)
+    (throw-invalid :pom-file-range-dependency))
+  (when (and (not (maven/snapshot-version? version))
+             (some #(maven/snapshot-version? (:version %)) dependencies))
+    (throw-invalid :pom-file-snapshot-dependency)))
+
 (defn- validate-pom [pom group name version]
   (validate-pom-entry pom :group group)
   (validate-pom-entry pom :name name)
   (validate-pom-entry pom :version version)
-  (validate-pom-license pom))
+  (validate-pom-license pom)
+  (validate-pom-dpendendencies pom version))
 
 (defn- validate-module-entry
   "Validates a key in a Gradle module"

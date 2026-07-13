@@ -19,7 +19,9 @@
     License
     Model
     Scm)
-   org.apache.maven.model.io.xpp3.MavenXpp3Reader))
+   (org.apache.maven.model.io.xpp3
+    MavenXpp3Reader
+    MavenXpp3Writer)))
 
 (set! *warn-on-reflection* true)
 
@@ -75,9 +77,15 @@
 
 (defn read-pom
   "Reads a pom file returning a maven Model object."
-  [file]
+  ^Model [file]
   (with-open [reader (io/reader file)]
     (.read (MavenXpp3Reader.) reader)))
+
+(defn write-pom
+  "Writes the pom file from the given model"
+  [^Model model file]
+  (with-open [writer (io/writer file)]
+    (.write (MavenXpp3Writer.) writer model)))
 
 (def pom-to-map (comp model-to-map read-pom))
 
@@ -203,6 +211,15 @@
 
 (defn snapshot-version? [^String version]
   (.endsWith version "-SNAPSHOT"))
+
+(defn range-version?
+  [v]
+  (some? (str/index-of v \,)))
+
+(let [dynamic-latest-versions #{"LATEST" "RELEASE"}]
+  (defn latest-metaversion-version?
+    [v]
+    (contains? dynamic-latest-versions v)))
 
 (defn central-metadata
   "Read the metadata from maven central for the given artifact."
