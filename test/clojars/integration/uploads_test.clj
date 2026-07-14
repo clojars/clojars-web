@@ -1124,8 +1124,9 @@
                        :tag "gradle-module-mismatch-version"})))
 
 (deftest deploy-requires-non-latest-metaversion-dependency-versions-in-module
-  (doseq [version ["latest.integration" "latest.release"]]
-    (testing (format "with a version of %s" version)
+  (doseq [version ["latest.integration" "latest.release"]
+          version-type [:prefers :requires :strictly]]
+    (testing (format "with a version %s and type %s" version version-type)
       (-> (session (help/app))
           (register-as "dantheman" "test@example.org" "password1234"))
       (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
@@ -1137,7 +1138,7 @@
                 :jar-file (io/file (io/resource "test.jar"))
                 :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
                 :module-file (-> (io/file (io/resource "test-0.0.1/test.module"))
-                                 (help/update-module-dependency 0 {:version {:requires version}}))
+                                 (help/update-module-dependency 0 {:version {version-type version}}))
                 :password  token})))
 
         (help/match-audit {:username "dantheman"}
@@ -1147,6 +1148,80 @@
                            :version "0.0.1"
                            :message "the Gradle module includes a dependency with a version of 'latest.integration' or 'latest.release'. See https://bit.ly/44Z4Ggp"
                            :tag "gradle-module-latest-metaversion-dependency"})))))
+
+(deftest deploy-requires-non-range-dependency-versions-in-module
+  (doseq [version ["[1,2)" "1.+" "+"]
+          version-type [:prefers :requires :strictly]]
+    (testing (format "with a range version %s and type %s" version version-type)
+      (-> (session (help/app))
+          (register-as "dantheman" "test@example.org" "password1234"))
+      (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
+        (is (thrown-with-msg?
+             DeploymentException
+             #"status=403,.*detail='the Gradle module includes a dependency with a version range"
+              (deploy
+               {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+                :jar-file (io/file (io/resource "test.jar"))
+                :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+                :module-file (-> (io/file (io/resource "test-0.0.1/test.module"))
+                                 (help/update-module-dependency 0 {:version {version-type version}}))
+                :password  token})))
+
+        (help/match-audit {:username "dantheman"}
+                          {:user "dantheman"
+                           :group_name "org.clojars.dantheman"
+                           :jar_name "test"
+                           :version "0.0.1"
+                           :message "the Gradle module includes a dependency with a version range. See https://bit.ly/44Z4Ggp"
+                           :tag "gradle-module-range-dependency"})))))
+
+;; NOCOMMIT: (toby)
+;; - test strictly, prefers
+(deftest deploy-requires-non-SNAPSHOT-dependency-versions-in-module
+  (doseq [version-type [:prefers :requires :strictly]]
+    (testing (format "with a SNAPSHOT version with type %s" version-type)
+      (-> (session (help/app))
+          (register-as "dantheman" "test@example.org" "password1234"))
+      (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
+        (is (thrown-with-msg?
+             DeploymentException
+             #"status=403,.*detail='the Gradle module includes a dependency with a SNAPSHOT version"
+              (deploy
+               {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+                :jar-file (io/file (io/resource "test.jar"))
+                :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+                :module-file (-> (io/file (io/resource "test-0.0.1/test.module"))
+                                 (help/update-module-dependency 0 {:version {version-type "1-SNAPSHOT"}}))
+                :password  token})))
+
+        (help/match-audit {:username "dantheman"}
+                          {:user "dantheman"
+                           :group_name "org.clojars.dantheman"
+                           :jar_name "test"
+                           :version "0.0.1"
+                           :message "the Gradle module includes a dependency with a SNAPSHOT version. See https://bit.ly/44Z4Ggp"
+                           :tag "gradle-module-snapshot-dependency"})))))
+
+(deftest deploy-allows-SNAPSHOT-dependency-versions-in-SNAPSHOT-module
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password1234"))
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
+    (deploy
+     {:coordinates '[org.clojars.dantheman/test "0.0.1-SNAPSHOT"]
+      :jar-file (io/file (io/resource "test.jar"))
+      :pom-file (-> (io/file (io/resource "test-0.0.1/test.pom"))
+                    (help/rewrite-pom {:version "0.0.1-SNAPSHOT"}))
+      :module-file (-> (io/file (io/resource "test-0.0.1/test.module"))
+                       (help/update-module-component {:version "0.0.1-SNAPSHOT"})
+                       (help/update-module-dependency 0 {:version {:requires "1-SNAPSHOT"}}))
+      :password token})
+
+    (help/match-audit {:username "dantheman"}
+                      {:tag "deployed"
+                       :user "dantheman"
+                       :group_name "org.clojars.dantheman"
+                       :jar_name "test"
+                       :version "0.0.1-SNAPSHOT"})))
 
 (deftest deploy-requires-lowercase-project
   (-> (session (help/app))

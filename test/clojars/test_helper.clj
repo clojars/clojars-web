@@ -1,6 +1,7 @@
 (ns clojars.test-helper
   (:require
    [cemerick.pomegranate.aether :as aether]
+   [cheshire.core :as json]
    [clojars.config :as config]
    [clojars.db :as db]
    [clojars.db.migrate :as migrate]
@@ -183,6 +184,28 @@
         dep (nth (.getDependencies model) idx)]
     (java.data/set-properties dep m)
     (write-pom model file)))
+
+(defn- write-module
+  [module ^File file]
+  (let [new-module-file (doto (File/createTempFile (.getName file) ".module")
+                          .deleteOnExit)]
+    (spit new-module-file (json/encode module))
+    new-module-file))
+
+(defn update-module-dependency
+  [file idx m]
+  (-> (slurp file)
+      (json/decode true)
+      (update-in [:variants 0 :dependencies idx]
+                 merge m)
+      (write-module file)))
+
+(defn update-module-component
+  [^File file m]
+  (-> (slurp file)
+      (json/decode true)
+      (update :component merge m)
+      (write-module file)))
 
 (defn add-verified-group
   [account group]
