@@ -134,11 +134,6 @@
       <version>1.1.6</version>
     </dependency>
     <dependency>
-      <groupId>clj-http</groupId>
-      <artifactId>clj-http</artifactId>
-      <version>3.13.1</version>
-    </dependency>
-    <dependency>
       <groupId>commons-collections</groupId>
       <artifactId>commons-collections</artifactId>
       <version>3.2.2</version>
@@ -214,6 +209,10 @@
       <artifactId>friend</artifactId>
       <version>0.2.3</version>
       <exclusions>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>org.openid4java</groupId>
           <artifactId>openid4java-nodeps</artifactId>

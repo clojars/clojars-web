@@ -1,7 +1,7 @@
 (ns clojars.verification
   (:require
-   [clj-http.client :as http]
    [clojars.db :as db]
+   [clojars.http-client :as http]
    [clojars.web.common :as common]
    [clojure.java.shell :as shell]
    [clojure.set :as set]
@@ -149,7 +149,7 @@
 (defn- repo-exists?
   [url]
   (try
-    (= 200 (:status (http/head url {:throw-exceptions false})))
+    (= 200 (:status (http/head url)))
     (catch Exception _
       false)))
 

@@ -2,13 +2,11 @@
   (:require
    [buddy.core.codecs :as codecs]
    [cemerick.pomegranate.aether :as aether]
-   [clj-http.client :as http]
-   [clj-http.cookies :as http-cookies]
-   [clj-http.core :as http-core]
    [clojars.config :refer [config]]
    [clojars.db :as db]
    [clojars.email :as email]
    [clojars.file-utils :as fu]
+   [clojars.http-client :as http]
    [clojars.http-utils :refer [clear-sessions!]]
    [clojars.integration.steps :refer [create-deploy-token login-as register-as]]
    [clojars.s3 :as s3]
@@ -340,16 +338,15 @@
                                :no-version]
                               [(tmp-file
                                 (io/file (io/resource "test.jar")) "test-sources-0.0.1.jar")]])]
-    ;; we use clj-http here instead of aether to have control over the
+    ;; we use an http client here instead of aether to have control over the
     ;; order the files are uploaded
-    (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
-      (doseq [[f no-version?] files]
-        (http/put (format "%s/org/clojars/dantheman/test/%s%s"
-                          (repo-url)
-                          (if no-version? "" "0.0.1/")
-                          (.getName f))
-                  {:body f
-                   :basic-auth ["dantheman" token]})))
+    (doseq [[f no-version?] files]
+      (http/put (format "%s/org/clojars/dantheman/test/%s%s"
+                        (repo-url)
+                        (if no-version? "" "0.0.1/")
+                        (.getName f))
+                {:body f
+                 :basic-auth ["dantheman" token]}))
 
     (let [base-path "org/clojars/dantheman/test/"
           repo-bucket (:repo-bucket help/system)
@@ -386,16 +383,15 @@
                                :no-version]
                               [(tmp-file
                                 (io/file (io/resource "test.jar")) "test-sources-0.0.1.jar")]])]
-    ;; we use clj-http here instead of aether to have control over the
+    ;; we use an http client here instead of aether to have control over the
     ;; order the files are uploaded
-    (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
-      (doseq [[f no-version?] files]
-        (http/put (format "%s/org/clojars/dantheman/test/%s%s"
-                          (repo-url)
-                          (if no-version? "" "0.0.1/")
-                          (.getName f))
-                  {:body f
-                   :basic-auth ["dantheman" token]})))
+    (doseq [[f no-version?] files]
+      (http/put (format "%s/org/clojars/dantheman/test/%s%s"
+                        (repo-url)
+                        (if no-version? "" "0.0.1/")
+                        (.getName f))
+                {:body f
+                 :basic-auth ["dantheman" token]}))
 
     (let [base-path "org/clojars/dantheman/test/"
           repo-bucket (:repo-bucket help/system)
@@ -736,26 +732,25 @@
                                 "maven-metadata.xml")
                                :no-version]])
         versioned-name #(str/replace (.getName %1) #"%" %2)]
-    ;; we use clj-http here instead of aether to have control over the
+    ;; we use an http client here instead of aether to have control over the
     ;; cookies
-    (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
-      (doseq [[f no-version?] files]
-        (http/put (format "%s/org/clojars/dantheman/test/%s%s"
-                          (repo-url)
-                          (if no-version? "" "0.0.3-SNAPSHOT/")
-                          (versioned-name f "20170505.125640-1"))
-                  {:body f
-                   :throw-entire-message? true
-                   :basic-auth ["dantheman" token]}))
+    (doseq [[f no-version?] files]
+      (http/put (format "%s/org/clojars/dantheman/test/%s%s"
+                        (repo-url)
+                        (if no-version? "" "0.0.3-SNAPSHOT/")
+                        (versioned-name f "20170505.125640-1"))
+                {:body f
+                 :throw-entire-message? true
+                 :basic-auth ["dantheman" token]}))
 
-      (doseq [[f no-version?] files]
-        (http/put (format "%s/org/clojars/dantheman/test/%s%s"
-                          (repo-url)
-                          (if no-version? "" "0.0.3-SNAPSHOT/")
-                          (versioned-name f "20170505.125655-99"))
-                  {:body f
-                   :throw-entire-message? true
-                   :basic-auth ["dantheman" token]}))))
+    (doseq [[f no-version?] files]
+      (http/put (format "%s/org/clojars/dantheman/test/%s%s"
+                        (repo-url)
+                        (if no-version? "" "0.0.3-SNAPSHOT/")
+                        (versioned-name f "20170505.125655-99"))
+                {:body f
+                 :throw-entire-message? true
+                 :basic-auth ["dantheman" token]})))
   ;; This test throws on failure, so we have this assertion to satisfy kaocha
   (is true))
 
@@ -778,18 +773,18 @@
                                 "maven-metadata.xml")
                                :no-version]])
         versioned-name #(str/replace (.getName %1) #"%" %2)]
-    ;; we use clj-http here instead of aether to have control over the cookies,
-    ;; and reset the cookie store for each file to exercise the very worst case;
-    ;; every file is in a new session
+    ;; we use an http client here instead of aether to have control over the cookies
     (doseq [[f no-version?] files]
-      (binding [http-core/*cookie-store* (http-cookies/cookie-store)]
-        (http/put (format "%s/org/clojars/dantheman/test/%s%s"
-                          (repo-url)
-                          (if no-version? "" "0.0.3-SNAPSHOT/")
-                          (versioned-name f "20170505.125640-1"))
-                  {:body f
-                   :throw-entire-message? true
-                   :basic-auth ["dantheman" token]}))))
+      (http/put (format "%s/org/clojars/dantheman/test/%s%s"
+                        (repo-url)
+                        (if no-version? "" "0.0.3-SNAPSHOT/")
+                        (versioned-name f "20170505.125640-1"))
+                {:body f
+                 ;; Generate a new client for each request to exercise the very worst case;
+                 ;; every file is in a new session
+                 :client (http/make-client)
+                 :throw-entire-message? true
+                 :basic-auth ["dantheman" token]})))
   ;; This test throws on failure, so we have this assertion to satisfy kaocha
   (is true))
 

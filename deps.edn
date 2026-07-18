@@ -10,10 +10,11 @@
 
   ch.qos.logback/logback-classic {:mvn/version "1.5.37"}
   cheshire/cheshire {:mvn/version "6.1.0"}
-  clj-http/clj-http {:mvn/version "3.13.1"}
   clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
   com.cemerick/friend {:mvn/version "0.2.3"
-                       :exclusions [ ;; not used, excluded to address CVE-2007-1652, CVE-2007-1651
+                       :exclusions [;; not used, excluded to address CVE-2026-54428
+                                    org.apache.httpcomponents/httpclient
+                                    ;; not used, excluded to address CVE-2007-1652, CVE-2007-1651
                                     org.openid4java/openid4java-nodeps
                                     ;; not used, excluded to address CVE-2012-0881, CVE-2013-4002, CVE-2009-2625
                                     net.sourceforge.nekohtml/nekohtml]}

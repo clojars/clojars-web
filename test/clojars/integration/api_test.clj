@@ -1,8 +1,8 @@
 (ns clojars.integration.api-test
   (:require
    [cheshire.core :as json]
-   [clj-http.client :as client]
    [clojars.db :as db]
+   [clojars.http-client :as http]
    [clojars.integration.steps :refer [register-as inject-artifacts-into-repo!]]
    [clojars.routes.api :as api]
    [clojars.test-helper :as help]
@@ -25,7 +25,7 @@
   (-> (format "http://localhost:%s/api/%s"
               help/test-port
               (str/join "/" (map name parts)))
-      (client/get opts)))
+      (http/get opts)))
 
 (defn get-release-feed
   ([from]
@@ -45,8 +45,8 @@
       (is (= 404 (-> e ex-data :status))))))
 
 (deftest utils-test
-  (is (= "application/json" (help/get-content-type {:headers {"content-type" "application/json"}})))
-  (is (= "application/json" (help/get-content-type {:headers {"content-type" "application/json;charset=utf-8"}}))))
+  (is (= "application/json" (help/get-content-type {:headers {:content-type "application/json"}})))
+  (is (= "application/json" (help/get-content-type {:headers {:content-type "application/json;charset=utf-8"}}))))
 
 (deftest an-api-test
   (-> (session (help/app))
@@ -58,7 +58,8 @@
 
   (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/yaml" "application/transit+json"]]
     (testing f
-      (is (= f (help/get-content-type (get-api [:groups "org.clojars.dantheman"] {:accept f}))))))
+      (is (= f (help/get-content-type (get-api [:groups "org.clojars.dantheman"]
+                                               {:headers {"accept" f}}))))))
 
   (testing "default format is json"
     (is (= "application/json" (help/get-content-type (get-api [:groups "org.clojars.dantheman"])))))
@@ -67,7 +68,7 @@
     (is (help/assert-cors-header (get-api [:groups "org.clojars.dantheman"]))))
 
   (testing "list group artifacts"
-    (let [resp (get-api [:groups "org.clojars.dantheman"] {:accept :json})
+    (let [resp (get-api [:groups "org.clojars.dantheman"] {:headers {"accept" :json}})
           body (json/parse-string (:body resp) true)]
       (is (= {:latest_version "0.0.3-SNAPSHOT"
               :latest_release "0.0.2"
@@ -83,7 +84,7 @@
     (assert-404 [:groups "does-not-exist"]))
 
   (testing "get artifact"
-    (let [resp (get-api [:artifacts "org.clojars.dantheman" "test"] {:accept :json})
+    (let [resp (get-api [:artifacts "org.clojars.dantheman" "test"] {:headers {"accept" :json}})
           body (json/parse-string (:body resp) true)]
       (is (= {:latest_version "0.0.3-SNAPSHOT"
               :latest_release "0.0.2"
@@ -154,7 +155,7 @@
     (testing "Every supported content-type works"
       (doseq [f ["application/json" "application/edn" "application/x-yaml" "application/yaml" "application/transit+json"]]
         (testing f
-          (let [res (get-release-feed start-inst {:accept f})]
+          (let [res (get-release-feed start-inst {:headers {"accept" f}})]
             (is (= f (help/get-content-type res)))
             (is (= 200 (:status res)))))))
 
