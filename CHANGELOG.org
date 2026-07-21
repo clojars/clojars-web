@@ -7,6 +7,10 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-07-09.2294][2026-07-09.2294]]
 + [[https://github.com/clojars/clojars-web/issues/928][Enable deploy notification emails for all existing users]]. Users that had Clojars accounts before this opt-in feature was added will now receive deploy notifications for groups they are members of. Users can still opt out via their Clojars settings. ([[https://github.com/danielcompton][Daniel Compton]])
 + [[https://github.com/clojars/clojars-web/pull/950][Move MFA to separate page on login]]. This reduces confusion for users not using MFA. ([[https://github.com/tobias][Toby Crawley]])
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2026-07-21.2299][2026-07-21.2299]]
++ [[https://github.com/clojars/clojars-web/pull/961][Remove Apache httpclient usage]] ([[https://github.com/tobias][Toby Crawley]])
++ [[https://github.com/clojars/clojars-web/pull/962][Update to official one-time release]] ([[https://github.com/tobias][Toby Crawley]])
   
 ** 2026-May
 
