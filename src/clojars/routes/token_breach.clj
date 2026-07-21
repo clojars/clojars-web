@@ -4,9 +4,9 @@
    [buddy.core.dsa :as dsa]
    [buddy.core.keys :as keys]
    [cheshire.core :as json]
-   [clj-http.client :as client]
    [clojars.db :as db]
    [clojars.event :as event]
+   [clojars.http-client :as http]
    [compojure.core :as compojure :refer [POST]]
    [ring.util.response :as response]))
 
@@ -15,14 +15,16 @@
   identifier, then converts the key text to a key object."
   [identifier]
   (when identifier
-    (some->> (client/get "https://api.github.com/meta/public_keys/token_scanning"
-                         {:as :json})
-             :body
-             :public_keys
-             (some (fn [{:keys [key_identifier key]}]
-                     (when (= identifier key_identifier)
-                       key)))
-             (keys/str->public-key))))
+    (some-> (http/get "https://api.github.com/meta/public_keys/token_scanning")
+            :body
+            (json/parse-string true)
+            :public_keys
+            (as-> %
+              (some (fn [{:keys [key_identifier key]}]
+                      (when (= identifier key_identifier)
+                        key))
+                    %))
+            (keys/str->public-key))))
 
 (defn- valid-github-request?
   "Verifies the request was signed using GitHub's key.

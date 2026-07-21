@@ -3,7 +3,7 @@
   to ease testing."
   (:require
    [cheshire.core :as json]
-   [clj-http.client :as http]))
+   [clojars.http-client :as http]))
 
 (defprotocol RemoteService
   (-remote-call [self request-info]))

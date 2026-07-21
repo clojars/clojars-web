@@ -1,6 +1,6 @@
 (ns clojars.integration.artifact-test
   (:require
-   [clj-http.client :as client]
+   [clojars.http-client :as http]
    [clojars.test-helper :as help]
    [clojure.string :as str]
    [clojure.test :refer [deftest is testing use-fixtures]]))
@@ -13,7 +13,7 @@
 (defn get-artifact [parts & [opts]]
   (-> (str "http://localhost:" help/test-port "/"
            (str/join "/" (map name parts)))
-      (client/get opts)))
+      (http/get opts)))
 
 (deftest artifacts-test
   (testing "latest-version.json should have permissive cors headers"

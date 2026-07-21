@@ -1,7 +1,7 @@
 (ns clojars.integration.search-test
   (:require
    [cheshire.core :as json]
-   [clj-http.client :as client]
+   [clojars.http-client :as http]
    [clojars.search :as search]
    [clojars.test-helper :as help]
    [clojure.test :refer [deftest is testing use-fixtures]]
@@ -20,7 +20,7 @@
               help/test-port
               query
               (name fmt))
-      (client/get opts)))
+      (http/get opts)))
 
 (defn do-search-with-page [fmt query page & [opts]]
   (-> (format "http://localhost:%s/search?q=%s&format=%s&page=%s"
@@ -28,7 +28,7 @@
               query
               (name fmt)
               page)
-      (client/get opts)))
+      (http/get opts)))
 
 (defn created-as-str
   [data]

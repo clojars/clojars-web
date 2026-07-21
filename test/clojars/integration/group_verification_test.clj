@@ -1,7 +1,7 @@
 (ns clojars.integration.group-verification-test
   (:require
-   [clj-http.client :as http]
    [clojars.email :as email]
+   [clojars.http-client :as http]
    [clojars.integration.steps :refer [register-as]]
    [clojars.test-helper :as help]
    [clojure.test :refer [deftest is use-fixtures]]

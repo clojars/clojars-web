@@ -4,9 +4,9 @@
    [buddy.core.dsa :as dsa]
    [buddy.core.keys :as keys]
    [cheshire.core :as json]
-   [clj-http.client :as client]
    [clojars.db :as db]
    [clojars.email :as email]
+   [clojars.http-client :as http]
    ;; for defmethods
    [clojars.notifications.token]
    [clojars.test-helper :as help]
@@ -23,9 +23,10 @@
 (def privkey (keys/private-key (io/resource "ecdsa-key.pem")))
 (def pubkey-str (slurp (io/resource "ecdsa-key-pub.pem")))
 (def github-response
-  {:public_keys [{:key_identifier "abcd"
-                  :key pubkey-str
-                  :is_current true}]})
+  (json/encode
+   {:public_keys [{:key_identifier "abcd"
+                   :key pubkey-str
+                   :is_current true}]}))
 
 (defn- build-breach-request
   [& token-values]
@@ -48,7 +49,7 @@
                (db/find-user-tokens-by-username help/*db* username)))
 
 (deftest test-github-token-breach-request-with-invalid-identifier
-  (with-redefs [client/get (constantly {:body github-response})]
+  (with-redefs [http/get (constantly {:body github-response})]
     (let [app (help/app)
           request (-> (build-breach-request "whatever")
                       (header "GITHUB-PUBLIC-KEY-IDENTIFIER" "bad"))
@@ -58,7 +59,7 @@
 (deftest test-github-token-breach-reporting-works
   (let [_user (db/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
         app (help/app)]
-    (with-redefs [client/get (constantly {:body github-response})]
+    (with-redefs [http/get (constantly {:body github-response})]
       (testing "when token is enabled"
         (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
               token-str (:token token)

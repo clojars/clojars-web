@@ -1,9 +1,9 @@
 (ns clojars.integration.web-test
   (:require
    [cheshire.core :as json]
-   [clj-http.client :as http]
    [clojars.db :as db]
    [clojars.errors :as errors]
+   [clojars.http-client :as http]
    [clojars.log :as log]
    [clojars.test-helper :as help]
    [clojars.web.dashboard :as dashboard]
@@ -43,7 +43,7 @@
   (-> (format "http://localhost:%s/search?%s"
               help/test-port
               param-string)
-      (http/get {:throw-exceptions false})))
+      (http/get)))
 
 (deftest invalid-params-are-rejected
   (is (match?
@@ -133,7 +133,7 @@
   (-> (format "http://localhost:%s/projects?page=%s"
               help/test-port
               page)
-      (http/get {:throw-exceptions false})))
+      (http/get)))
 
 (deftest browse-page-rejects-invalid-page
   (doseq [page [-1 0]]

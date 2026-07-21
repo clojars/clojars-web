@@ -1,7 +1,7 @@
 (ns clojars.unit.verification-test
   (:require
-   [clj-http.client :as http]
    [clojars.db :as db]
+   [clojars.http-client :as http]
    [clojars.test-helper :as help]
    [clojars.verification :as nut]
    [clojars.web.common :as common]
