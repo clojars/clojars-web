@@ -51,15 +51,8 @@
   ;; continue to send custom status messages on deploy failure.
   ;; See https://github.com/clojars/http-kit
   net.clojars.internal/http-kit {:mvn/version "2.9.0-beta3-clojars-03"}
-  ;; This fork is so we can have a version of one-time that uses
-  ;; https://github.com/nayuki/QR-Code-generator instead of
-  ;; https://github.com/kenglxn/QRGen, as the latter is deployed to jitpack.io,
-  ;; requiring an additional repo, and has vulnerable dependencies. It can't be
-  ;; a git dep, as it uses a lein project.clj instead of deps.edn. We can remove
-  ;; this and go back to the canonical release once 0.9.0 is released
-  ;; officially (see https://github.com/suvash/one-time/issues/27)
-  net.clojars.internal/one-time {:mvn/version "0.9.0-clojars-02"}
 
+  one-time/one-time {:mvn/version "0.9.0"}
   org.apache.commons/commons-email {:mvn/version "1.6.0"}
   org.apache.lucene/lucene-core {:mvn/version "10.3.2"}
   org.apache.lucene/lucene-analysis-common {:mvn/version "10.3.2"}
