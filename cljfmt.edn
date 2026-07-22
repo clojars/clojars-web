@@ -1,0 +1,25 @@
+{;; Codebase keeps occasional double blank lines between top-level forms.
+ :remove-consecutive-blank-lines? false
+
+ :extra-indents
+ {;; Compojure route macros: existing style aligns the body under the
+  ;; route path argument (default arg-alignment) rather than cljfmt's
+  ;; built-in [:inner 0] (2-space body indent). Disable the built-in
+  ;; rule by setting an inner depth that never matches.
+  ANY     ^:replace [[:inner 99]]
+  DELETE  ^:replace [[:inner 99]]
+  GET     ^:replace [[:inner 99]]
+  HEAD    ^:replace [[:inner 99]]
+  OPTIONS ^:replace [[:inner 99]]
+  PATCH   ^:replace [[:inner 99]]
+  POST    ^:replace [[:inner 99]]
+  PUT     ^:replace [[:inner 99]]
+  context ^:replace [[:inner 99]]
+
+  ;; clojure.test assertion forms: existing tests align the body
+  ;; under the predicate's first arg.
+  thrown?          [[:block 1]]
+  thrown-with-msg? [[:block 2]]
+
+  ;; kerodon helper: body aligns under the selector vector.
+  within           [[:block 1]]}}
