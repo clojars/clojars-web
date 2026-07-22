@@ -35,14 +35,13 @@
                    :method :head
                    :url url))))
 
-(defn purge
+(defn post
   ([url]
-   (purge url nil))
+   (post url nil))
   ([url opts]
    (request (assoc opts
-                   :method :purge
+                   :method :post
                    :url url))))
-
 (defn put
   ([url]
    (put url nil))
