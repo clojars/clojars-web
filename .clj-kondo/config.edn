@@ -20,9 +20,6 @@
   ;; use the resolved value
   :case-symbol-test {:level :warning}
 
-  ;; warn when we'll never reach an else
-  :condition-always-true {:level :warning}
-
   ;; warn when let bindings can be replaced by cond->
   :conditional-build-up {:level :warning}
   

@@ -127,7 +127,7 @@
            (nut/verify-group-by-TXT help/*db* {:username "dantheman"
                                                :group   "com.foo"
                                                :domain  "foo.com"}))))
-    (is (db/group-activenames help/*db* "com.foo"))
+    (is (seq (db/group-activenames help/*db* "com.foo")))
     (is (db/find-group-verification help/*db* "com.foo"))))
 
 (deftest verify-group-by-parent-group-with-invalid-group
