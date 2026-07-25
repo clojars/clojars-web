@@ -1,6 +1,7 @@
 (ns clojars.test-helper
   (:require
    [cemerick.pomegranate.aether :as aether]
+   [cheshire.core :as json]
    [clojars.config :as config]
    [clojars.db :as db]
    [clojars.db.migrate :as migrate]
@@ -8,12 +9,14 @@
    [clojars.email :as email]
    [clojars.errors :as errors]
    [clojars.http-kit :as http-kit]
+   [clojars.maven :as maven]
    [clojars.oauth.service :as oauth-service]
    [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.stats :as stats]
    [clojars.system :as system]
    [clojars.web :as web]
+   [clojure.java.data :as java.data]
    [clojure.java.io :as io]
    [clojure.java.shell :as shell]
    [clojure.string :as str]
@@ -32,8 +35,12 @@
     FileUtils)
    (org.apache.lucene.store
     ByteBuffersDirectory)
+   (org.apache.maven.model
+    Model)
    (org.apache.maven.wagon.providers.http
     HttpWagon)))
+
+(set! *warn-on-reflection* true)
 
 (def tmp-dir (io/file (System/getProperty "java.io.tmpdir")))
 (def local-repo (io/file tmp-dir "clojars" "test" "local-repo"))
@@ -158,16 +165,47 @@
   [resp]
   (= "*" (get-in resp [:headers :access-control-allow-origin])))
 
-(defn rewrite-pom [file m]
+(defn- write-pom
+  [^Model model ^File file]
   (let [new-pom (doto (File/createTempFile (.getName file) ".pom")
                   .deleteOnExit)]
-    (spit new-pom
-          (reduce (fn [accum [element new-value]]
-                    (str/replace accum (re-pattern (format "<(%s)>.*?<" (name element)))
-                                 (format "<$1>%s<" new-value)))
-                  (slurp file)
-                  m))
+    (maven/write-pom model new-pom)
     new-pom))
+
+(defn rewrite-pom
+  [file m]
+  (let [model (maven/read-pom file)]
+    (java.data/set-properties model m)
+    (write-pom model file)))
+
+(defn update-pom-dependency
+  [file idx m]
+  (let [model (maven/read-pom file)
+        dep (nth (.getDependencies model) idx)]
+    (java.data/set-properties dep m)
+    (write-pom model file)))
+
+(defn- write-module
+  [module ^File file]
+  (let [new-module-file (doto (File/createTempFile (.getName file) ".module")
+                          .deleteOnExit)]
+    (spit new-module-file (json/encode module))
+    new-module-file))
+
+(defn update-module-dependency
+  [file idx m]
+  (-> (slurp file)
+      (json/decode true)
+      (update-in [:variants 0 :dependencies idx]
+                 merge m)
+      (write-module file)))
+
+(defn update-module-component
+  [^File file m]
+  (-> (slurp file)
+      (json/decode true)
+      (update :component merge m)
+      (write-module file)))
 
 (defn add-verified-group
   [account group]
