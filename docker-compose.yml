@@ -1,6 +1,6 @@
 services:
   dev-db:
-    image: postgres:15.5
+    image: postgres:18.4
     ports:
       - "55432:5432"
     environment:
@@ -8,9 +8,9 @@ services:
       - POSTGRES_PASSWORD=clojars
       - POSTGRES_DB=clojars
     volumes:
-      - ./data/dev-postgres:/var/lib/postgresql/data
+      - ./data/dev-postgres:/var/lib/postgresql
   test-db:
-    image: postgres:15.5
+    image: postgres:18.4
     ports:
       - "55433:5432"
     environment:
@@ -18,7 +18,7 @@ services:
       - POSTGRES_PASSWORD=clojars
       - POSTGRES_DB=clojars
     volumes:
-      - ./data/test-postgres:/var/lib/postgresql/data
+      - ./data/test-postgres:/var/lib/postgresql
   minio:
     image: minio/minio:RELEASE.2023-04-20T17-56-55Z
     command: server /data --console-address ":9090"
