@@ -67,7 +67,8 @@
   raven-clj/raven-clj {:mvn/version "1.7.0"}
   ring/ring-core {:mvn/version "1.15.3"}
   ring/ring-defaults {:mvn/version "0.7.0"}
-
+  ring/ring-session-timeout {:mvn/version "0.3.0"}
+  
   valip/valip {:mvn/version "0.2.0"}
 
   ;; # Address CVEs

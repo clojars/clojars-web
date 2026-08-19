@@ -73,6 +73,7 @@ com.github.scribejava/scribejava-apis 8.3.3
     X com.fasterxml.jackson.core/jackson-databind 2.14.0 :use-top
   X com.fasterxml.jackson.core/jackson-databind 2.14.0 :use-top
 digest/digest 1.4.10
+ring/ring-session-timeout 0.3.0
 org.codehaus.plexus/plexus-utils 3.6.1
 net.clojars.internal/http-kit 2.9.0-beta3-clojars-03
 org.bouncycastle/bcpkix-jdk18on 1.85

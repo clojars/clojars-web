@@ -89,6 +89,11 @@
       <version>1.4.10</version>
     </dependency>
     <dependency>
+      <groupId>ring</groupId>
+      <artifactId>ring-session-timeout</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-utils</artifactId>
       <version>3.6.1</version>

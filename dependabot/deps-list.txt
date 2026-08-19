@@ -126,6 +126,7 @@ ring/ring-codec 1.3.0  (MIT)
 ring/ring-core 1.15.3  (MIT)
 ring/ring-defaults 0.7.0  (MIT)
 ring/ring-headers 0.4.0  (MIT)
+ring/ring-session-timeout 0.3.0  (MIT)
 ring/ring-ssl 0.4.0  (MIT)
 slingshot/slingshot 0.10.2 
 tigris/tigris 0.1.2  (EPL-1.0)

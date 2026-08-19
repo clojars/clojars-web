@@ -34,7 +34,8 @@
    [ring.middleware.defaults :as ring-defaults]
    [ring.middleware.flash :refer [wrap-flash]]
    [ring.middleware.not-modified :refer [wrap-not-modified]]
-   [ring.util.response :refer [bad-request content-type]]))
+   [ring.middleware.session-timeout :refer [wrap-idle-session-timeout]]
+   [ring.util.response :refer [bad-request content-type redirect]]))
 
 (let [throw* #(throw (ex-info
                       "page must be an positive integer"
@@ -139,6 +140,10 @@
             (bad-request)
             (content-type "application/json"))))))
 
+(def session-timeout-seconds
+  ;; 1 day
+  86400)
+
 (defn clojars-app
   [{:as system
     :keys [db
@@ -166,6 +171,13 @@
               (repo/wrap-file (:repo (config)))
               (log/wrap-request-context)
               (repo/wrap-reject-double-dot)))
+         ;; We need to time the repo sessions out so they can be cleared from
+         ;; the db, but users would never hit this in practice, as clients don't
+         ;; reuse sessions, and an upload session would have to pause for over
+         ;; 24 hours for this to trigger
+         (wrap-idle-session-timeout {:timeout session-timeout-seconds
+                                     :timeout-response {:status 400
+                                                        :body "Session timed out"}})
          (wrap-secure-session db))
      (-> (token-breach/routes db event-emitter)
          (wrap-exceptions error-reporter)
@@ -184,6 +196,8 @@
          (wrap-flash)
          (ring-defaults/wrap-defaults defaults-config)
          (wrap-additional-security-headers)
+         (wrap-idle-session-timeout {:timeout session-timeout-seconds
+                                     :timeout-response (redirect "/login")})
          (wrap-secure-session db)
          (wrap-content-type)
          (wrap-not-modified)
