@@ -89,9 +89,9 @@
   ;; Excluded form antq checking as it wants to upgrade to 20040616, which is actually a downgrade
   commons-collections/commons-collections ^:antq/exclude {:mvn/version "3.2.2"}
 
-  ;; Override bouncycastle brought in by buddy-core to address CVE-2025-8916, CVE-2026-5588
-  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.84"}
-  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.84"}
+  ;; Override bouncycastle brought in by buddy-core to address CVE-2025-8916, CVE-2026-5588, CVE-2026-12802
+  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.85"}
+  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.85"}
   ;; Override plexus-utils brought in by maven-model & maven-repository-metadata to address CVE-2025-67030
   org.codehaus.plexus/plexus-utils {:mvn/version "3.6.1"}
   ;; Addresses CVE-2015-0886
