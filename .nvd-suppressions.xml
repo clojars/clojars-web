@@ -44,4 +44,17 @@
     <cve>CVE-2025-67721</cve>
   </suppress>
 
+  <suppress>
+    <notes><![CDATA[
+    This CVE is for msgpack-python, so is spurious. It is triggered by having org.msgpack/msgpack in our dependency tree. 
+    ]]></notes>
+     <cve>CVE-2026-57585</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    This CVE is for msgpack-ruby, so is spurious. It is triggered by having org.msgpack/msgpack in our dependency tree.  
+    ]]></notes>
+     <cve>CVE-2026-54522</cve>
+  </suppress>
 </suppressions>
