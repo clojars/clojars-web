@@ -146,6 +146,16 @@
   (db/do-commands tx
                   ["update users set send_deploy_emails = true where send_deploy_emails = false and created < '2022-03-14'"]))
 
+(defn- add-sessions-table
+  [tx]
+  (db/do-commands tx
+                  [(str "CREATE TABLE session_store ("
+                        "session_id VARCHAR(36) NOT NULL PRIMARY KEY,"
+                        "idle_timeout BIGINT,"
+                        "absolute_timeout BIGINT,"
+                        "value BYTEA"
+                        ")")]))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -163,7 +173,8 @@
    #'rename-groups-to-permissions
    #'add-scope-to-permissions
    #'add-created-index-to-jars-table
-   #'enable-send-deploy-emails-for-existing-users])
+   #'enable-send-deploy-emails-for-existing-users
+   #'add-sessions-table])
 
 (defn migrate [db]
   (db/do-commands db

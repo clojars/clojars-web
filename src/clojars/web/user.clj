@@ -10,7 +10,6 @@
                               update-user-notifications]]
    [clojars.event :as event]
    [clojars.hcaptcha :as hcaptcha]
-   [clojars.http-utils :as http-utils]
    [clojars.log :as log]
    [clojars.notifications.common :as notif-common]
    [clojars.user-validations :as uv]
@@ -132,7 +131,7 @@
             (event/emit event-emitter :password-changed
                         (merge {:username account}
                                details))
-            (http-utils/delete-sessions-for-user! account))
+            (db/delete-sessions-for-user! db account))
           (if password-changed?
             (-> (redirect "/login")
                 (assoc :session nil
@@ -279,7 +278,7 @@
         (event/emit event-emitter :password-changed
                     (merge {:username username}
                            details))
-        (http-utils/delete-sessions-for-user! username)
+        (db/delete-sessions-for-user! db username)
         (assoc (redirect "/login")
                :flash "Your password was updated.")))))
 

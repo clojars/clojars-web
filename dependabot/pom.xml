@@ -164,17 +164,6 @@
       <version>0.9.0</version>
     </dependency>
     <dependency>
-      <groupId>kirasystems</groupId>
-      <artifactId>aging-session</artifactId>
-      <version>0.5.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.clojure</groupId>
-          <artifactId>clojurescript</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.nrepl</artifactId>
       <version>0.2.13</version>
@@ -234,14 +223,14 @@
       <version>6.1.0</version>
     </dependency>
     <dependency>
+      <groupId>jdbc-ring-session</groupId>
+      <artifactId>jdbc-ring-session</artifactId>
+      <version>1.5.5</version>
+    </dependency>
+    <dependency>
       <groupId>org.mindrot</groupId>
       <artifactId>jbcrypt</artifactId>
       <version>0.4</version>
-    </dependency>
-    <dependency>
-      <groupId>com.taoensso</groupId>
-      <artifactId>nippy</artifactId>
-      <version>3.6.0</version>
     </dependency>
     <dependency>
       <groupId>com.cognitect.aws</groupId>

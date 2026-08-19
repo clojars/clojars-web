@@ -12,6 +12,7 @@
    [clojure.spec.alpha :as s]
    [clojure.string :as str]
    [honey.sql :as hsql]
+   [jdbc-ring-session.core :as jdbc-ring-session]
    [next.jdbc :as jdbc]
    [next.jdbc.prepare :as jdbc.prepare]
    [next.jdbc.result-set :as jdbc.result-set]
@@ -1223,3 +1224,25 @@
        :from :group_settings
        :where [:= :group_name group-id]
        :limit 1})))
+
+(defn delete-sessions-for-user!
+  "Deletes all active sessions for `username`. Used to invalidate other
+  active sessions after a password change so an attacker who got in via
+  the old password is kicked out."
+  [db username]
+  (let [session-ids
+        (into #{}
+              (comp
+               (map #(update % :value jdbc-ring-session/deserialize-postgres))
+               (filter #(= username
+                           (get-in % [:value :cemerick.friend/identity :current])))
+               (map :session_id))
+              (q db {:select :* :from :session_store}))]
+    (when (seq session-ids)
+      (execute! db {:delete-from :session_store
+                    :where [:in :session_id session-ids]}))))
+
+(defn clear-sessions!
+  "Clears all active sessions. Should only be used in testing!"
+  [db]
+  (execute! db {:delete-from :session_store}))
