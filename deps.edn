@@ -8,7 +8,7 @@
 
   buddy/buddy-core {:mvn/version "1.12.0-430"}
 
-  ch.qos.logback/logback-classic {:mvn/version "1.5.37"}
+  ch.qos.logback/logback-classic {:mvn/version "1.6.3"}
   cheshire/cheshire {:mvn/version "6.1.0"}
   clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
   com.cemerick/friend {:mvn/version "0.2.3"
@@ -78,8 +78,8 @@
   ;; compatible with commons-email
   com.sun.mail/jakarta.mail ^:antq/exclude {:mvn/version "1.6.8"}
   ;; Addresses CVE-2022-42004, CVE-2022-42003, CVE-2021-46877, CVE-2020-36518,
-  ;; CVE-2026-54513, CVE-2026-54512
-  com.fasterxml.jackson.core/jackson-databind {:mvn/version "2.21.5"}
+  ;; CVE-2026-54513, CVE-2026-54512, CVE-2026-19032, CVE-2026-68497
+  com.fasterxml.jackson.core/jackson-databind {:mvn/version "2.21.6"}
   ;; Override the version brought in by aging-session to address CVE-2020-24164
   ;; & CVE-2024-36124
   com.taoensso/nippy {:mvn/version "3.6.0"}
@@ -89,9 +89,9 @@
   ;; Excluded form antq checking as it wants to upgrade to 20040616, which is actually a downgrade
   commons-collections/commons-collections ^:antq/exclude {:mvn/version "3.2.2"}
 
-  ;; Override bouncycastle brought in by buddy-core to address CVE-2025-8916, CVE-2026-5588
-  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.84"}
-  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.84"}
+  ;; Override bouncycastle brought in by buddy-core to address CVE-2025-8916, CVE-2026-5588, CVE-2026-12802
+  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.85"}
+  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.85"}
   ;; Override plexus-utils brought in by maven-model & maven-repository-metadata to address CVE-2025-67030
   org.codehaus.plexus/plexus-utils {:mvn/version "3.6.1"}
   ;; Addresses CVE-2015-0886

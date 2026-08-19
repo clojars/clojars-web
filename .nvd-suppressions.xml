@@ -37,15 +37,6 @@
   </suppress>
 
   <suppress>
-     <notes><![CDATA[
-     This CVE only impacts usage of Jetty's HttpURI directly, and we don't use it. We can't
-     upgrade to get rid of this CVE as it requires upgrading to Jetty 12, which ring does not
-     yet support (we are are 11 currently).
-     ]]></notes>
-     <cve>CVE-2024-6763</cve>
-  </suppress>
-
-  <suppress>
     <notes><![CDATA[
     This CVE only impacts us if we decompress user-supplied data and use a shared
     decompression buffer, and we do neither. We only use aircompressor via nippy.
@@ -53,4 +44,17 @@
     <cve>CVE-2025-67721</cve>
   </suppress>
 
+  <suppress>
+    <notes><![CDATA[
+    This CVE is for msgpack-python, so is spurious. It is triggered by having org.msgpack/msgpack in our dependency tree. 
+    ]]></notes>
+     <cve>CVE-2026-57585</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    This CVE is for msgpack-ruby, so is spurious. It is triggered by having org.msgpack/msgpack in our dependency tree.  
+    ]]></notes>
+     <cve>CVE-2026-54522</cve>
+  </suppress>
 </suppressions>
