@@ -29,7 +29,7 @@
   com.stuartsierra/component {:mvn/version "1.2.0"}
 
   comb/comb {:mvn/version "1.0.0"}
-  
+
   digest/digest {:mvn/version "1.4.10"}
   duct/duct {:mvn/version "0.8.2"}
   duct/hikaricp-component {:mvn/version "0.1.2"
@@ -44,7 +44,7 @@
   metosin/malli {:mvn/version "0.20.0"}
   metosin/muuntaja {:mvn/version "0.6.11"}
   metosin/muuntaja-yaml {:mvn/version "0.6.11"}
-  
+
   net.cgrand/regex {:mvn/version "1.1.0"}
 
   ;; This fork of http-kit supports :status-message to allow us to
@@ -103,6 +103,9 @@
            :check {:extra-deps {athos/clj-check {:git/url "https://github.com/athos/clj-check.git"
                                                  :sha "d997df866b2a04b7ce7b17533093ee0a2e2cb729"}}
                    :main-opts ["-m" "clj-check.check"]}
+
+           :cljfmt {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.16.4"}}
+                    :main-opts ["-m" "cljfmt.main"]}
 
            :dev {:extra-deps
                  {clj-commons/pomegranate {:mvn/version "1.3.26"}
