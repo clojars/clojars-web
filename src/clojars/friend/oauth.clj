@@ -56,11 +56,10 @@
   (let [res
         (reduce
          (fn [acc f]
-           (let [res (merge acc (f acc))
-                 {::keys [result]} res]
+           (let [{:as res ::keys [result]} (merge acc (f acc))]
              (cond
-               (:status  result)  (reduced res)
-               (:identity result) (workflow/make-auth res)
+               (:status  result)  (reduced result)
+               (:identity result) (reduced (workflow/make-auth result))
                :else              res)))
 
          (assoc req
@@ -72,6 +71,6 @@
           get-emails+login
           find-user
           make-auth])]
-    (doseq [verify-result (db/maybe-verify-provider-groups db (::result res))]
+    (doseq [verify-result (db/maybe-verify-provider-groups db res)]
       (log/info verify-result))
-    (::result res)))
+    res))
