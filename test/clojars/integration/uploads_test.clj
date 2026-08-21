@@ -7,7 +7,6 @@
    [clojars.email :as email]
    [clojars.file-utils :as fu]
    [clojars.http-client :as http]
-   [clojars.http-utils :refer [clear-sessions!]]
    [clojars.integration.steps :refer [create-deploy-token login-as register-as]]
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
@@ -54,7 +53,7 @@
   ;; we have to clear sessions on each deploy to mimic having new processes
   ;; deploying.
   (when-not retain-session?
-    (clear-sessions!))
+    (db/clear-sessions! help/*db*))
   (aether/deploy
    :coordinates coordinates
    :artifact-map (if module-file

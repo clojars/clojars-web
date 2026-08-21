@@ -38,9 +38,8 @@
   ;; manually imported clj-kondo configs from 2.x branch to .clj-kondo/imports/hiccup/hiccup
   hiccup/hiccup {:mvn/version "1.0.5"}
 
-  kirasystems/aging-session {:mvn/version "0.5.0"
-                             :exclusions [org.clojure/clojurescript]}
-
+  jdbc-ring-session/jdbc-ring-session {:mvn/version "1.5.5"}
+  
   metosin/malli {:mvn/version "0.20.0"}
   metosin/muuntaja {:mvn/version "0.6.11"}
   metosin/muuntaja-yaml {:mvn/version "0.6.11"}
@@ -68,7 +67,8 @@
   raven-clj/raven-clj {:mvn/version "1.7.0"}
   ring/ring-core {:mvn/version "1.15.3"}
   ring/ring-defaults {:mvn/version "0.7.0"}
-
+  ring/ring-session-timeout {:mvn/version "0.3.0"}
+  
   valip/valip {:mvn/version "0.2.0"}
 
   ;; # Address CVEs
@@ -80,9 +80,6 @@
   ;; Addresses CVE-2022-42004, CVE-2022-42003, CVE-2021-46877, CVE-2020-36518,
   ;; CVE-2026-54513, CVE-2026-54512, CVE-2026-19032, CVE-2026-68497
   com.fasterxml.jackson.core/jackson-databind {:mvn/version "2.21.6"}
-  ;; Override the version brought in by aging-session to address CVE-2020-24164
-  ;; & CVE-2024-36124
-  com.taoensso/nippy {:mvn/version "3.6.0"}
   ;; Addresses CVE-2019-10086, CVE-2014-0114, CVE-2025-48734
   commons-beanutils/commons-beanutils {:mvn/version "1.11.0"}
   ;; Addresses CVE-2015-6420

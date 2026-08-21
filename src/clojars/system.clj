@@ -17,6 +17,7 @@
    [clojars.repo-indexing :as repo-indexing]
    [clojars.s3 :as s3]
    [clojars.search :as search]
+   [clojars.session-cleaner :as session-cleaner]
    [clojars.stats :refer [artifact-stats]]
    [clojars.storage :as storage]
    [clojars.web :as web]
@@ -71,31 +72,33 @@
     (-> (merge
          (base-system config)
          (component/system-map
-          :app            (handler-component nil)
-          :clojars-app    (endpoint-component web/clojars-app)
-          :github         (github/new-github-service (:client-id github-oauth)
-                                                     (:client-secret github-oauth)
-                                                     (:callback-uri github-oauth))
-          :gitlab         (gitlab/new-gitlab-service (:client-id gitlab-oauth)
-                                                     (:client-secret gitlab-oauth)
-                                                     (:callback-uri gitlab-oauth))
-          :event-emitter  (event/new-sqs-emitter (:event-queue config))
-          :event-receiver (event/new-sqs-receiver (:event-queue config))
-          :hcaptcha       (hcaptcha/new-hcaptcha (:hcaptcha config))
-          :http           (http-kit/new-server (:http config))
-          :http-client    (remote-service/new-http-remote-service)
-          :mailer         (simple-mailer (:mail config))
-          :notifications  (notifications/notification-component)
-          :repo-bucket    (s3/s3-client (get-in config [:s3 :repo-bucket]))
-          :repo-indexer   (repo-indexing/repo-indexing-component)
-          :storage        (storage-component (:repo config) (:cdn-token config) (:cdn-url config))))
+          :app             (handler-component nil)
+          :clojars-app     (endpoint-component web/clojars-app)
+          :github          (github/new-github-service (:client-id github-oauth)
+                                                      (:client-secret github-oauth)
+                                                      (:callback-uri github-oauth))
+          :gitlab          (gitlab/new-gitlab-service (:client-id gitlab-oauth)
+                                                      (:client-secret gitlab-oauth)
+                                                      (:callback-uri gitlab-oauth))
+          :event-emitter   (event/new-sqs-emitter (:event-queue config))
+          :event-receiver  (event/new-sqs-receiver (:event-queue config))
+          :hcaptcha        (hcaptcha/new-hcaptcha (:hcaptcha config))
+          :http            (http-kit/new-server (:http config))
+          :http-client     (remote-service/new-http-remote-service)
+          :mailer          (simple-mailer (:mail config))
+          :notifications   (notifications/notification-component)
+          :repo-bucket     (s3/s3-client (get-in config [:s3 :repo-bucket]))
+          :repo-indexer    (repo-indexing/repo-indexing-component)
+          :session-cleaner (session-cleaner/new-session-cleaner)
+          :storage         (storage-component (:repo config) (:cdn-token config) (:cdn-url config))))
         (component/system-using
-         {:app            [:clojars-app]
-          :clojars-app    [:db :github :gitlab :error-reporter :event-emitter :hcaptcha
-                           :http-client :mailer :stats :search :storage]
-          :event-emitter  [:error-reporter]
-          :http           [:app]
-          :notifications  [:db :mailer]
-          :repo-indexer   [:error-reporter :repo-bucket]
-          :event-receiver [:error-reporter]
-          :storage        [:error-reporter :repo-bucket]}))))
+         {:app             [:clojars-app]
+          :clojars-app     [:db :github :gitlab :error-reporter :event-emitter :hcaptcha
+                            :http-client :mailer :stats :search :storage]
+          :event-emitter   [:error-reporter]
+          :event-receiver  [:error-reporter]
+          :http            [:app]
+          :notifications   [:db :mailer]
+          :repo-indexer    [:error-reporter :repo-bucket]
+          :session-cleaner [:db]
+          :storage         [:error-reporter :repo-bucket]}))))

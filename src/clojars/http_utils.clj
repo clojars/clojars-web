@@ -1,8 +1,7 @@
 (ns clojars.http-utils
   (:require
-   [aging-session.event :as aging-session-event]
-   [aging-session.memory :as aging-session]
    [clojure.string :as str]
+   [jdbc-ring-session.core :as jdbc-ring-session]
    [ring.middleware.session :refer [wrap-session]]
    [ring.util.response :refer [content-type response]]))
 
@@ -17,38 +16,14 @@
   (or (= :https (:scheme req))
       (= "https" (get-in req [:headers "x-forwarded-proto"]))))
 
-(def ^:private session-store-atom
-  (atom {}))
-
-(defn clear-sessions!
-  "Clears all active sessions. Should only be used in testing!"
-  []
-  (reset! session-store-atom {}))
-
-(defn delete-sessions-for-user!
-  "Deletes all active sessions for `username`. Used to invalidate other
-  active sessions after a password change so an attacker who got in via
-  the old password is kicked out."
-  [username]
-  (swap! session-store-atom
-         (fn [sessions]
-           (into {}
-                 (remove (fn [[_ entry]]
-                           (= username
-                              (get-in entry [:value :cemerick.friend/identity :current]))))
-                 sessions))))
-
-(defn wrap-secure-session [f]
-  (let [mem-store (aging-session/aging-memory-store
-                   :session-atom     session-store-atom
-                   :refresh-on-write true
-                   ;; Allow sessions to remain active for 1 hour
-                   :events           [(aging-session-event/expires-after 3600)])
+(defn wrap-secure-session
+  [f db]
+  (let [session-store (jdbc-ring-session/jdbc-store db)
         secure-session (wrap-session f {:cookie-attrs {:secure true
                                                        :http-only true}
-                                        :store mem-store})
+                                        :store session-store})
         regular-session (wrap-session f {:cookie-attrs {:http-only true}
-                                         :store mem-store})]
+                                         :store session-store})]
     (fn [req]
       (if (https-request? req)
         (secure-session req)

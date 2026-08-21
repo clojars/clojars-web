@@ -30,7 +30,8 @@
       "delete from users"
       "delete from group_verifications"
       "delete from group_settings"
-      "delete from audit"])
+      "delete from audit"
+      "delete from session_store"])
     (catch Exception _)))
 
 (defn add-test-users
