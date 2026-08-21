@@ -10,9 +10,9 @@
   (let [{:keys [error error_description]} params]
     (when error
       (if (= "access_denied" error)
-        (assoc (redirect "/login")
-               :flash (format "You declined access to your %s account"
-                              (oauth-service/provider-name oauth-service)))
+        {::result (assoc (redirect "/login")
+                         :flash (format "You declined access to your %s account"
+                                        (oauth-service/provider-name oauth-service)))}
         (throw (ex-info error_description {:error error}))))))
 
 (defn- get-emails+login [{:keys [params] ::keys [http-service oauth-service]}]
@@ -26,9 +26,9 @@
        ::login login
        ::token token
        ::provider provider-name}
-      (assoc (redirect "/login")
-             :flash (format "No verified emails were found in your %s account"
-                            provider-name)))))
+      {::result (assoc (redirect "/login")
+                       :flash (format "No verified emails were found in your %s account"
+                                      provider-name))})))
 
 (defn- find-user [{::keys [db emails oauth-service]}]
   (if-let [user (db/find-user-by-email-in db emails)]
@@ -39,37 +39,39 @@
           message (if (= "GitLab" provider-name)
                     (str message ". Note: your Clojars email must be your primary email in GitLab, since the GitLab API does't provide a way to get verified secondary emails.")
                     message)]
-      (assoc (redirect "/register")
-             :flash message))))
+      {::result (assoc (redirect "/register")
+                       :flash message)})))
 
 (defn- make-auth [{::keys [login provider user]}]
   (when-some [username (:user user)]
-    {:identity username
-     :username username
-     :auth-provider provider
-     :provider-login login}))
+    {::result {:identity username
+               :username username
+               :auth-provider provider
+               :provider-login login}}))
 
 (defn authorize [service]
   (redirect (oauth-service/authorization-url service)))
 
 (defn callback [req oauth-service http-service db]
   (let [res
-        (reduce (fn [acc f]
-                  (let [res (merge acc (f acc))]
-                    (cond
-                      (:status res)   (reduced res)
-                      (:identity res) (workflow/make-auth res)
-                      :else           res)))
+        (reduce
+         (fn [acc f]
+           (let [res (merge acc (f acc))
+                 {::keys [result]} res]
+             (cond
+               (:status  result)  (reduced res)
+               (:identity result) (workflow/make-auth res)
+               :else              res)))
 
-                (assoc req
-                       ::db db
-                       ::http-service http-service
-                       ::oauth-service oauth-service)
+         (assoc req
+                ::db db
+                ::http-service http-service
+                ::oauth-service oauth-service)
 
-                [handle-error
-                 get-emails+login
-                 find-user
-                 make-auth])]
-    (doseq [result (db/maybe-verify-provider-groups db res)]
-      (log/info result))
-    res))
+         [handle-error
+          get-emails+login
+          find-user
+          make-auth])]
+    (doseq [verify-result (db/maybe-verify-provider-groups db (::result res))]
+      (log/info verify-result))
+    (::result res)))
