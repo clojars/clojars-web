@@ -2,6 +2,7 @@
   (:require
    [clojars.auth :as auth]
    [clojars.event :as event]
+   [clojars.http-utils :as http-utils]
    [clojars.log :as log]
    [clojars.verification :as verification]
    [clojars.web.group-verification :as view]
@@ -50,16 +51,17 @@
                          (select-keys params [:url]))))
 
 (defn routes [db event-emitter]
-  (compojure/routes
-   (POST "/verify/group/parent" {:keys [params]}
+  (http-utils/wrap-anti-forgery
+   (compojure/routes
+    (POST "/verify/group/parent" {:keys [params]}
+          (auth/with-account
+            #(verify-via-parent db event-emitter % params)))
+    (POST "/verify/group/txt" {:keys [params]}
+          (auth/with-account
+            #(verify-via-TXT db event-emitter % params)))
+    (POST "/verify/group/vcs" {:keys [params]}
+          (auth/with-account
+            #(verify-via-vcs db event-emitter % params)))
+    (GET "/verify/group" {:keys [flash]}
          (auth/with-account
-           #(verify-via-parent db event-emitter % params)))
-   (POST "/verify/group/txt" {:keys [params]}
-         (auth/with-account
-           #(verify-via-TXT db event-emitter % params)))
-   (POST "/verify/group/vcs" {:keys [params]}
-         (auth/with-account
-           #(verify-via-vcs db event-emitter % params)))
-   (GET "/verify/group" {:keys [flash]}
-        (auth/with-account
-          #(view/index % flash)))))
+           #(view/index % flash))))))

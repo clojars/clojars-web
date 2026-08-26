@@ -3,6 +3,7 @@
    [clojars.auth :as auth]
    [clojars.db :as db]
    [clojars.event :as event]
+   [clojars.http-utils :as http-utils]
    [clojars.log :as log]
    [clojars.routes.common :as common]
    [clojars.web.token :as view]
@@ -43,7 +44,7 @@
             [group-name jar-name] (parse-scope scope)
             expires-at (calculate-expires-at expires_in)
             token-record (db/add-deploy-token db account name group-name jar-name
-                                                single-use? expires-at)]
+                                              single-use? expires-at)]
         (event/emit event-emitter :deploy-token-created
                     (merge {:username     account
                             :token-name   name
@@ -89,10 +90,11 @@
                      :flash "Token not found."))))))))
 
 (defn routes [db event-emitter]
-  (compojure/routes
-   (GET ["/tokens"] {:keys [flash]}
-        (get-tokens db flash))
-   (POST ["/tokens"] {:as request}
-         (create-token db event-emitter request))
-   (DELETE ["/tokens/:id", :id #"[0-9]+"] [id]
-           (disable-token db id))))
+  (http-utils/wrap-anti-forgery
+   (compojure/routes
+    (GET ["/tokens"] {:keys [flash]}
+         (get-tokens db flash))
+    (POST ["/tokens"] {:as request}
+          (create-token db event-emitter request))
+    (DELETE ["/tokens/:id", :id #"[0-9]+"] [id]
+            (disable-token db id)))))

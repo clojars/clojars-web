@@ -3,7 +3,9 @@
    [cemerick.friend :as friend]
    [clojure.string :as str]
    [jdbc-ring-session.core :as jdbc-ring-session]
+   [ring.middleware.anti-forgery :as ring-af]
    [ring.middleware.session :refer [wrap-session]]
+   [ring.middleware.session-timeout :as ring-session-timeout]
    [ring.util.response :refer [content-type redirect response]]))
 
 (defn wrap-cors-headers [handler]
@@ -79,3 +81,34 @@
         (assoc :session (:session request))
         (friend/merge-authentication response))
     response))
+
+(defn- wrap-anti-forgery*
+  ([only-when-authed? handler]
+   (let [af-handler (ring-af/wrap-anti-forgery handler)]
+     (fn wrap-anti-forgery**
+       [request]
+       (if (or (not only-when-authed?)
+               (some? (friend/identity request)))
+         (af-handler request)
+         (handler request))))))
+
+(def wrap-anti-forgery
+  "Wraps the given handler with ring anti-forgery support.
+  See `ring.middleware.anti-forgery/wrap-anti-forgery`."
+  (partial wrap-anti-forgery* false))
+
+(def wrap-anti-forgery-when-authenticated
+  "Wraps the given handler with ring anti-forgery support, but only when the
+  request is authenticated. See
+  `ring.middleware.anti-forgery/wrap-anti-forgery`."
+  (partial wrap-anti-forgery* true))
+
+(defn wrap-idle-session-timeout
+  "Wraps `ring.middleware.session-timeout/wrap-idle-session-timeout` to not set
+  the timeout when there is no session."
+  [handler options]
+  (let [idle-session-handler (ring-session-timeout/wrap-idle-session-timeout handler options)]
+    (fn [request]
+      (if (seq (:session request))
+        (idle-session-handler request)
+        (handler request)))))

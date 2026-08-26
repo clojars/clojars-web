@@ -19,16 +19,16 @@
   (every? #(.contains % "HttpOnly") (res cookies)))
 
 (deftest https-cookies-are-secure
-  (let [res ((help/app) (assoc (request :get "/") :scheme :https))]
+  (let [res ((help/app) (assoc (request :get "/login") :scheme :https))]
     (is (cookies-secure? res))
     (is (cookies-http-only? res))))
 
 (deftest forwarded-https-cookies-are-secure
-  (let [res ((help/app) (-> (request :get "/")
+  (let [res ((help/app) (-> (request :get "/login")
                             (header "x-forward-proto" "https")))]
     (is (cookies-secure? res))
     (is (cookies-http-only? res))))
 
 (deftest regular-cookies-are-http-only
-  (let [res ((help/app) (request :get "/"))]
+  (let [res ((help/app) (request :get "/login"))]
     (is (cookies-http-only? res))))

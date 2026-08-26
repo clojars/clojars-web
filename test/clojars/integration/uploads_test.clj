@@ -1169,8 +1169,6 @@
                            :message "the Gradle module includes a dependency with a version range. See https://bit.ly/44Z4Ggp"
                            :tag "gradle-module-range-dependency"})))))
 
-;; NOCOMMIT: (toby)
-;; - test strictly, prefers
 (deftest deploy-requires-non-SNAPSHOT-dependency-versions-in-module
   (doseq [version-type [:prefers :requires :strictly]]
     (testing (format "with a SNAPSHOT version with type %s" version-type)

@@ -6,7 +6,7 @@
    [clojars.auth :as auth :refer [try-account]]
    [clojars.config :refer [config]]
    [clojars.errors :refer [wrap-exceptions]]
-   [clojars.http-utils :refer [wrap-secure-session wrap-additional-security-headers]]
+   [clojars.http-utils :as http-utils]
    [clojars.log :as log]
    [clojars.middleware :refer [wrap-ignore-trailing-slash]]
    [clojars.routes.api :as api]
@@ -32,7 +32,6 @@
    [ring.middleware.defaults :as ring-defaults]
    [ring.middleware.flash :refer [wrap-flash]]
    [ring.middleware.not-modified :refer [wrap-not-modified]]
-   [ring.middleware.session-timeout :refer [wrap-idle-session-timeout]]
    [ring.util.response :refer [bad-request content-type redirect]]))
 
 (let [throw* #(throw (ex-info
@@ -105,6 +104,9 @@
 
 (def ^:private defaults-config
   (-> ring-defaults/secure-site-defaults
+      ;; We wrap routes that need antiforgery on a per-route basis to avoid
+      ;; creating a session for every request
+      (assoc-in [:security :anti-forgery] false)
       ;; Be more strict than the default; we never want to be frame-embedded
       (assoc-in [:security :frame-options] :deny)
       ;; we handle this in nginx
@@ -172,10 +174,10 @@
          ;; the db, but users would never hit this in practice, as clients don't
          ;; reuse sessions, and an upload session would have to pause for over
          ;; 24 hours for this to trigger
-         (wrap-idle-session-timeout {:timeout session-timeout-seconds
-                                     :timeout-response {:status 400
-                                                        :body "Session timed out"}})
-         (wrap-secure-session db))
+         (http-utils/wrap-idle-session-timeout {:timeout session-timeout-seconds
+                                                :timeout-response {:status 400
+                                                                   :body "Session timed out"}})
+         (http-utils/wrap-secure-session db))
      (-> (token-breach/routes db event-emitter)
          (wrap-exceptions error-reporter)
          (log/wrap-request-context))
@@ -191,10 +193,10 @@
          ;; ring-defaults' session support
          (wrap-flash)
          (ring-defaults/wrap-defaults defaults-config)
-         (wrap-additional-security-headers)
-         (wrap-idle-session-timeout {:timeout session-timeout-seconds
-                                     :timeout-response (redirect "/login")})
-         (wrap-secure-session db)
+         (http-utils/wrap-additional-security-headers)
+         (http-utils/wrap-idle-session-timeout {:timeout session-timeout-seconds
+                                                :timeout-response (redirect "/login")})
+         (http-utils/wrap-secure-session db)
          (wrap-content-type)
          (wrap-not-modified)
          (wrap-ignore-trailing-slash)))))

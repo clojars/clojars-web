@@ -3,6 +3,7 @@
    [clojars.auth :as auth]
    [clojars.db :as db]
    [clojars.event :as event]
+   [clojars.http-utils :as http-utils]
    [clojars.log :as log]
    [clojars.routes.common :as common]
    [clojars.web.group :as view]
@@ -194,17 +195,19 @@
              (view/show-group db account groupname
                               "Cannot set settings for non-existent group"))))))))
 
-(defn routes [db event-emitter]
-  (compojure/routes
-   (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
-        (get-members db groupname))
-   (POST ["/groups/:groupname/settings", :groupname #"[^/]+"] [groupname require_mfa :as request]
-         (update-group-settings db event-emitter groupname (= "1" require_mfa) (common/request-details request)))
-   (POST ["/groups/:groupname", :groupname #"[^/]+"] [admin groupname scope_to_jar scope_to_jar_new username :as request]
-         (toggle-or-add-member db event-emitter groupname username (= "1" admin)
-                               (if (= ":new" scope_to_jar)
-                                 scope_to_jar_new
-                                 scope_to_jar)
-                               (common/request-details request)))
-   (DELETE ["/groups/:groupname", :groupname #"[^/]+"] [groupname scope_to_jar username :as request]
-           (remove-member db event-emitter groupname scope_to_jar username (common/request-details request)))))
+(defn routes
+  [db event-emitter]
+  (http-utils/wrap-anti-forgery-when-authenticated
+   (compojure/routes
+    (GET ["/groups/:groupname", :groupname #"[^/]+"] [groupname]
+         (get-members db groupname))
+    (POST ["/groups/:groupname/settings", :groupname #"[^/]+"] [groupname require_mfa :as request]
+          (update-group-settings db event-emitter groupname (= "1" require_mfa) (common/request-details request)))
+    (POST ["/groups/:groupname", :groupname #"[^/]+"] [admin groupname scope_to_jar scope_to_jar_new username :as request]
+          (toggle-or-add-member db event-emitter groupname username (= "1" admin)
+                                (if (= ":new" scope_to_jar)
+                                  scope_to_jar_new
+                                  scope_to_jar)
+                                (common/request-details request)))
+    (DELETE ["/groups/:groupname", :groupname #"[^/]+"] [groupname scope_to_jar username :as request]
+            (remove-member db event-emitter groupname scope_to_jar username (common/request-details request))))))
