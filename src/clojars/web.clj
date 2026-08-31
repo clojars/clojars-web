@@ -6,15 +6,13 @@
    [clojars.auth :as auth :refer [try-account]]
    [clojars.config :refer [config]]
    [clojars.errors :refer [wrap-exceptions]]
-   [clojars.friend.oauth.github :as github]
-   [clojars.friend.oauth.gitlab :as gitlab]
-   [clojars.friend.registration :as registration]
    [clojars.http-utils :refer [wrap-secure-session wrap-additional-security-headers]]
    [clojars.log :as log]
    [clojars.middleware :refer [wrap-ignore-trailing-slash]]
    [clojars.routes.api :as api]
    [clojars.routes.artifact :as artifact]
    [clojars.routes.group :as group]
+   [clojars.routes.oauth :as oauth]
    [clojars.routes.repo :as repo]
    [clojars.routes.session :as session]
    [clojars.routes.token :as token]
@@ -56,7 +54,8 @@
         page))))
 
 (defn- main-routes
-  [{:as _system :keys [db event-emitter hcaptcha mailer search stats]}]
+  [{:as _system :keys [db event-emitter hcaptcha http-client
+                       github gitlab mailer search stats]}]
   (let [db (:spec db)]
     (routes
      (GET "/" _
@@ -84,12 +83,14 @@
           (try-account
            #(html-doc "DMCA" {:account %}
                       (raw (slurp (io/resource "dmca.html"))))))
-     session/routes
+     (session/routes db event-emitter hcaptcha)
+     (oauth/github-routes db github http-client)
+     (oauth/gitlab-routes db gitlab http-client)
      (group/routes db event-emitter)
      (artifact/routes db stats)
      ;; user routes must go after artifact routes
      ;; since they both catch /:identifier
-     (user/routes db event-emitter hcaptcha mailer)
+     (user/routes db event-emitter mailer)
      (verify/routes db event-emitter)
      (token/routes db event-emitter)
      (api/routes db stats)
@@ -149,10 +150,6 @@
     :keys [db
            error-reporter
            event-emitter
-           hcaptcha
-           http-client
-           github
-           gitlab
            search
            storage]}]
   (let [db (:spec db)]
@@ -183,11 +180,10 @@
          (wrap-exceptions error-reporter)
          (log/wrap-request-context))
      (-> (main-routes system)
-         (friend/authenticate
-          {:workflows [(auth/interactive-form-with-mfa-workflow db event-emitter)
-                       (registration/workflow db hcaptcha)
-                       (github/workflow github http-client db)
-                       (gitlab/workflow gitlab http-client db)]})
+         ;; This pulls the identity for the session. We don't have it run any
+         ;; workflows, as those are now handled by regular routes (see
+         ;; session/routes, oauth/github-routes, and oauth/gitlab-routes
+         (friend/authenticate nil)
          (wrap-reject-invalid-params)
          (wrap-exceptions error-reporter)
          (log/wrap-request-context)

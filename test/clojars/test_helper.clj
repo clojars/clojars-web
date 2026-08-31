@@ -11,6 +11,7 @@
    [clojars.http-kit :as http-kit]
    [clojars.maven :as maven]
    [clojars.oauth.service :as oauth-service]
+   [clojars.remote-service :as remote-service]
    [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.stats :as stats]
@@ -136,12 +137,18 @@
     ;; properly
     (binding [system (component/start
                       (assoc (system/new-system (config/config))
-                             :repo-bucket (s3/mock-s3-client)
                              :error-reporter (quiet-reporter)
+                             :github (oauth-service/new-mock-oauth-service
+                                      "GitHub" {:authorize-uri
+                                                "https://github.com/login/oauth/authorize"})
+                             :gitlab (oauth-service/new-mock-oauth-service
+                                      "GitLab" {:authorize-uri
+                                                "https://gitlab.com/oauth/authorize"})
+                             :http-client (remote-service/new-mock-remote-service)
                              :index-factory memory-index
                              :mailer (email/mock-mailer)
-                             :stats (no-stats)
-                             :github (oauth-service/new-mock-oauth-service "GitHub" {})))]
+                             :repo-bucket (s3/mock-s3-client)
+                             :stats (no-stats)))]
       (let [db (get-in system [:db :spec])]
         (try
           (clear-database db)

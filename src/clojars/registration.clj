@@ -1,4 +1,4 @@
-(ns clojars.friend.registration
+(ns clojars.registration
   (:require
    [cemerick.friend.workflows :as workflow]
    [clojars.db :refer [add-user]]
@@ -32,9 +32,3 @@
           (add-user db email username password)
           (log/info {:status :success})
           (workflow/make-auth {:identity username :username username}))))))
-
-(defn workflow [db hcaptcha]
-  (fn [{:keys [uri request-method params]}]
-    (when (and (= "/register" uri)
-               (= :post request-method))
-      (register db hcaptcha params))))

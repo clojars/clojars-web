@@ -10,7 +10,6 @@
    [clojars.util :as util]
    [clojure.string :as str]
    [one-time.core :as ot]
-   [ring.util.request :as req]
    [ring.util.response :as response])
   (:import
    java.sql.Timestamp))
@@ -39,7 +38,7 @@
     (friend/throw-unauthorized friend/*identity*
                                {:cemerick.friend/required-roles group})))
 
-(defn- verify-password
+(defn- verify-password*
   [db username password]
   (when-not (str/blank? password)
     (let [user (db/find-user db username)]
@@ -81,14 +80,14 @@
                        {::friend/workflow          :interactive-form
                         ::friend/redirect-on-auth? true}))
 
-(defn- verify-password-step
+(defn verify-password
   [db {:as _request :keys [form-params params session]}]
   (let [username (get-param :username form-params params)
         password (get-param :password form-params params)]
     (log/with-context {:tag      :authentication
                        :username username
                        :type     :password}
-      (if-some [{:as _user :keys [otp_active]} (verify-password db username password)]
+      (if-some [{:as _user :keys [otp_active]} (verify-password* db username password)]
         (if otp_active
           (do
             (log/info {:status :pending-mfa})
@@ -100,7 +99,7 @@
                      :reason :password-incorrect})
           (response/redirect (format "/login?login_failed=Y&username=%s" username)))))))
 
-(defn- verify-mfa-step
+(defn verify-mfa
   [db event-emitter {:as _request :keys [form-params params session]}]
   (if-some [username (::pending-mfa-username session)]
     (let [otp  (get-param :otp form-params params)
@@ -120,17 +119,6 @@
 (defn pending-mfa?
   [session]
   (some? (::pending-mfa-username session)))
-
-(defn interactive-form-with-mfa-workflow
-  [db event-emitter]
-  (fn [{:as request :keys [request-method]}]
-    (when (= :post request-method)
-      (let [path (req/path-info request)]
-        (case path
-          "/login"     (verify-password-step db request)
-          "/login/mfa" (verify-mfa-step db event-emitter request)
-          ;; else
-          nil)))))
 
 (defn parse-authorization-header
   "Parses a Basic auth header into username and password."

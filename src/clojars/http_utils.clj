@@ -1,9 +1,10 @@
 (ns clojars.http-utils
   (:require
+   [cemerick.friend :as friend]
    [clojure.string :as str]
    [jdbc-ring-session.core :as jdbc-ring-session]
    [ring.middleware.session :refer [wrap-session]]
-   [ring.util.response :refer [content-type response]]))
+   [ring.util.response :refer [content-type redirect response]]))
 
 (defn wrap-cors-headers [handler]
   (fn [req]
@@ -70,3 +71,11 @@
       (response)
       (content-type "text/html;charset=utf-8")
       (assoc ::extra-csp-srcs srcs)))
+
+(defn redirect-on-auth
+  [request response]
+  (if (friend/auth? response)
+    (-> (redirect "/")
+        (assoc :session (:session request))
+        (friend/merge-authentication response))
+    response))

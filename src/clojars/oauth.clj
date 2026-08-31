@@ -1,4 +1,4 @@
-(ns clojars.friend.oauth
+(ns clojars.oauth
   (:require
    [cemerick.friend.workflows :as workflow]
    [clojars.db :as db]
