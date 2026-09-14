@@ -6,6 +6,7 @@
    [clojars.auth :as auth :refer [try-account]]
    [clojars.config :refer [config]]
    [clojars.errors :refer [wrap-exceptions]]
+   [clojars.from.ring.middleware.session-timeout :as session-timeout]
    [clojars.http-utils :as http-utils]
    [clojars.log :as log]
    [clojars.middleware :refer [wrap-ignore-trailing-slash]]
@@ -174,9 +175,9 @@
          ;; the db, but users would never hit this in practice, as clients don't
          ;; reuse sessions, and an upload session would have to pause for over
          ;; 24 hours for this to trigger
-         (http-utils/wrap-idle-session-timeout {:timeout session-timeout-seconds
-                                                :timeout-response {:status 400
-                                                                   :body "Session timed out"}})
+         (session-timeout/wrap-idle-session-timeout {:timeout session-timeout-seconds
+                                                     :timeout-response {:status 400
+                                                                        :body "Session timed out"}})
          (http-utils/wrap-secure-session db))
      (-> (token-breach/routes db event-emitter)
          (wrap-exceptions error-reporter)
@@ -194,8 +195,8 @@
          (wrap-flash)
          (ring-defaults/wrap-defaults defaults-config)
          (http-utils/wrap-additional-security-headers)
-         (http-utils/wrap-idle-session-timeout {:timeout session-timeout-seconds
-                                                :timeout-response (redirect "/login")})
+         (session-timeout/wrap-idle-session-timeout {:timeout session-timeout-seconds
+                                                     :timeout-response (redirect "/login")})
          (http-utils/wrap-secure-session db)
          (wrap-content-type)
          (wrap-not-modified)

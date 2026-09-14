@@ -5,7 +5,6 @@
    [jdbc-ring-session.core :as jdbc-ring-session]
    [ring.middleware.anti-forgery :as ring-af]
    [ring.middleware.session :refer [wrap-session]]
-   [ring.middleware.session-timeout :as ring-session-timeout]
    [ring.util.response :refer [content-type redirect response]]))
 
 (defn wrap-cors-headers [handler]
@@ -103,12 +102,3 @@
   `ring.middleware.anti-forgery/wrap-anti-forgery`."
   (partial wrap-anti-forgery* true))
 
-(defn wrap-idle-session-timeout
-  "Wraps `ring.middleware.session-timeout/wrap-idle-session-timeout` to not set
-  the timeout when there is no session."
-  [handler options]
-  (let [idle-session-handler (ring-session-timeout/wrap-idle-session-timeout handler options)]
-    (fn [request]
-      (if (seq (:session request))
-        (idle-session-handler request)
-        (handler request)))))
