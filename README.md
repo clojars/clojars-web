@@ -45,7 +45,7 @@ To begin developing, start with a REPL (Note: if you are instead starting a repl
 make repl
 ```
 
-You'll need elasticmq, minio, and postgres running as well. That's managed via
+You'll need elasticmq, s3mock, and postgres running as well. That's managed via
 docker-compose:
 
 ```sh

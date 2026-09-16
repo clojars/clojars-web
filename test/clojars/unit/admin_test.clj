@@ -15,7 +15,7 @@
 
 (def ^:dynamic *s3-client* nil)
 
-;; Note: these tests exercise the s3 client end-to-end, and require minio to
+;; Note: these tests exercise the s3 client end-to-end, and require s3mock to
 ;; running. See docker-compose.yml
 
 (defn with-repo-setup

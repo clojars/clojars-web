@@ -8,7 +8,7 @@
    [matcher-combinators.matchers :as m]
    [matcher-combinators.test]))
 
-;; Note: these tests exercise the s3 client end-to-end, and require minio to
+;; Note: these tests exercise the s3 client end-to-end, and require s3mock to
 ;; running. See docker-compose.yml
 
 (defn- throw-on-error

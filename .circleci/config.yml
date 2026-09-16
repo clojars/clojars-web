@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: clojure:temurin-25-tools-deps-bullseye
+      - image: clojure:temurin-25-tools-deps-trixie
         environment:
           - DB_PORT: 5432
           - CLOJARS_ENVIRONMENT: test
@@ -11,22 +11,10 @@ jobs:
           - POSTGRES_USER=clojars
           - POSTGRES_PASSWORD=clojars
           - POSTGRES_DB=clojars
-      - image: minio/minio:RELEASE.2023-04-20T17-56-55Z
-        command: server /data
-        environment:
-          MINIO_ROOT_USER: fake-access-key
-          MINIO_ROOT_PASSWORD: fake-secret-key
+      - image: adobe/s3mock:5.2.2
     working_directory: ~/clojars
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - clojars-{{ checksum "deps.edn" }}
-      - run: make prep-deps
-      - save_cache:
-          paths:
-            - $HOME/.m2
-          key: clojars-{{ checksum "deps.edn" }}
       # Install some tooling we need that isn't on the image by default
       - run: apt update && apt install curl --yes && apt install unzip --yes
       - run:
@@ -36,9 +24,17 @@ jobs:
           name: Run ElasticMQ
           command: java -Dconfig.file=dev-resources/elasticmq.conf -jar elasticmq.jar
           background: true
+      - restore_cache:
+          keys:
+            - clojars-v1-{{ checksum "deps.edn" }}
+            - clojars-v1-
       - run: make migrate-db
       - run: make check-dependabot
       - run: make lint
       - run: make test
+      - save_cache:
+          key: clojars-v1-{{ checksum "deps.edn" }}  
+          paths:
+            - ~/.m2/repository
       - store_test_results:
           path: target/test-results

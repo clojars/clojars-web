@@ -94,7 +94,7 @@
   ;; to set either here.
   ([bucket]
    (s3-client bucket nil))
-  ;; This arity is only used directly in testing, where we use minio via docker, and we have
+  ;; This arity is only used directly in testing, where we use s3mock via docker, and we have
   ;; to override the endpoint and provide credentials
   ([bucket {:keys [credentials endpoint region]}]
    {:pre [(not (str/blank? bucket))]}
