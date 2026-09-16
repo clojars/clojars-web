@@ -25,10 +25,11 @@
             (if expires-at (str expires-at) "never"))
     (common/details-table event)
     common/did-not-take-action
-    "To manage your deploy tokens, visit https://clojars.org/tokens"]))
+    "To manage your deploy tokens, visit https://clojars.org/tokens"
+    (common/account-footer username)]))
 
 (defmethod notifications/notification :token-breached
-  [_type mailer {:as _user :keys [email]}
+  [_type mailer {:as _user username :user :keys [email]}
    {:as _data :keys [token-disabled? token-name commit-url]}]
   (notifications/send
    mailer email "Deploy token found on GitHub"
@@ -39,5 +40,6 @@
     (format "The commit was found at: %s" commit-url)
     (if token-disabled?
       "The token was already disabled, so we took no further action."
-      "This token has been disabled to prevent malicious use.")]))
+      "This token has been disabled to prevent malicious use.")
+    (common/account-footer username)]))
 

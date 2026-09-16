@@ -291,21 +291,20 @@
                [:not [:is :inactive true]]
                [:= :admin true]])})))
 
-(defn group-admin-emails
+(defn group-admin-users
   [db groupname scope]
-  (mapv :email
-        (q db
-           {:select :email
-            :from :users
-            :where [:in :user
-                    {:select-distinct :user
-                     :from :permissions
-                     :where
-                     (with-scoping scope
-                       [:and
-                        [:= :group_name groupname]
-                        [:not [:is :inactive true]]
-                        [:= :admin true]])}]})))
+  (q db
+     {:select [:email :created :id :user]
+      :from :users
+      :where [:in :user
+              {:select-distinct :user
+               :from :permissions
+               :where
+               (with-scoping scope
+                 [:and
+                  [:= :group_name groupname]
+                  [:not [:is :inactive true]]
+                  [:= :admin true]])}]}))
 
 (defn group-activenames
   [db groupname]

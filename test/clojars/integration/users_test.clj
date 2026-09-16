@@ -197,7 +197,8 @@
   (is (true? (email/wait-for-mock-emails)))
   (is (= #{"Your Clojars email was changed"
            "Your Clojars password was changed"}
-         (into #{} (map second) @email/mock-emails))))
+         (into #{} (map second) @email/mock-emails)))
+  (help/assert-email-user-footer [["fixture2@example.org" "fixture"]] @email/mock-emails))
 
 (deftest user-can-update-just-email
   (email/expect-mock-emails 2)
@@ -212,16 +213,18 @@
       (within [:div#notice]
         (has (text? "Profile updated."))))
   (is (true? (email/wait-for-mock-emails)))
-  (let [[addresses titles bodies]
+  (let [[_addresses titles bodies]
         (reduce
          #(map conj %1 %2)
          [#{} #{} #{}]
          @email/mock-emails)]
-    (is (= #{"fixture@example.org" "fixture2@example.org"} addresses))
     (is (= #{"Your Clojars email was changed"} titles))
     (doseq [body bodies]
       (is (re-find #"from 'fixture@example.org' to 'fixture2@example.org'" body))
-      (is (re-find #"Client IP" body)))))
+      (is (re-find #"Client IP" body)))
+    (help/assert-email-user-footer [["fixture@example.org" "fixture"]
+                                    ["fixture2@example.org" "fixture"]]
+                                   @email/mock-emails)))
 
 (deftest user-cannot-update-email-to-another-users-email
   (-> (session (help/app))
@@ -261,7 +264,9 @@
     (is (= "fixture@example.org" address))
     (is (= "Your Clojars password was changed" title))
     (is (re-find #"has changed the password on your 'fixture'" body))
-    (is (re-find #"Client IP" body))))
+    (is (re-find #"Client IP" body)))
+  (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
+                                 @email/mock-emails))
 
 (deftest changing-password-invalidates-other-sessions
   (let [app (help/app)
@@ -318,6 +323,8 @@
           (re-find
            #"To continue with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
            message)]
+      (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
+                                     @email/mock-emails)
       (-> (session app)
           (visit reset-password-link)
           (fill-in "New password" "password1234c")
@@ -397,6 +404,8 @@
           (re-find
            #"Hello,\n\nWe received a request from someone, hopefully you, to reset the password of the clojars user: fixture.\n\nTo continue with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
            message)]
+      (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
+                                     @email/mock-emails)
       (is (re-find #"Client IP" message))
       (is (string? reset-password-link))
       (email/expect-mock-emails 1)
@@ -463,6 +472,8 @@
     (is (= "fixture@example.org" address))
     (is (= "Two-factor auth was enabled on your Clojars account" title))
     (is (re-find #"'fixture'" body))
+    (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
+                                   @email/mock-emails)
 
     (testing "when manually disabled"
       (email/expect-mock-emails 1)
@@ -474,6 +485,8 @@
         (is (re-find #"'fixture'" body))
         (is (re-find #"manually disabled" body))
         (is (re-find #"Client IP" body))))
+    (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
+                                   @email/mock-emails)
 
     (testing "when recovery code used"
       (email/expect-mock-emails 2)
@@ -485,4 +498,6 @@
           (is (= "fixture@example.org" address))
           (is (= "Two-factor auth was disabled on your Clojars account" title))
           (is (re-find #"'fixture'" body))
-          (is (re-find #"your recovery code" body)))))))
+          (is (re-find #"your recovery code" body)))
+        (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
+                                       @email/mock-emails)))))

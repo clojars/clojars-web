@@ -12,7 +12,8 @@
      username)
     (common/details-table data)
     common/did-not-take-action
-    "To manage your two-factor settings, visit https://clojars.org/mfa"]))
+    "To manage your two-factor settings, visit https://clojars.org/mfa"
+    (common/account-footer username)]))
 
 (defmethod notifications/notification :mfa-deactivated
   [_type mailer
@@ -28,7 +29,8 @@
       "Your two-factor auth was manually disabled at https://clojars.org/mfa.")
     (common/details-table data)
     common/did-not-take-action
-    "To manage your two-factor settings, visit https://clojars.org/mfa"]))
+    "To manage your two-factor settings, visit https://clojars.org/mfa"
+    (common/account-footer username)]))
 
 (defmethod notifications/notification :email-changed
   [_type mailer {:as _user username :user email :email}
@@ -41,7 +43,8 @@
           old-email
           email)
          (common/details-table data)
-         common/did-not-take-action]]
+         common/did-not-take-action
+         (common/account-footer username)]]
     (notifications/send mailer email subject msg)
     (notifications/send mailer old-email subject msg)))
 
@@ -53,4 +56,5 @@
      "Someone (hopefully you) has changed the password on your '%s' Clojars account."
      username)
     (common/details-table data)
-    common/did-not-take-action]))
+    common/did-not-take-action
+    (common/account-footer username)]))

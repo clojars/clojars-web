@@ -213,7 +213,8 @@
                     reset-password-url
                     "This link is valid for 24 hours, after which you will need to generate a new one."
                     (notif-common/details-table details)
-                    "If you didn't reset your password then you can ignore this email."]
+                    "If you didn't reset your password then you can ignore this email."
+                    (notif-common/account-footer (:user user))]
                    (interpose "\n\n")
                    (apply str)))
       (catch Exception e

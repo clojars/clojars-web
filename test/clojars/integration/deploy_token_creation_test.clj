@@ -27,4 +27,6 @@
     (is (re-find #"Single use: no" body))
     (is (re-find #"Expires: never" body))
     (is (re-find #"https://clojars.org/tokens" body))
-    (is (not (re-find #"CLOJARS_" body)))))
+    (is (not (re-find #"CLOJARS_" body))))
+  (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
+                                 @email/mock-emails))
