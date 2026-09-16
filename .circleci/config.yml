@@ -15,14 +15,6 @@ jobs:
     working_directory: ~/clojars
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - clojars-{{ checksum "deps.edn" }}
-      - run: make prep-deps
-      - save_cache:
-          paths:
-            - $HOME/.m2
-          key: clojars-{{ checksum "deps.edn" }}
       # Install some tooling we need that isn't on the image by default
       - run: apt update && apt install curl --yes && apt install unzip --yes
       - run:
@@ -32,9 +24,17 @@ jobs:
           name: Run ElasticMQ
           command: java -Dconfig.file=dev-resources/elasticmq.conf -jar elasticmq.jar
           background: true
+      - restore_cache:
+          keys:
+            - clojars-v1-{{ checksum "deps.edn" }}
+            - clojars-v1-
       - run: make migrate-db
       - run: make check-dependabot
       - run: make lint
       - run: make test
+      - save_cache:
+          key: clojars-v1-{{ checksum "deps.edn" }}  
+          paths:
+            - ~/.m2/repository
       - store_test_results:
           path: target/test-results
