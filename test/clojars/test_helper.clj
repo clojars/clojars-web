@@ -252,14 +252,14 @@
 
 (defn real-s3-client
   "This creates a real s3 client for testing s3-specific functionality. It
-  requires minio to running. See docker-compose.yml."
+  requires s3mock to be running. See docker-compose.yml."
   [bucket]
   (let [client (s3/s3-client bucket
                              {:credentials {:access-key-id     "fake-access-key"
                                             :secret-access-key "fake-secret-key"}
                               :endpoint {:protocol "http"
                                          :hostname "localhost"
-                                         :port     9000}
+                                         :port     9090}
                               :region "us-east-1"})]
     (aws/invoke (:s3 client) {:op      :CreateBucket
                               :request {:Bucket bucket}})
