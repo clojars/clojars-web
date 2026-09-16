@@ -77,7 +77,9 @@
           (is (= "Deploy token found on GitHub" subject))
           (is (re-find #"'a token'" message))
           (is (re-find #"https://github.com/foo/bar" message))
-          (is (re-find #"has been disabled" message))))
+          (is (re-find #"has been disabled" message))
+          (help/assert-email-user-footer [["ham@biscuit.co" "ham"]]
+                                         @email/mock-emails)))
 
       (testing "when token is disabled"
         (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil false nil)
@@ -97,7 +99,9 @@
           (is (= "Deploy token found on GitHub" subject))
           (is (re-find #"'another token'" message))
           (is (re-find #"https://github.com/foo/bar" message))
-          (is (re-find #"was already disabled" message))))
+          (is (re-find #"was already disabled" message))
+          (help/assert-email-user-footer [["ham@biscuit.co" "ham"]]
+                                         @email/mock-emails)))
 
       (testing "with existing and non-existent tokens"
         (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil false nil)

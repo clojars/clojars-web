@@ -1363,16 +1363,17 @@
 
     (is (true? (email/wait-for-mock-emails)))
     (let [emails @email/mock-emails
-          addresses (into #{} (map first) emails)
           titles (map second emails)
           bodies (map #(nth % 2) emails)]
-      (is (= #{"test@example.org" "test2@example.org"} addresses))
       (is (every? #(= "[Clojars] dantheman deployed org.clojars.dantheman/test 0.0.1" %)
                   titles))
       (is (every? #(re-find #"User 'dantheman' just deployed org.clojars.dantheman/test 0.0.1" %)
                   bodies))
       (is (every? #(re-find #"https://clojars.org/org.clojars.dantheman/test/versions/0.0.1" %)
-                  bodies)))))
+                  bodies))
+      (help/assert-email-user-footer [["test@example.org" "dantheman"]
+                                      ["test2@example.org" "donthemon"]]
+                                     emails))))
 
 (deftest deploy-generates-repo-indexes
   (-> (session (help/app))
@@ -1435,7 +1436,9 @@
       (is (= "test@example.org" address))
       (is (= "[Clojars] dantheman deployed org.clojars.dantheman/test 0.0.1" title))
       (is (re-find #"User 'dantheman' just deployed org.clojars.dantheman/test 0.0.1" body))
-      (is (re-find #"https://clojars.org/org.clojars.dantheman/test/versions/0.0.1" body)))))
+      (is (re-find #"https://clojars.org/org.clojars.dantheman/test/versions/0.0.1" body))
+      (help/assert-email-user-footer [["test@example.org" "dantheman"]]
+                                     emails))))
 
 (deftest user-can-deploy-a-pom-only-release
   (-> (session (help/app))

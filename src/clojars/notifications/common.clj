@@ -20,3 +20,9 @@
     (format "Client IP: %s\nUser agent: %s\nTimestamp: %s"
             remote-addr user-agent (.format (iso-8601) timestamp))
     ""))
+
+(defn account-footer
+  [account-name]
+  (if account-name
+    (format "This message was sent to email address on file for the '%s' Clojars account." account-name)
+    ""))

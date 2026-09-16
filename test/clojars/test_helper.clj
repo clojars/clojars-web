@@ -212,6 +212,17 @@
   (db/add-group *db* account group)
   (db/verify-group! *db* account group))
 
+(defmacro assert-email-user-footer
+  [addresses->usernames emails]
+  `(let [emails# ~emails
+         emails-map# (group-by first emails#)]
+     (doseq [[email-address# username#] ~addresses->usernames
+             :let [emails-for-address# (emails-map# email-address#)]]
+       (is (seq emails-for-address#) (format "Emails for %s should exist" email-address#))
+       (doseq [email# emails-for-address#]
+         (is (str/ends-with? (nth email# 2)
+                             (format "This message was sent to email address on file for the '%s' Clojars account."
+                                     username#)))))))
 (defmacro match-audit
   [params m]
   `(let [db# (:db (config/config))

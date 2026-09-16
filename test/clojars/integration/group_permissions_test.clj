@@ -50,13 +50,15 @@
 
   (is (true? (email/wait-for-mock-emails)))
   (is (= 2 (count @email/mock-emails)))
-  (is (= #{"fixture@example.org" "test@example.org"}
-         (into #{} (map first) @email/mock-emails)))
   (is (every? #(= "A permission was added to the group org.clojars.dantheman"
                   %)
               (into [] (map second) @email/mock-emails)))
   (is (every? #(str/starts-with? % "User 'fixture' was added to the org.clojars.dantheman group with scope '*' by dantheman.\n\n")
-              (into [] (map #(nth % 2)) @email/mock-emails))))
+              (into [] (map #(nth % 2)) @email/mock-emails)))
+  (help/assert-email-user-footer
+   [["fixture@example.org" "fixture"]
+    ["test@example.org" "dantheman"]]
+   @email/mock-emails))
 
 (deftest admin-can-toggle-member-to-admin
   (-> (session (help/app))
@@ -111,13 +113,15 @@
 
   (is (true? (email/wait-for-mock-emails)))
   (is (= 2 (count @email/mock-emails)))
-  (is (= #{"fixture@example.org" "test@example.org"}
-         (into #{} (map first) @email/mock-emails)))
   (is (every? #(= "An admin permission was added to the group org.clojars.dantheman"
                   %)
               (into [] (map second) @email/mock-emails)))
   (is (every? #(str/starts-with? % "User 'fixture' was added as an admin to the org.clojars.dantheman group with scope '*' by dantheman.\n\n")
-              (into [] (map #(nth % 2)) @email/mock-emails))))
+              (into [] (map #(nth % 2)) @email/mock-emails)))
+  (help/assert-email-user-footer
+   [["fixture@example.org" "fixture"]
+    ["test@example.org" "dantheman"]]
+   @email/mock-emails))
 
 (deftest admin-can-add-admin-to-group
   (-> (session (help/app))
@@ -152,13 +156,15 @@
 
   (is (true? (email/wait-for-mock-emails)))
   (is (= 2 (count @email/mock-emails)))
-  (is (= #{"fixture@example.org" "test@example.org"}
-         (into #{} (map first) @email/mock-emails)))
   (is (every? #(= "An admin permission was added to the group org.clojars.dantheman"
                   %)
               (into [] (map second) @email/mock-emails)))
   (is (every? #(str/starts-with? % "User 'fixture' was added as an admin to the org.clojars.dantheman group with scope '*' by dantheman.\n\n")
-              (into [] (map #(nth % 2)) @email/mock-emails))))
+              (into [] (map #(nth % 2)) @email/mock-emails)))
+  (help/assert-email-user-footer
+   [["fixture@example.org" "fixture"]
+    ["test@example.org" "dantheman"]]
+   @email/mock-emails))
 
 (deftest admin-can-remove-user-from-group
   (-> (session (help/app))
@@ -181,16 +187,17 @@
                      :user "dantheman"
                      :group_name "org.clojars.dantheman"
                      :message "user 'fixture' with scope '*' removed"})
-
   (is (true? (email/wait-for-mock-emails)))
   (is (= 2 (count @email/mock-emails)))
-  (is (= #{"fixture@example.org" "test@example.org"}
-         (into #{} (map first) @email/mock-emails)))
   (is (every? #(= "A permission was removed from the group org.clojars.dantheman"
                   %)
               (into [] (map second) @email/mock-emails)))
   (is (every? #(str/starts-with? % "User 'fixture' was removed from the org.clojars.dantheman group with scope '*' by dantheman.\n\n")
-              (into [] (map #(nth % 2)) @email/mock-emails))))
+              (into [] (map #(nth % 2)) @email/mock-emails)))
+  (help/assert-email-user-footer
+   [["fixture@example.org" "fixture"]
+    ["test@example.org" "dantheman"]]
+   @email/mock-emails))
 
 (deftest user-must-exist-to-be-added-to-group
   (-> (session (help/app))

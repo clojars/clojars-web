@@ -84,11 +84,10 @@
                               (merge
                                details
                                {:admin? make-admin?
-                                :admin-emails (db/group-admin-emails db groupname scope-to-jar)
+                                :admin-users (db/group-admin-users db groupname scope-to-jar)
                                 :group groupname
                                 :scope-to-jar scope-to-jar
-                                :member username
-                                :member-email (:email user-to-add)
+                                :member-user user-to-add
                                 :username account}))
                   (log/info {:status :success})
                   (log/audit db {:tag :permission-added
@@ -137,11 +136,10 @@
                              :group-permission-removed
                              (merge
                               details
-                              {:admin-emails (db/group-admin-emails db groupname scope-to-jar)
+                              {:admin-users (db/group-admin-users db groupname scope-to-jar)
                                :group groupname
                                :scope-to-jar scope-to-jar
-                               :member username
-                               :member-email (:email (db/find-user db username))
+                               :member-user (db/find-user db username)
                                :username account}))
                  (log/info {:status :success})
                  (log/audit db {:tag :permission-removed
@@ -183,7 +181,7 @@
                             ;; This email goes to any admin that has any scope
                             ;; since this change will impact all deploys within
                             ;; the group
-                            {:admin-emails (db/group-admin-emails db groupname db/SCOPE-ALL)
+                            {:admin-users (db/group-admin-users db groupname db/SCOPE-ALL)
                              :group groupname
                              :username account
                              :settings settings}))
