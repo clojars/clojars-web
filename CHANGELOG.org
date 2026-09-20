@@ -7,6 +7,9 @@ Newest items at the top. Note that updates before 2022-August were copied from
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-09-16.2327][2026-09-16.2327]]
 + [[https://github.com/clojars/clojars-web/pull/969][Include username in email footer]] ([[https://github.com/tobias][Toby Crawley]])
 
+*** [[https://github.com/clojars/clojars-web/releases/tag/2026-09-20.2330][2026-09-20.2330]]
++ [[https://github.com/clojars/clojars-web/pull/971][Consider all confirmed emails on GitLab login, not just primary]] ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2026-August
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-08-21.2320][2026-08-21.2320]]
 + [[https://github.com/clojars/clojars-web/pull/964][Move session storage to PostgreSQL instead of using an atom]] ([[https://github.com/tobias][Toby Crawley]])
