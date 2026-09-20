@@ -22,21 +22,29 @@
   (provider-name [_]
     "GitLab"))
 
+;; https://docs.gitlab.com/api/users/#retrieve-the-current-user
 (defendpoint get-user
   [_client token]
   {:method :get
    :url "https://gitlab.com/api/v4/user"
    :oauth-token token})
 
-;; NOTE: this only uses the primary email from GitLab since there
-;; doesn't appear to be a way to tell if a secondary email has been
-;; verified. https://docs.gitlab.com/ee/api/users.html#list-emails-for-user
-;; returns all secondary emails, verified or not, but doesn't include
-;; the verification status. - Toby 2021-03-13
+;; https://docs.gitlab.com/api/user_email_addresses/#list-all-email-addresses
+(defendpoint get-user-emails
+  [_client token]
+  {:method :get
+   :url "https://gitlab.com/api/v4/user/emails"
+   :oauth-token token})
+
 (defmethod oauth-service/get-user-details "GitLab"
   [_ http-client token]
-  (let [{:keys [email username]} (get-user http-client token)]
-    {:emails [email]
+  (let [{:keys [username]} (get-user http-client token)
+        confirmed-emails (into []
+                               (comp
+                                (filter :confirmed_at)
+                                (map :email))
+                               (get-user-emails http-client token))]
+    {:emails confirmed-emails
      :login  username}))
 
 (defn- gitlab-instance []

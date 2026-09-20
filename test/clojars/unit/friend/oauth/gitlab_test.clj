@@ -32,11 +32,18 @@
                              (-> response :headers (get "Location"))))))))
 
 (defn- set-mock-responses
-  [email username]
-  (remote-service/set-responder
-   'get-user
-   (constantly {:email email
-                :username username})))
+  ([email username]
+   (set-mock-responses email username true))
+  ([email username email-confirmed?]
+   (remote-service/set-responder
+    'get-user
+    (constantly {:username username}))
+   (remote-service/set-responder
+    'get-user-emails
+    (constantly [{:confirmed_at (when email-confirmed? #inst "2026-01-01")
+                  :email        email}
+                 {:confirmed_at #inst "2026-01-01"
+                  :email        "anemailthatnevermatches@example.com"}]))))
 
 (deftest test-callback
   (remote-service/with-mocking
@@ -97,7 +104,17 @@
             response (handle-workflow req)]
 
         (is (= "/register" (-> response :headers (get "Location"))))
-        (is (= "No account emails match the verified emails we got from GitLab. Note: your Clojars email must be your primary email in GitLab, since the GitLab API does't provide a way to get verified secondary emails."
+        (is (= "No account emails match the verified emails we got from GitLab"
+               (:flash response)))))
+
+    (testing "with a non-confirmed e-mail"
+      (set-mock-responses "john.doe@example.org" "jd" false)
+      (let [req {:uri "/oauth/gitlab/callback"
+                 :params {:code "1234567890"}}
+            response (handle-workflow req)]
+
+        (is (= "/register" (-> response :headers (get "Location"))))
+        (is (= "No account emails match the verified emails we got from GitLab"
                (:flash response)))))
 
     ;; TODO: (toby) fix this to use actual error response from gitlab

@@ -35,10 +35,7 @@
     {::user user}
     (let [provider-name (oauth-service/provider-name oauth-service)
           message (format "No account emails match the verified emails we got from %s"
-                          provider-name)
-          message (if (= "GitLab" provider-name)
-                    (str message ". Note: your Clojars email must be your primary email in GitLab, since the GitLab API does't provide a way to get verified secondary emails.")
-                    message)]
+                          provider-name)]
       {::result (assoc (redirect "/register")
                        :flash message)})))
 
