@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Fix Clojure formatting with cljfmt. See cljfmt.edn for the rule set.
+
+set -euo pipefail
+
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd "$dir/.."
+
+exec clojure -M:cljfmt fix src test dev build.clj

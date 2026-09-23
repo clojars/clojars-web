@@ -30,6 +30,9 @@ jobs:
             - clojars-v1-
       - run: make migrate-db
       - run: make check-dependabot
+      - run:
+          name: Check formatting
+          command: ./scripts/lint
       - run: make lint
       - run: make test
       - save_cache:
