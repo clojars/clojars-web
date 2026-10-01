@@ -99,8 +99,33 @@
   (when email
     (str/lower-case (str/trim email))))
 
+;; NOCOMMIT: move this elsewhere; reduce duplication with the next fn
+(defn send-verification-email
+  "Generates an email verification code and sends a confirmation link to the user.
+  Can be called from both the registration and login paths."
+  [db mailer username]
+  (let [code (db/set-email-verification-code! db username)
+        user (db/find-user db username)
+        base-url (:base-url (config/config))
+        verification-url (str base-url "/email-verification/" code)]
+    (log/info {:tag :email-verification-code-generated})
+    (try
+      (mailer (:email user)
+              "Confirm your Clojars email address"
+              (->> ["Hello,"
+                    (format "Please confirm your email address for your Clojars account: %s." username)
+                    "To verify your email address, click the following link:"
+                    verification-url
+                    "This link is valid for 24 hours."
+                    "If you didn't create a Clojars account or request this, you can safely ignore this email."]
+                   (interpose "\n\n")
+                   (apply str)))
+      (catch Exception e
+        (log/error {:tag :failed-email-verification-email
+                    :error e})))))
+
 (defn update-profile
-  [db event-emitter account {:keys [email current-password password confirm] :as params} details]
+  [db event-emitter mailer account {:keys [email current-password password confirm] :as params} session details]
   (let [email (normalize-email email)]
     (log/with-context {:tag :update-profile
                        :username account}
@@ -120,24 +145,42 @@
         (let [old-email (:email (find-user-by-user-or-email db account))
               email-changed? (not= old-email email)
               password-changed? (seq password)]
-          (update-user db account email password)
           (log/info {:status :success})
-          (when email-changed?
-            (event/emit event-emitter :email-changed
-                        (merge {:username account
-                                :old-email old-email}
-                               details)))
-          (when password-changed?
-            (event/emit event-emitter :password-changed
-                        (merge {:username account}
-                               details))
-            (db/delete-sessions-for-user! db account))
-          (if password-changed?
-            (-> (redirect "/login")
-                (assoc :session nil
-                       :flash "Your password was updated. Please log in again."))
-            (assoc (redirect "/profile")
-                   :flash "Profile updated.")))))))
+          (if email-changed?
+            ;; Email changes immediately; user must re-verify the new address.
+            (do
+              (update-user db account email password)
+              (db/mark-email-unverified! db account)
+              (send-verification-email db mailer account)
+              (event/emit event-emitter :email-changed
+                          (merge {:username account :old-email old-email} details))
+              (when password-changed?
+                (event/emit event-emitter :password-changed
+                            (merge {:username account} details))
+                (db/delete-sessions-for-user! db account))
+              (if password-changed?
+                ;; Sessions invalidated — user must log in again; they'll be gated to verify-email
+                (-> (redirect "/login")
+                    (assoc :session nil
+                           :flash (format (str "Your email and password have been updated. "
+                                               "Please verify your new address (%s) after logging in.") email)))
+                ;; Put the user straight into the verification pending flow
+                (-> (redirect "/login/verify-email")
+                    (assoc :session (assoc session
+                                           :clojars.auth/pending-email-verification-username account
+                                           :clojars.auth/email-verification-context :login)))))
+            (do
+              (update-user db account email password)
+              (when password-changed?
+                (event/emit event-emitter :password-changed
+                            (merge {:username account} details))
+                (db/delete-sessions-for-user! db account))
+              (if password-changed?
+                (-> (redirect "/login")
+                    (assoc :session nil
+                           :flash "Your password was updated. Please log in again."))
+                (assoc (redirect "/profile")
+                       :flash "Profile updated.")))))))))
 
 (defn notifications-form
   [account user flash-msg & [errors]]

@@ -8,9 +8,11 @@
    [clojars.http-utils :as http-utils]
    [clojars.log :as log]
    [clojars.routes.common :as common]
+   [clojars.web.login :as view-login]
    [clojars.web.user :as view]
    [compojure.core :as compojure :refer [DELETE GET POST PUT]]
    [ring.util.response :refer [redirect]]))
+
 
 (defn show [db username]
   (when-let [user (db/find-user db username)]
@@ -121,9 +123,9 @@
    (GET "/profile" {:keys [flash]}
         (auth/with-account
           #(view/profile-form % (db/find-user db %) flash)))
-   (POST "/profile" {:as request :keys [params]}
+   (POST "/profile" {:as request :keys [params session]}
          (auth/with-account
-           #(view/update-profile db event-emitter % params (common/request-details request))))
+           #(view/update-profile db event-emitter mailer % params session (common/request-details request))))
 
    (GET "/mfa" {:keys [flash]}
         (auth/with-account
@@ -160,6 +162,15 @@
 
    (POST "/password-resets/:reset-code" {:as request {:keys [reset-code password confirm]} :params}
          (view/reset-password db event-emitter reset-code {:password password :confirm confirm} (common/request-details request)))
+
+   (GET "/email-verification/:code" [code]
+        (if-let [user (db/find-user-by-email-verification-code db code)]
+          (do
+            (db/mark-email-verified! db (:user user))
+            (assoc (redirect "/login")
+                   :flash "Your email address has been confirmed. Please log in."))
+          (view-login/email-verification-expired)))
+
 
    (GET "/users/:username" [username]
         (show db username))

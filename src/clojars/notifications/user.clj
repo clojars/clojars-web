@@ -58,3 +58,4 @@
     (common/details-table data)
     common/did-not-take-action
     (common/account-footer username)]))
+

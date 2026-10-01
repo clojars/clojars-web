@@ -1,10 +1,12 @@
 (ns clojars.integration.sessions-test
   (:require
    [clojars.db :as db]
-   [clojars.integration.steps :refer [create-deploy-token enable-mfa login-as register-as]]
+   [clojars.email :as email]
+   [clojars.integration.steps :refer [create-deploy-token enable-mfa login-as register-as
+                                      register-unverified-as]]
    [clojars.test-helper :as help]
-   [clojure.test :refer [deftest testing use-fixtures]]
-   [kerodon.core :refer [follow follow-redirect session within]]
+   [clojure.test :refer [deftest is testing use-fixtures]]
+   [kerodon.core :refer [follow follow-redirect press session visit within]]
    [kerodon.test :refer [has status? text?]]
    [net.cgrand.enlive-html :as enlive]
    [next.jdbc.sql :as sql]
@@ -116,3 +118,90 @@
             (has (status? 200))
             (within [:.light-article :> :h1]
               (has (text? "Dashboard (fixture)"))))))))
+
+;; ---- Email Verification Tests ----
+
+(deftest login-with-unverified-email-shows-verification-page
+  ;; When a password-login user has not verified their email, login gates them.
+  (let [app (help/app)]
+    (db/add-user help/*db* "unverified@example.org" "unverified" "password1234")
+    (email/expect-mock-emails 1)
+    (-> (session app)
+        (login-as "unverified" "password1234")
+        (follow-redirect)
+        (has (status? 200))
+        (within [:div.small-section :> :h1]
+          (has (text? "Please verify your email address."))))
+    (is (true? (email/wait-for-mock-emails)))
+    (let [[to subject] (first @email/mock-emails)]
+      (is (= "unverified@example.org" to))
+      (is (= "Confirm your Clojars email address" subject)))))
+
+(deftest email-verification-link-verifies-and-redirects-to-login
+  ;; Clicking the verification link marks the email verified and redirects to login.
+  (let [app (help/app)]
+    (db/add-user help/*db* "unverified@example.org" "unverified" "password1234")
+    (email/expect-mock-emails 1)
+    (-> (session app)
+        (login-as "unverified" "password1234")
+        (follow-redirect)
+        (has (status? 200))
+        (within [:div.small-section :> :h1]
+          (has (text? "Please verify your email address."))))
+    (is (true? (email/wait-for-mock-emails)))
+    (let [[_ _ body] (first @email/mock-emails)
+          [_ code] (re-find #"/email-verification/([a-f0-9]+)" body)]
+      (is (string? code))
+      (-> (session app)
+          (visit (str "/email-verification/" code))
+          (follow-redirect)
+          (has (status? 200))
+          (within [:div.small-section :> :h1]
+            (has (text? "Login")))
+          (within [:div#notice]
+            (has (text? "Your email address has been confirmed. Please log in."))))
+      (is (true? (:email_verified (db/find-user help/*db* "unverified")))))))
+
+(deftest expired-verification-link-shows-error-page
+  ;; An invalid or expired link shows the error page.
+  (let [app (help/app)]
+    (-> (session app)
+        (visit "/email-verification/this-code-does-not-exist")
+        (has (status? 200))
+        (within [:div.small-section :> :h1]
+          (has (text? "Verification link expired"))))))
+
+(deftest resend-verification-email
+  ;; The resend button sends a fresh verification email.
+  (let [app (help/app)]
+    (db/add-user help/*db* "unverified@example.org" "unverified" "password1234")
+    (email/expect-mock-emails 1)
+    (let [state (-> (session app)
+                    (login-as "unverified" "password1234")
+                    (follow-redirect))]
+      (is (true? (email/wait-for-mock-emails)))
+      (email/expect-mock-emails 1)
+      (-> state
+          (press "Resend verification email")
+          (has (status? 200))
+          (within [:div#notice]
+            (has (text? "A new verification email has been sent."))))
+      (is (true? (email/wait-for-mock-emails)))
+      (let [[to subject] (first @email/mock-emails)]
+        (is (= "unverified@example.org" to))
+        (is (= "Confirm your Clojars email address" subject))))))
+
+(deftest registration-redirects-to-email-verification-pending-page
+  ;; After registration, the user is sent to the email verification pending page.
+  (let [app (help/app)]
+    (email/expect-mock-emails 1)
+    (-> (session app)
+        (register-unverified-as "newuser" "newuser@example.org" "password1234")
+        (follow-redirect)
+        (has (status? 200))
+        (within [:div.small-section :> :h1]
+          (has (text? "Welcome! Please verify your email address."))))
+    (is (true? (email/wait-for-mock-emails)))
+    (let [[to subject] (first @email/mock-emails)]
+      (is (= "newuser@example.org" to))
+      (is (= "Confirm your Clojars email address" subject)))))

@@ -8,6 +8,7 @@
    [clojars.event :as event]
    [clojars.log :as log]
    [clojars.util :as util]
+   [clojars.web.user :as user-web]
    [clojure.string :as str]
    [one-time.core :as ot]
    [ring.util.request :as req]
@@ -82,19 +83,21 @@
                         ::friend/redirect-on-auth? true}))
 
 (defn- verify-password-step
-  [db {:as _request :keys [form-params params session]}]
+  [db mailer {:as _request :keys [form-params params session]}]
   (let [username (get-param :username form-params params)
         password (get-param :password form-params params)]
     (log/with-context {:tag      :authentication
                        :username username
                        :type     :password}
-      (if-some [{:as _user :keys [otp_active]} (verify-password db username password)]
-        (if otp_active
-          (do
-            (log/info {:status :pending-mfa})
-            (-> (response/redirect "/login/mfa")
-                (assoc :session (assoc session ::pending-mfa-username username))))
-          (make-auth username))
+      (if-some [{:as user :keys [otp_active]} (verify-password db username password)]
+        (do
+          (maybe-send-password-verification-email db mailer user)
+          (if otp_active
+            (do
+              (log/info {:status :pending-mfa})
+              (-> (response/redirect "/login/mfa")
+                  (assoc :session (assoc session ::pending-mfa-username username))))
+            (make-auth username)))
         (do
           (log/info {:status :failed
                      :reason :password-incorrect})
@@ -121,13 +124,18 @@
   [session]
   (some? (::pending-mfa-username session)))
 
+(defn pending-email-verification?
+  "Returns true if the session is in the email-verification pending state."
+  [session]
+  (some? (::pending-email-verification-username session)))
+
 (defn interactive-form-with-mfa-workflow
-  [db event-emitter]
+  [db event-emitter mailer]
   (fn [{:as request :keys [request-method]}]
     (when (= :post request-method)
       (let [path (req/path-info request)]
         (case path
-          "/login"     (verify-password-step db request)
+          "/login"     (verify-password-step db mailer request)
           "/login/mfa" (verify-mfa-step db event-emitter request)
           ;; else
           nil)))))

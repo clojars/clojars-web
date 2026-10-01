@@ -39,6 +39,12 @@
       {::result (assoc (redirect "/register")
                        :flash message)})))
 
+(defn- auto-verify-email [{::keys [db user]}]
+  (when-some [username (:user user)]
+    (when-not (:email_verified user)
+      (db/mark-email-verified! db username)
+      nil)))
+
 (defn- make-auth [{::keys [login provider user]}]
   (when-some [username (:user user)]
     {::result {:identity username
@@ -67,6 +73,7 @@
          [handle-error
           get-emails+login
           find-user
+          auto-verify-email
           make-auth])]
     (doseq [verify-result (db/maybe-verify-provider-groups db res)]
       (log/info verify-result))

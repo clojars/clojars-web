@@ -8,6 +8,7 @@
    [hiccup.form :refer [label text-field
                         password-field submit-button]]))
 
+
 (defn login-form
   [login-failed username message]
   (html-doc
@@ -44,6 +45,29 @@
               (link-to {:class :login-button} "/oauth/gitlab/authorize"
                        (helpers/retinized-image "/images/gitlab-mark.png" "GitLab")
                        "Login with GitLab.com")])]))
+
+(defn verify-email-pending-form
+  "The holding page shown while a user's email is awaiting verification.
+  `context` is :registration or :login; `email` is the address we sent the link to."
+  [email context flash-msg]
+  (html-doc
+   "Verify your email address" {}
+   [:div.small-section
+    (flash flash-msg)
+    [:h1 "Please verify your email address."]
+    [:p (format "We sent a verification link to %s. Please check your inbox and click the link to continue." email)]
+    (form-to [:post "/login/verify-email/resend"]
+             (submit-button "Resend verification email"))]))
+
+(defn email-verification-expired
+  []
+  (html-doc
+   "Verification link expired" {}
+   [:div.small-section
+    [:h1 "Verification link expired"]
+    [:p "This verification link has expired or is invalid. "
+     "You can request a new one by "
+     (link-to "/login" "logging in") "."]]))
 
 (defn mfa-form
   [otp-failed message]

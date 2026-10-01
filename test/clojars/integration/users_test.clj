@@ -2,7 +2,8 @@
   (:require
    [clojars.db :as db]
    [clojars.email :as email]
-   [clojars.integration.steps :refer [disable-mfa enable-mfa fill-in-captcha login-as register-as]]
+   [clojars.integration.steps :refer [disable-mfa enable-mfa fill-in-captcha login-as
+                                      register-as register-unverified-as verify-email-for]]
    ;; for defmethods
    [clojars.notifications.user]
    [clojars.test-helper :as help]
@@ -17,47 +18,39 @@
   help/run-test-app)
 
 (deftest user-can-register
+  ;; After registration the user is redirected to the email-verification pending page.
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password1234")
+      (register-unverified-as "dantheman" "test@example.org" "password1234")
       (follow-redirect)
       (has (status? 200))
-      (within [:div.light-article :> :h1]
-        (has (text? "Dashboard (dantheman)")))))
+      (within [:div.small-section :> :h1]
+              (has (text? "Welcome! Please verify your email address.")))))
 
 (deftest user-registering-with-upcase-email-gets-downcased
+  ;; After registration the user sees the verify-email page; the email in DB is lower-cased.
   (-> (session (help/app))
-      (register-as "dantheman" "Test@example.org" "password1234")
+      (register-unverified-as "dantheman" "Test@example.org" "password1234")
       (follow-redirect)
       (has (status? 200))
-      (within [:div.light-article :> :h1]
-        (has (text? "Dashboard (dantheman)"))))
+      (within [:div.small-section :> :h1]
+              (has (text? "Welcome! Please verify your email address."))))
   (is (= "test@example.org" (:email (db/find-user help/*db* "dantheman")))))
 
 (deftest user-registering-with-email-of-existing-user-shows-error
+  (register-as (session (help/app)) "dantheman" "test@example.org" "password1234")
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password1234")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:div.light-article :> :h1]
-        (has (text? "Dashboard (dantheman)"))))
-  (-> (session (help/app))
-      (register-as "dantheman2" "test@example.org" "password1234")
+      (register-unverified-as "dantheman2" "test@example.org" "password1234")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "A user already exists with this email")))))
+              (has (text? "A user already exists with this email")))))
 
 (deftest user-registering-with-upcase-email-of-existing-user-shows-error
+  (register-as (session (help/app)) "dantheman" "test@example.org" "password1234")
   (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password1234")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:div.light-article :> :h1]
-        (has (text? "Dashboard (dantheman)"))))
-  (-> (session (help/app))
-      (register-as "dantheman2" "Test@example.org" "password1234")
+      (register-unverified-as "dantheman2" "Test@example.org" "password1234")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "A user already exists with this email")))))
+              (has (text? "A user already exists with this email")))))
 
 (deftest bad-registration-info-should-show-error
   (-> (session (help/app))
@@ -67,7 +60,7 @@
       (follow "register")
       (has (status? 200))
       (within [:title]
-        (has (text? "Register - Clojars")))
+              (has (text? "Register - Clojars")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "dantheman")
@@ -75,7 +68,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Password can't be blankPassword must be 12 characters or longer")))
+              (has (text? "Password can't be blankPassword must be 12 characters or longer")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "dantheman")
@@ -85,7 +78,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Password must be 256 or fewer characters")))
+              (has (text? "Password must be 256 or fewer characters")))
 
       (fill-in "Password" "password1234")
       (fill-in "Email" "test@example.com")
@@ -96,7 +89,7 @@
       (has (value? [:input#username] "dantheman"))
       (has (value? [:input#email] "test@example.com"))
       (within [:div.error :ul :li]
-        (has (text? "Password and confirm password must match")))
+              (has (text? "Password and confirm password must match")))
 
       (fill-in "Email" "")
       (fill-in "Username" "dantheman")
@@ -106,7 +99,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Email can't be blankEmail is not valid")))
+              (has (text? "Email can't be blankEmail is not valid")))
 
       (fill-in "Email" "not-an-email@adf@")
       (fill-in "Username" "dantheman")
@@ -116,7 +109,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Email is not valid")))
+              (has (text? "Email is not valid")))
 
       (fill-in "Email" (apply str "too-long@foo."
                               (repeat 250 "a")))
@@ -127,7 +120,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Email must be 256 or fewer characters")))
+              (has (text? "Email must be 256 or fewer characters")))
 
       (fill-in "Email" "test@example.org")
       (fill-in "Username" "")
@@ -137,7 +130,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.Username can't be blank")))
+              (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.Username can't be blank")))
       (fill-in "Username" "<script>")
       (fill-in "Password" "password1234")
       (fill-in "Confirm password" "password1234")
@@ -145,7 +138,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.")))
+              (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.")))
 
       (fill-in "Username" "fixture")
       (fill-in "Password" "password1234")
@@ -154,7 +147,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Username is already taken")))
+              (has (text? "Username is already taken")))
 
       (fill-in "Username" "fixture2")
       (fill-in "Password" "password1234")
@@ -163,7 +156,7 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Captcha response is invalid.")))
+              (has (text? "Captcha response is invalid.")))
       (fill-in "Username" "fixture2")
       (fill-in "Password" "password1234")
       (fill-in "Confirm password" "password1234")
@@ -171,216 +164,228 @@
       (press "Register")
       (has (status? 200))
       (within [:div.error :ul :li]
-        (has (text? "Captcha response is invalid.")))))
+              (has (text? "Captcha response is invalid.")))))
 
 (deftest user-can-update-info
-  (email/expect-mock-emails 3)
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password1234")
-      (follow-redirect)
-      (follow "profile")
-      (fill-in "Email" "fixture2@example.org")
-      (fill-in "Current password" "password1234")
-      (fill-in "New password" "password1234b")
-      (fill-in "Confirm new password" "password1234b")
-      (press "Update")
-      (follow-redirect)
-      (within [:div#notice]
-        (has (text? "Your password was updated. Please log in again.")))
-      (within [:div.small-section :> :h1]
-        (has (text? "Login")))
-      (login-as "fixture" "password1234b")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:div.light-article :> :h1]
-        (has (text? "Dashboard (fixture)"))))
-  (is (true? (email/wait-for-mock-emails)))
-  (is (= #{"Your Clojars email was changed"
-           "Your Clojars password was changed"}
-         (into #{} (map second) @email/mock-emails)))
-  (help/assert-email-user-footer [["fixture2@example.org" "fixture"]] @email/mock-emails))
-
-(deftest user-can-update-just-email
-  (email/expect-mock-emails 2)
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password1234")
-      (follow-redirect)
-      (follow "profile")
-      (fill-in "Email" "fixture2@example.org")
-      (fill-in "Current password" "password1234")
-      (press "Update")
-      (follow-redirect)
-      (within [:div#notice]
-        (has (text? "Profile updated."))))
-  (is (true? (email/wait-for-mock-emails)))
-  (let [[_addresses titles bodies]
-        (reduce
-         #(map conj %1 %2)
-         [#{} #{} #{}]
-         @email/mock-emails)]
-    (is (= #{"Your Clojars email was changed"} titles))
-    (doseq [body bodies]
-      (is (re-find #"from 'fixture@example.org' to 'fixture2@example.org'" body))
-      (is (re-find #"Client IP" body)))
-    (help/assert-email-user-footer [["fixture@example.org" "fixture"]
-                                    ["fixture2@example.org" "fixture"]]
-                                   @email/mock-emails)))
-
-(deftest user-cannot-update-email-to-another-users-email
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password1234"))
-  (-> (session (help/app))
-      (register-as "fixture2" "fixture2@example.org" "password1234")
-      (follow-redirect)
-      (follow "profile")
-      (fill-in "Email" "fixture@example.org")
-      (fill-in "Current password" "password1234")
-      (press "Update")
-      (within [:div.error :ul :li]
-        (has (text? "A user already exists with this email")))))
-
-(deftest user-can-update-just-password
-  (email/expect-mock-emails 1)
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password1234")
-      (follow-redirect)
-      (follow "profile")
-      (fill-in "Current password" "password1234")
-      (fill-in "New password" "password1234b")
-      (fill-in "Confirm new password" "password1234b")
-      (press "Update")
-      (follow-redirect)
-      (within [:div#notice]
-        (has (text? "Your password was updated. Please log in again.")))
-      (within [:div.small-section :> :h1]
-        (has (text? "Login")))
-      (login-as "fixture" "password1234b")
-      (follow-redirect)
-      (has (status? 200))
-      (within [:div.light-article :> :h1]
-        (has (text? "Dashboard (fixture)"))))
-  (is (true? (email/wait-for-mock-emails)))
-  (let [[address title body] (first @email/mock-emails)]
-    (is (= "fixture@example.org" address))
-    (is (= "Your Clojars password was changed" title))
-    (is (re-find #"has changed the password on your 'fixture'" body))
-    (is (re-find #"Client IP" body)))
-  (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
-                                 @email/mock-emails))
-
-(deftest changing-password-invalidates-other-sessions
-  (let [app (help/app)
-        ;; Session A registers and stays logged in.
-        session-a (-> (session app)
-                      (register-as "fixture" "fixture@example.org" "password1234")
-                      (follow-redirect))
-        ;; Session B logs in concurrently as the same user.
-        session-b (-> (session app)
-                      (login-as "fixture" "password1234")
-                      (follow-redirect))]
-    (-> session-b
-        (visit "/profile")
-        (has (status? 200))
-        (within [:title]
-          (has (text? "Profile (fixture) - Clojars"))))
-    ;; Change password from session A.
-    (-> session-a
-        (visit "/profile")
+  ;; Changing both email and password: both update immediately.
+  ;; The user must re-login (password invalidated) and then verify the new email.
+  (let [app (help/app)]
+    (register-as (session app) "fixture" "fixture@example.org" "password1234")
+    ;; email-changed (x2: old+new addresses) + password-changed (x1) + verification email (x1) = 4
+    (email/expect-mock-emails 4)
+    (-> (session app)
+        (login-as "fixture" "password1234")
+        (follow-redirect)
+        (follow "profile")
+        (fill-in "Email" "fixture2@example.org")
         (fill-in "Current password" "password1234")
         (fill-in "New password" "password1234b")
         (fill-in "Confirm new password" "password1234b")
         (press "Update")
         (follow-redirect)
+        (within [:div#notice]
+                (has (text? "Your email and password have been updated. Please verify your new address (fixture2@example.org) after logging in.")))
         (within [:div.small-section :> :h1]
-          (has (text? "Login"))))
-    ;; Session B should now be logged out — visiting /profile redirects to /login.
-    (-> session-b
-        (visit "/profile")
-        (follow-redirect)
-        (within [:div.small-section :> :h1]
-          (has (text? "Login"))))))
+                (has (text? "Login"))))
+    (is (true? (email/wait-for-mock-emails)))
+    (is (= #{"Your Clojars email was changed"
+             "Your Clojars password was changed"
+             "Confirm your Clojars email address"}
+           (into #{} (map second) @email/mock-emails)))
+    ;; Email is updated in the DB but unverified
+    (is (= "fixture2@example.org" (:email (db/find-user help/*db* "fixture"))))
+    (is (false? (:email_verified (db/find-user help/*db* "fixture"))))))
 
-(deftest password-reset-invalidates-existing-sessions
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password1234"))
-  (let [app (help/app)
-        ;; Existing logged-in session before the reset.
-        session-a (-> (session app)
-                      (login-as "fixture" "password1234")
-                      (follow-redirect))]
-    (-> session-a
-        (visit "/profile")
-        (has (status? 200)))
-    ;; Trigger the reset flow and submit a new password.
+(deftest user-can-update-just-email
+  ;; Changing the email updates it immediately; the user must verify the new address.
+  ;; They are redirected to the verify-email pending page without losing their session.
+  (let [app (help/app)]
+    (register-as (session app) "fixture" "fixture@example.org" "password1234")
+    ;; email-changed (x2: old+new) + verification email to new address = 3
+    (email/expect-mock-emails 3)
+    (let [auth-state (-> (session app)
+                         (login-as "fixture" "password1234")
+                         (follow-redirect))]
+      (-> auth-state
+          (follow "profile")
+          (fill-in "Email" "fixture2@example.org")
+          (fill-in "Current password" "password1234")
+          (press "Update")
+          ;; Email-only change: user is redirected to the verification pending page
+          (follow-redirect)
+          (has (status? 200))
+          (within [:div.small-section :> :h1]
+                  (has (text? "Please verify your email address."))))
+      (is (true? (email/wait-for-mock-emails)))
+      ;; New email is already in the DB
+      (is (= "fixture2@example.org" (:email (db/find-user help/*db* "fixture"))))
+      ;; But it is marked as unverified
+      (is (false? (:email_verified (db/find-user help/*db* "fixture"))))
+      (is (= #{"Your Clojars email was changed" "Confirm your Clojars email address"}
+             (into #{} (map second) @email/mock-emails))))))
+
+(deftest user-cannot-update-email-to-another-users-email
+  (let [app (help/app)]
+    (register-as (session app) "fixture" "fixture@example.org" "password1234")
+    (register-as (session app) "fixture2" "fixture2@example.org" "password1234")
     (-> (session app)
-        (visit "/")
-        (follow "login")
-        (follow "Forgot your username or password?")
-        (fill-in "Email or Username" "fixture")
-        (press "Email me a password reset link"))
-    (let [[_ _ message] (first @email/mock-emails)
-          [_ reset-password-link]
-          (re-find
-           #"To continue with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
-           message)]
-      (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
-                                     @email/mock-emails)
-      (-> (session app)
-          (visit reset-password-link)
-          (fill-in "New password" "password1234c")
-          (fill-in "Confirm new password" "password1234c")
-          (press "Update my password")
+        (login-as "fixture2" "password1234")
+        (follow-redirect)
+        (follow "profile")
+        (fill-in "Email" "fixture@example.org")
+        (fill-in "Current password" "password1234")
+        (press "Update")
+        (within [:div.error :ul :li]
+                (has (text? "A user already exists with this email"))))))
+
+(deftest user-can-update-just-password
+  (let [app (help/app)]
+    (register-as (session app) "fixture" "fixture@example.org" "password1234")
+    (email/expect-mock-emails 1)
+    (-> (session app)
+        (login-as "fixture" "password1234")
+        (follow-redirect)
+        (follow "profile")
+        (fill-in "Current password" "password1234")
+        (fill-in "New password" "password1234b")
+        (fill-in "Confirm new password" "password1234b")
+        (press "Update")
+        (follow-redirect)
+        (within [:div#notice]
+                (has (text? "Your password was updated. Please log in again.")))
+        (within [:div.small-section :> :h1]
+                (has (text? "Login")))
+        (login-as "fixture" "password1234b")
+        (follow-redirect)
+        (has (status? 200))
+        (within [:div.light-article :> :h1]
+                (has (text? "Dashboard (fixture)"))))
+    (is (true? (email/wait-for-mock-emails)))
+    (let [[address title body] (first @email/mock-emails)]
+      (is (= "fixture@example.org" address))
+      (is (= "Your Clojars password was changed" title))
+      (is (re-find #"has changed the password on your 'fixture'" body))
+      (is (re-find #"Client IP" body)))
+    (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
+                                   @email/mock-emails)))
+
+(deftest changing-password-invalidates-other-sessions
+  (let [app (help/app)]
+    (register-as (session app) "fixture" "fixture@example.org" "password1234")
+    (let [;; Session A logs in.
+          session-a (-> (session app)
+                        (login-as "fixture" "password1234")
+                        (follow-redirect))
+          ;; Session B logs in concurrently as the same user.
+          session-b (-> (session app)
+                        (login-as "fixture" "password1234")
+                        (follow-redirect))]
+      (-> session-b
+          (visit "/profile")
+          (has (status? 200))
+          (within [:title]
+                  (has (text? "Profile (fixture) - Clojars"))))
+      ;; Change password from session A.
+      (-> session-a
+          (visit "/profile")
+          (fill-in "Current password" "password1234")
+          (fill-in "New password" "password1234b")
+          (fill-in "Confirm new password" "password1234b")
+          (press "Update")
           (follow-redirect)
           (within [:div.small-section :> :h1]
-            (has (text? "Login")))))
-    ;; Session A is no longer authenticated.
-    (-> session-a
-        (visit "/profile")
-        (follow-redirect)
-        (within [:div.small-section :> :h1]
-          (has (text? "Login"))))))
+                  (has (text? "Login"))))
+      ;; Session B should now be logged out — visiting /profile redirects to /login.
+      (-> session-b
+          (visit "/profile")
+          (follow-redirect)
+          (within [:div.small-section :> :h1]
+                  (has (text? "Login")))))))
+
+(deftest password-reset-invalidates-existing-sessions
+  (let [app (help/app)]
+    (register-as (session app) "fixture" "fixture@example.org" "password1234")
+    (let [;; Existing logged-in session before the reset.
+          session-a (-> (session app)
+                        (login-as "fixture" "password1234")
+                        (follow-redirect))]
+      (-> session-a
+          (visit "/profile")
+          (has (status? 200)))
+      ;; Trigger the reset flow and submit a new password.
+      (email/expect-mock-emails 1)
+      (-> (session app)
+          (visit "/")
+          (follow "login")
+          (follow "Forgot your username or password?")
+          (fill-in "Email or Username" "fixture")
+          (press "Email me a password reset link"))
+      (is (true? (email/wait-for-mock-emails)))
+      (let [[_ _ message] (first @email/mock-emails)
+            [_ reset-password-link]
+            (re-find
+             #"To continue with the reset password process, click on the following link:\n\n([^ ]+)\n\n"
+             message)]
+        (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
+                                       @email/mock-emails)
+        (-> (session app)
+            (visit reset-password-link)
+            (fill-in "New password" "password1234c")
+            (fill-in "Confirm new password" "password1234c")
+            (press "Update my password")
+            (follow-redirect)
+            (within [:div.small-section :> :h1]
+                    (has (text? "Login")))))
+      ;; Session A is no longer authenticated.
+      (-> session-a
+          (visit "/profile")
+          (follow-redirect)
+          (within [:div.small-section :> :h1]
+                  (has (text? "Login")))))))
 
 (deftest bad-update-info-should-show-error
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password1234")
-      (follow-redirect)
-      (follow "profile")
-      (has (status? 200))
-      (within [:title]
-        (has (text? "Profile (fixture) - Clojars")))
+  (let [app (help/app)]
+    (register-as (session app) "fixture" "fixture@example.org" "password1234")
+    (-> (session app)
+        (login-as "fixture" "password1234")
+        (follow-redirect)
+        (follow "profile")
+        (has (status? 200))
+        (within [:title]
+                (has (text? "Profile (fixture) - Clojars")))
 
-      (fill-in "Current password" "")
-      (press "Update")
-      (has (status? 200))
-      (within [:div.error :ul :li]
-        (has (text? "Current password can't be blankCurrent password is incorrect")))
+        (fill-in "Current password" "")
+        (press "Update")
+        (has (status? 200))
+        (within [:div.error :ul :li]
+                (has (text? "Current password can't be blankCurrent password is incorrect")))
 
-      (fill-in "Current password" "wrong-password")
-      (press "Update")
-      (has (status? 200))
-      (within [:div.error :ul :li]
-        (has (text? "Current password is incorrect")))
+        (fill-in "Current password" "wrong-password")
+        (press "Update")
+        (has (status? 200))
+        (within [:div.error :ul :li]
+                (has (text? "Current password is incorrect")))
 
-      (fill-in "New password" "newpassword1")
-      (fill-in "Confirm new password" "newpassword1")
-      (press "Update")
-      (has (status? 200))
-      (within [:div.error :ul :li]
-        (has (text? "Current password can't be blankCurrent password is incorrect")))
+        (fill-in "New password" "newpassword1")
+        (fill-in "Confirm new password" "newpassword1")
+        (press "Update")
+        (has (status? 200))
+        (within [:div.error :ul :li]
+                (has (text? "Current password can't be blankCurrent password is incorrect")))
 
-      (fill-in "Current password" "password1234")
-      (fill-in "New password" "newpassword1")
-      (press "Update")
-      (has (status? 200))
-      (within [:div.error :ul :li]
-        (has (text? "Password and confirm password must match")))
+        (fill-in "Current password" "password1234")
+        (fill-in "New password" "newpassword1")
+        (press "Update")
+        (has (status? 200))
+        (within [:div.error :ul :li]
+                (has (text? "Password and confirm password must match")))
 
-      (fill-in "Current password" "password1234")
-      (fill-in "Email" "")
-      (press "Update")
-      (has (status? 200))
-      (within [:div.error :ul :li]
-        (has (text? "Email can't be blankEmail is not valid")))))
+        (fill-in "Current password" "password1234")
+        (fill-in "Email" "")
+        (press "Update")
+        (has (status? 200))
+        (within [:div.error :ul :li]
+                (has (text? "Email can't be blankEmail is not valid"))))))
 
 (deftest user-can-get-new-password
   (email/expect-mock-emails 1)
@@ -394,7 +399,7 @@
       (press "Email me a password reset link")
       (has (status? 200))
       (within [:p]
-        (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
+              (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
   (let [[to subject message :as email] (first @email/mock-emails)]
     (is email)
     (is (= "fixture@example.org" to))
@@ -418,13 +423,13 @@
           (follow-redirect)
           (has (status? 200))
           (within [:div.small-section :> :h1]
-            (has (text? "Login")))
+                  (has (text? "Login")))
           ;; can login with new password
           (login-as "fixture" password)
           (follow-redirect)
           (has (status? 200))
           (within [:div.light-article :> :h1]
-            (has (text? "Dashboard (fixture)"))))))
+                  (has (text? "Dashboard (fixture)"))))))
   (is (true? (email/wait-for-mock-emails)))
   (let [[address title body] (first @email/mock-emails)]
     (is (= "fixture@example.org" address))
@@ -446,7 +451,7 @@
       (press "Email me a password reset link")
       (has (status? 200))
       (within [:p]
-        (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
+              (has (text? "If your account was found, you should get an email with a link to reset your password soon."))))
   (is (empty? @email/mock-emails)))
 
 (deftest bad-reset-code-shows-message
@@ -454,18 +459,19 @@
       (visit "/password-resets/this-code-does-not-exist")
       (has (status? 200))
       (within [:p]
-        (has (text? "The reset code was not found. Please ask for a new code in the forgot password page")))))
+              (has (text? "The reset code was not found. Please ask for a new code in the forgot password page")))))
 
 (deftest users-can-be-viewed
-  (-> (session (help/app))
-      (register-as "dantheman" "test@example.org" "password1234")
-      (visit "/users/dantheman")
-      (within [:div.light-article :> :h1]
-        (has (text? "dantheman")))))
+  (let [app (help/app)]
+    (register-as (session app) "dantheman" "test@example.org" "password1234")
+    (-> (session app)
+        (visit "/users/dantheman")
+        (within [:div.light-article :> :h1]
+                (has (text? "dantheman"))))))
 
 (deftest user-is-emailed-when-activating-and-deactivating-mfa
-  (-> (session (help/app))
-      (register-as "fixture" "fixture@example.org" "password1234"))
+  (register-as (session (help/app)) "fixture" "fixture@example.org" "password1234")
+  (email/expect-mock-emails 1)
   (let [[otp-secret] (enable-mfa (session (help/app)) "fixture" "password1234")
         _ (is (true? (email/wait-for-mock-emails)))
         [address title body] (first @email/mock-emails)]
@@ -501,3 +507,5 @@
           (is (re-find #"your recovery code" body)))
         (help/assert-email-user-footer [["fixture@example.org" "fixture"]]
                                        @email/mock-emails)))))
+
+

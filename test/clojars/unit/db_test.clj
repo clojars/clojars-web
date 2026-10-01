@@ -534,3 +534,58 @@
   ;; Test upsert
   (db/set-group-mfa-required help/*db* "my-group" false)
   (is (false? (:require_mfa_to_deploy (db/get-group-settings help/*db* "my-group")))))
+
+(deftest email-verification-code-functions
+  (let [email "test@example.com"
+        name  "testuser"]
+    (db/add-user help/*db* email name "password1234")
+    ;; Initially email is not verified
+    (is (false? (:email_verified (db/find-user help/*db* name))))
+    (is (nil? (:email_verification_code (db/find-user help/*db* name))))
+    ;; Set a verification code
+    (let [code (db/set-email-verification-code! help/*db* name)]
+      (is (string? code))
+      (is (= 40 (count code)))  ;; 20 bytes hex = 40 chars
+      ;; Can find the user by code
+      (is (match? {:user name :email_verification_code code}
+                  (db/find-user-by-email-verification-code help/*db* code)))
+      ;; Mark email verified
+      (db/mark-email-verified! help/*db* name)
+      (let [user (db/find-user help/*db* name)]
+        (is (true? (:email_verified user)))
+        (is (nil? (:email_verification_code user)))
+        (is (nil? (:email_verification_code_created_at user))))
+      ;; Code is no longer valid
+      (is (nil? (db/find-user-by-email-verification-code help/*db* code))))))
+
+(deftest email-verification-code-expiry
+  (let [email "test@example.com"
+        name  "testuser"]
+    (db/add-user help/*db* email name "password1234")
+    (let [code (db/set-email-verification-code! help/*db* name)]
+      ;; Code is valid now
+      (is (some? (db/find-user-by-email-verification-code help/*db* code)))
+      ;; Code is expired after 2 days
+      (time/with-now (time/days-from 2)
+        (is (nil? (db/find-user-by-email-verification-code help/*db* code)))))))
+
+(deftest clear-email-verification
+  (let [email "test@example.com"
+        name  "testuser"]
+    (db/add-user help/*db* email name "password1234")
+    (db/set-email-verification-code! help/*db* name)
+    (is (some? (:email_verification_code (db/find-user help/*db* name))))
+    (db/clear-email-verification! help/*db* name)
+    (is (nil? (:email_verification_code (db/find-user help/*db* name))))))
+
+(deftest mark-email-unverified
+  (let [email "test@example.com"
+        name  "testuser"]
+    (db/add-user help/*db* email name "password1234")
+    (db/mark-email-verified! help/*db* name)
+    (is (true? (:email_verified (db/find-user help/*db* name))))
+    ;; Simulate email change: mark as unverified
+    (db/mark-email-unverified! help/*db* name)
+    (let [user (db/find-user help/*db* name)]
+      (is (false? (:email_verified user)))
+      (is (nil? (:email_verification_code user))))))

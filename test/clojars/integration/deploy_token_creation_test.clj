@@ -16,6 +16,7 @@
 
 (deftest creating-deploy-token-sends-email-to-user
   (db/add-user help/*db* "fixture@example.org" "fixture" "password1234")
+  (db/mark-email-verified! help/*db* "fixture")
   (create-deploy-token (session (help/app)) "fixture" "password1234" "my-laptop")
   (is (true? (email/wait-for-mock-emails)))
   (let [[to subject body] (first @email/mock-emails)]

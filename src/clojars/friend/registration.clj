@@ -1,15 +1,16 @@
 (ns clojars.friend.registration
   (:require
-   [cemerick.friend.workflows :as workflow]
+   [clojars.auth :as auth]
    [clojars.db :refer [add-user]]
    [clojars.hcaptcha :as hcaptcha]
    [clojars.http-utils :as http-utils]
    [clojars.log :as log]
    [clojars.user-validations :as uv]
-   [clojars.web.user :refer [register-form normalize-email]]))
+   [clojars.web.user :refer [register-form normalize-email send-verification-email]]
+   [ring.util.response :as response]))
 
 (defn register
-  [db hcaptcha {:keys [confirm email h-captcha-response password username]}]
+  [db hcaptcha mailer {:keys [confirm email h-captcha-response password username]} session]
   (let [email (normalize-email email)]
     (log/with-context {:email email
                        :username username
@@ -31,10 +32,14 @@
         (do
           (add-user db email username password)
           (log/info {:status :success})
-          (workflow/make-auth {:identity username :username username}))))))
+          (send-verification-email db mailer username)
+          (-> (response/redirect "/login/verify-email")
+              (assoc :session (assoc session
+                                     ::auth/pending-email-verification-username username
+                                     ::auth/email-verification-context :registration))))))))
 
-(defn workflow [db hcaptcha]
-  (fn [{:keys [uri request-method params]}]
+(defn workflow [db hcaptcha mailer]
+  (fn [{:keys [uri request-method params session]}]
     (when (and (= "/register" uri)
                (= :post request-method))
-      (register db hcaptcha params))))
+      (register db hcaptcha mailer params session))))

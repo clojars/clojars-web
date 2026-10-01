@@ -816,6 +816,55 @@
                {:password_reset_code nil}
                {user-column username}))
 
+;; Email verification
+
+(defn set-email-verification-code!
+  [db username]
+  (let [code (hexadecimalize (generate-secure-token 20))]
+    (sql/update! db :users
+                 {:email_verification_code            code
+                  :email_verification_code_created_at (get-time)}
+                 {user-column username})
+    code))
+
+(defn find-user-by-email-verification-code
+  [db code]
+  (first
+   (q db
+      {:select :*
+       :from :users
+       :where [:and
+               [:= :email_verification_code code]
+               [:>= :email_verification_code_created_at
+                (Timestamp/from (time/days-ago 1))]]
+       :limit 1})))
+
+(defn mark-email-verified!
+  [db username]
+  (sql/update! db :users
+               {:email_verified                     true
+                :email_verification_code            nil
+                :email_verification_code_created_at nil}
+               {user-column username}))
+
+(defn clear-email-verification!
+  "Clears the verification code fields (used when issuing a new code)."
+  [db username]
+  (sql/update! db :users
+               {:email_verification_code            nil
+                :email_verification_code_created_at nil}
+               {user-column username}))
+
+(defn mark-email-unverified!
+  "Marks a user's email as unverified and clears any existing verification code.
+  Used when a user changes their email address so they must re-verify."
+  [db username]
+  (sql/update! db :users
+               {:email_verified                     false
+                :email_verification_code            nil
+                :email_verification_code_created_at nil}
+               {user-column username}))
+
 (defn set-otp-secret-key!
   [db username]
   (let [secret-key (ot/generate-secret-key)]
