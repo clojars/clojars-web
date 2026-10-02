@@ -193,7 +193,7 @@
                      (fn [& _] (throw (ex-info "BOOM" {})))]]
     (with-redefs [http/head responder]
       (is (match?
-           {:error "The verification repo does not exist."}
+           {:error "The verification repo could not be accessed. Check that it exists and is public."}
            (nut/verify-vcs-groups help/*db* {:url      "https://github.com/foo/clojars-dantheman"
                                              :username "dantheman"}))))))
 

@@ -138,6 +138,7 @@
                                :placeholder (format "https://github.com/example/clojars-%s"
                                                     account)}
                               :url)
+                  [:p.help-block "The verification repository must be public. Private repositories cannot be verified."]
                   (submit-button "Verify Groups"))]
         [:div.col-xs-7
          [:div.help (vcs-help account)]]]]
