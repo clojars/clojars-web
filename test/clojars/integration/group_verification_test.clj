@@ -112,5 +112,5 @@
           (press "Verify Groups"))
         (follow-redirect)
         (within [:div.error]
-          (has (some-text? "The verification repo does not exist"))))
+          (has (some-text? "The verification repo could not be accessed. Check that it exists and is public."))))
     (assert-admin-email :failure)))

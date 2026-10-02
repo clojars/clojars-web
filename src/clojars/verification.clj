@@ -198,7 +198,7 @@
                            username-from-url username))
 
       (not (repo-exists? url))
-      (err request "The verification repo does not exist.")
+      (err request "The verification repo could not be accessed. Check that it exists and is public.")
 
       :else
       (verify-groups db request username groups-to-verify))))
