@@ -39,7 +39,14 @@ jobs:
           background: true
       - run:
           name: Wait for MinIO
-          command: curl -fsS --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 30 http://localhost:9000/minio/health/ready
+          command: |
+            for attempt in {1..30}; do
+              if curl -fsS --max-time 2 http://127.0.0.1:9000/minio/health/ready; then
+                exit 0
+              fi
+              sleep 1
+            done
+            exit 1
       - run:
           name: Download ElasticMQ
           command: curl https://s3-eu-west-1.amazonaws.com/softwaremill-public/elasticmq-server-1.6.12.jar -o elasticmq.jar
