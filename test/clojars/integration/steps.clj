@@ -89,10 +89,22 @@
                           (enlive/text))]
     [otp-secret recovery-code]))
 
+(defn login-as-with-otp+retry
+  "Attempts login with otp, and retries twice on failure. This is to address the
+  case where the otp code is no longer valid by the time we use it (we generated
+  it close to the end of its lifetime)."
+  [state user password otp-secret]
+  (loop [attempt 1]
+    (let [result (login-as state user password (ot/get-totp-token otp-secret))]
+      (if (or (= 3 attempt)
+              (= 200 (get-in result [:response :status])))
+        result
+        (recur (inc attempt))))))
+
 (defn disable-mfa
   [state user password otp-secret]
   (-> state
-      (login-as user password (ot/get-totp-token otp-secret))
+      (login-as-with-otp+retry user password otp-secret)
       (follow-redirect)
       (visit "/mfa")
       (fill-in "Password" password)
