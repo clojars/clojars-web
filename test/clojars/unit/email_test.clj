@@ -63,7 +63,7 @@
       ;; TODO actually setting up an ssl server
       ;; and checking the message would be better
       ;; but it looks like the tls stuff is a mess
-      ;; this sufficies to say it tried
+      ;; this suffices to say it tried
       ((email/simple-mailer {:host "localhost"
                              :port (.getPort server)
                              :from "example@example.org"
