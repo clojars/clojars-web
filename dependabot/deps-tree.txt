@@ -27,20 +27,18 @@ duct/hikaricp-component 0.1.2
     X org.slf4j/slf4j-api 1.7.10 :older-version
 co.deps/ring-etag-middleware 0.2.1
   X ring/ring-core 1.6.3 :use-top
-metosin/muuntaja 0.6.11
-  . metosin/jsonista 0.3.13
-    X com.fasterxml.jackson.core/jackson-core 2.18.2 :older-version
-    X com.fasterxml.jackson.core/jackson-databind 2.18.2 :use-top
-    . com.fasterxml.jackson.datatype/jackson-datatype-jsr310 2.18.2
-      X com.fasterxml.jackson.core/jackson-annotations 2.18.2 :older-version
-      X com.fasterxml.jackson.core/jackson-core 2.18.2 :older-version
-      X com.fasterxml.jackson.core/jackson-databind 2.18.2 :use-top
-  . com.cognitect/transit-clj 1.0.333
-    . com.cognitect/transit-java 1.0.371
-      X com.fasterxml.jackson.core/jackson-core 2.14.2 :older-version
-      . org.msgpack/msgpack 0.6.12
-        . com.googlecode.json-simple/json-simple 1.1.1
-        . org.javassist/javassist 3.18.1-GA
+metosin/muuntaja 0.6.12
+  . metosin/jsonista 1.0.1
+    X com.fasterxml.jackson.core/jackson-core 2.22.2 :older-version
+    X com.fasterxml.jackson.core/jackson-databind 2.22.2 :use-top
+    . com.fasterxml.jackson.datatype/jackson-datatype-jsr310 2.22.2
+      . com.fasterxml.jackson.core/jackson-annotations 2.22
+      X com.fasterxml.jackson.core/jackson-core 2.22.2 :older-version
+      X com.fasterxml.jackson.core/jackson-databind 2.22.2 :use-top
+  . com.cognitect/transit-clj 1.1.363
+    . com.cognitect/transit-java 1.1.406
+      X com.fasterxml.jackson.core/jackson-core 2.22.1 :older-version
+      . org.msgpack/msgpack-core 0.9.12
       . javax.xml.bind/jaxb-api 2.4.0-b180830.0359
         . javax.activation/javax.activation-api 1.2.0
 com.fasterxml.jackson.core/jackson-databind 2.22.3
@@ -149,8 +147,8 @@ com.cemerick/friend 0.2.3
     . org.clojure/data.priority-map 0.0.2
   . com.google.inject/guice 2.0
     . aopalliance/aopalliance 1.0
-metosin/muuntaja-yaml 0.6.11
-  X metosin/muuntaja 0.6.11 :use-top
+metosin/muuntaja-yaml 0.6.12
+  X metosin/muuntaja 0.6.12 :use-top
   . clj-commons/clj-yaml 1.0.29
     . org.yaml/snakeyaml 2.3
     . org.flatland/ordered 1.15.12

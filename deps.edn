@@ -42,8 +42,8 @@
   jdbc-ring-session/jdbc-ring-session {:mvn/version "1.5.5"}
   
   metosin/malli {:mvn/version "0.20.0"}
-  metosin/muuntaja {:mvn/version "0.6.11"}
-  metosin/muuntaja-yaml {:mvn/version "0.6.11"}
+  metosin/muuntaja {:mvn/version "0.6.12"}
+  metosin/muuntaja-yaml {:mvn/version "0.6.12"}
   
   net.cgrand/regex {:mvn/version "1.1.0"}
 
