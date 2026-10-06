@@ -10,7 +10,8 @@
     :else      "* (any group/artifact you have access to)"))
 
 (defmethod notifications/notification :deploy-token-created
-  [_type mailer {:as _user username :user email :email}
+  [_type
+   {:keys [mailer] {email :email username :user} :user}
    {:as event :keys [token-name single-use? expires-at]}]
   (notifications/send
    mailer email "A deploy token was created on your Clojars account"
@@ -29,7 +30,8 @@
     (common/account-footer username)]))
 
 (defmethod notifications/notification :token-breached
-  [_type mailer {:as _user username :user :keys [email]}
+  [_type
+   {:keys [mailer] {email :email username :user} :user}
    {:as _data :keys [token-disabled? token-name commit-url]}]
   (notifications/send
    mailer email "Deploy token found on GitHub"

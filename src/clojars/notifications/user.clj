@@ -4,7 +4,7 @@
    [clojars.notifications.common :as common]))
 
 (defmethod notifications/notification :mfa-activated
-  [_type mailer {:as _user username :user email :email} data]
+  [_type {:keys [mailer] {email :email username :user} :user} data]
   (notifications/send
    mailer email "Two-factor auth was enabled on your Clojars account"
    [(format
@@ -16,8 +16,8 @@
     (common/account-footer username)]))
 
 (defmethod notifications/notification :mfa-deactivated
-  [_type mailer
-   {:as _user username :user email :email}
+  [_type
+   {:keys [mailer] {email :email username :user} :user}
    {:as data :keys [source]}]
   (notifications/send
    mailer email "Two-factor auth was disabled on your Clojars account"
@@ -33,7 +33,8 @@
     (common/account-footer username)]))
 
 (defmethod notifications/notification :email-changed
-  [_type mailer {:as _user username :user email :email}
+  [_type
+   {:keys [mailer] {email :email username :user} :user}
    {:as data :keys [old-email]}]
   (let [subject "Your Clojars email was changed"
         msg
@@ -49,7 +50,7 @@
     (notifications/send mailer old-email subject msg)))
 
 (defmethod notifications/notification :password-changed
-  [_type mailer {:as _user username :user email :email} data]
+  [_type {:keys [mailer] {email :email username :user} :user} data]
   (notifications/send
    mailer email "Your Clojars password was changed"
    [(format

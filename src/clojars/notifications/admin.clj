@@ -4,8 +4,8 @@
    [clojure.pprint :as pprint]))
 
 (defmethod notifications/notification :group-verification-requested
-  [_type mailer
-   {:as _user username :user}
+  [_type
+   {:keys [mailer] {username :user} :user}
    {:as data :keys [error]}]
   (let [result (if error "failed" "succeeded")
         subject (format "[Clojars] Group verification attempt %s" result)

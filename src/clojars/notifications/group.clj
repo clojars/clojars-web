@@ -5,8 +5,8 @@
    [clojars.util :as util]))
 
 (defmethod notifications/notification :group-permission-added
-  [_type mailer
-   {:as _user username :user}
+  [_type
+   {:keys [mailer] {username :user} :user}
    {:as data :keys [admin? admin-users group member-user scope-to-jar]}]
   (let [subject (format "A%s permission was added to the group %s"
                         (if admin? "n admin" "")
@@ -26,8 +26,8 @@
       (notifications/send mailer email subject (conj body (common/account-footer username))))))
 
 (defmethod notifications/notification :group-permission-removed
-  [_type mailer
-   {:as _user username :user}
+  [_type
+   {:keys [mailer] {username :user} :user}
    {:as data :keys [admin-users group member-user scope-to-jar]}]
   (let [subject (format "A permission was removed from the group %s"
                         group)
