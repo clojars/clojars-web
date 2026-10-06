@@ -31,7 +31,7 @@
             :let [key (index-key path)]]
       (testing (format "with path '%s'" path)
         (write-data repo-bucket path)
-        (event/emit event-emitter :repo-path-needs-index {:path path})
+        (event/emit event-emitter :repo-path-changed {:path path})
         (when (is (help/wait-for-s3-key repo-bucket key))
           (when (is (s3/object-exists? repo-bucket key))
             (let [index (with-open [is (s3/get-object-stream repo-bucket key)]

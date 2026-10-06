@@ -119,7 +119,7 @@
 
 (defn- handler
   [{:keys [error-reporter repo-bucket]} type {:as _data :keys [path]}]
-  (when (= :repo-path-needs-index type)
+  (when (= :repo-path-changed type)
     (let [path (normalize-path path)]
       (retry/retry {:error-reporter error-reporter}
                    (when-some [entries (get-path-entries repo-bucket path)]

@@ -3,7 +3,7 @@
    [clojars.notifications :as notifications]
    [clojure.pprint :as pprint]))
 
-(defmethod notifications/notification :group-verification-request
+(defmethod notifications/notification :group-verification-requested
   [_type mailer
    {:as _user username :user}
    {:as data :keys [error]}]

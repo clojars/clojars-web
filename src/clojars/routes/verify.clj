@@ -13,7 +13,7 @@
   (log/with-context (assoc request :tag tag)
     (let [result (f db request)
           request+result (merge request result)]
-      (event/emit event-emitter :group-verification-request request+result)
+      (event/emit event-emitter :group-verification-requested request+result)
       (if-some [error (:error result)]
         (log/info {:status :failed
                    :error  error})

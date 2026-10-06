@@ -486,7 +486,7 @@
 (defn- emit-deploy-events
   [db event-emitter {:as version-data :keys [group]}]
   (doseq [path (gen-repo-paths version-data)]
-    (event/emit event-emitter :repo-path-needs-index {:path path}))
+    (event/emit event-emitter :repo-path-changed {:path path}))
   (doseq [user (db/group-active-users db group)]
     (event/emit event-emitter :version-deployed (assoc version-data :user user))))
 
