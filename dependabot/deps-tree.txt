@@ -55,6 +55,9 @@ valip/valip 0.2.0
       X commons-collections/commons-collections 2.1 :use-top
       . xml-apis/xml-apis 1.0.b2
     X commons-logging/commons-logging 1.0.4 :older-version
+com.fasterxml.jackson.dataformat/jackson-dataformat-cbor 2.22.3
+  . com.fasterxml.jackson.core/jackson-core 2.22.3
+  X com.fasterxml.jackson.core/jackson-databind 2.22.3 :use-top
 org.apache.lucene/lucene-analysis-common 10.3.2
   X org.apache.lucene/lucene-core 10.3.2 :use-top
 com.cognitect.aws/sqs 871.2.34.1
@@ -153,10 +156,8 @@ metosin/muuntaja-yaml 0.6.11
     . org.flatland/ordered 1.15.12
 cheshire/cheshire 6.1.0
   X com.fasterxml.jackson.core/jackson-core 2.20.0 :older-version
-  . com.fasterxml.jackson.dataformat/jackson-dataformat-smile 2.20.0
-    X com.fasterxml.jackson.core/jackson-core 2.20.0 :older-version
-  . com.fasterxml.jackson.dataformat/jackson-dataformat-cbor 2.20.0
-    X com.fasterxml.jackson.core/jackson-core 2.20.0 :older-version
+  X com.fasterxml.jackson.dataformat/jackson-dataformat-smile 2.20.0 :use-top
+  X com.fasterxml.jackson.dataformat/jackson-dataformat-cbor 2.20.0 :use-top
   . tigris/tigris 0.1.2
 jdbc-ring-session/jdbc-ring-session 1.5.5
   X ring/ring-core 1.9.6 :use-top
@@ -197,3 +198,6 @@ ring/ring-core 1.15.3
   . crypto-random/crypto-random 1.2.1
     X commons-codec/commons-codec 1.15 :older-version
   . crypto-equality/crypto-equality 1.0.1
+com.fasterxml.jackson.dataformat/jackson-dataformat-smile 2.22.3
+  . com.fasterxml.jackson.core/jackson-core 2.22.3
+  X com.fasterxml.jackson.core/jackson-databind 2.22.3 :use-top
