@@ -45,8 +45,8 @@ To begin developing, start with a REPL (Note: if you are instead starting a repl
 make repl
 ```
 
-You'll need elasticmq, s3mock, and postgres running as well. That's managed via
-docker-compose:
+You'll need elasticmq, mailcatcher, s3mock, and postgresql running as well.
+That's managed via docker-compose:
 
 ```sh
 docker-compose up
@@ -107,6 +107,9 @@ version-specific metadata (which won't matter for the operation of
 clojars, but may matter if you try to use the resulting repo as a real
 repo), and versions will be listed out of order on the project pages,
 but it should be good enough to test with.
+
+If you are working on emails, you can see the emails sent in dev mode in
+mailcatcher at http://localhost:1080.
 
 ### Testing
 

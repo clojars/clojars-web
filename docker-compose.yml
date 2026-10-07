@@ -33,4 +33,8 @@ services:
         source: ./dev-resources/elasticmq.conf
         target: /opt/elasticmq.conf
         read_only: true
-
+  mailcatcher:
+    image: "dockage/mailcatcher:0.9.0"
+    ports:
+      - "1080:1080"
+      - "1025:1025"

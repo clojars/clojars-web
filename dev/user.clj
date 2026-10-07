@@ -6,7 +6,6 @@
     [errors :as errors]
     [system :as system]]
    [clojars.db.migrate :as migrate]
-   [clojars.email :as email]
    [clojars.s3 :as s3]
    [clojure.tools.namespace.repl :refer [refresh]]
    [reloaded.repl :refer [system init stop go clear]])
@@ -24,7 +23,6 @@
     (s3/put-object stats-bucket "all.edn" (ByteArrayInputStream. (.getBytes "{}")))
     (assoc (system/new-system (config/config))
            :error-reporter (errors/stdout-reporter)
-           :mailer         (email/mock-mailer)
            :repo-bucket    (s3/mock-s3-client)
            :stats-bucket   stats-bucket)))
 
