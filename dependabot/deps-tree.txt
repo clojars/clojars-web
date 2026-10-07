@@ -25,6 +25,8 @@ duct/hikaricp-component 0.1.2
   X com.stuartsierra/component 0.3.2 :use-top
   . com.zaxxer/HikariCP-java6 2.3.13
     X org.slf4j/slf4j-api 1.7.10 :older-version
+co.deps/ring-etag-middleware 0.2.1
+  X ring/ring-core 1.6.3 :use-top
 metosin/muuntaja 0.6.11
   . metosin/jsonista 0.3.13
     X com.fasterxml.jackson.core/jackson-core 2.18.2 :older-version

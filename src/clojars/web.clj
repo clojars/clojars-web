@@ -27,6 +27,7 @@
    [clojars.web.safe-hiccup :refer [raw]]
    [clojars.web.search :as search]
    [clojure.java.io :as io]
+   [co.deps.ring-etag-middleware :refer [wrap-file-etag]]
    [compojure.core :refer [ANY context GET PUT routes]]
    [compojure.route :refer [not-found]]
    [malli.core :as m]
@@ -200,5 +201,6 @@
                                      :timeout-response (redirect "/login")})
          (wrap-secure-session db)
          (wrap-content-type)
+         (wrap-file-etag)
          (wrap-not-modified)
          (wrap-ignore-trailing-slash)))))

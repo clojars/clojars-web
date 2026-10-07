@@ -11,6 +11,7 @@
   ch.qos.logback/logback-classic {:mvn/version "1.6.3"}
   cheshire/cheshire {:mvn/version "6.1.0"}
   clj-stacktrace/clj-stacktrace {:mvn/version "0.2.8"}
+  co.deps/ring-etag-middleware {:mvn/version "0.2.1"}
   com.cemerick/friend {:mvn/version "0.2.3"
                        :exclusions [;; not used, excluded to address CVE-2026-54428
                                     org.apache.httpcomponents/httpclient
