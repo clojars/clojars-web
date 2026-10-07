@@ -66,6 +66,27 @@
        (first)
        (enlive/text))))
 
+(defn- enlive->text
+  [state selector]
+  (-> state
+      :enlive
+      (enlive/select selector)
+      (first)
+      (enlive/text)))
+
+(defn- confirm-mfa-code
+  [state otp-secret]
+  (loop [state state
+         attempt 1]
+    (let [otp (ot/get-totp-token otp-secret)
+          state (-> state
+                    (fill-in "Code" otp)
+                    (press "Confirm code"))]
+      (if (and (< attempt 3)
+               (re-find #"token incorrect" (enlive->text state [:div.notice])))
+        (recur state (inc attempt))
+        (enlive->text state [:div.new-token :> :pre])))))
+
 (defn enable-mfa
   [state user password]
   (let [state (-> state
@@ -74,19 +95,8 @@
                   (visit "/mfa")
                   (fill-in "Password" password)
                   (press "Enable two-factor authentication"))
-        otp-secret (-> state
-                       :enlive
-                       (enlive/select [:pre.mfa-key])
-                       (first)
-                       (enlive/text))
-        otp (ot/get-totp-token otp-secret)
-        recovery-code (-> state
-                          (fill-in "Code" otp)
-                          (press "Confirm code")
-                          :enlive
-                          (enlive/select [:div.new-token :> :pre])
-                          (first)
-                          (enlive/text))]
+        otp-secret (enlive->text state [:pre.mfa-key])
+        recovery-code (confirm-mfa-code state otp-secret)]
     [otp-secret recovery-code]))
 
 (defn login-as-with-otp+retry

@@ -1,7 +1,8 @@
 (ns clojars.integration.sessions-test
   (:require
    [clojars.db :as db]
-   [clojars.integration.steps :refer [create-deploy-token enable-mfa login-as register-as]]
+   [clojars.integration.steps :refer [create-deploy-token enable-mfa login-as
+                                      login-as-with-otp+retry register-as]]
    [clojars.test-helper :as help]
    [clojure.test :refer [deftest testing use-fixtures]]
    [kerodon.core :refer [follow follow-redirect session within]]
@@ -74,7 +75,7 @@
     (let [[otp-secret recovery-code] (enable-mfa (session app) "fixture" "password1234")]
       (testing "with valid token"
         (-> (session app)
-            (login-as "fixture" "password1234" (ot/get-totp-token otp-secret))
+            (login-as-with-otp+retry "fixture" "password1234" otp-secret)
             (follow-redirect)
             (has (status? 200))
             (within [:.light-article :> :h1]
