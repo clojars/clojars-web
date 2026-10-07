@@ -43,12 +43,19 @@
      (link-to "https://github.com/clojars/clojars-web/wiki/Data" "API")
      (link-to "/sitemap.xml" "sitemap")
      [:div.sponsors
-      [:div.sponsors-title
-       "Hosting costs sponsored by:"]
-      [:div.sponsors-group
-       [:div.sponsor
-        (link-to "https://korey.ai/"
-                 (image "/images/korey-logo.png" "Korey"))]]
+      [:div.sponsors-primary
+       [:div.sponsor-section
+        [:div.sponsors-title
+         "Hosting costs sponsored by:"]
+        [:div.sponsor
+         (link-to "https://korey.ai/"
+                  (image "/images/korey-logo.png" "Korey"))]]
+       [:div.sponsor-section
+        [:div.sponsors-title
+         "On-call and maintenance costs sponsored by:"]
+        [:div.sponsor
+         (link-to "https://clojuriststogether.org/"
+                  [:img {:src "/images/clojurists-together-logo.svg" :alt "Clojurists Together Foundation"}])]]]
       [:div.sponsors-title
        "With in-kind sponsorship from:"]
       [:div.sponsors-group
@@ -75,17 +82,11 @@
                  (image "/images/statuspage-io-logo.svg" "StatusPage.io"))]
        [:div.sponsor
         (link-to "https://uptime.com/"
-                 (image "/images/uptime-logo.svg" "Uptime.com"))]]]
-     [:div.sponsors
-      [:div.sponsors-group
-       [:div.sponsor
-        [:span "remixed by" [:br]]
-        [:span (link-to "http://www.bendyworks.com/"
-                        [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]]
-       [:div.sponsor
-        [:span "member project of" [:br]]
-        [:span (link-to "https://clojuriststogether.org/"
-                        [:img {:src "/images/clojurists-together-logo.png" :alt "Clojurists Together Foundation" :height "40"}])]]]]]
+                 (image "/images/uptime-logo.svg" "Uptime.com"))]]
+      [:div.sponsor.sponsors-remixed
+       [:span "remixed by" [:br]]
+       [:span (link-to "http://www.bendyworks.com/"
+                       [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]]]]
     [:footer.row]))
 
 (defn html-doc [title ctx & body]

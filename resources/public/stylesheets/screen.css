@@ -652,19 +652,35 @@ details.help > summary {
   color: #999;
 }
 
+.sponsors-primary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1em;
+  max-width: 720px;
+  margin: 0 auto 1em;
+}
+
 .sponsors-group {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
 
 .sponsor {
-    padding: 1em;
+  padding: 1em;
 }
 
 .sponsor img {
-    width: 120px;
+  width: 120px;
+}
+
+.sponsors-primary .sponsor {
+  padding: 0.75em 1em 0;
+}
+
+.sponsors-remixed {
+  padding-top: 0.25em;
 }
 
 .result a.fork {
