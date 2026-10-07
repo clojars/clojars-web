@@ -49,6 +49,11 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>co.deps</groupId>
+      <artifactId>ring-etag-middleware</artifactId>
+      <version>0.2.1</version>
+    </dependency>
+    <dependency>
       <groupId>metosin</groupId>
       <artifactId>muuntaja</artifactId>
       <version>0.6.11</version>
