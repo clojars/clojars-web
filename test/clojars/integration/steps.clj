@@ -105,11 +105,11 @@
   it close to the end of its lifetime)."
   [state user password otp-secret]
   (loop [attempt 1]
-    (let [result (login-as state user password (ot/get-totp-token otp-secret))]
-      (if (or (= 3 attempt)
-              (= 200 (get-in result [:response :status])))
-        result
-        (recur (inc attempt))))))
+    (let [state (login-as state user password (ot/get-totp-token otp-secret))]
+      (if (and (< attempt 3)
+               (re-find #"Incorrect" (enlive->text (follow-redirect state) [:p.error])))
+        (recur (inc attempt))
+        state))))
 
 (defn disable-mfa
   [state user password otp-secret]
