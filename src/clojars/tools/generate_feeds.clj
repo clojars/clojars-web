@@ -6,10 +6,11 @@
    [clojars.file-utils :as fu]
    [clojars.maven :as maven]
    [clojars.s3 :as s3]
-   [clojars.util :as util :refer [concatv]]
+   [clojars.util :refer [concatv]]
    [clojure.data.xml :as xml]
    [clojure.java.io :as io]
-   [clojure.set :as set])
+   [clojure.set :as set]
+   [medley.core :as medley])
   (:import
    (java.io
     File
@@ -22,13 +23,13 @@
 
 (defn- versions-data
   [jars]
-  (let [distinct-jars (into [] (util/distinct-by :version) jars)]
+  (let [distinct-jars (into [] (medley/distinct-by :version) jars)]
     {:versions (mapv :version distinct-jars)
      :versions-meta (mapv
                      (fn [{:keys [created scm version]}]
-                       (util/assoc-some {:version version
-                                         :release-date created}
-                                        :scm-tag (:tag scm)))
+                       (medley/assoc-some {:version version
+                                           :release-date created}
+                                          :scm-tag (:tag scm)))
                      distinct-jars)}))
 
 (defn- all-grouped-jars [db]

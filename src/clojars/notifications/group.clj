@@ -2,7 +2,7 @@
   (:require
    [clojars.notifications :as notifications]
    [clojars.notifications.common :as common]
-   [clojars.util :as util]))
+   [medley.core :as medley]))
 
 (defmethod notifications/notification :group-permission-added
   [_type
@@ -21,7 +21,7 @@
                  (format "'%s'" scope-to-jar))
                username)
               (common/details-table data)]
-        notify-users (util/distinct-by :user (conj admin-users member-user))]
+        notify-users (medley/distinct-by :user (conj admin-users member-user))]
     (doseq [{email :email username :user} notify-users]
       (notifications/send mailer email subject (conj body (common/account-footer username))))))
 
@@ -40,6 +40,6 @@
                  (format "'%s'" scope-to-jar))
                username)
               (common/details-table data)]
-        notify-users (util/distinct-by :user (conj admin-users member-user))]
+        notify-users (medley/distinct-by :user (conj admin-users member-user))]
     (doseq [{email :email username :user} notify-users]
       (notifications/send mailer email subject (conj body (common/account-footer username))))))

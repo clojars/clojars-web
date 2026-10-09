@@ -167,6 +167,12 @@
       <groupId>duct</groupId>
       <artifactId>duct</artifactId>
       <version>0.8.2</version>
+      <exclusions>
+        <exclusion>
+          <groupId>medley</groupId>
+          <artifactId>medley</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>hiccup</groupId>
@@ -236,6 +242,11 @@
       <groupId>cheshire</groupId>
       <artifactId>cheshire</artifactId>
       <version>6.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>dev.weavejester</groupId>
+      <artifactId>medley</artifactId>
+      <version>1.10.0</version>
     </dependency>
     <dependency>
       <groupId>jdbc-ring-session</groupId>
