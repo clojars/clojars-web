@@ -4,7 +4,9 @@
     Duration
     Instant)
    (java.time.temporal
-    ChronoUnit)))
+    ChronoUnit)
+   (java.util
+    Date)))
 
 (set! *warn-on-reflection* true)
 
@@ -43,3 +45,7 @@
   [^Instant i1 ^Instant i2]
   (.get (Duration/between i1 i2)
         ChronoUnit/SECONDS))
+
+(defn date-after
+  [^Date d1 ^Date d2]
+  (.after d1 d2))

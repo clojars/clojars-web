@@ -7,17 +7,28 @@
    (java.sql
     Timestamp)
    (java.time
-    Instant)))
+    Instant)
+   (java.util
+    Date)))
 
 (set! *warn-on-reflection* true)
 
 ;; Email verification
 
+(def email-verification-required-date #inst "2026-10-12")
+
+(defn require-email-verification-to-login?
+  "Returns true for users created after the verification boundary date. Will be
+  removed when we require validation for all users."
+  [{:as _user created :created email-verified? :email_verified}]
+  (and (not email-verified?)
+       (time/date-after created email-verification-required-date)))
+
 (def verify-email-resend-rate-limit-seconds 60)
 
 (defn verify-email-send-allowed?
   [{:as _user
-    ^Timestamp code-created-at :email_verification_code_created_at
+    ^Date code-created-at :email_verification_code_created_at
     email-verified? :email_verified}]
   (and (not email-verified?)
        (let [now (time/now)

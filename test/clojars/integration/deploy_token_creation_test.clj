@@ -1,8 +1,7 @@
 (ns clojars.integration.deploy-token-creation-test
   (:require
-   [clojars.db :as db]
    [clojars.email :as email]
-   [clojars.integration.steps :refer [create-deploy-token]]
+   [clojars.integration.steps :refer [create-deploy-token register-as]]
    ;; for defmethod side effects when handler runs
    [clojars.notifications.token]
    [clojars.test-helper :as help]
@@ -15,8 +14,10 @@
   help/run-test-app)
 
 (deftest creating-deploy-token-sends-email-to-user
-  (db/add-user help/*db* "fixture@example.org" "fixture" "password1234")
-  (create-deploy-token (session (help/app)) "fixture" "password1234" "my-laptop")
+  (-> (session (help/app))
+      (register-as "fixture" "fixture@example.org" "password1234"))
+  (-> (session (help/app))
+      (create-deploy-token "fixture" "password1234" "my-laptop"))
   (is (true? (email/wait-for-mock-emails)))
   (let [[to subject body] (first @email/mock-emails)]
     (is (= "fixture@example.org" to))

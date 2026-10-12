@@ -7,13 +7,13 @@
    [clojars.db :as db]
    [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.models.user :as user-m]
+   [clojars.time :as time]
    [clojars.util :as util]
    [clojure.string :as str]
    [one-time.core :as ot]
    [ring.util.request :as req]
-   [ring.util.response :as response])
-  (:import
-   java.sql.Timestamp))
+   [ring.util.response :as response]))
 
 (set! *warn-on-reflection* true)
 
@@ -82,6 +82,15 @@
                        {::friend/workflow          :interactive-form
                         ::friend/redirect-on-auth? true}))
 
+(defn- maybe-complete-login
+  [event-emitter user]
+  (if (user-m/require-email-verification-to-login? user)
+    (do
+      (log/info {:status :pending-email-verification})
+      (event/emit event-emitter :email-verification-email-requested {:user user})
+      (response/redirect "/login/verify-email"))
+    (make-auth event-emitter user)))
+
 (defn- verify-password-step
   [db event-emitter {:as _request :keys [form-params params session]}]
   (let [username (get-param :username form-params params)
@@ -95,7 +104,7 @@
             (log/info {:status :pending-mfa})
             (-> (response/redirect "/login/mfa")
                 (assoc :session (assoc session ::pending-mfa-username username))))
-          (make-auth event-emitter user))
+          (maybe-complete-login event-emitter user))
         (do
           (log/info {:status :failed
                      :reason :password-incorrect})
@@ -110,7 +119,7 @@
                          :username username
                          :type     :mfa}
         (if (validate-otp db event-emitter user otp)
-          (make-auth event-emitter user)
+          (maybe-complete-login event-emitter user)
           (do
             (log/info {:status :failed
                        :reason :otp-incorrect})
@@ -169,7 +178,7 @@
 (defn token-expired?
   [{:as _token :keys [expires_at]}]
   (and expires_at
-       (.after (db/get-time) ^Timestamp expires_at)))
+       (time/date-after (db/get-time) expires_at)))
 
 (defn token-credential-fn [db]
   (fn [{username-or-email :username password :password}]
