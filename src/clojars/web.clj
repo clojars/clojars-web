@@ -85,7 +85,7 @@
           (try-account
            #(html-doc "DMCA" {:account %}
                       (raw (slurp (io/resource "dmca.html"))))))
-     session/routes
+     (session/routes db event-emitter)
      (group/routes db event-emitter)
      (artifact/routes db stats)
      ;; user routes must go after artifact routes
@@ -186,9 +186,9 @@
      (-> (main-routes system)
          (friend/authenticate
           {:workflows [(auth/interactive-form-with-mfa-workflow db event-emitter)
-                       (registration/workflow db hcaptcha)
-                       (github/workflow github http-client db)
-                       (gitlab/workflow gitlab http-client db)]})
+                       (registration/workflow db hcaptcha event-emitter)
+                       (github/workflow github http-client db event-emitter)
+                       (gitlab/workflow gitlab http-client db event-emitter)]})
          (wrap-reject-invalid-params)
          (wrap-exceptions error-reporter)
          (log/wrap-request-context)

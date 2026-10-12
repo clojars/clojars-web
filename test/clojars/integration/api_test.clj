@@ -207,7 +207,7 @@
               res3 (get-release-feed (:next_from body2))
               body3 (json/parse-string (:body res3) true)]
           (is (match?
-               {:next_from (str (Instant/ofEpochMilli (+ start-time 3)))
+               {:next_from (str (Instant/ofEpochMilli (+ start-time 5)))
                 :releases
                 [{:artifact_id "test"
                   :description nil

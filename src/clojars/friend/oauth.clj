@@ -2,7 +2,9 @@
   (:require
    [cemerick.friend.workflows :as workflow]
    [clojars.db :as db]
+   [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.models.user :as user-m]
    [clojars.oauth.service :as oauth-service]
    [ring.util.response :refer [redirect]]))
 
@@ -39,8 +41,17 @@
       {::result (assoc (redirect "/register")
                        :flash message)})))
 
-(defn- make-auth [{::keys [login provider user]}]
+;; NOTE: this trusts the email verification from GitHub and Gitlab. We'll need
+;; to reevaluate this if we add oauth login for other services.
+(defn- auto-verify-email [{::keys [db user]}]
   (when-some [username (:user user)]
+    (when-not (:email_verified user)
+      (user-m/mark-email-verified db username)
+      nil)))
+
+(defn- make-auth [{::keys [event-emitter login provider user]}]
+  (when-some [username (:user user)]
+    (event/emit event-emitter :user-logged-in {:user user})
     {::result {:identity username
                :username username
                :auth-provider provider
@@ -49,7 +60,7 @@
 (defn authorize [service]
   (redirect (oauth-service/authorization-url service)))
 
-(defn callback [req oauth-service http-service db]
+(defn callback [req oauth-service http-service db event-emitter]
   (let [res
         (reduce
          (fn [acc f]
@@ -61,12 +72,14 @@
 
          (assoc req
                 ::db db
+                ::event-emitter event-emitter
                 ::http-service http-service
                 ::oauth-service oauth-service)
 
          [handle-error
           get-emails+login
           find-user
+          auto-verify-email
           make-auth])]
     (doseq [verify-result (db/maybe-verify-provider-groups db res)]
       (log/info verify-result))

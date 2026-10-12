@@ -1,5 +1,7 @@
 (ns clojars.notifications.user
   (:require
+   [clojars.config :as config]
+   [clojars.models.user :as user-m]
    [clojars.notifications :as notifications]
    [clojars.notifications.common :as common]))
 
@@ -59,3 +61,32 @@
     (common/details-table data)
     common/did-not-take-action
     (common/account-footer username)]))
+
+(defn- send-email-verification-email
+  [{:keys [db mailer]} {:as user username :user}]
+  (let [code (user-m/set-email-verification-code db username)
+        base-url (:base-url (config/config))
+        verification-url (str base-url "/email-verification/" code)]
+    (notifications/send
+     mailer (:email user)
+     "Confirm your Clojars email address"
+     ["Hello,"
+      (format "Please confirm your email address for your Clojars account: %s." username)
+      "To verify your email address, click the following link:"
+      verification-url
+      "This link is valid for 24 hours or until you request a new confirmation email."
+      (common/account-footer username)])))
+
+(defmethod notifications/notification :user-logged-in
+  [_type {:as ctx user :user} _data]
+  (when (user-m/verify-email-send-allowed? user)
+    (send-email-verification-email ctx user)))
+
+(defmethod notifications/notification :user-registered
+  [_type {:as ctx :keys [user]} _data]
+  (send-email-verification-email ctx user))
+
+(defmethod notifications/notification :email-verification-email-requested
+  [_type {:as ctx :keys [user]} _data]
+  (when (user-m/verify-email-send-allowed? user)
+    (send-email-verification-email ctx user)))

@@ -116,7 +116,7 @@
 (defn bcrypt [s]
   (creds/hash-bcrypt s :work-factor (:bcrypt-work-factor (config))))
 
-(defn- q
+(defn q
   ([db query-data]
    (q db query-data nil))
   ([db query-data opts]
@@ -801,6 +801,8 @@
   ;; converts byte array to hex string
   ;; http://stackoverflow.com/a/8015558/974795
   (str/lower-case (apply str (map #(format "%02X" %) byte-array))))
+
+(def generate-secure-hex-token (comp hexadecimalize generate-secure-token))
 
 (defn set-password-reset-code!
   [db username]

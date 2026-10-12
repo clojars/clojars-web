@@ -1,6 +1,7 @@
 (ns clojars.time
   (:import
    (java.time
+    Duration
     Instant)
    (java.time.temporal
     ChronoUnit)))
@@ -30,6 +31,15 @@
   ([^Instant instant ^long days]
    (.plus instant days ChronoUnit/DAYS)))
 
+(defn seconds-from
+  [^Instant instant ^long seconds]
+  (.plus instant seconds ChronoUnit/SECONDS))
+
 (defn parse-instant
   ^Instant [^String instant-string]
   (Instant/parse instant-string))
+
+(defn seconds-between
+  [^Instant i1 ^Instant i2]
+  (.get (Duration/between i1 i2)
+        ChronoUnit/SECONDS))
