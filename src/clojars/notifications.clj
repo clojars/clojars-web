@@ -10,7 +10,7 @@
 
 (defn send
   [mailer email title body]
-  (mailer email title (str/join "\n\n" body)))
+  (mailer email title (str/join "\n\n" (remove nil? body))))
 
 (defn handler
   [{:keys [db mailer]} type {:as data :keys [user user-id username]}]
