@@ -63,7 +63,7 @@
     (common/account-footer username)]))
 
 (defn- send-email-verification-email
-  [{:keys [db mailer]} {:as user username :user} context]
+  [{:keys [db mailer]} {:as user username :user}]
   (let [code (user-m/set-email-verification-code db username)
         base-url (:base-url (config/config))
         verification-url (str base-url "/email-verification/" code)]
@@ -75,20 +75,13 @@
       "To verify your email address, click the following link:"
       verification-url
       "This link is valid for 24 hours or until you request a new confirmation email."
-      (when (= :login context)
-        "NOTE: After 2027-01-01, your email must be verified before you can log in.")
       (common/account-footer username)])))
-
-(defmethod notifications/notification :user-logged-in
-  [_type {:as ctx user :user} _data]
-  (when (user-m/verify-email-send-allowed? user)
-    (send-email-verification-email ctx user :login)))
 
 (defmethod notifications/notification :user-registered
   [_type {:as ctx :keys [user]} _data]
-  (send-email-verification-email ctx user :registration))
+  (send-email-verification-email ctx user))
 
 (defmethod notifications/notification :email-verification-email-requested
   [_type {:as ctx :keys [user]} _data]
   (when (user-m/verify-email-send-allowed? user)
-    (send-email-verification-email ctx user :resend)))
+    (send-email-verification-email ctx user)))

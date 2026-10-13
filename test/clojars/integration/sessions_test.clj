@@ -14,8 +14,6 @@
    [next.jdbc.sql :as sql]
    [one-time.core :as ot])
   (:import
-   (java.sql
-    Timestamp)
    (java.util
     Date)))
 
@@ -225,17 +223,3 @@
       (is (= "newuser@example.org" to))
       (is (= "Confirm your Clojars email address" subject)))))
 
-(deftest post-registration-login-for-pre-boundary-account-succeeds
-  (let [app (help/app)
-        pre-boundary-date #inst "2026-10-01"
-        state (with-redefs [db/get-time (constantly (Timestamp. (.getTime pre-boundary-date)))]
-                (-> (session app)
-                    (register-unverified-as "newuser" "newuser@example.org" "password1234")
-                    (follow-redirect)
-                    (has (status? 200))))]
-    (-> state
-        (login-as "newuser" "password1234")
-        (follow-redirect)
-        (has (status? 200))
-        (within [:.light-article :> :h1]
-          (has (text? "Dashboard (newuser)"))))))

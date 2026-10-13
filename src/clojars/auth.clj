@@ -7,7 +7,6 @@
    [clojars.db :as db]
    [clojars.event :as event]
    [clojars.log :as log]
-   [clojars.models.user :as user-m]
    [clojars.time :as time]
    [clojars.util :as util]
    [clojure.string :as str]
@@ -84,7 +83,7 @@
 
 (defn- maybe-complete-login
   [event-emitter user]
-  (if (user-m/require-email-verification-to-login? user)
+  (if (not (:email_verified user))
     (do
       (log/info {:status :pending-email-verification})
       (event/emit event-emitter :email-verification-email-requested {:user user})
