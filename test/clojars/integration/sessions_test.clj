@@ -165,7 +165,7 @@
       (email/expect-mock-emails 1)
       ;; We have to move time forward allow a resend after the initial send at
       ;; registration time
-      (with-redefs [time/now (constantly (time/seconds-from now 61))]
+      (with-redefs [time/now (constantly (time/seconds-from now 90))]
         (-> state
             (press "Resend verification email")
             (follow-redirect)
