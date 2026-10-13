@@ -7,13 +7,13 @@
    [clojars.db :as db]
    [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.models.user :as user-m]
+   [clojars.time :as time]
    [clojars.util :as util]
    [clojure.string :as str]
    [one-time.core :as ot]
    [ring.util.request :as req]
-   [ring.util.response :as response])
-  (:import
-   java.sql.Timestamp))
+   [ring.util.response :as response]))
 
 (set! *warn-on-reflection* true)
 
@@ -75,26 +75,36 @@
   (or (get form-params (name key)) (get params key "")))
 
 (defn- make-auth
-  [username]
+  [event-emitter {:as user username :user}]
+  (event/emit event-emitter :user-logged-in {:user user})
   (log/info {:status :success})
   (workflows/make-auth {:username username}
                        {::friend/workflow          :interactive-form
                         ::friend/redirect-on-auth? true}))
 
+(defn- maybe-complete-login
+  [event-emitter user]
+  (if (user-m/require-email-verification-to-login? user)
+    (do
+      (log/info {:status :pending-email-verification})
+      (event/emit event-emitter :email-verification-email-requested {:user user})
+      (response/redirect "/login/verify-email"))
+    (make-auth event-emitter user)))
+
 (defn- verify-password-step
-  [db {:as _request :keys [form-params params session]}]
+  [db event-emitter {:as _request :keys [form-params params session]}]
   (let [username (get-param :username form-params params)
         password (get-param :password form-params params)]
     (log/with-context {:tag      :authentication
                        :username username
                        :type     :password}
-      (if-some [{:as _user :keys [otp_active]} (verify-password db username password)]
+      (if-some [{:as user :keys [otp_active]} (verify-password db username password)]
         (if otp_active
           (do
             (log/info {:status :pending-mfa})
             (-> (response/redirect "/login/mfa")
                 (assoc :session (assoc session ::pending-mfa-username username))))
-          (make-auth username))
+          (maybe-complete-login event-emitter user))
         (do
           (log/info {:status :failed
                      :reason :password-incorrect})
@@ -109,7 +119,7 @@
                          :username username
                          :type     :mfa}
         (if (validate-otp db event-emitter user otp)
-          (make-auth username)
+          (maybe-complete-login event-emitter user)
           (do
             (log/info {:status :failed
                        :reason :otp-incorrect})
@@ -121,13 +131,18 @@
   [session]
   (some? (::pending-mfa-username session)))
 
+(defn pending-email-verification?
+  "Returns true if the session is in the email-verification pending state."
+  [session]
+  (some? (::pending-email-verification-username session)))
+
 (defn interactive-form-with-mfa-workflow
   [db event-emitter]
   (fn [{:as request :keys [request-method]}]
     (when (= :post request-method)
       (let [path (req/path-info request)]
         (case path
-          "/login"     (verify-password-step db request)
+          "/login"     (verify-password-step db event-emitter request)
           "/login/mfa" (verify-mfa-step db event-emitter request)
           ;; else
           nil)))))
@@ -163,7 +178,7 @@
 (defn token-expired?
   [{:as _token :keys [expires_at]}]
   (and expires_at
-       (.after (db/get-time) ^Timestamp expires_at)))
+       (time/date-after (db/get-time) expires_at)))
 
 (defn token-credential-fn [db]
   (fn [{username-or-email :username password :password}]

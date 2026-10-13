@@ -6,11 +6,11 @@
    [clojure.string :as str]))
 
 (defmulti notification
-  (fn [type _mailer _user _data] type))
+  (fn [type _ctx _data] type))
 
 (defn send
   [mailer email title body]
-  (mailer email title (str/join "\n\n" body)))
+  (mailer email title (str/join "\n\n" (remove nil? body))))
 
 (defn handler
   [{:keys [db mailer]} type {:as data :keys [user user-id username]}]
@@ -20,7 +20,11 @@
                   user-id  (db/find-user-by-id db user-id)
                   username (db/find-user db username)
                   :else    nil)]
-      (notification type mailer user' data))))
+      (notification type
+                    {:db db
+                     :mailer mailer
+                     :user user'}
+                    data))))
 
 (defn notification-component
   "Handles email notifications. Needs :db, :mailer."

@@ -9,8 +9,8 @@
           group name version))
 
 (defmethod notifications/notification :version-deployed
-  [_type mailer
-   {:as _user email :email send-email? :send_deploy_emails username :user}
+  [_type
+   {:keys [mailer] {email :email send-email? :send_deploy_emails username :user} :user}
    {:keys [deployer-username group name version]}]
   (when send-email?
     (let [ga (format "%s/%s" group name)]

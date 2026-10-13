@@ -10,7 +10,8 @@
    [kerodon.test :refer [has some-text?]]))
 
 (use-fixtures :each
-  help/run-test-app)
+  help/run-test-app
+  help/with-clean-database)
 
 (defn session
   []

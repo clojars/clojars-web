@@ -109,11 +109,10 @@ duct/duct 0.8.2
     . org.clojure/tools.macro 0.1.5
     . clout/clout 2.1.2
       . instaparse/instaparse 1.4.0
-    X medley/medley 0.8.2 :older-version
+    X medley/medley 0.8.2 :excluded
     X ring/ring-core 1.5.0 :use-top
     X ring/ring-codec 1.0.1 :older-version
   . environ/environ 1.1.0
-  . medley/medley 0.8.3
   . meta-merge/meta-merge 1.0.0
   X ring/ring-core 1.5.0 :use-top
 hiccup/hiccup 1.0.5
@@ -157,6 +156,7 @@ cheshire/cheshire 6.1.0
   X com.fasterxml.jackson.dataformat/jackson-dataformat-smile 2.20.0 :use-top
   X com.fasterxml.jackson.dataformat/jackson-dataformat-cbor 2.20.0 :use-top
   . tigris/tigris 0.1.2
+dev.weavejester/medley 1.10.0
 jdbc-ring-session/jdbc-ring-session 1.5.5
   X ring/ring-core 1.9.6 :use-top
   . com.taoensso/nippy 3.4.2

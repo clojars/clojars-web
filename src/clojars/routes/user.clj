@@ -7,7 +7,9 @@
    [clojars.hcaptcha :as hcaptcha]
    [clojars.http-utils :as http-utils]
    [clojars.log :as log]
+   [clojars.models.user :as user-m]
    [clojars.routes.common :as common]
+   [clojars.web.login :as view-login]
    [clojars.web.user :as view]
    [compojure.core :as compojure :refer [DELETE GET POST PUT]]
    [ring.util.response :refer [redirect]]))
@@ -160,6 +162,14 @@
 
    (POST "/password-resets/:reset-code" {:as request {:keys [reset-code password confirm]} :params}
          (view/reset-password db event-emitter reset-code {:password password :confirm confirm} (common/request-details request)))
+
+   (GET "/email-verification/:code" [code]
+        (if-let [user (user-m/find-user-by-email-verification-code db code)]
+          (do
+            (user-m/mark-email-verified db (:user user))
+            (assoc (redirect "/login")
+                   :flash "Your email address has been confirmed. Please log in."))
+          (view-login/email-verification-expired)))
 
    (GET "/users/:username" [username]
         (show db username))

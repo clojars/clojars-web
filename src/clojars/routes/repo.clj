@@ -18,6 +18,7 @@
    [comb.template :as comb]
    [compojure.core :as compojure :refer [PUT]]
    [compojure.route :refer [not-found]]
+   [medley.core :as medley]
    [ring.util.codec :as codec]
    [ring.util.response :as response])
   (:import
@@ -71,7 +72,7 @@
 (defn- write-metadata
   [session dir group-name group-path artifact version timestamp-version]
   (let [token-id (:id (token-from-session session))
-        metadata (util/assoc-some
+        metadata (medley/assoc-some
                   (read-metadata dir)
                   :group group-name
                   :group-path group-path
@@ -486,7 +487,7 @@
 (defn- emit-deploy-events
   [db event-emitter {:as version-data :keys [group]}]
   (doseq [path (gen-repo-paths version-data)]
-    (event/emit event-emitter :repo-path-needs-index {:path path}))
+    (event/emit event-emitter :repo-path-changed {:path path}))
   (doseq [user (db/group-active-users db group)]
     (event/emit event-emitter :version-deployed (assoc version-data :user user))))
 

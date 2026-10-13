@@ -30,9 +30,13 @@
   com.stuartsierra/component {:mvn/version "1.2.0"}
 
   comb/comb {:mvn/version "1.0.0"}
-  
+
+  dev.weavejester/medley {:mvn/version "1.10.0"}
   digest/digest {:mvn/version "1.4.10"}
-  duct/duct {:mvn/version "0.8.2"}
+  duct/duct {:mvn/version "0.8.2"
+             ;; Newer versions use a different group (dev.weavejester), so
+             ;; we have to exclude here to prevent conflicts
+             :exclusions [medley/medley]}
   duct/hikaricp-component {:mvn/version "0.1.2"
                            :exclusions [org.slf4j/slf4j-nop]}
 
@@ -40,7 +44,7 @@
   hiccup/hiccup {:mvn/version "1.0.5"}
 
   jdbc-ring-session/jdbc-ring-session {:mvn/version "1.5.5"}
-  
+
   metosin/malli {:mvn/version "0.20.0"}
   metosin/muuntaja {:mvn/version "0.6.12"}
   metosin/muuntaja-yaml {:mvn/version "0.6.12"}

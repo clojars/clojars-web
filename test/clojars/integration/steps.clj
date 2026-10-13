@@ -1,9 +1,11 @@
 (ns clojars.integration.steps
   (:require
    [cemerick.pomegranate.aether :as aether]
-   [clojars.config :refer [config]]
+   [clojars.config :as config]
    [clojars.db :as db]
+   [clojars.email :as email]
    [clojars.maven :as maven]
+   [clojars.models.user :as user-m]
    [clojars.test-helper :as help]
    [clojure.java.io :as io]
    [kerodon.core :refer [check choose fill-in follow follow-redirect press visit]]
@@ -34,9 +36,11 @@
   ([state value]
    (fill-in state "TEST Captcha" value)))
 
-(defn register-as
+(defn register-unverified-as
+  "Registers a user WITHOUT verifying their email. Use this when testing the
+  email verification flow itself."
   ([state user email password]
-   (register-as state user email password password))
+   (register-unverified-as state user email password password))
   ([state user email password confirm]
    (-> state
        (visit "/")
@@ -48,23 +52,46 @@
        (fill-in-captcha)
        (press "Register"))))
 
+(defn register-as
+  ([state user email password]
+   (register-as state user email password password))
+  ([state user email password confirm]
+   (email/expect-mock-emails 1)
+   (let [registered (register-unverified-as state user email password confirm)]
+     (email/wait-for-mock-emails)
+     ;; Reset the mock so the verification email doesn't interfere with subsequent
+     ;; assertions in tests that don't care about email verification.
+     (email/clear-mock-emails)
+     (user-m/mark-email-verified help/*db* user)
+     (-> registered
+         (visit "/login")
+         (fill-in "Username" user)
+         (fill-in "Password" password)
+         (press "Login")
+         (follow-redirect)))))
+
 (defn create-deploy-token
   ([state user password token-name]
    (create-deploy-token state user password token-name {}))
   ([state user password token-name {:keys [expires-in scope single-use?]}]
-   (-> state
-       (login-as user password)
-       (follow-redirect)
-       (follow "deploy tokens")
-       (fill-in "Token name" token-name)
-       (cond-> scope (choose "Token scope" scope))
-       (cond-> single-use? (check "Single use?"))
-       (cond-> expires-in (choose "Expires in" expires-in))
-       (press "Create Token")
-       :enlive
-       (enlive/select [:div.new-token :> :pre])
-       (first)
-       (enlive/text))))
+   (email/expect-mock-emails 1)
+   (let [state (-> state
+                   (login-as user password)
+                   (follow-redirect))]
+     (email/wait-for-mock-emails)
+     (email/clear-mock-emails)
+     (email/expect-mock-emails 1)
+     (-> state
+         (follow "deploy tokens")
+         (fill-in "Token name" token-name)
+         (cond-> scope (choose "Token scope" scope))
+         (cond-> single-use? (check "Single use?"))
+         (cond-> expires-in (choose "Expires in" expires-in))
+         (press "Create Token")
+         :enlive
+         (enlive/select [:div.new-token :> :pre])
+         (first)
+         (enlive/text)))))
 
 (defn- enlive->text
   [state selector]
@@ -136,4 +163,4 @@
                    :jar-file (io/resource jar)
                    :pom-file pom-file
                    :local-repo help/local-repo
-                   :repository {"local" (file-repo (:repo (config)))})))
+                   :repository {"local" (file-repo (:repo (config/config)))})))

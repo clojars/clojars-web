@@ -7,12 +7,12 @@
    [clojars.oauth.service :as oauth-service]
    [clojars.remote-service :as remote-service]
    [clojars.test-helper :as help]
-   [clojure.test :refer [deftest testing is join-fixtures use-fixtures]]))
+   [clojure.test :refer [deftest testing is use-fixtures]]))
 
 (use-fixtures :each
-  (join-fixtures
-   [help/default-fixture
-    help/with-clean-database]))
+  help/default-fixture
+  help/with-clean-database
+  help/run-test-app)
 
 (defn handle-workflow [req]
   ((workflow (oauth-service/new-mock-oauth-service
@@ -20,7 +20,8 @@
               {:authorize-uri
                "https://gitlab.com/oauth/authorize"})
              (remote-service/new-mock-remote-service)
-             help/*db*)
+             help/*db*
+             (:event-emitter help/system))
    req))
 
 (deftest test-authorization
@@ -55,12 +56,14 @@
                  :params {:code "1234567890"}}
             response (handle-workflow req)
 
-            {:keys [auth-provider identity provider-login username]} response]
+            {:keys [auth-provider identity provider-login username]} response
+            user (db/find-user help/*db* username)]
 
         (is (= "GitLab" auth-provider))
         (is (= "johndoe" identity))
         (is (= "jd" provider-login))
         (is (= "johndoe" username))
+        (is (:email_verified user))
         (is (db/find-group-verification help/*db* "com.gitlab.jd"))
         (is (db/find-group-verification help/*db* "io.gitlab.jd"))))
 

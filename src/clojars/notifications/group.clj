@@ -2,11 +2,11 @@
   (:require
    [clojars.notifications :as notifications]
    [clojars.notifications.common :as common]
-   [clojars.util :as util]))
+   [medley.core :as medley]))
 
 (defmethod notifications/notification :group-permission-added
-  [_type mailer
-   {:as _user username :user}
+  [_type
+   {:keys [mailer] {username :user} :user}
    {:as data :keys [admin? admin-users group member-user scope-to-jar]}]
   (let [subject (format "A%s permission was added to the group %s"
                         (if admin? "n admin" "")
@@ -21,13 +21,13 @@
                  (format "'%s'" scope-to-jar))
                username)
               (common/details-table data)]
-        notify-users (util/distinct-by :user (conj admin-users member-user))]
+        notify-users (medley/distinct-by :user (conj admin-users member-user))]
     (doseq [{email :email username :user} notify-users]
       (notifications/send mailer email subject (conj body (common/account-footer username))))))
 
 (defmethod notifications/notification :group-permission-removed
-  [_type mailer
-   {:as _user username :user}
+  [_type
+   {:keys [mailer] {username :user} :user}
    {:as data :keys [admin-users group member-user scope-to-jar]}]
   (let [subject (format "A permission was removed from the group %s"
                         group)
@@ -40,6 +40,6 @@
                  (format "'%s'" scope-to-jar))
                username)
               (common/details-table data)]
-        notify-users (util/distinct-by :user (conj admin-users member-user))]
+        notify-users (medley/distinct-by :user (conj admin-users member-user))]
     (doseq [{email :email username :user} notify-users]
       (notifications/send mailer email subject (conj body (common/account-footer username))))))

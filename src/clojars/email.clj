@@ -53,12 +53,15 @@
 (def mock-emails (atom []))
 
 (let [email-latch (atom nil)]
+  (defn clear-mock-emails
+    []
+    (reset! mock-emails []))
   (defn expect-mock-emails
     "Sets up the email mock to wait for `n` emails in `wait-for-mock-emails`."
     ([]
      (expect-mock-emails 1))
     ([n]
-     (reset! mock-emails [])
+     (clear-mock-emails)
      (reset! email-latch (CountDownLatch. n))))
 
   (defn wait-for-mock-emails
