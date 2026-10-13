@@ -12,7 +12,10 @@ Newest items at the top. Note that updates before 2022-August were copied from
 
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-10-10.2352][2026-10-10.2352]]
 + [[https://github.com/clojars/clojars-web/pull/979][Address CVE-2026-104721, CVE-2026-107314, CVE-2026-107315]] ([[https://github.com/tobias][Toby Crawley]])
-  
+
+*** [[https://github.com/clojars/clojars-web/releases/tag/2026-10-13.2361][2026-10-13.2361]]
++ [[https://github.com/clojars/clojars-web/pull/980][Implement email address validation]]. New registrations must verify their emails before logging in. Existing users will get an email asking them to verify on every login. We will require all users to be verified before logging in starting 2027-01-01. ([[https://github.com/tobias][Toby Crawley]])
+
 ** 2026-September
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-09-16.2327][2026-09-16.2327]]
 + [[https://github.com/clojars/clojars-web/pull/969][Include username in email footer]] ([[https://github.com/tobias][Toby Crawley]])
