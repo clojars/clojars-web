@@ -7,7 +7,8 @@
    [clojars.search :as search]
    [clojars.stats :as stats]
    [clojure.java.io :as io]
-   [clojure.string :as str])
+   [clojure.string :as str]
+   [next.jdbc :as jdbc])
   (:import
    (java.io
     File)
@@ -21,18 +22,23 @@
 (set! *warn-on-reflection* true)
 
 (defn clear-database! [db]
-  (try
-    (db/do-commands
-     db
-     ["delete from deps"
-      "delete from permissions"
-      "delete from jars"
-      "delete from users"
-      "delete from group_verifications"
-      "delete from group_settings"
-      "delete from audit"
-      "delete from session_store"])
-    (catch Exception _)))
+  (jdbc/execute!
+   db
+   ["DO $$
+   DECLARE
+     tables text;
+   BEGIN
+     SELECT string_agg(table_name::text, ',')
+     INTO tables
+     FROM information_schema.tables
+     WHERE table_schema = 'public'
+     AND table_type = 'BASE TABLE'
+     AND table_name != 'migrations';
+
+     IF tables IS NOT NULL THEN
+       EXECUTE 'TRUNCATE TABLE ' || tables || ' CASCADE';
+     END IF;
+   END; $$;"]))
 
 (defn add-test-users
   "Adds n test users of the form test0/test0."

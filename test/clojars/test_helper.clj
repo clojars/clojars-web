@@ -83,14 +83,12 @@
 
 (declare ^:dynamic *db*)
 
-(def clear-database setup/clear-database!)
-
 (defn with-clean-database [f]
   (binding [config/*profile* "test"]
     ;; double binding since ^ needs to be bound for config to load
     ;; properly
     (binding [*db* (:db (config/config))]
-      (clear-database *db*)
+      (setup/clear-database! *db*)
       (with-out-str
         (migrate/migrate *db*))
       (f))))
@@ -144,7 +142,7 @@
                              :github (oauth-service/new-mock-oauth-service "GitHub" {})))]
       (let [db (get-in system [:db :spec])]
         (try
-          (clear-database db)
+          (setup/clear-database! db)
           (with-out-str
             (migrate/migrate db))
           (f)
