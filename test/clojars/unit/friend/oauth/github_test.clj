@@ -1,7 +1,9 @@
 (ns clojars.unit.friend.oauth.github-test
   (:require
-   [clojars.db :as db]
    [clojars.friend.oauth.github :refer [workflow]]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.user :as user-m]
    ;; for mulitmethods
    [clojars.oauth.github]
    [clojars.oauth.service :as oauth-service]
@@ -44,7 +46,7 @@
 (deftest test-callback
   (remote-service/with-mocking
     (testing "with a valid user"
-      (db/add-user help/*db* "john.doe@example.org" "johndoe" "pwd12345")
+      (user-m/add-user help/*db* "john.doe@example.org" "johndoe" "pwd12345")
       (set-mock-responses
        [{:email "john.doe@example.org"
          :primary true
@@ -56,18 +58,18 @@
             response (handle-workflow req)
 
             {:keys [auth-provider identity provider-login username]} response
-            user (db/find-user help/*db* username)]
+            user (user-m/find-user help/*db* username)]
 
         (is (= "GitHub" auth-provider))
         (is (= "johndoe" identity))
         (is (= "jd" provider-login))
         (is (= "johndoe" username))
         (is (:email_verified user))
-        (is (db/find-group-verification help/*db* "com.github.jd"))
-        (is (db/find-group-verification help/*db* "io.github.jd"))))
+        (is (group-verification-m/find-group-verification help/*db* "com.github.jd"))
+        (is (group-verification-m/find-group-verification help/*db* "io.github.jd"))))
 
     (testing "with a valid upcased user"
-      (db/add-user help/*db* "john.doe2@example.org" "johndoe2" "pwd12345")
+      (user-m/add-user help/*db* "john.doe2@example.org" "johndoe2" "pwd12345")
       (set-mock-responses
        [{:email "john.doe2@example.org"
          :primary true
@@ -84,11 +86,11 @@
         (is (= "johndoe2" identity))
         (is (= "Jd2" provider-login))
         (is (= "johndoe2" username))
-        (is (db/find-group-verification help/*db* "com.github.jd2"))
-        (is (db/find-group-verification help/*db* "io.github.jd2"))))
+        (is (group-verification-m/find-group-verification help/*db* "com.github.jd2"))
+        (is (group-verification-m/find-group-verification help/*db* "io.github.jd2"))))
 
     (testing "with a valid upcased email"
-      (db/add-user help/*db* "john.doe3@example.org" "johndoe3" "pwd12345")
+      (user-m/add-user help/*db* "john.doe3@example.org" "johndoe3" "pwd12345")
       (set-mock-responses
        [{:email "John.doe3@example.org"
          :primary true
@@ -105,11 +107,11 @@
         (is (= "johndoe3" identity))
         (is (= "jd3" provider-login))
         (is (= "johndoe3" username))
-        (is (db/find-group-verification help/*db* "com.github.jd3"))
-        (is (db/find-group-verification help/*db* "io.github.jd3"))))
+        (is (group-verification-m/find-group-verification help/*db* "com.github.jd3"))
+        (is (group-verification-m/find-group-verification help/*db* "io.github.jd3"))))
 
     (testing "with a valid user but group already exists"
-      (db/add-admin help/*db* "com.github.johnd" db/SCOPE-ALL "someone" "clojars")
+      (permission-m/add-admin help/*db* "com.github.johnd" permission-m/SCOPE-ALL "someone" "clojars")
       (set-mock-responses
        [{:email "john.doe@example.org"
          :primary true
@@ -125,11 +127,11 @@
         (is (= "johndoe" identity))
         (is (= "johnd" provider-login))
         (is (= "johndoe" username))
-        (is (not (db/find-group-verification help/*db* "com.github.johnd")))
-        (is (db/find-group-verification help/*db* "io.github.johnd"))))
+        (is (not (group-verification-m/find-group-verification help/*db* "com.github.johnd")))
+        (is (group-verification-m/find-group-verification help/*db* "io.github.johnd"))))
 
     (testing "with a valid user which the clojars email is not the primary one"
-      (db/add-user help/*db* "jane.dot@example.org" "janedot" "pwd12345")
+      (user-m/add-user help/*db* "jane.dot@example.org" "janedot" "pwd12345")
       (set-mock-responses
        [{:email "jane.dot@company.com"
          :primary true

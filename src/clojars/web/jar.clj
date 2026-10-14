@@ -3,9 +3,9 @@
    [cheshire.core :as json]
    [clojars.auth :as auth]
    [clojars.config :refer [config]]
-   [clojars.db :as db :refer [find-jar jar-exists]]
    [clojars.file-utils :as fu]
    [clojars.maven :as maven]
+   [clojars.models.jar :as jar-m]
    [clojars.stats :as stats]
    [clojars.web.common :refer [audit-table html-doc jar-link
                                tag jar-url jar-name jar-versioned-url group-is-name?
@@ -58,7 +58,7 @@
 
 (defn dependency-link [db dep]
   (link-to
-   (if (jar-exists db (:group_name dep) (:jar_name dep)) (jar-url dep) (maven-jar-url dep))
+   (if (jar-m/jar-exists db (:group_name dep) (:jar_name dep)) (jar-url dep) (maven-jar-url dep))
    (if-some [version (:version dep)]
      (format "%s %s" (jar-name dep) version)
      (jar-name dep))))
@@ -241,7 +241,7 @@
                                 #(set/rename-keys % {:dep_group_name :group_name
                                                      :dep_jar_name   :jar_name
                                                      :dep_version    :version})))
-                              (db/find-dependencies db group_name jar_name version)))]
+                              (jar-m/find-dependencies db group_name jar_name version)))]
     (list
      [:h3 "Dependencies"]
      [:ul#dependencies
@@ -250,7 +250,7 @@
 
 (defn- get-dependents [db {:keys [group_name jar_name]}]
   (filter #(= "compile" (:dep_scope %))
-          (db/find-jar-dependents db group_name jar_name)))
+          (jar-m/find-jar-dependents db group_name jar_name)))
 
 (defn- dependents [db jar version-count]
   (when-some [all-deps (seq (get-dependents db jar))]
@@ -449,7 +449,7 @@
         [:tspan {:fill clojars-color} "clojars.org"]]])))
 
 (defn make-latest-version-svg [db group-id artifact-id]
-  (let [jar (find-jar db group-id artifact-id)]
+  (let [jar (jar-m/find-jar db group-id artifact-id)]
     (hiccup.core/html
      "<?xml version=\"1.0\" standalone=\"no\"?>"
      "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
@@ -459,5 +459,5 @@
 (defn make-latest-version-json
   "Return the latest version of a JAR as JSON"
   [db group-id artifact-id]
-  (let [jar (find-jar db group-id artifact-id)]
+  (let [jar (jar-m/find-jar db group-id artifact-id)]
     (json/generate-string (select-keys jar [:version]))))

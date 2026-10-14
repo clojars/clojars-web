@@ -10,6 +10,9 @@
    [clojars.errors :as errors]
    [clojars.http-kit :as http-kit]
    [clojars.maven :as maven]
+   [clojars.models.audit :as audit-m]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.permission :as permission-m]
    [clojars.oauth.service :as oauth-service]
    [clojars.s3 :as s3]
    [clojars.search :as search]
@@ -207,8 +210,8 @@
 
 (defn add-verified-group
   [account group]
-  (db/add-group *db* account group)
-  (db/verify-group! *db* account group))
+  (permission-m/add-group *db* account group)
+  (group-verification-m/verify-group! *db* account group))
 
 (defmacro assert-email-user-footer
   [addresses->usernames emails]
@@ -224,7 +227,7 @@
 (defmacro match-audit
   [params m]
   `(let [db# (:db (config/config))
-         audit# (first (db/find-audit db# ~params))]
+         audit# (first (audit-m/find-audit db# ~params))]
      (is (~'match? ~m audit#))))
 
 (defmacro with-time

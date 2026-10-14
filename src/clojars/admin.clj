@@ -3,6 +3,11 @@
    [clojars.config :refer [config]]
    [clojars.db :as db]
    [clojars.file-utils :as fu]
+   [clojars.models.deploy-token :as deploy-token-m]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.user :as user-m]
    [clojars.search :as search]
    [clojars.storage :as storage]
    [clojure.java.io :as io]
@@ -58,7 +63,7 @@
               "     if no version is provided"])))
 
 (defn delete-group [group-id]
-  (if (seq (db/group-activenames *db* group-id))
+  (if (seq (permission-m/group-activenames *db* group-id))
     (do
       (println "Giving you a fn to delete group" group-id)
       (fn []
@@ -66,16 +71,16 @@
         (let [path (segments->path [group-id])]
           (path->backup path *storage* (:deletion-backup-dir (config)))
           (storage/remove-path *storage* path))
-        (db/delete-jars *db* group-id)
-        (db/delete-group *db* group-id)
+        (jar-m/delete-jars *db* group-id)
+        (permission-m/delete-group *db* group-id)
         (search/delete! *search* group-id)))
     (println "No group found under" group-id)))
 
 (defn delete-jars [group-id jar-id & [version]]
   (let [pretty-coords (format "%s/%s %s" group-id jar-id (or version "(all versions)"))]
     (if-let [{:keys [description]} (if version
-                                     (db/find-jar *db* group-id jar-id version)
-                                     (db/find-jar *db* group-id jar-id))]
+                                     (jar-m/find-jar *db* group-id jar-id version)
+                                     (jar-m/find-jar *db* group-id jar-id))]
       (do
         (println "Giving you a fn to delete jars that match" pretty-coords)
         (when-not
@@ -86,7 +91,7 @@
           (let [path (segments->path [group-id jar-id version])]
             (path->backup path *storage* (:deletion-backup-dir (config)))
             (storage/remove-path *storage* path))
-          (apply db/delete-jars *db* group-id jar-id (if version [version] []))
+          (apply jar-m/delete-jars *db* group-id jar-id (if version [version] []))
           (when-not version (search/delete! *search* group-id jar-id))))
       (println "No artifacts found under" group-id jar-id version))))
 
@@ -96,7 +101,7 @@
   verification record or an error string if the group is a reserved
   name or the user doesn't have access to it."
   [username group-name]
-  (let [actives (db/group-activenames *db* group-name)]
+  (let [actives (permission-m/group-activenames *db* group-name)]
     (cond
       (and (seq actives)
            (not (some #{username} actives)))
@@ -112,9 +117,9 @@
 
       :else
       (do
-        (db/add-group *db* username group-name)
-        (db/verify-group! *db* username group-name)
-        (db/find-group-verification *db* group-name)))))
+        (permission-m/add-group *db* username group-name)
+        (group-verification-m/verify-group! *db* username group-name)
+        (group-verification-m/find-group-verification *db* group-name)))))
 
 (defn- get-txt-records
   [domain]
@@ -147,9 +152,9 @@
     (printf "TXT records for %s:\n" domain)
     (pprint txt)
     (if-some [[_ username] (some #(re-find #"^clojars[- ]?(.+)$" %) txt)]
-      (let [group-active-members (seq (db/group-activenames *db* group))
-            group-verification (db/find-group-verification *db* group)
-            user-record (db/find-user *db* username)]
+      (let [group-active-members (seq (permission-m/group-activenames *db* group))
+            group-verification (group-verification-m/find-group-verification *db* group)
+            user-record (user-m/find-user *db* username)]
         (printf "Found username %s\n" username)
         (cond
           (nil? user-record)
@@ -185,24 +190,24 @@
 
   Returns the new username."
   [old-username]
-  (let [user-record (db/find-user *db* old-username)
+  (let [user-record (user-m/find-user *db* old-username)
         _ (when (nil? user-record)
             (throw (ex-info (format "User %s not found!" old-username) {})))
         user-id (:id user-record)
         new-username (format "deleted_%s" (System/currentTimeMillis))
         empty-default-groups (into []
                                    (filter
-                                    #(empty? (db/jars-by-groupname *db* %)))
-                                   (db/default-user-groups old-username))]
+                                    #(empty? (jar-m/jars-by-groupname *db* %)))
+                                   (user-m/default-user-groups old-username))]
     (jdbc/with-transaction [tx *db*]
-      (db/disable-otp! tx old-username)
-      (db/clear-password-reset-code! tx old-username)
-      (db/disable-deploy-tokens-for-user tx user-id)
-      (db/rename-user tx old-username new-username)
+      (user-m/disable-otp! tx old-username)
+      (user-m/clear-password-reset-code! tx old-username)
+      (deploy-token-m/disable-deploy-tokens-for-user tx user-id)
+      (user-m/rename-user tx old-username new-username)
       ;; Clear email, set random password
-      (db/update-user tx new-username ""
-                      (db/hexadecimalize (db/generate-secure-token 20)))
-      (run! (fn [group] (db/delete-group tx group)) empty-default-groups))
+      (user-m/update-user tx new-username ""
+                          (db/generate-secure-hex-token 20))
+      (run! (fn [group] (permission-m/delete-group tx group)) empty-default-groups))
     new-username))
 
 (defn handler [mapping]

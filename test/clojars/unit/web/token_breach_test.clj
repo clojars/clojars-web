@@ -4,9 +4,10 @@
    [buddy.core.dsa :as dsa]
    [buddy.core.keys :as keys]
    [cheshire.core :as json]
-   [clojars.db :as db]
    [clojars.email :as email]
    [clojars.http-client :as http]
+   [clojars.models.deploy-token :as deploy-token-m]
+   [clojars.models.user :as user-m]
    ;; for defmethods
    [clojars.notifications.token]
    [clojars.test-helper :as help]
@@ -46,7 +47,7 @@
 
 (defn- find-token [username token-name]
   (filter-some #(= token-name (:name %))
-               (db/find-user-tokens-by-username help/*db* username)))
+               (deploy-token-m/find-user-tokens-by-username help/*db* username)))
 
 (deftest test-github-token-breach-request-with-invalid-identifier
   (with-redefs [http/get (constantly {:body github-response})]
@@ -57,11 +58,11 @@
       (is (= 422 (:status res))))))
 
 (deftest test-github-token-breach-reporting-works
-  (let [_user (db/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
+  (let [_user (user-m/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
         app (help/app)]
     (with-redefs [http/get (constantly {:body github-response})]
       (testing "when token is enabled"
-        (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
+        (let [token (deploy-token-m/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
               token-str (:token token)
               res (app (build-breach-request token-str))
               db-token (find-token "ham" "a token")
@@ -82,10 +83,10 @@
                                          @email/mock-emails)))
 
       (testing "when token is disabled"
-        (let [token (db/add-deploy-token help/*db* "ham" "another token" nil nil false nil)
+        (let [token (deploy-token-m/add-deploy-token help/*db* "ham" "another token" nil nil false nil)
               token-str (:token token)
               db-token (find-token "ham" "another token")
-              _ (db/disable-deploy-token help/*db* (:id db-token))
+              _ (deploy-token-m/disable-deploy-token help/*db* (:id db-token))
               _ (email/expect-mock-emails 1)
               res (app (build-breach-request token-str))
               _ (is (true? (email/wait-for-mock-emails)))
@@ -104,7 +105,7 @@
                                          @email/mock-emails)))
 
       (testing "with existing and non-existent tokens"
-        (let [token (db/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
+        (let [token (deploy-token-m/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
               token-str (:token token)
               res (app (build-breach-request token-str "non-existent-token"))
               db-token (find-token "ham" "a token")]

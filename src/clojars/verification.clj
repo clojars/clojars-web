@@ -2,6 +2,8 @@
   (:require
    [clojars.db :as db]
    [clojars.http-client :as http]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.permission :as permission-m]
    [clojars.web.common :as common]
    [clojure.java.shell :as shell]
    [clojure.set :as set]
@@ -54,8 +56,8 @@
   [db username group]
   ;; will only create the group if it doesn't already exist
   (let [group (str/lower-case group)]
-    (db/add-group db username group)
-    (db/verify-group! db username group)))
+    (permission-m/add-group db username group)
+    (group-verification-m/verify-group! db username group)))
 
 (defn- verify-group
   [db request username group]
@@ -92,8 +94,8 @@
       (let [txt                  (get-txt-records domain)
             request              (assoc request :txt-records txt)
             username-from-txt    (parse-text-records txt)
-            group-active-members (db/group-activenames db group)
-            group-verification   (db/find-group-verification db group)]
+            group-active-members (permission-m/group-activenames db group)
+            group-verification   (group-verification-m/find-group-verification db group)]
         (cond
           (not username-from-txt)
           (err request "No valid verification TXT record found.")
@@ -122,7 +124,7 @@
   "Verifies a group that is a subgroup of an already verified group."
   [db {:as request :keys [username group]}]
   (let [group              (str/lower-case group)
-        group-verification (db/find-group-verification db group)]
+        group-verification (group-verification-m/find-group-verification db group)]
     (cond
       (not (valid-identifier? group))
       (err request "The group name is not a valid reverse-domain name.")
@@ -137,7 +139,7 @@
                                    (fn [{:keys [group_name]}]
                                      (when (str/starts-with? group (str group_name "."))
                                        group_name))
-                                   (db/find-group-verifications-for-users-groups db username))]
+                                   (group-verification-m/find-group-verifications-for-users-groups db username))]
         (verify-group db (assoc request :parent-group parent-group-name) username group)
         (err request "The group is not a subgroup of a verified group.")))))
 
@@ -177,7 +179,7 @@
                                   (comp
                                    (map
                                     (fn [group-name]
-                                      (db/find-group-verification db group-name)))
+                                      (group-verification-m/find-group-verification db group-name)))
                                    (remove nil?))
                                   candidate-groups)
         group-verification-names (set (map :group_name group-verifications))

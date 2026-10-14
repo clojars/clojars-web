@@ -5,6 +5,7 @@
    [clojars.integration.steps :refer [create-deploy-token enable-mfa login-as
                                       login-as-with-otp+retry register-as
                                       register-unverified-as]]
+   [clojars.models.user :as user-m]
    [clojars.test-helper :as help]
    [clojars.time :as time]
    [clojure.test :refer [deftest is testing use-fixtures]]
@@ -128,7 +129,7 @@
 (deftest email-verification-link-verifies-and-redirects-to-login
   ;; Clicking the verification link marks the email verified and redirects to login.
   (let [app (help/app)]
-    (db/add-user help/*db* "unverified@example.org" "unverified" "password1234")
+    (user-m/add-user help/*db* "unverified@example.org" "unverified" "password1234")
     (email/expect-mock-emails 1)
     (login-as (session app) "unverified" "password1234")
     (is (true? (email/wait-for-mock-emails)))
@@ -143,7 +144,7 @@
             (has (text? "Login")))
           (within [:div#notice]
             (has (text? "Your email address has been confirmed. Please log in."))))
-      (is (true? (:email_verified (db/find-user help/*db* "unverified")))))))
+      (is (true? (:email_verified (user-m/find-user help/*db* "unverified")))))))
 
 (deftest expired-verification-link-shows-error-page
   ;; An invalid or expired link shows the error page.

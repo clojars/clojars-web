@@ -4,6 +4,10 @@
    [clojars.db :as db]
    [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.models.deploy-token :as deploy-token-m]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.user :as user-m]
    [clojars.routes.common :as common]
    [clojars.web.token :as view]
    [clojure.string :as str]
@@ -16,9 +20,9 @@
 (defn- get-tokens [db flash-msg]
   (auth/with-account
     #(view/show-tokens %
-                       (db/find-user-tokens-by-username db %)
-                       (db/jars-by-groups-for-username db %)
-                       (db/find-groupnames db %)
+                       (deploy-token-m/find-user-tokens-by-username db %)
+                       (jar-m/jars-by-groups-for-username db %)
+                       (permission-m/find-groupnames db %)
                        {:message flash-msg})))
 
 (defn- parse-scope
@@ -42,8 +46,8 @@
             single-use? (boolean single_use)
             [group-name jar-name] (parse-scope scope)
             expires-at (calculate-expires-at expires_in)
-            token-record (db/add-deploy-token db account name group-name jar-name
-                                                single-use? expires-at)]
+            token-record (deploy-token-m/add-deploy-token db account name group-name jar-name
+                                                          single-use? expires-at)]
         (event/emit event-emitter :deploy-token-created
                     (merge {:username     account
                             :token-name   name
@@ -56,30 +60,30 @@
                    :username account
                    :status :success})
         (view/show-tokens account
-                          (db/find-user-tokens-by-username db account)
-                          (db/jars-by-username db account)
-                          (db/find-groupnames db account)
+                          (deploy-token-m/find-user-tokens-by-username db account)
+                          (jar-m/jars-by-username db account)
+                          (permission-m/find-groupnames db account)
                           {:new-token token-record})))))
 
 (defn- find-token [db token-id]
   (when-let [id-int (try
                       (Integer/parseInt token-id)
                       (catch Exception _))]
-    (db/find-token db id-int)))
+    (deploy-token-m/find-token db id-int)))
 
 (defn- disable-token [db token-id]
   (auth/with-account
     (fn [account]
       (log/with-context {:username account}
         (let [token (find-token db token-id)
-              user (db/find-user db account)
+              user (user-m/find-user db account)
               found? (and token
                           (= (:user_id token)
                              (:id user)))]
           (if found?
             (do
               (log/info {:status :success})
-              (db/disable-deploy-token db (:id token))
+              (deploy-token-m/disable-deploy-token db (:id token))
               (assoc (redirect "/tokens")
                      :flash (format "Token '%s' disabled." (:name token))))
             (do

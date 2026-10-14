@@ -2,9 +2,10 @@
   (:gen-class)
   (:require
    [clojars.config :refer [config]]
-   [clojars.db :as db]
    [clojars.file-utils :as fu]
    [clojars.maven :as maven]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.user :as user-m]
    [clojars.s3 :as s3]
    [clojars.util :refer [concatv]]
    [clojure.data.xml :as xml]
@@ -33,7 +34,7 @@
                      distinct-jars)}))
 
 (defn- all-grouped-jars [db]
-  (->> (db/all-jars db)
+  (->> (jar-m/all-jars db)
        (maven/sort-by-version)
        (reverse) ;; We want the most recent version first
        (group-by (juxt :group_name :jar_name))))
@@ -79,7 +80,7 @@
          (s3/list-object-keys s3-bucket))))
 
 (defn jar-list [db]
-  (->> (db/all-jars db)
+  (->> (jar-m/all-jars db)
        (map (fn [{:keys [group_name jar_name version]}]
               [(if (= group_name jar_name)
                  (symbol jar_name)
@@ -107,7 +108,7 @@
                           (comp
                            (map :group_name)
                            (map #(str "/groups/" %)))
-                          (db/all-groups db))
+                          (jar-m/all-groups db))
 
         artifact-links (into []
                              (mapcat
@@ -128,7 +129,7 @@
 
         user-links (into []
                          (map :user)
-                         (db/all-users db))
+                         (user-m/all-users db))
 
         all-links (concat base-links
                           group-links

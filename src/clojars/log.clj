@@ -1,7 +1,7 @@
 (ns clojars.log
   "Provides redacted edn logging via clojure.tools.logging."
   (:require
-   [clojars.db :as db]
+   [clojars.models.audit :as audit-m]
    [clojure.tools.logging.readable :as log])
   (:import
    java.util.UUID))
@@ -65,7 +65,7 @@
 (defn audit
   [db m]
   (let [{:keys [group artifact message tag username version]} (merge *context* m)]
-    (db/add-audit db (name tag) username group artifact version message)))
+    (audit-m/add-audit db (name tag) username group artifact version message)))
 
 (defn trace-id
   []

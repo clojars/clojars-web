@@ -8,9 +8,9 @@
   (:gen-class)
   (:require
    [clojars.config :refer [config]]
-   [clojars.db :as db]
    [clojars.file-utils :as fu]
    [clojars.maven :as maven]
+   [clojars.models.jar :as jar-m]
    [clojure.data.xml :as xml]
    [clojure.java.io :as io])
   (:import
@@ -60,7 +60,7 @@
 
 (defn export-all-poms
   [db repo-dir]
-  (doseq [jar (db/all-jars db)]
+  (doseq [jar (jar-m/all-jars db)]
     (process-jar repo-dir jar)))
 
 (defn -main

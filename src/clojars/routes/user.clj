@@ -2,7 +2,6 @@
   (:require
    [cemerick.friend.credentials :as creds]
    [clojars.auth :as auth]
-   [clojars.db :as db]
    [clojars.event :as event]
    [clojars.hcaptcha :as hcaptcha]
    [clojars.http-utils :as http-utils]
@@ -15,7 +14,7 @@
    [ring.util.response :refer [redirect]]))
 
 (defn show [db username]
-  (when-let [user (db/find-user db username)]
+  (when-let [user (user-m/find-user db username)]
     (auth/try-account
      #(view/show-user db % user))))
 
@@ -40,10 +39,10 @@
 
       (creds/bcrypt-verify password (:password user))
       (do
-        (db/set-otp-secret-key! db account)
+        (user-m/set-otp-secret-key! db account)
         (log/info {:status :success})
         (with-data-img-src
-          (view/setup-mfa account (db/find-user db account) nil)))
+          (view/setup-mfa account (user-m/find-user db account) nil)))
 
       :else
       (do
@@ -69,8 +68,8 @@
                :flash "Two-factor auth already enabled."))
 
       (auth/valid-totp-token? otp user)
-      (let [recovery-code (db/enable-otp! db account)
-            user (db/find-user db account)]
+      (let [recovery-code (user-m/enable-otp! db account)
+            user (user-m/find-user db account)]
         (log/info {:status :success})
         (event/emit event-emitter :mfa-activated
                     (merge {:username account} details))
@@ -101,7 +100,7 @@
 
       (creds/bcrypt-verify password (:password user))
       (do
-        (db/disable-otp! db account)
+        (user-m/disable-otp! db account)
         (log/info {:status :success})
         (event/emit event-emitter
                     :mfa-deactivated
@@ -122,28 +121,28 @@
   (compojure/routes
    (GET "/profile" {:keys [flash]}
         (auth/with-account
-          #(view/profile-form % (db/find-user db %) flash)))
+          #(view/profile-form % (user-m/find-user db %) flash)))
    (POST "/profile" {:as request :keys [params]}
          (auth/with-account
            #(view/update-profile db event-emitter % params (common/request-details request))))
 
    (GET "/mfa" {:keys [flash]}
         (auth/with-account
-          #(view/mfa % (db/find-user db %) flash)))
+          #(view/mfa % (user-m/find-user db %) flash)))
    (POST "/mfa" {:keys [params]}
          (auth/with-account
-           #(create-mfa db % (db/find-user db %) params)))
+           #(create-mfa db % (user-m/find-user db %) params)))
    (PUT "/mfa" {:as request :keys [params]}
         (auth/with-account
           #(confirm-mfa db event-emitter %
-                        (db/find-user db %) params (common/request-details request))))
+                        (user-m/find-user db %) params (common/request-details request))))
    (DELETE "/mfa" {:as request :keys [params]}
            (auth/with-account
-             #(disable-mfa db event-emitter % (db/find-user db %) params (common/request-details request))))
+             #(disable-mfa db event-emitter % (user-m/find-user db %) params (common/request-details request))))
 
    (GET "/notification-preferences" {:keys [flash]}
         (auth/with-account
-          #(view/notifications-form % (db/find-user db %) flash)))
+          #(view/notifications-form % (user-m/find-user db %) flash)))
    (POST "/notification-preferences" {:keys [params]}
          (auth/with-account
            #(view/update-notifications db % params)))

@@ -1,8 +1,8 @@
 (ns clojars.routes.artifact
   (:require
    [clojars.auth :as auth]
-   [clojars.db :as db]
    [clojars.http-utils :as http-utils]
+   [clojars.models.jar :as jar-m]
    [clojars.web.jar :as view]
    [compojure.core :as compojure :refer [GET]]
    [ring.util.response :as response]))
@@ -13,34 +13,34 @@
   (http-utils/with-extra-csp-srcs {:img-src ["https://img.shields.io"]} body))
 
 (defn show [db stats group-id artifact-id]
-  (when-some [artifact (db/find-jar db group-id artifact-id)]
+  (when-some [artifact (jar-m/find-jar db group-id artifact-id)]
     (with-shields-io-img-src
       (auth/try-account
        #(view/show-jar db
                        stats
                        %
                        artifact
-                       (db/recent-versions db group-id artifact-id 5)
-                       (db/count-versions db group-id artifact-id))))))
+                       (jar-m/recent-versions db group-id artifact-id 5)
+                       (jar-m/count-versions db group-id artifact-id))))))
 
 (defn list-versions [db group-id artifact-id]
-  (when-let [artifact (db/find-jar db group-id artifact-id)]
+  (when-let [artifact (jar-m/find-jar db group-id artifact-id)]
     (auth/try-account
      #(view/show-versions % artifact
-                          (db/recent-versions db group-id artifact-id)))))
+                          (jar-m/recent-versions db group-id artifact-id)))))
 
 (defn list-dependents [db group-id artifact-id]
-  (when-let [artifact (db/find-jar db group-id artifact-id)]
+  (when-let [artifact (jar-m/find-jar db group-id artifact-id)]
     (auth/try-account
      #(view/show-dependents db % artifact))))
 
 (defn- show-version [db stats group-id artifact-id version]
-  (when-some [artifact (db/find-jar db group-id artifact-id version)]
+  (when-some [artifact (jar-m/find-jar db group-id artifact-id version)]
     (with-shields-io-img-src
       (auth/try-account
        #(view/show-jar db stats % artifact
-                       (db/recent-versions db group-id artifact-id 5)
-                       (db/count-versions db group-id artifact-id))))))
+                       (jar-m/recent-versions db group-id artifact-id 5)
+                       (jar-m/count-versions db group-id artifact-id))))))
 
 (defn response-based-on-format
   "render appropriate response based on the file type suffix provided:

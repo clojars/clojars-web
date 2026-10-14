@@ -1,9 +1,9 @@
 (ns clojars.friend.oauth
   (:require
    [cemerick.friend.workflows :as workflow]
-   [clojars.db :as db]
    [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.models.group-verification :as group-verification-m]
    [clojars.models.user :as user-m]
    [clojars.oauth.service :as oauth-service]
    [ring.util.response :refer [redirect]]))
@@ -33,7 +33,7 @@
                                       provider-name))})))
 
 (defn- find-user [{::keys [db emails oauth-service]}]
-  (if-let [user (db/find-user-by-email-in db emails)]
+  (if-let [user (user-m/find-user-by-email-in db emails)]
     {::user user}
     (let [provider-name (oauth-service/provider-name oauth-service)
           message (format "No account emails match the verified emails we got from %s"
@@ -81,6 +81,6 @@
           find-user
           auto-verify-email
           make-auth])]
-    (doseq [verify-result (db/maybe-verify-provider-groups db res)]
+    (doseq [verify-result (group-verification-m/maybe-verify-provider-groups db res)]
       (log/info verify-result))
     res))
