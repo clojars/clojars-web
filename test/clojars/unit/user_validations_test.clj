@@ -1,7 +1,8 @@
 (ns clojars.unit.user-validations-test
   (:require
-   [clojars.db :as db]
    [clojars.hcaptcha :as hcaptcha]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.user :as user-m]
    [clojars.remote-service :as remote-service]
    [clojars.test-helper :as help]
    [clojars.user-validations :as uv]
@@ -29,7 +30,7 @@
   (is (nil? (uv/validate {:email "foo@example.com"
                           :username "auser"}
                          (uv/user-validations help/*db*))))
-  (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
+  (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")
   (is (match?
        {:email ["A user already exists with this email"]}
        (uv/validate {:email "foo@example.com"
@@ -95,7 +96,7 @@
                          :username "auser"
                          :captcha "valid"}
                         (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
-      (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
+      (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")
       (is (match?
            {:username ["Username is already taken"]
             :email ["A user already exists with this email"]}
@@ -111,7 +112,7 @@
                          :username "admin"
                          :captcha "valid"}
                         (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
-      (db/add-group help/*db* "auser" "agroup")
+      (permission-m/add-group help/*db* "auser" "agroup")
       (is (match?
            {:username ["Username is already taken"]}
            (uv/validate {:email "foo2@example.com"
@@ -121,8 +122,8 @@
                         (uv/new-user-validations help/*db*  hcaptcha-service "password1234a")))))))
 
 (deftest test-reset-password-validations
-  (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
-  (let [reset-code (db/set-password-reset-code! help/*db* "auser")]
+  (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")
+  (let [reset-code (user-m/set-password-reset-code! help/*db* "auser")]
     (is (nil?
          (uv/validate {:reset-code reset-code
                        :password "password1234a"}
@@ -139,7 +140,7 @@
                       (uv/reset-password-validations help/*db* "password1234a"))))))
 
 (deftest current-password-validations
-  (db/add-user help/*db* "foo@example.com" "auser" "password1234a")
+  (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")
   (is (nil?
        (uv/validate {:current-password "password1234a"}
                     (uv/current-password-validations help/*db* "auser"))))

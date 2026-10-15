@@ -1,8 +1,8 @@
 (ns clojars.notifications
   (:refer-clojure :exclude [send])
   (:require
-   [clojars.db :as db]
    [clojars.event :as event]
+   [clojars.models.user :as user-m]
    [clojure.string :as str]))
 
 (defmulti notification
@@ -17,8 +17,8 @@
   (when (contains? (set (keys (methods notification))) type)
     (let [user' (cond
                   user     user
-                  user-id  (db/find-user-by-id db user-id)
-                  username (db/find-user db username)
+                  user-id  (user-m/find-user-by-id db user-id)
+                  username (user-m/find-user db username)
                   :else    nil)]
       (notification type
                     {:db db
@@ -30,3 +30,5 @@
   "Handles email notifications. Needs :db, :mailer."
   []
   (event/handler-component #'handler))
+
+

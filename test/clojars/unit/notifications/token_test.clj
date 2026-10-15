@@ -1,6 +1,6 @@
 (ns clojars.unit.notifications.token-test
   (:require
-   [clojars.db :as db]
+   [clojars.models.user :as user-m]
    [clojars.notifications :as notifications]
    ;; for defmethod
    [clojars.notifications.token]
@@ -17,7 +17,7 @@
   help/with-clean-database)
 
 (deftest deploy-token-created-handler-sends-safe-email
-  (db/add-user help/*db* "fixture@example.org" "fixture" "password1234")
+  (user-m/add-user help/*db* "fixture@example.org" "fixture" "password1234")
   (let [sent (atom [])]
     (notifications/handler
      {:db help/*db*
@@ -47,7 +47,7 @@
       (is (not (re-find #"CLOJARS_" body))))))
 
 (deftest deploy-token-created-email-includes-expiry-when-set
-  (db/add-user help/*db* "fixture@example.org" "fixture" "password1234")
+  (user-m/add-user help/*db* "fixture@example.org" "fixture" "password1234")
   (let [t (Timestamp/valueOf "2020-06-15 12:00:00")
         body-msg
         (let [out (atom nil)]

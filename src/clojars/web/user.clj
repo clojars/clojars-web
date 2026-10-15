@@ -2,10 +2,13 @@
   (:require
    [buddy.core.codecs :as codecs]
    [clojars.config :as config]
-   [clojars.db :as db]
    [clojars.event :as event]
    [clojars.hcaptcha :as hcaptcha]
    [clojars.log :as log]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.session :as session-m]
    [clojars.models.user :as user-m]
    [clojars.notifications.common :as notif-common]
    [clojars.user-validations :as uv]
@@ -115,10 +118,10 @@
           (log/info {:status :failed
                      :reason :validation-failed})
           (profile-form account params nil (apply concat (vals errors))))
-        (let [old-email (:email (db/find-user-by-user-or-email db account))
+        (let [old-email (:email (user-m/find-user-by-user-or-email db account))
               email-changed? (not= old-email email)
               password-changed? (seq password)]
-          (db/update-user db account email password)
+          (user-m/update-user db account email password)
           (log/info {:status :success})
           (when email-changed?
             (event/emit event-emitter :email-changed
@@ -129,7 +132,7 @@
             (do
               (event/emit event-emitter :password-changed
                           (merge {:username account} details))
-              (db/delete-sessions-for-user! db account)
+              (session-m/delete-sessions-for-user! db account)
               (-> (redirect "/login")
                   (assoc :session nil
                          :flash "Your password was updated. Please log in again.")))
@@ -160,7 +163,7 @@
 (defn update-notifications [db account {:keys [send-deploy-emails] :as _params}]
   (log/with-context {:tag :update-notification-preferences
                      :username account}
-    (db/update-user-notifications db account {:send_deploy_emails (boolean send-deploy-emails)})
+    (user-m/update-user-notifications db account {:send_deploy_emails (boolean send-deploy-emails)})
     (log/info {:status :success})
     (assoc (redirect "/notification-preferences")
            :flash "Notification preferences updated.")))
@@ -172,16 +175,16 @@
               (user :user)]
              [:div.col-xs-12.col-sm-6
               [:h2 "Projects"]
-              (unordered-list (map jar-link (db/jars-by-username db (user :user))))]
+              (unordered-list (map jar-link (jar-m/jars-by-username db (user :user))))]
              [:div.col-xs-12.col-sm-6
               [:h2 "Groups"]
               (unordered-list (map (fn [group-name]
-                                     (let [verified-group? (db/find-group-verification db group-name)]
+                                     (let [verified-group? (group-verification-m/find-group-verification db group-name)]
                                        [:div
                                         [:span (group-link group-name)]
                                         (when verified-group?
                                           verified-group-badge-small)]))
-                                   (db/find-groupnames db (user :user))))]]))
+                                   (permission-m/find-groupnames db (user :user))))]]))
 
 (defn forgot-password-form []
   (html-doc "Forgot password or username?" {}
@@ -197,7 +200,7 @@
 
 (defn- send-forgot-password-email
   [db mailer user details]
-  (let [reset-code (db/set-password-reset-code! db (:user user))
+  (let [reset-code (user-m/set-password-reset-code! db (:user user))
         base-url (:base-url (config/config))
         reset-password-url (str base-url "/password-resets/" reset-code)]
     (log/info {:tag :password-reset-code-generated})
@@ -220,7 +223,7 @@
 
 (defn forgot-password [db mailer {:keys [email-or-username]} details]
   (log/with-context {:email-or-username email-or-username}
-    (if-let [user (db/find-user-by-user-or-email db email-or-username)]
+    (if-let [user (user-m/find-user-by-user-or-email db email-or-username)]
       (send-forgot-password-email db mailer user details)
       (log/info {:tag :password-reset-user-not-found})))
   (html-doc "Forgot password?" {}
@@ -228,7 +231,7 @@
              [:p "If your account was found, you should get an email with a link to reset your password soon."]]))
 
 (defn reset-password-form [db reset-code & [errors]]
-  (if-let [user (db/find-user-by-password-reset-code db reset-code)]
+  (if-let [user (user-m/find-user-by-password-reset-code db reset-code)]
     (html-doc "Reset your password" {:footer-links? false}
               [:div.small-section
                [:h1 "Reset your password"]
@@ -269,14 +272,14 @@
         (log/info {:status :failed
                    :reason :validation-failed})
         (reset-password-form db reset-code (apply concat (vals errors))))
-      (let [{username :user} (db/find-user-by-password-reset-code db reset-code)]
-        (db/reset-user-password db username reset-code password)
+      (let [{username :user} (user-m/find-user-by-password-reset-code db reset-code)]
+        (user-m/reset-user-password db username reset-code password)
         (log/info {:status :success
                    :username username})
         (event/emit event-emitter :password-changed
                     (merge {:username username}
                            details))
-        (db/delete-sessions-for-user! db username)
+        (session-m/delete-sessions-for-user! db username)
         (assoc (redirect "/login")
                :flash "Your password was updated.")))))
 

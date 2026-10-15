@@ -1,10 +1,10 @@
 (ns clojars.integration.web-test
   (:require
    [cheshire.core :as json]
-   [clojars.db :as db]
    [clojars.errors :as errors]
    [clojars.http-client :as http]
    [clojars.log :as log]
+   [clojars.models.jar :as jar-m]
    [clojars.test-helper :as help]
    [clojars.web.dashboard :as dashboard]
    [clojure.test :refer [deftest is testing use-fixtures]]
@@ -69,7 +69,7 @@
 (deftest browse-page-renders-multiple-pages
   (help/add-verified-group "test-user" "tester")
   (doseq [i (range 21)]
-    (db/add-jar
+    (jar-m/add-jar
      help/*db*
      "test-user"
      {:name (str "tester" i) :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
@@ -95,7 +95,7 @@
 (deftest browse-page-can-jump
   (help/add-verified-group "test-user" "tester")
   (doseq [i (range 100 125)]
-    (db/add-jar
+    (jar-m/add-jar
      help/*db*
      "test-user"
      {:name (str "tester" i "a") :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))
@@ -114,7 +114,7 @@
 (deftest browse-page-rejects-invalid-utf-jump
   (help/add-verified-group "test-user" "tester")
   (doseq [i (range 100 125)]
-    (db/add-jar
+    (jar-m/add-jar
      help/*db*
      "test-user"
      {:name (str "tester" i "a") :group "tester" :version "0.1" :description "Huh" :authors ["Zz"]}))

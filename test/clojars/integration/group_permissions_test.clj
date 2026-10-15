@@ -1,8 +1,9 @@
 (ns clojars.integration.group-permissions-test
   (:require
-   [clojars.db :as db]
    [clojars.email :as email]
    [clojars.integration.steps :refer [login-as register-as]]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
    ;; for defmethods
    [clojars.notifications.group]
    [clojars.test-helper :as help]
@@ -40,7 +41,7 @@
                [:td (enlive/nth-of-type 3)]]
         (has (text? "No"))))
 
-  (is (some #{"fixture"} (db/group-membernames help/*db* "org.clojars.dantheman" db/SCOPE-ALL)))
+  (is (some #{"fixture"} (permission-m/group-membernames help/*db* "org.clojars.dantheman" permission-m/SCOPE-ALL)))
 
   (help/match-audit {:username "dantheman"}
                     {:tag "permission-added"
@@ -146,7 +147,7 @@
                [:td (enlive/nth-of-type 3)]]
         (has (text? "Yes"))))
 
-  (is (some #{"fixture"} (db/group-adminnames help/*db* "org.clojars.dantheman" db/SCOPE-ALL)))
+  (is (some #{"fixture"} (permission-m/group-adminnames help/*db* "org.clojars.dantheman" permission-m/SCOPE-ALL)))
 
   (help/match-audit {:username "dantheman"}
                     {:tag "permission-added"
@@ -214,14 +215,14 @@
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
-  (db/add-jar help/*db* "dantheman"
-              {:group "org.clojars.dantheman"
-               :name "test"
-               :version "0.0.1"})
-  (db/add-jar help/*db* "dantheman"
-              {:group "org.clojars.dantheman"
-               :name "test2"
-               :version "0.0.1"})
+  (jar-m/add-jar help/*db* "dantheman"
+                 {:group "org.clojars.dantheman"
+                  :name "test"
+                  :version "0.0.1"})
+  (jar-m/add-jar help/*db* "dantheman"
+                 {:group "org.clojars.dantheman"
+                  :name "test2"
+                  :version "0.0.1"})
   (-> (session (help/app))
       (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
@@ -265,10 +266,10 @@
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
-  (db/add-jar help/*db* "dantheman"
-              {:group "org.clojars.dantheman"
-               :name "test"
-               :version "0.0.1"})
+  (jar-m/add-jar help/*db* "dantheman"
+                 {:group "org.clojars.dantheman"
+                  :name "test"
+                  :version "0.0.1"})
   (-> (session (help/app))
       (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
@@ -339,10 +340,10 @@
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
-  (db/add-jar help/*db* "dantheman"
-              {:group "org.clojars.dantheman"
-               :name "test"
-               :version "0.0.1"})
+  (jar-m/add-jar help/*db* "dantheman"
+                 {:group "org.clojars.dantheman"
+                  :name "test"
+                  :version "0.0.1"})
   (testing "As admin for all scope"
     (-> (session (help/app))
         (login-as "dantheman" "password1234")
@@ -424,10 +425,10 @@
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
-  (db/add-jar help/*db* "dantheman"
-              {:group "org.clojars.dantheman"
-               :name "test"
-               :version "0.0.1"})
+  (jar-m/add-jar help/*db* "dantheman"
+                 {:group "org.clojars.dantheman"
+                  :name "test"
+                  :version "0.0.1"})
   (-> (session (help/app))
       (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
@@ -452,14 +453,14 @@
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
-  (db/add-jar help/*db* "dantheman"
-              {:group "org.clojars.dantheman"
-               :name "test"
-               :version "0.0.1"})
-  (db/add-jar help/*db* "dantheman"
-              {:group "org.clojars.dantheman"
-               :name "test2"
-               :version "0.0.1"})
+  (jar-m/add-jar help/*db* "dantheman"
+                 {:group "org.clojars.dantheman"
+                  :name "test"
+                  :version "0.0.1"})
+  (jar-m/add-jar help/*db* "dantheman"
+                 {:group "org.clojars.dantheman"
+                  :name "test2"
+                  :version "0.0.1"})
   (-> (session (help/app))
       (login-as "dantheman" "password1234")
       (visit "/groups/org.clojars.dantheman")
@@ -485,10 +486,10 @@
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234"))
   ;; Add jars so they show in select
-  (db/add-jar help/*db* "dantheman"
-              {:group "org.clojars.dantheman"
-               :name "test"
-               :version "0.0.1"})
+  (jar-m/add-jar help/*db* "dantheman"
+                 {:group "org.clojars.dantheman"
+                  :name "test"
+                  :version "0.0.1"})
   (testing "As admin for jar scope"
     (-> (session (help/app))
         (login-as "dantheman" "password1234")

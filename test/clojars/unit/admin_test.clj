@@ -3,6 +3,12 @@
    [clojars.admin :as admin]
    [clojars.config :refer [config]]
    [clojars.db :as db]
+   [clojars.models.audit :as audit-m]
+   [clojars.models.deploy-token :as deploy-token-m]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.user :as user-m]
    [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.storage :as storage]
@@ -36,11 +42,11 @@
               admin/*storage* (storage/multi-storage
                                (storage/fs-storage (:repo config))
                                (storage/s3-storage s3-client))]
-      (db/add-user admin/*db* "testuser@example.com" "testuser" "password1234")
+      (user-m/add-user admin/*db* "testuser@example.com" "testuser" "password1234")
       (help/add-verified-group "testuser" "org.ham")
-      (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "1" :description "delete me"})
-      (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "2" :description ""})
-      (db/add-jar admin/*db* "testuser" {:group "org.ham" :name "sandwich" :version "1" :description ""})
+      (jar-m/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "1" :description "delete me"})
+      (jar-m/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "2" :description ""})
+      (jar-m/add-jar admin/*db* "testuser" {:group "org.ham" :name "sandwich" :version "1" :description ""})
       (storage/write-artifact admin/*storage* "org/ham/biscuit/1/biscuit-1.jar" jar)
       (storage/write-artifact admin/*storage* "org/ham/biscuit/1/biscuit-1.pom" jar)
       (storage/write-artifact admin/*storage* "org/ham/biscuit/2/biscuit-2.jar" jar)
@@ -93,9 +99,9 @@
 
   (is (not (.exists (io/file (:repo (config)) "org/ham"))))
 
-  (is (not (db/find-jar admin/*db* "org.ham" "biscuit")))
-  (is (not (db/find-jar admin/*db* "org.ham" "sandwich")))
-  (is (empty? (db/group-activenames admin/*db* "org.ham")))
+  (is (not (jar-m/find-jar admin/*db* "org.ham" "biscuit")))
+  (is (not (jar-m/find-jar admin/*db* "org.ham" "sandwich")))
+  (is (empty? (permission-m/group-activenames admin/*db* "org.ham")))
   (is (= #{"org.ham"} @*search-removals*)))
 
 (deftest delete-jar-without-version-should-work
@@ -123,9 +129,9 @@
   (is (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.jar"))
   (is (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.pom"))
 
-  (is (not (db/find-jar admin/*db* "org.ham" "biscuit")))
-  (is (db/find-jar admin/*db* "org.ham" "sandwich"))
-  (is (seq (db/group-activenames admin/*db* "org.ham")))
+  (is (not (jar-m/find-jar admin/*db* "org.ham" "biscuit")))
+  (is (jar-m/find-jar admin/*db* "org.ham" "sandwich"))
+  (is (seq (permission-m/group-activenames admin/*db* "org.ham")))
   (is (= #{"org.ham/biscuit"} @*search-removals*)))
 
 (deftest delete-jar-with-version-should-work
@@ -153,10 +159,10 @@
   (is (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.jar"))
   (is (s3/object-exists? *s3-client* "org/ham/sandwich/1/sandwich-1.pom"))
 
-  (is (not (db/find-jar admin/*db* "org.ham" "biscuit" "1")))
-  (is (db/find-jar admin/*db* "org.ham" "biscuit" "2"))
-  (is (db/find-jar admin/*db* "org.ham" "sandwich"))
-  (is (seq (db/group-activenames admin/*db* "org.ham")))
+  (is (not (jar-m/find-jar admin/*db* "org.ham" "biscuit" "1")))
+  (is (jar-m/find-jar admin/*db* "org.ham" "biscuit" "2"))
+  (is (jar-m/find-jar admin/*db* "org.ham" "sandwich"))
+  (is (seq (permission-m/group-activenames admin/*db* "org.ham")))
   (is (empty? @*search-removals*)))
 
 (deftest verify-group!-works
@@ -175,35 +181,35 @@
     (is (match? {:group_name "org.hambiscuit"
                  :verified_by "testuser"}
                 (admin/verify-group! "testuser" "org.hambiscuit")))
-    (is (some #{"testuser"} (db/group-activenames help/*db* "org.hambiscuit")))))
+    (is (some #{"testuser"} (permission-m/group-activenames help/*db* "org.hambiscuit")))))
 
 (deftest soft-delete-user!-works
   ;; Given: a user with:
   ;; - otp
   ;; - password reset code
   ;; - deploy token
-  (db/enable-otp! admin/*db* "testuser")
-  (db/set-otp-secret-key! admin/*db* "testuser")
-  (db/set-password-reset-code! admin/*db* "testuser")
-  (db/add-deploy-token admin/*db* "testuser" "token" nil nil false (db/get-time))
+  (user-m/enable-otp! admin/*db* "testuser")
+  (user-m/set-otp-secret-key! admin/*db* "testuser")
+  (user-m/set-password-reset-code! admin/*db* "testuser")
+  (deploy-token-m/add-deploy-token admin/*db* "testuser" "token" nil nil false (db/get-time))
 
   ;; And: a shared default group with a jar
-  (db/add-admin admin/*db* "org.clojars.testuser" db/SCOPE-ALL "otheruser" "testuser")
-  (db/add-jar admin/*db* "testuser" {:group   "org.clojars.testuser"
-                                     :name    "jar"
-                                     :version "1.0"})
+  (permission-m/add-admin admin/*db* "org.clojars.testuser" permission-m/SCOPE-ALL "otheruser" "testuser")
+  (jar-m/add-jar admin/*db* "testuser" {:group   "org.clojars.testuser"
+                                        :name    "jar"
+                                        :version "1.0"})
 
   ;; And: and audit record
-  (db/add-audit admin/*db* "testing" "testuser" nil nil nil "a message")
+  (audit-m/add-audit admin/*db* "testing" "testuser" nil nil nil "a message")
 
-  (let [user-id      (:id (db/find-user admin/*db* "testuser"))
+  (let [user-id      (:id (user-m/find-user admin/*db* "testuser"))
 
         ;; When: we mark the user as deleted
         new-username (admin/soft-delete-user! "testuser")]
 
     ;; Then: the user is really renamed to a deleted placeholder
     (is (re-find #"deleted_\d+" new-username))
-    (is (nil? (db/find-user admin/*db* "testuser")))
+    (is (nil? (user-m/find-user admin/*db* "testuser")))
 
     ;; And: they have no email, and otp & password recovery is cleared
     (is (match?
@@ -213,31 +219,31 @@
           :otp_secret_key      nil
           :password_reset_code nil
           :user                new-username}
-         (db/find-user admin/*db* new-username)))
+         (user-m/find-user admin/*db* new-username)))
 
     ;; And: their deploy tokens are disabled
-    (is (:disabled (first (db/find-deploy-tokens-for-user admin/*db* user-id))))
+    (is (:disabled (first (deploy-token-m/find-deploy-tokens-for-user admin/*db* user-id))))
 
     ;; And: empty default groups are deleted
-    (is (empty? (db/group-allnames admin/*db* "net.clojars.testuser")))
-    (is (empty? (db/find-group-verification admin/*db* "net.clojars.testuser")))
+    (is (empty? (permission-m/group-allnames admin/*db* "net.clojars.testuser")))
+    (is (empty? (group-verification-m/find-group-verification admin/*db* "net.clojars.testuser")))
 
     ;; And: non-empty default groups are left in place, but with the new username
-    (is (= [new-username "otheruser"] (db/group-allnames admin/*db* "org.clojars.testuser")))
-    (is (some? (db/find-group-verification admin/*db* "org.clojars.testuser")))
+    (is (= [new-username "otheruser"] (permission-m/group-allnames admin/*db* "org.clojars.testuser")))
+    (is (some? (group-verification-m/find-group-verification admin/*db* "org.clojars.testuser")))
 
     ;; And: existing non-default groups are left in place, but with the new username
-    (is (= [new-username] (db/group-allnames admin/*db* "org.ham")))
+    (is (= [new-username] (permission-m/group-allnames admin/*db* "org.ham")))
     (is (match? {:verified_by new-username}
-                (db/find-group-verification admin/*db* "org.ham")))
+                (group-verification-m/find-group-verification admin/*db* "org.ham")))
 
     ;; And: any jars they deployed have the new username
-    (is (seq (db/jars-by-username admin/*db* new-username)))
-    (is (empty? (db/jars-by-username admin/*db* "testuser")))
+    (is (seq (jar-m/jars-by-username admin/*db* new-username)))
+    (is (empty? (jar-m/jars-by-username admin/*db* "testuser")))
 
     ;; And: their audit records have been reassigned to the new username
-    (is (seq (db/find-audit admin/*db* {:username new-username})))
-    (is (empty? (db/find-audit admin/*db* {:username "testuser"})))))
+    (is (seq (audit-m/find-audit admin/*db* {:username new-username})))
+    (is (empty? (audit-m/find-audit admin/*db* {:username "testuser"})))))
 
 (deftest soft-delete-user!-with-non-existent-user
   (is (thrown-with-msg?

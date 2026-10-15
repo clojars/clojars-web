@@ -1,11 +1,11 @@
 (ns clojars.friend.registration
   (:require
    [clojars.auth :as auth]
-   [clojars.db :refer [add-user]]
    [clojars.event :as event]
    [clojars.hcaptcha :as hcaptcha]
    [clojars.http-utils :as http-utils]
    [clojars.log :as log]
+   [clojars.models.user :as user-m]
    [clojars.user-validations :as uv]
    [clojars.web.user :refer [register-form normalize-email]]
    [ring.util.response :as response]))
@@ -31,7 +31,7 @@
                             :username username}
                            nil)))
         (do
-          (add-user db email username password)
+          (user-m/add-user db email username password)
           (log/info {:status :success})
           (event/emit event-emitter :user-registered {:username username})
           (-> (response/redirect "/login/verify-email")

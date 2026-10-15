@@ -4,6 +4,8 @@
    [clojars.db :as db]
    [clojars.hcaptcha :as hcaptcha]
    [clojars.log :as log]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.user :as user-m]
    [clojure.string :as str]
    [valip.core :as valip]
    [valip.predicates :as pred]))
@@ -19,10 +21,10 @@
    (user-validations db nil))
   ([db existing-username]
    (let [existing-email-fn (if existing-username
-                             #(let [existing-user (db/find-user-by-user-or-email db %)]
+                             #(let [existing-user (user-m/find-user-by-user-or-email db %)]
                                 (or (nil? existing-user)
                                     (= existing-username (:user existing-user))))
-                             #(nil? (db/find-user-by-user-or-email db %)))]
+                             #(nil? (user-m/find-user-by-user-or-email db %)))]
      [[:email pred/present? "Email can't be blank"]
       [:email pred/email-address? "Email is not valid"]
       [:email (pred/max-length 256) "Email must be 256 or fewer characters"]
@@ -40,8 +42,8 @@
   [db hcaptcha confirm]
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (db/reserved-names %)
-                                (db/find-user db %)
-                                (seq (db/group-activenames db %))))
+                                (user-m/find-user db %)
+                                (seq (permission-m/group-activenames db %))))
             "Username is already taken"]]
           (user-validations db)
           (password-validations confirm)
@@ -51,12 +53,12 @@
   [db confirm]
   (concat
    [[:reset-code pred/present? "Reset code can't be blank."]
-    [:reset-code #(or (str/blank? %) (db/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]]
+    [:reset-code #(or (str/blank? %) (user-m/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]]
    (password-validations confirm)))
 
 (defn- correct-password?
   [db username current-password]
-  (let [user (db/find-user db username)]
+  (let [user (user-m/find-user db username)]
     (when (and user (not (str/blank? current-password)))
       (creds/bcrypt-verify current-password (:password user)))))
 

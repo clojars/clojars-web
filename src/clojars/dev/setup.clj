@@ -2,12 +2,16 @@
   "Tools to setup a dev db."
   (:require
    [clojars.config :refer [config]]
-   [clojars.db :as db]
    [clojars.file-utils :as fu]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.user :as user-m]
    [clojars.search :as search]
    [clojars.stats :as stats]
    [clojure.java.io :as io]
-   [clojure.string :as str])
+   [clojure.string :as str]
+   [next.jdbc :as jdbc])
   (:import
    (java.io
     File)
@@ -21,28 +25,33 @@
 (set! *warn-on-reflection* true)
 
 (defn clear-database! [db]
-  (try
-    (db/do-commands
-     db
-     ["delete from deps"
-      "delete from permissions"
-      "delete from jars"
-      "delete from users"
-      "delete from group_verifications"
-      "delete from group_settings"
-      "delete from audit"
-      "delete from session_store"])
-    (catch Exception _)))
+  (jdbc/execute!
+   db
+   ["DO $$
+   DECLARE
+     tables text;
+   BEGIN
+     SELECT string_agg(table_name::text, ',')
+     INTO tables
+     FROM information_schema.tables
+     WHERE table_schema = 'public'
+     AND table_type = 'BASE TABLE'
+     AND table_name != 'migrations';
+
+     IF tables IS NOT NULL THEN
+       EXECUTE 'TRUNCATE TABLE ' || tables || ' CASCADE';
+     END IF;
+   END; $$;"]))
 
 (defn add-test-users
   "Adds n test users of the form test0/test0."
   [db n]
   (mapv #(let [name (str "test" %)]
-           (if (db/find-user db name)
+           (if (user-m/find-user db name)
              (println "User" name "already exists")
              (do
                (printf "Adding user %s/%s\n" name name)
-               (db/add-user db (str name "@example.com") name name)))
+               (user-m/add-user db (str name "@example.com") name name)))
            name)
         (range n)))
 
@@ -96,23 +105,23 @@
                  [_ group-path artifact-id] (re-find group-artifact-pattern (get-path parent))
                  version (.getName version-dir)
                  group-id (str/lower-case (fu/path->group group-path))
-                 user (or (first (db/group-adminnames db group-id db/SCOPE-ALL))
+                 user (or (first (permission-m/group-adminnames db group-id permission-m/SCOPE-ALL))
                           (rand-nth users))]]
-       (when-not (db/find-jar db group-id artifact-id version)
+       (when-not (jar-m/find-jar db group-id artifact-id version)
          (printf "Importing %s/%s %s (user: %s)\n" group-id artifact-id version user)
-         (db/add-group db user group-id)
-         (db/verify-group! db user group-id)
-         (db/add-jar db
-                     user {:group group-id
-                           :name artifact-id
-                           :version version
-                           :description (format "Description for %s/%s" group-id artifact-id)
-                           :homepage (format "http://example.com/%s/%s" group-id artifact-id)
-                           :authors ["Foo" "Bar" "Basil"]
-                           :scm {:tag "abcde1"
-                                 :url (format "https://%s/%s/%s"
-                                              (rand-nth ["github.com" "gitlab.com" "other.org"])
-                                              group-id artifact-id)}})
+         (permission-m/add-group db user group-id)
+         (group-verification-m/verify-group! db user group-id)
+         (jar-m/add-jar db
+                        user {:group group-id
+                              :name artifact-id
+                              :version version
+                              :description (format "Description for %s/%s" group-id artifact-id)
+                              :homepage (format "http://example.com/%s/%s" group-id artifact-id)
+                              :authors ["Foo" "Bar" "Basil"]
+                              :scm {:tag "abcde1"
+                                    :url (format "https://%s/%s/%s"
+                                                 (rand-nth ["github.com" "gitlab.com" "other.org"])
+                                                 group-id artifact-id)}})
          (update-metadata parent group-id artifact-id version)
          [group-id artifact-id version (rand-int 1000)]))
      (remove nil?)

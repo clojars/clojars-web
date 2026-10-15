@@ -2,9 +2,9 @@
   (:require
    [cemerick.pomegranate.aether :as aether]
    [clojars.config :as config]
-   [clojars.db :as db]
    [clojars.email :as email]
    [clojars.maven :as maven]
+   [clojars.models.jar :as jar-m]
    [clojars.models.user :as user-m]
    [clojars.test-helper :as help]
    [clojure.java.io :as io]
@@ -156,7 +156,7 @@
                    (io/resource pom))
         jarmap   (maven/pom-to-map pom-file)]
     (help/add-verified-group user (:group jarmap))
-    (db/add-jar db user jarmap)
+    (jar-m/add-jar db user jarmap)
     (aether/deploy :coordinates [(keyword (:group jarmap)
                                           (:name jarmap))
                                  (:version jarmap)]

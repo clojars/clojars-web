@@ -2,7 +2,6 @@
   (:require
    [cemerick.friend :as friend]
    [clojars.auth :as auth]
-   [clojars.db :as db]
    [clojars.event :as event]
    [clojars.models.user :as user-m]
    [clojars.web.login :as view]
@@ -23,13 +22,13 @@
    (GET "/login/verify-email" {:keys [flash session]}
         (if (auth/pending-email-verification? session)
           (let [username (::auth/pending-email-verification-username session)
-                user     (db/find-user db username)]
+                user     (user-m/find-user db username)]
             (view/verify-email-pending-form (:email user) flash))
           (response/redirect "/login")))
 
    (POST "/login/verify-email/resend" {:keys [session]}
          (if-let [username (::auth/pending-email-verification-username session)]
-           (let [user (db/find-user db username)
+           (let [user (user-m/find-user db username)
                  rate-limit-elapsed? (user-m/verify-email-send-allowed? user)]
              (when rate-limit-elapsed?
                (event/emit event-emitter :email-verification-email-requested {:username username}))

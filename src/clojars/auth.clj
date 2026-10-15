@@ -7,6 +7,8 @@
    [clojars.db :as db]
    [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.models.deploy-token :as deploy-token-m]
+   [clojars.models.permission :as permission-m]
    [clojars.models.user :as user-m]
    [clojars.time :as time]
    [clojars.util :as util]
@@ -25,13 +27,13 @@
 
 (defn authorized-admin? [db account group scope]
   (when account
-    (let [adminnames (db/group-adminnames db group scope)
-          allnames (db/group-allnames db group)]
+    (let [adminnames (permission-m/group-adminnames db group scope)
+          allnames (permission-m/group-allnames db group)]
       (or (some #{account} adminnames) (empty? allnames)))))
 
 (defn authorized-group-access? [db account group]
   (when account
-    (some #{account} (db/group-allnames db group))))
+    (some #{account} (permission-m/group-allnames db group))))
 
 (defn require-admin-authorization [db account group scope f]
   (if (authorized-admin? db account group scope)
@@ -42,7 +44,7 @@
 (defn- verify-password
   [db username password]
   (when-not (str/blank? password)
-    (let [user (db/find-user db username)]
+    (let [user (user-m/find-user db username)]
       (when (and (not (str/blank? (:password user)))
                  (creds/bcrypt-verify password (:password user)))
         user))))
@@ -63,7 +65,7 @@
    otp]
   (if (creds/bcrypt-verify otp recovery-code)
     (do
-      (db/disable-otp! db username)
+      (user-m/disable-otp! db username)
       (event/emit event-emitter :mfa-deactivated
                   {:username username
                    :source :recovery-code})
@@ -114,7 +116,7 @@
   [db event-emitter {:as _request :keys [form-params params session]}]
   (if-some [username (::pending-mfa-username session)]
     (let [otp  (get-param :otp form-params params)
-          user (db/find-user db username)]
+          user (user-m/find-user db username)]
       (log/with-context {:tag      :authentication
                          :username username
                          :type     :mfa}
@@ -172,7 +174,7 @@
   [{:as _request :keys [headers]}]
   (if-let [authorization (get headers "authorization")]
     (let [{:keys [password]} (parse-authorization-header authorization)]
-      (db/is-deploy-token? password))
+      (deploy-token-m/is-deploy-token? password))
     true))
 
 (defn token-expired?
@@ -186,11 +188,11 @@
                        :username username-or-email
                        :type :token}
       (let [password-hash (when password
-                            (db/hash-deploy-token password))
-            username (:user (db/find-user-by-user-or-email db username-or-email))]
+                            (deploy-token-m/hash-deploy-token password))
+            username (:user (user-m/find-user-by-user-or-email db username-or-email))]
         (if-let [token (and username
                             password
-                            (->> (db/find-user-tokens-by-username db username)
+                            (->> (deploy-token-m/find-user-tokens-by-username db username)
                                  (remove :disabled)
                                  (filter #(let [{:keys [token_hash]} %]
                                             (or (not token_hash) ;; pre-hash token
@@ -203,11 +205,11 @@
               (log/info {:status :failed
                          :reason :expired-token}))
             (do
-              (db/set-deploy-token-used db (:id token))
+              (deploy-token-m/set-deploy-token-used db (:id token))
               (when-not (:token_hash token)
                 ;; set token hashes for tokens that were created before we
                 ;; added the hash to the db
-                (db/set-deploy-token-hash db (:id token) password))
+                (deploy-token-m/set-deploy-token-hash db (:id token) password))
               (log/info {:status :success})
               {:username username
                :token token}))

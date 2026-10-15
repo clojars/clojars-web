@@ -1,8 +1,8 @@
 (ns clojars.search
   (:require
    [clojars.config :refer [config]]
-   [clojars.db :as db]
    [clojars.maven :as maven]
+   [clojars.models.jar :as jar-m]
    [clojars.stats :as stats]
    [clojure.string :as str]
    [com.stuartsierra.component :as component])
@@ -258,7 +258,7 @@
              {:indexed 0
               :last-time (System/currentTimeMillis)
               :start-time (System/currentTimeMillis)}
-             (maven/sort-by-version (db/all-jars db)))
+             (maven/sort-by-version (jar-m/all-jars db)))
             seconds (float (/ (- (System/currentTimeMillis) start-time) 1000))]
         (printf "Indexing complete. Indexed %s jars in %f seconds (%f/second)\n"
                 indexed seconds (/ indexed seconds))

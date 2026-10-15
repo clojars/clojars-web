@@ -1,7 +1,8 @@
 (ns clojars.routes.api
   (:require
-   [clojars.db :as db]
    [clojars.http-utils :refer [wrap-cors-headers]]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
    [clojars.stats :as stats]
    [clojure.set :as set]
    [compojure.core :as compojure :refer [ANY context GET]]
@@ -20,10 +21,10 @@
     ZonedDateTime)))
 
 (defn get-artifact [db stats group-id artifact-id]
-  (if-let [artifact (db/find-jar-artifact db group-id artifact-id)]
+  (if-let [artifact (jar-m/find-jar-artifact db group-id artifact-id)]
     (-> artifact
         (assoc
-         :recent_versions (db/recent-versions db group-id artifact-id)
+         :recent_versions (jar-m/recent-versions db group-id artifact-id)
          :downloads (stats/download-count stats group-id artifact-id))
         (update :recent_versions
                 (fn [versions]
@@ -32,7 +33,7 @@
                                 :downloads (stats/download-count stats group-id artifact-id (:version version))))
                        versions)))
         (assoc :dependencies
-               (->> (db/find-dependencies db group-id artifact-id (:latest_version artifact))
+               (->> (jar-m/find-dependencies db group-id artifact-id (:latest_version artifact))
                     (map #(-> %
                               (select-keys [:dep_group_name :dep_jar_name :dep_version :dep_scope])
                               (set/rename-keys {:dep_group_name :group_name
@@ -68,7 +69,7 @@
                             (.toInstant))
                         (catch Exception _
                           nil))]
-    (let [releases (db/version-feed db from-inst page-size)]
+    (let [releases (jar-m/version-feed db from-inst page-size)]
       (ring.util/response
        (generate-release-response from-inst releases)))
     (ring.util/bad-request
@@ -79,7 +80,7 @@
   (compojure/routes
    (context "/api" []
             (GET ["/groups/:group-id" :group-id #"[^/]+"] [group-id]
-                 (if-let [jars (seq (db/find-jars-information db group-id))]
+                 (if-let [jars (seq (jar-m/find-jars-information db group-id))]
                    (ring.util/response
                     (map (fn [jar]
                            (assoc jar
@@ -95,7 +96,7 @@
             (GET ["/release-feed"] [from]
                  (get-release-feed db from))
             (GET "/users/:username" [username]
-                 (if-let [groups (seq (db/find-groupnames db username))]
+                 (if-let [groups (seq (permission-m/find-groupnames db username))]
                    (ring.util/response {:groups groups})
                    (not-found nil)))
             (ANY "*" _

@@ -1,9 +1,9 @@
 (ns clojars.integration.users-test
   (:require
-   [clojars.db :as db]
    [clojars.email :as email]
    [clojars.integration.steps :refer [disable-mfa enable-mfa fill-in-captcha login-as
                                       register-as register-unverified-as]]
+   [clojars.models.user :as user-m]
    ;; for defmethods
    [clojars.notifications.user]
    [clojars.test-helper :as help]
@@ -31,7 +31,7 @@
       (has (status? 200))
       (within [:div.light-article :> :h1]
         (has (text? "Dashboard (dantheman)"))))
-  (is (= "test@example.org" (:email (db/find-user help/*db* "dantheman")))))
+  (is (= "test@example.org" (:email (user-m/find-user help/*db* "dantheman")))))
 
 (deftest user-registering-with-email-of-existing-user-shows-error
   (register-as (session (help/app)) "dantheman" "test@example.org" "password1234")
@@ -190,8 +190,8 @@
              "Confirm your Clojars email address"}
            (into #{} (map second) @email/mock-emails)))
     ;; Email is updated in the DB but unverified
-    (is (= "fixture2@example.org" (:email (db/find-user help/*db* "fixture"))))
-    (is (false? (:email_verified (db/find-user help/*db* "fixture"))))))
+    (is (= "fixture2@example.org" (:email (user-m/find-user help/*db* "fixture"))))
+    (is (false? (:email_verified (user-m/find-user help/*db* "fixture"))))))
 
 (deftest user-can-update-just-email
   (let [app (help/app)]
@@ -211,8 +211,8 @@
           (within [:div.small-section :> :h1]
             (has (text? "Profile (fixture)"))))
       (is (true? (email/wait-for-mock-emails)))
-      (is (= "fixture2@example.org" (:email (db/find-user help/*db* "fixture"))))
-      (is (false? (:email_verified (db/find-user help/*db* "fixture"))))
+      (is (= "fixture2@example.org" (:email (user-m/find-user help/*db* "fixture"))))
+      (is (false? (:email_verified (user-m/find-user help/*db* "fixture"))))
       (is (= #{"Your Clojars email was changed" "Confirm your Clojars email address"}
              (into #{} (map second) @email/mock-emails))))))
 
@@ -434,7 +434,7 @@
   (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password1234"))
   ;; force an invalid email address
-  (db/update-user help/*db* "fixture" "" nil)
+  (user-m/update-user help/*db* "fixture" "" nil)
   (-> (session (help/app))
       (visit "/")
       (follow "login")

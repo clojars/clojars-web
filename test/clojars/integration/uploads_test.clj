@@ -8,6 +8,12 @@
    [clojars.file-utils :as fu]
    [clojars.http-client :as http]
    [clojars.integration.steps :refer [create-deploy-token login-as register-as]]
+   [clojars.models.deploy-token :as deploy-token-m]
+   [clojars.models.group-setting :as group-setting-m]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.session :as session-m]
+   [clojars.models.user :as user-m]
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
    [clojars.web.common :as common]
@@ -53,7 +59,7 @@
   ;; we have to clear sessions on each deploy to mimic having new processes
   ;; deploying.
   (when-not retain-session?
-    (db/clear-sessions! help/*db*))
+    (session-m/clear-sessions! help/*db*))
   (aether/deploy
    :coordinates coordinates
    :artifact-map (if module-file
@@ -294,8 +300,8 @@
       (register-as "dantheman" "test@example.org" "password1234"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")
         db (:db (config))
-        db-token (first (db/find-user-tokens-by-username db "dantheman"))]
-    (db/disable-deploy-token db (:id db-token))
+        db-token (first (deploy-token-m/find-user-tokens-by-username db "dantheman"))]
+    (deploy-token-m/disable-deploy-token db (:id db-token))
     (is (thrown-with-msg?
          DeploymentException
          #"401.*Unauthorized"
@@ -510,11 +516,11 @@
     ;; create a prior version in a non-verified group - we have to do
     ;; this directly and prevent a verified group check since we can
     ;; longer deploy to create the group or project
-    (db/add-admin help/*db* "legacy-group" db/SCOPE-ALL "dantheman" "testing")
-    (with-redefs [db/check-group+project (constantly nil)]
-      (db/add-jar help/*db* "dantheman" {:group "legacy-group"
-                                         :name "test"
-                                         :version "0.0.1-SNAPSHOT"}))
+    (permission-m/add-admin help/*db* "legacy-group" permission-m/SCOPE-ALL "dantheman" "testing")
+    (with-redefs [jar-m/check-group+project (constantly nil)]
+      (jar-m/add-jar help/*db* "dantheman" {:group "legacy-group"
+                                            :name "test"
+                                            :version "0.0.1-SNAPSHOT"}))
 
     (deploy
      {:coordinates '[legacy-group/test "0.0.1"]
@@ -543,7 +549,7 @@
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")]
-    (db/add-admin help/*db* "legacy-group" db/SCOPE-ALL "dantheman" "testing")
+    (permission-m/add-admin help/*db* "legacy-group" permission-m/SCOPE-ALL "dantheman" "testing")
 
     (is (thrown-with-msg? DeploymentException
                           #"status=403,.*detail='Group 'legacy-group' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"
@@ -1318,7 +1324,7 @@
       (register-as "dantheman" "test@example.org" "password1234"))
   (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")
         db (:db (config))
-        {token-id :id} (db/find-token-by-value db token)
+        {token-id :id} (deploy-token-m/find-token-by-value db token)
         _ (sql/update! db :deploy_tokens {:token_hash nil} {:id token-id})]
     (deploy
      {:coordinates '[org.clojars.dantheman/test "0.0.1"]
@@ -1327,8 +1333,8 @@
                                   {:groupId "org.clojars.dantheman"})
       :password  token})
 
-    (let [{:keys [token_hash]} (db/find-token-by-value db token)]
-      (is (= (db/hash-deploy-token token)
+    (let [{:keys [token_hash]} (deploy-token-m/find-token-by-value db token)]
+      (is (= (deploy-token-m/hash-deploy-token token)
              token_hash)))))
 
 (deftest deploy-sends-notification-emails
@@ -1472,7 +1478,7 @@
                (session (help/app))
                "dantheman" "password1234" "testing")]
 
-    (db/set-group-mfa-required help/*db* "org.clojars.dantheman" true)
+    (group-setting-m/set-group-mfa-required help/*db* "org.clojars.dantheman" true)
 
     (testing "deploying without mfa fails"
       (is (thrown-with-msg?
@@ -1494,7 +1500,7 @@
                          :tag "group-requires-mfa"}))
 
     (testing "deploy with mfa enabled works"
-      (db/enable-otp! help/*db* "dantheman")
+      (user-m/enable-otp! help/*db* "dantheman")
       (deploy
        {:coordinates '[org.clojars.dantheman/test "0.0.1"]
         :jar-file (io/file (io/resource "test.jar"))

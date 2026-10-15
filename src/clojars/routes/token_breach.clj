@@ -4,9 +4,9 @@
    [buddy.core.dsa :as dsa]
    [buddy.core.keys :as keys]
    [cheshire.core :as json]
-   [clojars.db :as db]
    [clojars.event :as event]
    [clojars.http-client :as http]
+   [clojars.models.deploy-token :as deploy-token-m]
    [compojure.core :as compojure :refer [POST]]
    [ring.util.response :as response]))
 
@@ -49,10 +49,10 @@
 (defn- check-token
   [db event-emitter {:as token-data :keys [token url]}]
   (if-some [{:as db-token :keys [id disabled user_id]}
-            (db/find-token-by-value db token)]
+            (deploy-token-m/find-token-by-value db token)]
     (do
       (when (not disabled)
-        (db/disable-deploy-token db id))
+        (deploy-token-m/disable-deploy-token db id))
       (event/emit event-emitter :token-breached
                   {:user-id         user_id
                    :token-disabled? disabled

@@ -1,8 +1,14 @@
 (ns clojars.models.user
   (:require
    [clojars.db :as db]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.permission :as permission-m]
    [clojars.time :as time]
-   [next.jdbc.sql :as sql])
+   [clojure.set :as set]
+   [clojure.string :as str]
+   [next.jdbc :as jdbc]
+   [next.jdbc.sql :as sql]
+   [one-time.core :as ot])
   (:import
    (java.sql
     Timestamp)
@@ -12,6 +18,173 @@
     Date)))
 
 (set! *warn-on-reflection* true)
+
+(defn default-user-groups
+  [username]
+  (mapv #(format "%s.clojars.%s" % username)
+        ["net" "org"]))
+
+(defn add-user
+  [db email username password]
+  (let [record {:email (str/lower-case email)
+                :username username
+                :password (db/bcrypt password)
+                :send_deploy_emails true
+                :created (db/get-time)}]
+    (sql/insert! db :users (set/rename-keys record {:username db/user-column}))
+    (doseq [groupname (default-user-groups username)]
+      (permission-m/add-member* db groupname permission-m/SCOPE-ALL username "clojars" true)
+      (group-verification-m/verify-group! db username groupname))
+    record))
+
+(defn update-user
+  [db account email password]
+  (sql/update! db :users
+               (cond-> {:email email}
+                 (seq password) (assoc :password (db/bcrypt password)))
+               {db/user-column account})
+  {:email    (str/lower-case email)
+   :username account
+   :account  account})
+
+(defn rename-user
+  [db old-name new-name]
+  (jdbc/with-transaction [tx db]
+    (sql/update! tx :users
+                 {db/user-column new-name}
+                 {db/user-column old-name})
+    (sql/update! tx :permissions
+                 {db/user-column new-name}
+                 {db/user-column old-name})
+    (sql/update! tx :permissions
+                 {:added_by new-name}
+                 {:added_by old-name})
+    (sql/update! tx :group_verifications
+                 {:verified_by new-name}
+                 {:verified_by old-name})
+    (sql/update! tx :jars
+                 {db/user-column new-name}
+                 {db/user-column old-name})
+    (sql/update! tx :audit
+                 {db/user-column new-name}
+                 {db/user-column old-name})
+    {:username new-name
+     :account  new-name}))
+
+(defn update-user-notifications
+  [db account prefs]
+  (sql/update! db :users prefs {db/user-column account}))
+
+(defn reset-user-password
+  [db username reset-code password]
+  (assert (not (str/blank? reset-code)))
+  (assert (some? username))
+  (sql/update! db :users
+               {:password                       (db/bcrypt password)
+                :password_reset_code            nil
+                :password_reset_code_created_at nil}
+               {:password_reset_code reset-code
+                db/user-column username}))
+
+(defn all-users
+  [db]
+  (db/q db
+        {:select [:user]
+         :from :users
+         :order-by [[:user :asc]]}))
+
+(defn find-user
+  [db username]
+  (first
+   (db/q db
+         {:select :*
+          :from :users
+          :where [:= :user username]
+          :limit 1})))
+
+(defn find-user-by-user-or-email
+  [db username-or-email]
+  (first
+   (db/q db
+         {:select :*
+          :from :users
+          :where [:or
+                  [:= :user username-or-email]
+                  [:= :email (str/lower-case username-or-email)]]
+          :limit 1})))
+
+(defn find-user-by-email-in
+  [db emails]
+  (first
+   (db/q db
+         {:select :*
+          :from :users
+          :where [:in :email (mapv str/lower-case emails)]
+          :limit 1})))
+
+(defn find-user-by-password-reset-code
+  [db reset-code]
+  (first
+   (db/q db
+         {:select :*
+          :from :users
+          :where [:and
+                  [:= :password_reset_code reset-code]
+                  [:>= :password_reset_code_created_at
+                   (Timestamp/from (time/days-ago 1))]]
+          :limit 1})))
+
+(defn find-user-by-id
+  [db id]
+  (first
+   (db/q db
+         {:select :*
+          :from :users
+          :where [:= :id id]
+          :limit 1})))
+
+(defn set-password-reset-code!
+  [db username]
+  (let [reset-code (db/generate-secure-hex-token 20)]
+    (sql/update! db :users
+                 {:password_reset_code            reset-code
+                  :password_reset_code_created_at (db/get-time)}
+                 {db/user-column username})
+    reset-code))
+
+(defn clear-password-reset-code!
+  [db username]
+  (sql/update! db :users
+               {:password_reset_code nil}
+               {db/user-column username}))
+
+(defn set-otp-secret-key!
+  [db username]
+  (let [secret-key (ot/generate-secret-key)]
+    (sql/update! db :users
+                 {:otp_secret_key secret-key}
+                 {db/user-column username})))
+
+(defn enable-otp!
+  [db username]
+  (let [recovery-code (str (random-uuid))]
+    (sql/update! db :users
+                 {:otp_active        true
+                  :otp_recovery_code (db/bcrypt recovery-code)}
+                 {db/user-column username})
+    recovery-code))
+
+(defn disable-otp!
+  [db username]
+  (sql/update! db :users
+               {:otp_active        false
+                :otp_recovery_code nil
+                :otp_secret_key    nil}
+               {db/user-column username}))
+
+(defn user-has-mfa?
+  [db username]
+  (some? (:otp_recovery_code (find-user db username))))
 
 ;; Email verification
 
@@ -83,5 +256,3 @@
                 :email_verification_code            nil
                 :email_verification_code_created_at nil}
                {db/user-column username}))
-
-

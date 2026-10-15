@@ -1,22 +1,24 @@
 (ns clojars.routes.group
   (:require
    [clojars.auth :as auth]
-   [clojars.db :as db]
    [clojars.event :as event]
    [clojars.log :as log]
+   [clojars.models.group-setting :as group-setting-m]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.user :as user-m]
    [clojars.routes.common :as common]
    [clojars.web.group :as view]
    [compojure.core :as compojure :refer [GET POST DELETE]]))
 
 (defn- get-members [db groupname]
-  (when (seq (db/group-all-actives db groupname))
+  (when (seq (permission-m/group-all-actives db groupname))
     (auth/try-account
      #(view/show-group db % groupname))))
 
 (defn- toggle-or-add-member
   [db event-emitter groupname username make-admin? scope-to-jar details]
-  (let [actives (db/group-all-actives db groupname)
-        user-to-add (db/find-user db username)]
+  (let [actives (permission-m/group-all-actives db groupname)
+        user-to-add (user-m/find-user db username)]
     (when (seq actives)
       (auth/try-account
        (fn [account]
@@ -50,8 +52,8 @@
                            scope-to-jar
                            (if make-admin? "admin" "member"))))
 
-                (and (not= scope-to-jar db/SCOPE-ALL)
-                     (some #{[username db/SCOPE-ALL]}
+                (and (not= scope-to-jar permission-m/SCOPE-ALL)
+                     (some #{[username permission-m/SCOPE-ALL]}
                            (mapv (juxt :user :scope) actives)))
                 (do
                   (log/info {:status :failed
@@ -59,14 +61,14 @@
                   (view/show-group
                    db account groupname
                    (format "User has '%s' scope, so can't be further scoped"
-                           db/SCOPE-ALL)))
+                           permission-m/SCOPE-ALL)))
 
-                (and (= scope-to-jar db/SCOPE-ALL)
+                (and (= scope-to-jar permission-m/SCOPE-ALL)
                      (seq (into []
                                 (comp
                                  (filter #(= username (:user %)))
                                  (map :scope)
-                                 (remove #(= db/SCOPE-ALL %)))
+                                 (remove #(= permission-m/SCOPE-ALL %)))
                                 actives)))
                 (do
                   (log/info {:status :failed
@@ -74,17 +76,17 @@
                   (view/show-group
                    db account groupname
                    (format "User has project scope, so can't be given '%s' scope"
-                           db/SCOPE-ALL)))
+                           permission-m/SCOPE-ALL)))
 
                 user-to-add
-                (let [add-fn (if make-admin? db/add-admin db/add-member)]
+                (let [add-fn (if make-admin? permission-m/add-admin permission-m/add-member)]
                   (add-fn db groupname scope-to-jar username account)
                   (event/emit event-emitter
                               :group-permission-added
                               (merge
                                details
                                {:admin? make-admin?
-                                :admin-users (db/group-admin-users db groupname scope-to-jar)
+                                :admin-users (permission-m/group-admin-users db groupname scope-to-jar)
                                 :group groupname
                                 :scope-to-jar scope-to-jar
                                 :member-user user-to-add
@@ -107,7 +109,7 @@
 
 (defn- remove-member
   [db event-emitter groupname scope-to-jar username details]
-  (let [actives (db/jar-active-usernames db groupname scope-to-jar)]
+  (let [actives (permission-m/jar-active-usernames db groupname scope-to-jar)]
     (when (seq actives)
       (auth/try-account
        (fn [account]
@@ -131,15 +133,15 @@
 
                (contains? actives username)
                (do
-                 (db/inactivate-member db groupname scope-to-jar username account)
+                 (permission-m/inactivate-member db groupname scope-to-jar username account)
                  (event/emit event-emitter
                              :group-permission-removed
                              (merge
                               details
-                              {:admin-users (db/group-admin-users db groupname scope-to-jar)
+                              {:admin-users (permission-m/group-admin-users db groupname scope-to-jar)
                                :group groupname
                                :scope-to-jar scope-to-jar
-                               :member-user (db/find-user db username)
+                               :member-user (user-m/find-user db username)
                                :username account}))
                  (log/info {:status :success})
                  (log/audit db {:tag :permission-removed
@@ -158,7 +160,7 @@
 
 (defn- update-group-settings
   [db event-emitter groupname require-mfa? details]
-  (let [actives (seq (db/group-all-actives db groupname))
+  (let [actives (seq (permission-m/group-all-actives db groupname))
         settings {:require_mfa_to_deploy require-mfa?}]
     (auth/try-account
      (fn [account]
@@ -166,14 +168,14 @@
         db
         account
         groupname
-        db/SCOPE-ALL
+        permission-m/SCOPE-ALL
         #(log/with-context {:tag :update-group-settings
                             :username account
                             :group groupname
                             :settings settings}
            (if actives
              (do
-               (db/set-group-mfa-required db groupname require-mfa?)
+               (group-setting-m/set-group-mfa-required db groupname require-mfa?)
                (event/emit event-emitter
                            :group-settings-updated
                            (merge
@@ -181,7 +183,7 @@
                             ;; This email goes to any admin that has any scope
                             ;; since this change will impact all deploys within
                             ;; the group
-                            {:admin-users (db/group-admin-users db groupname db/SCOPE-ALL)
+                            {:admin-users (permission-m/group-admin-users db groupname permission-m/SCOPE-ALL)
                              :group groupname
                              :username account
                              :settings settings}))

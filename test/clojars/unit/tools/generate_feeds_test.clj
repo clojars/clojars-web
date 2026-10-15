@@ -3,6 +3,7 @@
    [clojars.db :as db]
    [clojars.file-utils :as fu]
    [clojars.maven :as maven]
+   [clojars.models.jar :as jar-m]
    [clojars.s3 :as s3]
    [clojars.test-helper :as help]
    [clojars.tools.generate-feeds :as feeds]
@@ -30,7 +31,7 @@
               :let [pom-data (maven/pom-to-map (io/resource (format "%s-%s/%s.pom" name version name)))]]
 
         (help/add-verified-group "testuser" (:group pom-data))
-        (db/add-jar help/*db* "testuser" pom-data)))
+        (jar-m/add-jar help/*db* "testuser" pom-data)))
     ;; Convert to Date to reduce the precision to what we would see when reading
     ;; it from edn. java.sql.Timestamp is a subclass of Date, but has higher
     ;; precision.

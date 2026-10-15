@@ -2,13 +2,17 @@
   (:require
    [cheshire.core :as json]
    [clojars.auth :as auth :refer [with-account]]
-   [clojars.db :as db]
    [clojars.errors :refer [report-error]]
    [clojars.event :as event]
    [clojars.file-utils :as fu]
    [clojars.gradle :as gradle]
    [clojars.log :as log]
    [clojars.maven :as maven]
+   [clojars.models.deploy-token :as deploy-token-m]
+   [clojars.models.group-setting :as group-setting-m]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
+   [clojars.models.user :as user-m]
    [clojars.search :as search]
    [clojars.storage :as storage]
    [clojars.util :as util]
@@ -248,7 +252,7 @@
 
 (defn- check-group+project [db account group artifact]
   (try
-    (db/check-group+project db account group artifact)
+    (jar-m/check-group+project db account group artifact)
     (catch Exception e
       (let [meta (ex-data e)]
         (throw-invalid (:error-tag meta) meta e)))))
@@ -369,7 +373,7 @@
 
 (defn assert-non-redeploy [db group-id artifact-id version]
   (when (and (not (maven/snapshot-version? version))
-             (db/find-jar db group-id artifact-id version))
+             (jar-m/find-jar db group-id artifact-id version))
     (throw-invalid :redeploy-non-snapshot)))
 
 (defn assert-non-versioned-file-overwrite
@@ -469,7 +473,7 @@
   [db session]
   (let [token (token-from-session session)]
     (when (= "yes" (:single_use token))
-      (db/consume-deploy-token db (:id token)))))
+      (deploy-token-m/consume-deploy-token db (:id token)))))
 
 (defn- gen-repo-paths
   [{:as _version-data :keys [group-path name version]}]
@@ -488,7 +492,7 @@
   [db event-emitter {:as version-data :keys [group]}]
   (doseq [path (gen-repo-paths version-data)]
     (event/emit event-emitter :repo-path-changed {:path path}))
-  (doseq [user (db/group-active-users db group)]
+  (doseq [user (permission-m/group-active-users db group)]
     (event/emit event-emitter :version-deployed (assoc version-data :user user))))
 
 (defn- finalize-deploy
@@ -540,12 +544,12 @@
                    (remove (fn [^File f] (.isDirectory f)))
                    (remove #(some #{(.getName ^File %)} [metadata-edn]))))
 
-        (db/add-jar db account pom)
+        (jar-m/add-jar db account pom)
         (maybe-consume-single-use-token db session)
         (log/audit db {:tag :deployed})
         (log/info {:tag :deploy-finalized})
         (future
-          (search/index! search (db/find-jar db group name version))
+          (search/index! search (jar-m/find-jar db group name version))
           (log/info {:tag :deploy-indexed}))
         (spit (io/file dir ".finalized") "")
         (emit-deploy-events db event-emitter (assoc posted-metadata :deployer-username account))))
@@ -597,9 +601,9 @@
 
 (defn- maybe-assert-user-has-mfa-enabled
   [db account groupname]
-  (let [group-settings (db/get-group-settings db groupname)]
+  (let [group-settings (group-setting-m/get-group-settings db groupname)]
     (when (and (:require_mfa_to_deploy group-settings)
-               (not (db/user-has-mfa? db account)))
+               (not (user-m/user-has-mfa? db account)))
       (throw-invalid :group-requires-mfa
                      {:group groupname
                       :username account}))))

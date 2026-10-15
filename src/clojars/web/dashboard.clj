@@ -1,6 +1,8 @@
 (ns clojars.web.dashboard
   (:require
-   [clojars.db :as db]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
    [clojars.stats :as stats]
    [clojars.web.common :refer [audit-table html-doc html-doc-with-large-header
                                jar-link group-link tag
@@ -15,10 +17,10 @@
   "Caches recent jars in memory under the max jar id, and uses that
   cached value until a new jar is added."
   [db]
-  (let [max-id (db/max-jars-id db)]
+  (let [max-id (jar-m/max-jars-id db)]
     (if-let [jars (get @recent-jars-cache max-id)]
       jars
-      (let [jars (db/recent-jars db)]
+      (let [jars (jar-m/recent-jars db)]
         (reset! recent-jars-cache {max-id jars})
         jars))))
 
@@ -88,7 +90,7 @@
       [:div.col-xs-12.col-sm-4
        [:div.dash-palette
         [:h2 "Your Projects"]
-        (let [jars (db/jars-by-username db account)]
+        (let [jars (jar-m/jars-by-username db account)]
           (if (seq jars)
             (unordered-list (map jar-link jars))
             [:p "You don't have any projects, would you like to "
@@ -99,11 +101,11 @@
         [:h2 "Your Groups"]
         (unordered-list
          (map (fn [group-name]
-                (let [verified-group? (db/find-group-verification db group-name)]
+                (let [verified-group? (group-verification-m/find-group-verification db group-name)]
                   (list [:span (group-link group-name)]
                         (when verified-group?
                           verified-group-badge-small))))
-              (db/find-groupnames db account)))]]
+              (permission-m/find-groupnames db account)))]]
       [:div.col-xs-12.col-sm-4
        [:div.dash-palette
         [:h2 "FAQ"]

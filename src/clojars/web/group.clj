@@ -1,6 +1,9 @@
 (ns clojars.web.group
   (:require
-   [clojars.db :as db]
+   [clojars.models.group-setting :as group-setting-m]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.jar :as jar-m]
+   [clojars.models.permission :as permission-m]
    [clojars.web.common :refer [audit-table form-table html-doc jar-link user-link error-list verified-group-badge-small]]
    [clojars.web.safe-hiccup :refer [form-to]]
    [clojars.web.structured-data :as structured-data]
@@ -9,14 +12,14 @@
 
 (defn- scope-options
   [db account groupname actives all-group-jars]
-  (let [admin-scopes-for-user (db/admin-group-scopes-for-user db account groupname)
-        admin-all? (contains? admin-scopes-for-user db/SCOPE-ALL)
+  (let [admin-scopes-for-user (permission-m/admin-group-scopes-for-user db account groupname)
+        admin-all? (contains? admin-scopes-for-user permission-m/SCOPE-ALL)
         all-visible-jar-scopes (into #{}
                                      (comp
                                       (filter #(or
                                                 admin-all?
                                                 (contains? admin-scopes-for-user %)))
-                                      (remove #(= db/SCOPE-ALL %)))
+                                      (remove #(= permission-m/SCOPE-ALL %)))
                                      (concat
                                       (map :jar_name all-group-jars)
                                       (map :scope actives)))]
@@ -29,8 +32,8 @@
 
 (defn show-group
   [db account groupname & errors]
-  (let [actives (db/group-actives db groupname)
-        actives-for-user (db/group-actives-for-user db groupname account)
+  (let [actives (permission-m/group-actives db groupname)
+        actives-for-user (permission-m/group-actives-for-user db groupname account)
         user-admin-scopes (into #{}
                                 (comp
                                  (filter #(= account (:user %)))
@@ -39,12 +42,12 @@
                                 actives-for-user)
         current-user-admin? (seq user-admin-scopes)
         current-user-admin-for-scope? (fn [scope]
-                                        (or (contains? user-admin-scopes db/SCOPE-ALL)
+                                        (or (contains? user-admin-scopes permission-m/SCOPE-ALL)
                                             (contains? user-admin-scopes scope)))
         show-membership-details? (seq actives-for-user)
-        verified-group? (db/find-group-verification db groupname)
-        group-settings (db/get-group-settings db groupname)
-        all-group-jars (db/jars-by-groupname db groupname)]
+        verified-group? (group-verification-m/find-group-verification db groupname)
+        group-settings (group-setting-m/get-group-settings db groupname)
+        all-group-jars (jar-m/jars-by-groupname db groupname)]
     (html-doc
      (str groupname " group")
      {:account account
@@ -103,7 +106,7 @@
                            (hidden-field "scope_to_jar" scope)
                            [:input.button.red-button {:type "submit"
                                                       :value "Remove Permission"}])]))])]])
-        (unordered-list (->> (db/group-all-actives db groupname)
+        (unordered-list (->> (permission-m/group-all-actives db groupname)
                              (into []
                                    (comp
                                     (map :user)
@@ -136,7 +139,7 @@
                           :scope_to_jar_new)]]]
            [:input.button {:type "submit" :value "Add Permission"}])]
          ;; Only all-scoped admins can change group-wide settings
-         (when (current-user-admin-for-scope? db/SCOPE-ALL)
+         (when (current-user-admin-for-scope? permission-m/SCOPE-ALL)
            [:div.group-settings
             [:h2 "Group Settings"]
             (form-table

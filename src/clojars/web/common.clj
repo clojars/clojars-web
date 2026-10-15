@@ -1,7 +1,7 @@
 (ns clojars.web.common
   (:require
-   [clojars.db :as db]
    [clojars.maven :as maven]
+   [clojars.models.audit :as audit-m]
    [clojars.web.helpers :as helpers]
    [clojars.web.safe-hiccup :refer [form-to html5 raw]]
    [clojars.web.structured-data :as structured-data]
@@ -439,7 +439,7 @@
      [:th "Artifact"]
      [:th "Message"]
      [:th "Timestamp"]]
-    (for [audit (db/find-audit db lookup)]
+    (for [audit (audit-m/find-audit db lookup)]
       [:tr
        [:td [:pre (:tag audit)]]
        [:td (when (:user audit) (user-link (:user audit)))]

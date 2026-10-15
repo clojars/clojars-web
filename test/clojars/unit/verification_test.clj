@@ -1,7 +1,8 @@
 (ns clojars.unit.verification-test
   (:require
-   [clojars.db :as db]
    [clojars.http-client :as http]
+   [clojars.models.group-verification :as group-verification-m]
+   [clojars.models.permission :as permission-m]
    [clojars.test-helper :as help]
    [clojars.verification :as nut]
    [clojars.web.common :as common]
@@ -72,7 +73,7 @@
 
 (deftest verify-group-by-TXT-with-already-verified-group
   (let [records ["clojars dantheman"]]
-    (db/verify-group! help/*db* "dantheman" "com.foo")
+    (group-verification-m/verify-group! help/*db* "dantheman" "com.foo")
     (help/with-TXT records
       (is (match?
            {:txt-records records
@@ -84,11 +85,11 @@
 
 (deftest verify-group-by-TXT-with-existing-group-user-is-not-active-member-of
   (let [records ["clojars dantheman"]]
-    (db/add-group help/*db* "dantheman" "com.foo")
+    (permission-m/add-group help/*db* "dantheman" "com.foo")
     ;; We have to have some other member for the group to be considered to
     ;; exist.
-    (db/add-member help/*db* "com.foo" db/SCOPE-ALL "anotheruser" "testing")
-    (db/inactivate-member help/*db* "com.foo" db/SCOPE-ALL "dantheman" "testing")
+    (permission-m/add-member help/*db* "com.foo" permission-m/SCOPE-ALL "anotheruser" "testing")
+    (permission-m/inactivate-member help/*db* "com.foo" permission-m/SCOPE-ALL "dantheman" "testing")
     (help/with-TXT records
       (is (match?
            {:txt-records records
@@ -99,7 +100,7 @@
 
 (deftest verify-group-by-TXT-with-existing-group-user-is-not-member-of
   (let [records ["clojars dantheman"]]
-    (db/add-group help/*db* "abc" "com.foo")
+    (permission-m/add-group help/*db* "abc" "com.foo")
     (help/with-TXT records
       (is (match?
            {:txt-records records
@@ -110,14 +111,14 @@
 
 (deftest verify-group-by-TXT-with-existing-group-user-is-active-member-of
   (let [records ["clojars dantheman"]]
-    (db/add-group help/*db* "dantheman" "com.foo")
+    (permission-m/add-group help/*db* "dantheman" "com.foo")
     (help/with-TXT records
       (is (match?
            {:message "The group 'com.foo' has been verified."}
            (nut/verify-group-by-TXT help/*db* {:username "dantheman"
                                                :group   "com.foo"
                                                :domain  "foo.com"}))))
-    (is (db/find-group-verification help/*db* "com.foo"))))
+    (is (group-verification-m/find-group-verification help/*db* "com.foo"))))
 
 (deftest verify-group-by-TXT-with-non-existing-group
   (let [records ["clojars dantheman"]]
@@ -127,8 +128,8 @@
            (nut/verify-group-by-TXT help/*db* {:username "dantheman"
                                                :group   "com.foo"
                                                :domain  "foo.com"}))))
-    (is (seq (db/group-activenames help/*db* "com.foo")))
-    (is (db/find-group-verification help/*db* "com.foo"))))
+    (is (seq (permission-m/group-activenames help/*db* "com.foo")))
+    (is (group-verification-m/find-group-verification help/*db* "com.foo"))))
 
 (deftest verify-group-by-parent-group-with-invalid-group
   (are [given] (= "The group name is not a valid reverse-domain name."
@@ -139,15 +140,15 @@
     "..com"))
 
 (deftest verify-group-by-parent-group-with-already-verified-group
-  (db/verify-group! help/*db* "dantheman" "com.foo.bar")
+  (group-verification-m/verify-group! help/*db* "dantheman" "com.foo.bar")
   (is (match?
        {:error (format "Group already verified by user 'dantheman' on %s."
                        (common/format-date (Date.)))}
        (nut/verify-group-by-parent-group help/*db* {:group "com.foo.bar"}))))
 
 (deftest verify-group-by-parent-group-with-non-subgroup
-  (db/add-group help/*db* "dantheman" "com.foo")
-  (db/verify-group! help/*db* "dantheman" "com.foo")
+  (permission-m/add-group help/*db* "dantheman" "com.foo")
+  (group-verification-m/verify-group! help/*db* "dantheman" "com.foo")
   (is (match?
        {:error "The group is not a subgroup of a verified group."}
        (nut/verify-group-by-parent-group help/*db* {:group    "com.bar"
@@ -158,8 +159,8 @@
                                                     :username "dantheman"}))))
 
 (deftest verify-group-by-parent-group-that-is-subgroup
-  (db/add-group help/*db* "dantheman" "com.foo")
-  (db/verify-group! help/*db* "dantheman" "com.foo")
+  (permission-m/add-group help/*db* "dantheman" "com.foo")
+  (group-verification-m/verify-group! help/*db* "dantheman" "com.foo")
   (is (match?
        {:message      "The group 'com.foo.bar' has been verified."
         :parent-group "com.foo"}
@@ -179,8 +180,8 @@
                                          :username "dantheman"}))))
 
 (deftest verify-vcs-groups-with-already-verified-groups
-  (db/verify-group! help/*db* "dantheman" "com.github.foo")
-  (db/verify-group! help/*db* "dantheman" "io.github.foo")
+  (group-verification-m/verify-group! help/*db* "dantheman" "com.github.foo")
+  (group-verification-m/verify-group! help/*db* "dantheman" "io.github.foo")
   (is (match?
        {:error (format "Groups already verified by user 'dantheman' on %s."
                        (common/format-date (Date.)))}

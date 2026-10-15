@@ -1,7 +1,6 @@
 (ns clojars.web.browse
   (:require
-   [clojars.db :refer [browse-projects count-all-projects
-                       count-projects-before]]
+   [clojars.models.jar :as jar-m]
    [clojars.web.common :refer [html-doc jar-link user-link format-date
                                page-nav page-description
                                collection-fork-notice
@@ -11,9 +10,9 @@
    [ring.util.response :refer [redirect]]))
 
 (defn browse-page [db account page per-page]
-  (let [project-count (count-all-projects db)
+  (let [project-count (jar-m/count-all-projects db)
         total-pages (-> (/ project-count per-page) Math/ceil long)
-        projects (browse-projects db page per-page)]
+        projects (jar-m/browse-projects db page per-page)]
     (html-doc
      "All projects" {:account account :description "Browse all of the projects in Clojars"}
      [:div.light-article.row
@@ -52,7 +51,7 @@
 (defn browse [db account params]
   (let [per-page 20]
     (if-let [from (:from params)]
-      (let [i (count-projects-before db from)
+      (let [i (jar-m/count-projects-before db from)
             page (inc (int (/ i per-page)))]
         (redirect (str "/projects?page=" page "#" (mod i per-page))))
       (browse-page db account (or (:page params) 1) per-page))))

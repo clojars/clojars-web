@@ -2,6 +2,7 @@
   (:require
    [clojars.db :as db]
    [clojars.maven :as maven]
+   [clojars.models.jar :as jar-m]
    [clojars.test-helper :as help]
    [clojars.tools.export-poms :as export-poms]
    [clojure.java.io :as io]
@@ -19,7 +20,7 @@
   [at {:as jar :keys [group]}]
   (with-redefs [db/get-time (constantly (Timestamp. (.getTime at)))]
     (help/add-verified-group "testuser" group)
-    (db/add-jar help/*db* "testuser" jar)))
+    (jar-m/add-jar help/*db* "testuser" jar)))
 
 (deftest test-export-all-poms
   (let [temp-repo (help/create-tmp-dir "repo")]
