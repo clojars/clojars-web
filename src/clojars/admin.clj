@@ -204,9 +204,10 @@
       (user-m/clear-password-reset-code! tx old-username)
       (deploy-token-m/disable-deploy-tokens-for-user tx user-id)
       (user-m/rename-user tx old-username new-username)
-      ;; Clear email, set random password
-      (user-m/update-user tx new-username ""
+      ;; Reset email, set random password
+      (user-m/update-user tx new-username (format "%s@clojars.org" new-username)
                           (db/generate-secure-hex-token 20))
+      (user-m/mark-email-unverified tx new-username)
       (run! (fn [group] (permission-m/delete-group tx group)) empty-default-groups))
     new-username))
 

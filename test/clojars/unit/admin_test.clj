@@ -211,9 +211,9 @@
     (is (re-find #"deleted_\d+" new-username))
     (is (nil? (user-m/find-user admin/*db* "testuser")))
 
-    ;; And: they have no email, and otp & password recovery is cleared
+    ;; And: they have a dummy email, and otp & password recovery is cleared
     (is (match?
-         {:email               ""
+         {:email               (format "%s@clojars.org" new-username)
           :otp_active          false
           :otp_recovery_code   nil
           :otp_secret_key      nil
