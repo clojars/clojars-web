@@ -241,13 +241,6 @@
                 :email_verification_code_created_at nil}
                {db/user-column username}))
 
-(defn clear-email-verification
-  [db username]
-  (sql/update! db :users
-               {:email_verification_code            nil
-                :email_verification_code_created_at nil}
-               {db/user-column username}))
-
 (defn mark-email-unverified
   [db username]
   (sql/update! db :users

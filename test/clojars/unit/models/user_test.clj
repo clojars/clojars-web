@@ -142,17 +142,3 @@
       (time/with-now (time/days-from 2)
         (is (nil? (user-m/find-user-by-email-verification-code help/*db* code)))))))
 
-(deftest clear-email-verification
-  (let [email "test@example.com"
-        name  "testuser"
-        ts    (db/get-time)]
-    (user-m/add-user help/*db* email name "password1234")
-    (with-redefs [db/get-time (constantly ts)]
-      (user-m/set-email-verification-code help/*db* name))
-    (is (match? {:email_verification_code some?
-                 :email_verification_code_created_at ts}
-                (user-m/find-user help/*db* name)))
-    (user-m/clear-email-verification help/*db* name)
-    (is (match? {:email_verification_code nil
-                 :email_verification_code_created_at nil}
-                (user-m/find-user help/*db* name)))))
