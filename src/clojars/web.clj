@@ -123,7 +123,10 @@
 
   This schema will need to be expanded if we ever to need to use vector or map
   params."
-  [:map-of :keyword :string])
+  ;; We allow string keys here, as the keyword-params middleware does not
+  ;; convert strings that start with a number to keywords, leaving them as strings. We see
+  ;; keys like this on .svg routes as an attempt to cache-bust (ex: `?1234`)
+  [:map-of [:or :keyword :string] :string])
 
 (defn wrap-reject-invalid-params
   "Checks `:params` from the request against `params-schema`, returning a 400 if

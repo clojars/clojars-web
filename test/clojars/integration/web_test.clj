@@ -51,7 +51,7 @@
         :body
         (m/via json/decode
                {"explanation"
-                "{:schema [:map-of :keyword :string], :value {:q {:a \"b\"}}, :errors ({:path [1], :in [:q], :schema :string, :value {:a \"b\"}})}"})}
+                "{:schema [:map-of [:or :keyword :string] :string], :value {:q {:a \"b\"}}, :errors ({:path [1], :in [:q], :schema :string, :value {:a \"b\"}})}"})}
        (search-request "q[a]=b")))
 
   (is (match?
@@ -59,7 +59,7 @@
         :body
         (m/via json/decode
                {"explanation"
-                "{:schema [:map-of :keyword :string], :value {:q [\"b\"]}, :errors ({:path [1], :in [:q], :schema :string, :value [\"b\"]})}"})}
+                "{:schema [:map-of [:or :keyword :string] :string], :value {:q [\"b\"]}, :errors ({:path [1], :in [:q], :schema :string, :value [\"b\"]})}"})}
        (search-request "q[]=b")))
 
   (doseq [page [-1 0]]
