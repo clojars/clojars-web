@@ -14,8 +14,8 @@
    [clojure.java.shell :as shell]
    [clojure.pprint :refer [pprint]]
    [clojure.string :as str]
-   [clojure.tools.nrepl.server :as nrepl]
-   [next.jdbc :as jdbc])
+   [next.jdbc :as jdbc]
+   [nrepl.server :as nrepl])
   (:import
    java.net.URL
    java.text.SimpleDateFormat))
@@ -213,13 +213,13 @@
 
 (defn handler [mapping]
   (nrepl/default-handler
-    (with-meta
-      (fn [h]
-        (fn [{:keys [session] :as msg}]
-          (swap! session merge mapping)
-          (h msg)))
-      {:clojure.tools.nrepl.middleware/descriptor {:requires #{"clone"}
-                                                   :expects #{"eval"}}})))
+   (with-meta
+     (fn [h]
+       (fn [{:keys [session] :as msg}]
+         (swap! session merge mapping)
+         (h msg)))
+     {:nrepl.middleware/descriptor {:requires #{"clone"}
+                                    :expects #{"eval"}}})))
 
 (defn init [db search storage]
   (when-let [port (:nrepl-port (config))]

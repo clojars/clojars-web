@@ -186,11 +186,6 @@
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
-      <artifactId>tools.nrepl</artifactId>
-      <version>0.2.13</version>
-    </dependency>
-    <dependency>
-      <groupId>org.clojure</groupId>
       <artifactId>data.xml</artifactId>
       <version>0.2.0-alpha10</version>
     </dependency>
@@ -257,6 +252,11 @@
       <groupId>org.mindrot</groupId>
       <artifactId>jbcrypt</artifactId>
       <version>0.4</version>
+    </dependency>
+    <dependency>
+      <groupId>nrepl</groupId>
+      <artifactId>nrepl</artifactId>
+      <version>1.8.0</version>
     </dependency>
     <dependency>
       <groupId>com.cognitect.aws</groupId>
