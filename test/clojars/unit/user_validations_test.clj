@@ -12,6 +12,8 @@
 (use-fixtures :each
   help/with-clean-database)
 
+(def ^:private mock-hibp (remote-service/new-mock-remote-service))
+
 (defn user-validations
   ([]
    (user-validations nil))
@@ -23,21 +25,27 @@
   (uv/new-user-validations help/*db*
                            (remote-service/new-mock-remote-service)
                            (hcaptcha/new-mock-hcaptcha)
+                           mock-hibp
                            "password1234a"))
 
 (deftest test-password-validations
-  (is (nil? (uv/validate {:password "abcdefghijkl"} (uv/password-validations "abcdefghijkl"))))
+  (is (nil? (uv/validate {:password "abcdefghijkl"} (uv/password-validations mock-hibp "abcdefghijkl"))))
   (is (match?
        {:password ["Password must be 12 characters or longer"]}
-       (uv/validate {:password "a"} (uv/password-validations "a"))))
+       (uv/validate {:password "a"} (uv/password-validations mock-hibp "a"))))
   (is (match?
        {:password ["Password must be 12 characters or longer"
                    "Password and confirm password must match"]}
-       (uv/validate {:password "a"} (uv/password-validations "b"))))
+       (uv/validate {:password "a"} (uv/password-validations mock-hibp "b"))))
   (let [long-password (apply str (repeat 257 "a"))]
     (is (match?
          {:password ["Password must be 256 or fewer characters"]}
-         (uv/validate {:password long-password} (uv/password-validations long-password))))))
+         (uv/validate {:password long-password} (uv/password-validations mock-hibp long-password)))))
+  (help/with-pwned-password
+    #(is (match?
+          {:password [uv/pwned-password-message]}
+          (uv/validate {:password help/pwned-password}
+                       (uv/password-validations mock-hibp help/pwned-password))))))
 
 (deftest test-user-validations
   (is (nil? (uv/validate {:email "foo@example.com"
@@ -152,17 +160,17 @@
     (is (nil?
          (uv/validate {:reset-code reset-code
                        :password "password1234a"}
-                      (uv/reset-password-validations help/*db* "password1234a"))))
+                      (uv/reset-password-validations help/*db* mock-hibp "password1234a"))))
     (is (match?
          {:reset-code ["Reset code can't be blank."]}
          (uv/validate {:reset-code ""
                        :password "password1234a"}
-                      (uv/reset-password-validations help/*db* "password1234a"))))
+                      (uv/reset-password-validations help/*db* mock-hibp "password1234a"))))
     (is (match?
          {:reset-code ["The reset code does not exist or it has expired."]}
          (uv/validate {:reset-code "foo"
                        :password "password1234a"}
-                      (uv/reset-password-validations help/*db* "password1234a"))))))
+                      (uv/reset-password-validations help/*db* mock-hibp "password1234a"))))))
 
 (deftest current-password-validations
   (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")
@@ -177,4 +185,12 @@
   (is (match?
        {:current-password ["Current password is incorrect"]}
        (uv/validate {:current-password "wrong"}
+                    (uv/current-password-validations help/*db* "auser")))))
+
+(deftest current-password-validations-for-password-less-user
+  (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")
+  (user-m/clear-password! help/*db* "auser")
+  (is (match?
+       {:current-password [uv/no-password-message]}
+       (uv/validate {:current-password "password1234a"}
                     (uv/current-password-validations help/*db* "auser")))))

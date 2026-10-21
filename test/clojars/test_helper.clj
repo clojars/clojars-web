@@ -1,5 +1,7 @@
 (ns clojars.test-helper
   (:require
+   [buddy.core.codecs :as codecs]
+   [buddy.core.hash :as hash]
    [cemerick.pomegranate.aether :as aether]
    [cheshire.core :as json]
    [clojars.config :as config]
@@ -129,6 +131,19 @@
 (defn memory-index []
   (ByteBuffersDirectory.))
 
+(def pwned-password
+  "A password that `with-pwned-password` makes HIBP report as compromised."
+  "pwned-password-1234")
+
+(defn with-pwned-password
+  "Fixture that answers HIBP range requests as if `pwned-password` had appeared
+  in a breach."
+  [f]
+  (remote-service/with-mocking
+    (let [suffix (-> (hash/sha1 pwned-password) codecs/bytes->hex str/upper-case (subs 5))]
+      (remote-service/set-responder '-password-range (constantly (str suffix ":1"))))
+    (f)))
+
 (declare ^:dynamic system)
 
 (defn app []
@@ -144,6 +159,7 @@
                              :email-validation (remote-service/new-mock-remote-service)
                              :error-reporter (quiet-reporter)
                              :github (oauth-service/new-mock-oauth-service "GitHub" {})
+                             :hibp (remote-service/new-mock-remote-service)
                              :index-factory memory-index
                              :mailer (email/mock-mailer)
                              :repo-bucket (s3/mock-s3-client)
@@ -227,7 +243,7 @@
        (is (seq emails-for-address#) (format "Emails for %s should exist" email-address#))
        (doseq [email# emails-for-address#]
          (is (str/ends-with? (nth email# 2)
-                             (format "This message was sent to email address on file for the '%s' Clojars account."
+                             (format "This message was sent to the email address on file for the '%s' Clojars account."
                                      username#)))))))
 (defmacro match-audit
   [params m]
