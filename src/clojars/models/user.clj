@@ -1,5 +1,6 @@
 (ns clojars.models.user
   (:require
+   [cemerick.friend.credentials :as creds]
    [clojars.db :as db]
    [clojars.models.group-verification :as group-verification-m]
    [clojars.models.permission :as permission-m]
@@ -85,6 +86,27 @@
                 :password_reset_code_created_at nil}
                {:password_reset_code reset-code
                 db/user-column username}))
+
+(defn has-password?
+  "Returns true if the user has a password set. A user's password is blank
+  after it was cleared, e.g. for appearing in a breach."
+  [user]
+  (not (str/blank? (:password user))))
+
+(defn password-matches?
+  "Returns true if `password` matches the user's password. Always false when
+  either is blank, since bcrypt throws on a blank hash."
+  [user password]
+  (boolean
+   (and (has-password? user)
+        (not (str/blank? password))
+        (creds/bcrypt-verify password (:password user)))))
+
+(defn clear-password!
+  "Clears the user's password so they can't log in with it. They will need to
+  use the forgot password flow to set a new one."
+  [db username]
+  (sql/update! db :users {:password ""} {db/user-column username}))
 
 (defn all-users
   [db]
