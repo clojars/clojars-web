@@ -1,5 +1,6 @@
 (ns clojars.integration.sessions-test
   (:require
+   [clojars.auth :as auth]
    [clojars.db :as db]
    [clojars.email :as email]
    [clojars.integration.steps :refer [create-deploy-token enable-mfa login-as
@@ -8,6 +9,7 @@
    [clojars.models.user :as user-m]
    [clojars.test-helper :as help]
    [clojars.time :as time]
+   [clojure.string :as str]
    [clojure.test :refer [deftest is testing use-fixtures]]
    [kerodon.core :refer [follow follow-redirect press session visit within]]
    [kerodon.test :refer [has status? text?]]
@@ -67,12 +69,12 @@
     (-> (session app)
         (register-as "fixture" "fixture@example.org" "password1234"))
     (sql/update! help/*db* :users {:password ""} {db/user-column "fixture"})
-    (-> (session app)
-        (login-as "fixture" "password1234")
-        (follow-redirect)
-        (has (status? 200))
-        (within [:div :p.error]
-          (has (text? "Incorrect username or password."))))))
+    (let [state (-> (session app)
+                    (login-as "fixture" "password1234")
+                    (follow-redirect))]
+      (is (= "/forgot-password" (get-in state [:request :uri])))
+      (is (str/includes? (apply str (enlive/texts (:enlive state)))
+                         auth/password-disabled-message)))))
 
 (deftest login-with-mfa
   (let [app (help/app)]
