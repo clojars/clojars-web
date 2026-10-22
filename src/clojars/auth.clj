@@ -14,6 +14,7 @@
    [clojars.util :as util]
    [clojure.string :as str]
    [one-time.core :as ot]
+   [ring.util.codec :as codec]
    [ring.util.request :as req]
    [ring.util.response :as response]))
 
@@ -110,7 +111,7 @@
         (do
           (log/info {:status :failed
                      :reason :password-incorrect})
-          (response/redirect (format "/login?login_failed=Y&username=%s" username)))))))
+          (response/redirect (str "/login?" (codec/form-encode {:login_failed "Y" :username username}))))))))
 
 (defn- verify-mfa-step
   [db event-emitter {:as _request :keys [form-params params session]}]
