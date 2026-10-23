@@ -12,9 +12,14 @@
 ;; 30 seconds
 (def TIMEOUT-MS 30000)
 
+(def default-opts
+  {:user-agent "clojars.org"})
+
 (defn request
   [opts]
-  (let [resp (deref (http/request opts) TIMEOUT-MS ::timeout)]
+  (let [resp (-> (merge default-opts opts)
+                 (http/request)
+                 (deref TIMEOUT-MS ::timeout))]
     (if (= ::timeout resp)
       (throw (ex-info "HTTP request timeout" opts))
       resp)))
