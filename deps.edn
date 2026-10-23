@@ -55,8 +55,8 @@
   ;; continue to send custom status messages on deploy failure.
   ;; See https://github.com/clojars/http-kit
   net.clojars.internal/http-kit {:mvn/version "2.9.0-beta3-clojars-03"}
-
   nrepl/nrepl {:mvn/version "1.8.0"}
+  
   one-time/one-time {:mvn/version "0.9.0"}
   org.apache.commons/commons-email {:mvn/version "1.6.0"}
   org.apache.lucene/lucene-core {:mvn/version "10.3.2"}
@@ -103,7 +103,9 @@
   ;; Override plexus-utils brought in by maven-model & maven-repository-metadata to address CVE-2025-67030
   org.codehaus.plexus/plexus-utils {:mvn/version "3.6.1"}
   ;; Addresses CVE-2015-0886
-  org.mindrot/jbcrypt {:mvn/version "0.4"}}
+  org.mindrot/jbcrypt {:mvn/version "0.4"}
+  ;; Address CVE-2026-110263, CVE-2026-110261, CVE-2026-110257, CVE-2026-110258, CVE-2026-110260, CVE-2026-110259
+  org.ow2.asm/asm {:mvn/version "9.11.1"}}
 
  :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.12"}}
                    :ns-default build}
