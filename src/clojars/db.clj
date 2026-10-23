@@ -12,6 +12,7 @@
    (java.security
     SecureRandom)
    (java.sql
+    Array
     Timestamp)))
 
 (set! *warn-on-reflection* true)
@@ -79,6 +80,11 @@
     "verify"
     "webmaster"
     "welcome"})
+
+(extend-protocol jdbc.result-set/ReadableColumn
+  Array
+  (read-column-by-label [^Array v _]    (vec (.getArray v)))
+  (read-column-by-index [^Array v _ _]  (vec (.getArray v))))
 
 ;; From https://cljdoc.org/d/com.github.seancorfield/next.jdbc/1.3.894/doc/migration-from-clojure-java-jdbc
 (defn do-commands

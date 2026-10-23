@@ -69,6 +69,13 @@
                  (update record :token db/bcrypt))
     record))
 
+(defn reassign-token
+  "Reassigns a token to a different user. Should only be used when merging users."
+  [db token-id user-id]
+  (sql/update! db :deploy_tokens
+               {:user_id user-id}
+               {:id token-id}))
+
 (defn find-deploy-tokens-for-user
   [db user-id]
   (mapv #(dissoc % :token)

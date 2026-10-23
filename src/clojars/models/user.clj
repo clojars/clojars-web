@@ -1,6 +1,7 @@
 (ns clojars.models.user
   (:require
    [clojars.db :as db]
+   [clojars.models.deploy-token :as deploy-token-m]
    [clojars.models.group-verification :as group-verification-m]
    [clojars.models.permission :as permission-m]
    [clojars.time :as time]
@@ -47,29 +48,120 @@
    :username account
    :account  account})
 
+(defn- rename-user-tree
+  [tx from-name to-name]
+  (sql/update! tx :permissions
+               {db/user-column to-name}
+               {db/user-column from-name})
+  (sql/update! tx :permissions
+               {:added_by to-name}
+               {:added_by from-name})
+  (sql/update! tx :group_verifications
+               {:verified_by to-name}
+               {:verified_by from-name})
+  (sql/update! tx :jars
+               {db/user-column to-name}
+               {db/user-column from-name})
+  (sql/update! tx :audit
+               {db/user-column to-name}
+               {db/user-column from-name}))
+
 (defn rename-user
   [db old-name new-name]
   (jdbc/with-transaction [tx db]
     (sql/update! tx :users
                  {db/user-column new-name}
                  {db/user-column old-name})
-    (sql/update! tx :permissions
-                 {db/user-column new-name}
-                 {db/user-column old-name})
-    (sql/update! tx :permissions
-                 {:added_by new-name}
-                 {:added_by old-name})
-    (sql/update! tx :group_verifications
-                 {:verified_by new-name}
-                 {:verified_by old-name})
-    (sql/update! tx :jars
-                 {db/user-column new-name}
-                 {db/user-column old-name})
-    (sql/update! tx :audit
-                 {db/user-column new-name}
-                 {db/user-column old-name})
+    (rename-user-tree tx old-name new-name)
     {:username new-name
      :account  new-name}))
+
+(defn- append-merged-usernames
+  [tx main-username other-usernames]
+  (db/execute!
+   tx {:update :users
+       :set {:merged_usernames [:array_cat :merged_usernames [:array other-usernames]]}
+       :where [:= :user main-username]}))
+
+(defn- delete-users!
+  [tx usernames]
+  (db/execute! tx {:delete-from :users
+                   :where [:in :user usernames]}))
+
+(defn find-user
+  [db username]
+  (first
+   (db/q db
+         {:select :*
+          :from :users
+          :where [:= :user username]
+          :limit 1})))
+
+(defn- assert-find-user
+  [db username]
+  (if-some [user (find-user db username)]
+    user
+    (throw (ex-info "User does not exist"
+                    {:username username}))))
+
+(defn- remove-future-duplicate-membership
+  "Finds all memberships for all users involved in the merge. It then inactivates
+  all but one of those memberships for each group and scope, preventing
+  duplicated group membership after the merge. \"*\" scoped memberships trump
+  all other scopes for that group. It doesn't matter what user the remaining
+  memberships are for, as they will all be assigned to the main-username by the
+  time the merge is done. The preserved memberships are the ones that are
+  admin (if available) and the broadest scope."
+  [tx main-username other-usernames]
+  (let [all-memberships (permission-m/find-memberships-for-users
+                         tx (conj other-usernames main-username))]
+    (doseq [group-memberships (vals (group-by :group_name all-memberships))
+            :when (> (count group-memberships) 1)]
+      (->> group-memberships
+           ;; false sorts before true, so we flip admin. "*" sorts before alpha strings.
+           (sort-by (fn [{:keys [admin scope]}] [(not admin) scope]))
+           (reduce
+            (fn [[seen-scopes to-inactivate] {:as membership :keys [scope]}]
+              (if (or (contains? seen-scopes permission-m/SCOPE-ALL)
+                      (contains? seen-scopes scope))
+                [seen-scopes (conj to-inactivate membership)]
+                [(conj seen-scopes scope) to-inactivate]))
+            [#{} #{}])
+           (peek)
+           (run! (fn [{group :group_name, scope :scope, username :user}]
+                   (permission-m/inactivate-member tx group scope username "clojars")))))))
+
+(defn merge-users!
+  "Merges users for `other-usernames` into the user for `main-username`, and deletes the `other-usernames` users.
+  
+  The main user inherits all the groups/jars of any of the merged users.
+
+  The `other-usernames` are stored on the main user in the merged_usernames
+  array so can still be used for logging in, and the register logic can still
+  consider the usernames as unavailable."
+  [db main-username other-usernames]
+  (let [{:as _main-user main-user-id :id} (assert-find-user db main-username)
+        other-users-map (into {} (comp
+                                  (map #(assert-find-user db %))
+                                  (map (juxt :user identity)))
+                              other-usernames)]
+    (jdbc/with-transaction [tx db]
+      (remove-future-duplicate-membership tx main-username other-usernames)
+      (doseq [merging-username other-usernames
+              :let [tokens (deploy-token-m/find-deploy-tokens-for-user
+                            db
+                            (:id (other-users-map merging-username)))]]
+        (rename-user-tree tx merging-username main-username)
+        (doseq [{token-id :id} tokens]
+          (deploy-token-m/reassign-token tx token-id main-user-id)))
+      (append-merged-usernames tx main-username
+                               (into other-usernames
+                                     ;; Include any users that were already merged
+                                     ;; into the other users, as we want to preserve
+                                     ;; that history
+                                     (mapcat :merged_usernames)
+                                     (vals other-users-map)))
+      (delete-users! tx other-usernames))))
 
 (defn update-user-notifications
   [db account prefs]
@@ -92,15 +184,6 @@
         {:select [:user]
          :from :users
          :order-by [[:user :asc]]}))
-
-(defn find-user
-  [db username]
-  (first
-   (db/q db
-         {:select :*
-          :from :users
-          :where [:= :user username]
-          :limit 1})))
 
 (defn find-user-by-user-or-email
   [db username-or-email]
