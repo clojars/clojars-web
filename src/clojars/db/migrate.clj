@@ -166,6 +166,13 @@
          "add email_verification_code text, "
          "add email_verification_code_created_at timestamp")]))
 
+(defn- add-merged-usernames-to-users
+  [tx]
+  (db/do-commands
+   tx
+   ["alter table users add merged_usernames text[]"
+    "CREATE INDEX users_merged_usernames_idx ON users USING gin (merged_usernames)"]))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -185,7 +192,8 @@
    #'add-created-index-to-jars-table
    #'enable-send-deploy-emails-for-existing-users
    #'add-sessions-table
-   #'add-email-verification-to-users])
+   #'add-email-verification-to-users
+   #'add-merged-usernames-to-users])
 
 (defn migrate [db]
   (db/do-commands db
