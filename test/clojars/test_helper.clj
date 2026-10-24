@@ -8,6 +8,7 @@
    [clojars.dev.setup :as setup]
    [clojars.email :as email]
    [clojars.errors :as errors]
+   [clojars.hibp :as hibp]
    [clojars.http-kit :as http-kit]
    [clojars.maven :as maven]
    [clojars.models.audit :as audit-m]
@@ -125,6 +126,10 @@
 (defn memory-index []
   (ByteBuffersDirectory.))
 
+(def pwned-password
+  "A password the test system's mock HIBP service considers compromised."
+  "pwned-password-1234")
+
 (declare ^:dynamic system)
 
 (defn app []
@@ -142,7 +147,8 @@
                              :index-factory memory-index
                              :mailer (email/mock-mailer)
                              :stats (no-stats)
-                             :github (oauth-service/new-mock-oauth-service "GitHub" {})))]
+                             :github (oauth-service/new-mock-oauth-service "GitHub" {})
+                             :hibp (hibp/new-mock-hibp #{pwned-password})))]
       (let [db (get-in system [:db :spec])]
         (try
           (setup/clear-database! db)
@@ -222,7 +228,7 @@
        (is (seq emails-for-address#) (format "Emails for %s should exist" email-address#))
        (doseq [email# emails-for-address#]
          (is (str/ends-with? (nth email# 2)
-                             (format "This message was sent to email address on file for the '%s' Clojars account."
+                             (format "This message was sent to the email address on file for the '%s' Clojars account."
                                      username#)))))))
 (defmacro match-audit
   [params m]

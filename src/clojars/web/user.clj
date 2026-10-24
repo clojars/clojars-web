@@ -99,7 +99,7 @@
     (str/lower-case (str/trim email))))
 
 (defn update-profile
-  [db event-emitter account
+  [db event-emitter hibp account
    {:keys [email current-password password confirm] :as params}
    details]
   (let [email (normalize-email email)]
@@ -113,7 +113,7 @@
                                     (uv/user-validations db account)
                                     (uv/current-password-validations db account)
                                     (when-not (str/blank? password)
-                                      (uv/password-validations confirm))))]
+                                      (uv/password-validations hibp confirm))))]
         (do
           (log/info {:status :failed
                      :reason :validation-failed})
@@ -186,15 +186,17 @@
                                           verified-group-badge-small)]))
                                    (permission-m/find-groupnames db (user :user))))]]))
 
-(defn forgot-password-form []
+(defn forgot-password-form [email-or-username flash-msg]
   (html-doc "Forgot password or username?" {}
             [:div.small-section
              [:h1 "Forgot something?"]
+             (flash flash-msg)
              [:p "Don't worry, it happens to the best of us. Enter your email or username below, and we'll send you a password reset link along with your username."]
              (form-to [:post "/forgot-password"]
                       (label :email-or-username "Email or Username")
                       (text-field {:placeholder "bob"
-                                   :required true}
+                                   :required true
+                                   :value email-or-username}
                                   :email-or-username)
                       (submit-button "Email me a password reset link"))]))
 
@@ -262,12 +264,12 @@
                 [:h1 "Reset your password"]
                 [:p "The reset code was not found. Please ask for a new code in the " [:a {:href "/forgot-password"} "forgot password"] " page"]))))
 
-(defn reset-password [db event-emitter reset-code {:keys [password confirm]} details]
+(defn reset-password [db event-emitter hibp reset-code {:keys [password confirm]} details]
   (log/with-context {:tag :reset-password
                      :reset-code reset-code}
     (if-let [errors (uv/validate {:password password
                                   :reset-code reset-code}
-                                 (uv/reset-password-validations db confirm))]
+                                 (uv/reset-password-validations db hibp confirm))]
       (do
         (log/info {:status :failed
                    :reason :validation-failed})

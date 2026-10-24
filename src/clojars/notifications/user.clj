@@ -62,6 +62,18 @@
     common/did-not-take-action
     (common/account-footer username)]))
 
+(defmethod notifications/notification :password-pwned
+  [_type {:keys [mailer] {email :email username :user} :user} data]
+  (notifications/send
+   mailer email "Your Clojars password has been disabled"
+   [(format
+     "Someone (hopefully you) just tried to log in to your '%s' Clojars account with a password that has appeared in a public data breach, according to Have I Been Pwned (https://haveibeenpwned.com/Passwords)."
+     username)
+    (common/details-table data)
+    "To protect your account, we have disabled that password and logged out all of your sessions. Your deploy tokens have not been changed."
+    "To log in again, set a new password at https://clojars.org/forgot-password. If you used this password anywhere else, you should change it there too."
+    (common/account-footer username)]))
+
 (defn- send-email-verification-email
   [{:keys [db mailer]} {:as user username :user} context]
   (let [code (user-m/set-email-verification-code db username)
