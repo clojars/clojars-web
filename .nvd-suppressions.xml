@@ -57,4 +57,15 @@
     ]]></notes>
      <cve>CVE-2026-54522</cve>
   </suppress>
+
+  <suppress>
+   <notes><![CDATA[
+   file name: msgpack-core-0.9.12.jar
+
+   This only impacts deserialization, and we only serialize msgpack (via transit).
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.msgpack/msgpack-core@.*$</packageUrl>
+   <vulnerabilityName>CVE-2026-90473</vulnerabilityName>
+  </suppress>
+  
 </suppressions>
