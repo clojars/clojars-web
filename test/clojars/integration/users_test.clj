@@ -52,6 +52,7 @@
 (deftest bad-registration-info-should-show-error
   (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password1234"))
+  (user-m/append-merged-usernames help/*db* "fixture" ["mergeduser"])
   (-> (session (help/app))
       (visit "/")
       (follow "register")
@@ -138,6 +139,15 @@
         (has (text? "Username must consist only of lowercase letters, numbers, hyphens and underscores.")))
 
       (fill-in "Username" "fixture")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
+      (fill-in-captcha)
+      (press "Register")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "Username is already taken")))
+
+      (fill-in "Username" "mergeduser")
       (fill-in "Password" "password1234")
       (fill-in "Confirm password" "password1234")
       (fill-in-captcha)

@@ -44,7 +44,7 @@
   [db email-validation hcaptcha confirm]
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (db/reserved-names %)
-                                (user-m/find-user db %)
+                                (user-m/find-user-by-username|merged-usernames db %)
                                 (seq (permission-m/group-activenames db %))))
             "Username is already taken"]]
           (user-validations db email-validation)
