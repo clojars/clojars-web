@@ -7,6 +7,7 @@
    [clojars.time :as time]
    [clojure.set :as set]
    [clojure.string :as str]
+   [honey.sql.pg-ops :as pg-ops]
    [next.jdbc :as jdbc]
    [next.jdbc.sql :as sql]
    [one-time.core :as ot])
@@ -76,7 +77,9 @@
     {:username new-name
      :account  new-name}))
 
-(defn- append-merged-usernames
+;; Public only for testing usage. Should not be used directly from
+;; production code!
+(defn append-merged-usernames
   [tx main-username other-usernames]
   (db/execute!
    tx {:update :users
@@ -103,6 +106,17 @@
     user
     (throw (ex-info "User does not exist"
                     {:username username}))))
+
+(defn find-user-by-username|merged-usernames
+  [db username]
+  (first
+   (db/q db
+         {:select :*
+          :from :users
+          :where [:or
+                  [:= :user username]
+                  [pg-ops/at> :merged_usernames [:array [username] :text]]]
+          :limit 1})))
 
 (defn- remove-future-duplicate-membership
   "Finds all memberships for all users involved in the merge. It then inactivates

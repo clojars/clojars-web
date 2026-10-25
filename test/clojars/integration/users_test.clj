@@ -163,6 +163,15 @@
       (within [:div.error :ul :li]
         (has (text? "Captcha response is invalid.")))))
 
+(deftest user-can-log-in-with-merged-username
+  (register-as (session (help/app)) "dantheman" "test@example.org" "password1234")
+  (user-m/append-merged-usernames help/*db* "dantheman" ["mergeduser"])
+  (-> (session (help/app))
+      (login-as "mergeduser" "password1234")
+      (follow-redirect)
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (dantheman)")))))
+
 (deftest user-can-update-info
   ;; Changing both email and password: both update immediately.
   ;; The user must re-login (password invalidated) and then verify the new email.

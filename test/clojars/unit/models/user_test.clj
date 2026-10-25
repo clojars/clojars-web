@@ -27,8 +27,20 @@
                       :user name}
                      x)
       (user-m/find-user help/*db* name)
+      (user-m/find-user-by-username|merged-usernames help/*db* name)
       (user-m/find-user-by-user-or-email help/*db* name)
       (user-m/find-user-by-user-or-email help/*db* email))))
+
+(deftest merged-users-can-be-found
+  (let [email "test@example.com"
+        name "testuser"
+        password "password1234"]
+    (user-m/add-user help/*db* email name password)
+    (user-m/append-merged-usernames help/*db* name ["testuser2"])
+    (is (match?
+         {:email email
+          :user name}
+         (user-m/find-user-by-username|merged-usernames help/*db* "testuser2")))))
 
 (deftest user-does-not-exist
   (is (not (user-m/find-user-by-user-or-email help/*db* "test2@example.com"))))
