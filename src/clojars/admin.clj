@@ -2,6 +2,7 @@
   (:require
    [clojars.config :refer [config]]
    [clojars.db :as db]
+   [clojars.event :as event]
    [clojars.file-utils :as fu]
    [clojars.models.deploy-token :as deploy-token-m]
    [clojars.models.group-verification :as group-verification-m]
@@ -26,6 +27,7 @@
   (.format (SimpleDateFormat. "yyyyMMdd") (db/get-time)))
 
 (def ^:dynamic *db* nil)
+(def ^:dynamic *event-emitter* nil)
 (def ^:dynamic *search* nil)
 (def ^:dynamic *storage* nil)
 
@@ -211,21 +213,30 @@
       (run! (fn [group] (permission-m/delete-group tx group)) empty-default-groups))
     new-username))
 
+(defn merge-users!
+  [main-username other-usernames]
+  (user-m/merge-users! *db* main-username other-usernames)
+  (event/emit *event-emitter* :users-merged
+              {:username        main-username
+               :other-usernames other-usernames}))
+
 (defn handler [mapping]
   (nrepl/default-handler
-   (with-meta
-     (fn [h]
-       (fn [{:keys [session] :as msg}]
-         (swap! session merge mapping)
-         (h msg)))
-     {:nrepl.middleware/descriptor {:requires #{"clone"}
-                                    :expects #{"eval"}}})))
+    (with-meta
+      (fn [h]
+        (fn [{:keys [session] :as msg}]
+          (swap! session merge mapping)
+          (h msg)))
+      {:nrepl.middleware/descriptor {:requires #{"clone"}
+                                     :expects #{"eval"}}})))
 
-(defn init [db search storage]
+(defn init
+  [db event-emitter search storage]
   (when-let [port (:nrepl-port (config))]
     (printf "clojars-web: starting nrepl on localhost:%s\n" port)
     (nrepl/start-server :port port
                         :bind "127.0.0.1"
-                        :handler (handler {#'*db*      db
-                                           #'*search*  search
-                                           #'*storage* storage}))))
+                        :handler (handler {#'*db*            db
+                                           #'*event-emitter* event-emitter
+                                           #'*search*        search
+                                           #'*storage*       storage}))))
