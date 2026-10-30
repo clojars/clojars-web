@@ -43,6 +43,7 @@
       (err/set-default-exception-handler error-reporter)
       (info "starting http-kit on" (format "http://%s:%s" (-> config :http :host) (-> config :http :port)))
       (admin/init (get-in system [:db :spec])
+                  (:event-emitter system)
                   (:search system)
                   (:storage system)))
     (catch Throwable t

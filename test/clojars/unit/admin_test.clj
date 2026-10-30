@@ -3,6 +3,7 @@
    [clojars.admin :as admin]
    [clojars.config :refer [config]]
    [clojars.db :as db]
+   [clojars.email :as email]
    [clojars.models.audit :as audit-m]
    [clojars.models.deploy-token :as deploy-token-m]
    [clojars.models.group-verification :as group-verification-m]
@@ -32,6 +33,7 @@
     (binding [*search-removals* (atom #{})
               *s3-client* s3-client
               admin/*db* help/*db*
+              admin/*event-emitter* (:event-emitter help/system)
               admin/*search* (reify search/Search
                                (index! [_ _])
                                (search [_ _ _])
@@ -59,6 +61,7 @@
 
 (use-fixtures :each
   help/default-fixture
+  help/run-test-app
   help/with-clean-database
   with-repo-setup)
 
@@ -249,3 +252,16 @@
   (is (thrown-with-msg?
        Exception #"User does-not-exist not found!"
         (admin/soft-delete-user! "does-not-exist"))))
+
+(deftest merge-users!
+  ;; Note: user merging is already tested in clojars.unit.models.user-test. This
+  ;; just checks that the admin wrapper triggers an email
+  (user-m/add-user admin/*db* "testuser2@example.com" "testuser2" "password1234")
+  (email/expect-mock-emails 1)
+  (admin/merge-users! "testuser" ["testuser2"])
+  (email/wait-for-mock-emails)
+  (let [[to subject body] (first @email/mock-emails)]
+    (is (= "testuser@example.com" to))
+    (is (= "Your two Clojars accounts that share this email address have been merged" subject))
+    (is (re-find #"'testuser'" body))
+    (is (re-find #"- testuser2" body))))
