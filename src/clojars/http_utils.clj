@@ -67,6 +67,7 @@
   "Adds an additional *-src values to our content-security-policy."
   [srcs body]
   (-> body
+      (str)
       (response)
       (content-type "text/html;charset=utf-8")
       (assoc ::extra-csp-srcs srcs)))
