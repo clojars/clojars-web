@@ -42,20 +42,19 @@
                        (jar-m/recent-versions db group-id artifact-id 5)
                        (jar-m/count-versions db group-id artifact-id))))))
 
-(defn response-based-on-format
+(defn latest-version-response
   "render appropriate response based on the file type suffix provided:
   JSON or SVG"
   [db file-format artifact-id & [group-id]]
-  (let [group-id (or group-id artifact-id)]
-    (cond
-      (= "json" file-format) (-> (response/response (view/make-latest-version-json db group-id artifact-id))
-                                 (response/header "Cache-Control" "no-cache")
-                                 (response/content-type "application/json; charset=UTF-8")
-                                 (response/header "Access-Control-Allow-Origin" "*"))
-      (= "svg" file-format) (-> (response/response (view/make-latest-version-svg db group-id artifact-id))
-                                (response/header "Cache-Control" "no-cache")
-                                (response/content-type "image/svg+xml")
-                                (response/header "Access-Control-Allow-Origin" "*")))))
+  (let [group-id (or group-id artifact-id)
+        [content-type body]
+        (case file-format
+          "json" ["application/json; charset=UTF-8" (view/make-latest-version-json db group-id artifact-id)]
+          "svg"  ["image/svg+xml" (view/make-latest-version-svg db group-id artifact-id)])]
+    (-> (response/response body)
+        (response/content-type content-type)
+        (response/header "Cache-Control" "no-cache")
+        (response/header "Access-Control-Allow-Origin" "*"))))
 
 (defn routes [db stats]
   (compojure/routes
@@ -92,11 +91,11 @@
          :artifact-id #"[^/]+"
          :file-format #"(svg|json)$"]
         [artifact-id file-format]
-        (response-based-on-format db file-format artifact-id))
+        (latest-version-response db file-format artifact-id))
 
    (GET ["/:group-id/:artifact-id/latest-version.:file-format"
          :group-id #"[^/]+"
          :artifact-id #"[^/]+"
          :file-format #"(svg|json)$"]
         [group-id artifact-id file-format]
-        (response-based-on-format db file-format artifact-id group-id))))
+        (latest-version-response db file-format artifact-id group-id))))
