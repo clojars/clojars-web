@@ -49,6 +49,9 @@
 (def local-repo (io/file tmp-dir "clojars" "test" "local-repo"))
 (def local-repo2 (io/file tmp-dir "clojars" "test" "local-repo2"))
 
+(defn test-config []
+  (config/config :test))
+
 (defn delete-file-recursively
   "Delete file f. If it's a directory, recursively delete all its contents."
   [f]
@@ -73,7 +76,7 @@
 (defn default-fixture [f]
   (binding [config/*profile* "test"]
     (let [cleanup (fn [] (run!
-                          #(delete-file-recursively (io/file ((config/config) %)))
+                          #(delete-file-recursively (io/file ((test-config) %)))
                           [:deletion-backup-dir :repo]))]
       (cleanup)
       (f)
@@ -90,7 +93,7 @@
   (binding [config/*profile* "test"]
     ;; double binding since ^ needs to be bound for config to load
     ;; properly
-    (binding [*db* (:db (config/config))]
+    (binding [*db* (:db (test-config))]
       (setup/clear-database! *db*)
       (with-out-str
         (migrate/migrate *db*))
@@ -136,7 +139,7 @@
     ;; double binding since ^ needs to be bound for config to load
     ;; properly
     (binding [system (component/start
-                      (assoc (system/new-system (config/config))
+                      (assoc (system/new-system (test-config))
                              :repo-bucket (s3/mock-s3-client)
                              :error-reporter (quiet-reporter)
                              :index-factory memory-index
@@ -226,7 +229,7 @@
                                      username#)))))))
 (defmacro match-audit
   [params m]
-  `(let [db# (:db (config/config))
+  `(let [db# (:db (test-config))
          audit# (first (audit-m/find-audit db# ~params))]
      (is (~'match? ~m audit#))))
 
