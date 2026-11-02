@@ -51,10 +51,11 @@
         (case file-format
           "json" ["application/json; charset=UTF-8" (view/make-latest-version-json db group-id artifact-id)]
           "svg"  ["image/svg+xml" (view/make-latest-version-svg db group-id artifact-id)])]
-    (-> (response/response body)
-        (response/content-type content-type)
-        (response/header "Cache-Control" "no-cache")
-        (response/header "Access-Control-Allow-Origin" "*"))))
+    (when body
+      (-> (response/response body)
+          (response/content-type content-type)
+          (response/header "Cache-Control" "no-cache")
+          (response/header "Access-Control-Allow-Origin" "*")))))
 
 (defn routes [db stats]
   (compojure/routes
