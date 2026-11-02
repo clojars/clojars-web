@@ -18,8 +18,8 @@
    [matcher-combinators.test]))
 
 (def ^:dynamic *search-removals* nil)
-
 (def ^:dynamic *s3-client* nil)
+(def ^:dynamic *user* nil)
 
 ;; Note: these tests exercise the s3 client end-to-end, and require s3mock to
 ;; running. See docker-compose.yml
@@ -41,8 +41,8 @@
                                  (swap! *search-removals* conj (format "%s/%s" group# artifact#))))
               admin/*storage* (storage/multi-storage
                                (storage/fs-storage (:repo config))
-                               (storage/s3-storage s3-client))]
-      (user-m/add-user admin/*db* "testuser@example.com" "testuser" "password1234")
+                               (storage/s3-storage s3-client))
+              *user* (user-m/add-user help/*db* "testuser@example.com" "testuser" "password1234")]
       (help/add-verified-group "testuser" "org.ham")
       (jar-m/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "1" :description "delete me"})
       (jar-m/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "2" :description ""})
@@ -191,7 +191,7 @@
   (user-m/enable-otp! admin/*db* "testuser")
   (user-m/set-otp-secret-key! admin/*db* "testuser")
   (user-m/set-password-reset-code! admin/*db* "testuser")
-  (deploy-token-m/add-deploy-token admin/*db* "testuser" "token" nil nil false (db/get-time))
+  (deploy-token-m/add-deploy-token admin/*db* (:id *user*) "token" nil nil false (db/get-time))
 
   ;; And: a shared default group with a jar
   (permission-m/add-admin admin/*db* "org.clojars.testuser" permission-m/SCOPE-ALL "otheruser" "testuser")
