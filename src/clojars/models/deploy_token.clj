@@ -4,7 +4,6 @@
    [buddy.core.hash :as buddy.hash]
    [cemerick.friend.credentials :as creds]
    [clojars.db :as db]
-   [clojars.models.user :as user-m]
    [clojars.util :refer [filter-some]]
    [next.jdbc.sql :as sql]
    [next.jdbc.types :as jdbc.types]))
@@ -54,10 +53,9 @@
   (boolean (and v (re-find #"^CLOJARS_[0-9a-f]{60}$" v))))
 
 (defn add-deploy-token
-  [db username token-name group-name jar-name single-use? expires-at]
-  (let [user (user-m/find-user db username)
-        token (generate-deploy-token)
-        record {:user_id (:id user)
+  [db user-id token-name group-name jar-name single-use? expires-at]
+  (let [token (generate-deploy-token)
+        record {:user_id user-id
                 :name token-name
                 :token token
                 :token_hash (hash-deploy-token token)

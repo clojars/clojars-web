@@ -30,12 +30,12 @@
                 :username username
                 :password (db/bcrypt password)
                 :send_deploy_emails true
-                :created (db/get-time)}]
-    (sql/insert! db :users (set/rename-keys record {:username db/user-column}))
+                :created (db/get-time)}
+        result (sql/insert! db :users (set/rename-keys record {:username db/user-column}))]
     (doseq [groupname (default-user-groups username)]
       (permission-m/add-member* db groupname permission-m/SCOPE-ALL username "clojars" true)
       (group-verification-m/verify-group! db username groupname))
-    record))
+    (assoc record :id (:users/id result))))
 
 (defn update-user
   [db account email password]
