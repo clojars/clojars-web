@@ -107,17 +107,6 @@
     (throw (ex-info "User does not exist"
                     {:username username}))))
 
-(defn find-user-by-username|merged-usernames
-  [db username]
-  (first
-   (db/q db
-         {:select :*
-          :from :users
-          :where [:or
-                  [:= :user username]
-                  [pg-ops/at> :merged_usernames [:array [username] :text]]]
-          :limit 1})))
-
 (defn- remove-future-duplicate-membership
   "Finds all memberships for all users involved in the merge. It then inactivates
   all but one of those memberships for each group and scope, preventing
@@ -199,7 +188,11 @@
          :from :users
          :order-by [[:user :asc]]}))
 
-(defn find-user-by-user-or-email
+(defn find-user-by-email|username|merged-username
+  "Looks up a user by email or username. The username is checked against the :user
+  column, and the :merged_usernames column (to handle the case where the user
+  for the given username was merged away). Merged users retain ownership of the
+  usernames for their merged-away users."
   [db username-or-email]
   (first
    (db/q db
@@ -207,7 +200,23 @@
           :from :users
           :where [:or
                   [:= :user username-or-email]
-                  [:= :email (str/lower-case username-or-email)]]
+                  [:= :email (str/lower-case username-or-email)]
+                  [pg-ops/at> :merged_usernames [:array [username-or-email] :text]]]
+          :limit 1})))
+
+(defn find-user-by-username|merged-username
+  "Looks up a user by username. The username is checked against the :user column,
+  and the :merged_usernames column (to handle the case where the user for the
+  given username was merged away). Merged users retain ownership of the
+  usernames for their merged-away users."
+  [db username]
+  (first
+   (db/q db
+         {:select :*
+          :from :users
+          :where [:or
+                  [:= :user username]
+                  [pg-ops/at> :merged_usernames [:array [username] :text]]]
           :limit 1})))
 
 (defn find-user-by-email-in

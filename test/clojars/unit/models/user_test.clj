@@ -27,9 +27,9 @@
                       :user name}
                      x)
       (user-m/find-user help/*db* name)
-      (user-m/find-user-by-username|merged-usernames help/*db* name)
-      (user-m/find-user-by-user-or-email help/*db* name)
-      (user-m/find-user-by-user-or-email help/*db* email))))
+      (user-m/find-user-by-username|merged-username help/*db* name)
+      (user-m/find-user-by-email|username|merged-username help/*db* name)
+      (user-m/find-user-by-email|username|merged-username help/*db* email))))
 
 (deftest merged-users-can-be-found
   (let [email "test@example.com"
@@ -40,10 +40,10 @@
     (is (match?
          {:email email
           :user name}
-         (user-m/find-user-by-username|merged-usernames help/*db* "testuser2")))))
+         (user-m/find-user-by-username|merged-username help/*db* "testuser2")))))
 
 (deftest user-does-not-exist
-  (is (not (user-m/find-user-by-user-or-email help/*db* "test2@example.com"))))
+  (is (not (user-m/find-user-by-email|username|merged-username help/*db* "test2@example.com"))))
 
 (deftest added-users-can-be-found-by-password-reset-code-except-when-expired
   (let [email "test@example.com"
@@ -72,7 +72,7 @@
                           :created created-at}
                          x)
           (user-m/find-user help/*db* name2)
-          (user-m/find-user-by-user-or-email help/*db* name2)))
+          (user-m/find-user-by-email|username|merged-username help/*db* name2)))
       (is (not (user-m/find-user help/*db* name))))))
 
 (deftest updated-users-can-be-found
@@ -89,7 +89,7 @@
         (is (match?
              {:email email2
               :created created-at}
-             (user-m/find-user-by-user-or-email help/*db* email2)))))))
+             (user-m/find-user-by-email|username|merged-username help/*db* email2)))))))
 
 (deftest update-user-works-when-password-is-blank
   (let [email "test@example.com"

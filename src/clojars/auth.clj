@@ -45,7 +45,7 @@
 (defn- verify-password
   [db username password]
   (when-not (str/blank? password)
-    (let [user (user-m/find-user-by-username|merged-usernames db username)]
+    (let [user (user-m/find-user-by-username|merged-username db username)]
       (when (and (not (str/blank? (:password user)))
                  (creds/bcrypt-verify password (:password user)))
         user))))
@@ -191,7 +191,7 @@
                        :type :token}
       (let [password-hash (when password
                             (deploy-token-m/hash-deploy-token password))
-            username (:user (user-m/find-user-by-user-or-email db username-or-email))]
+            username (:user (user-m/find-user-by-email|username|merged-username db username-or-email))]
         (if-let [token (and username
                             password
                             (->> (deploy-token-m/find-user-tokens-by-username db username)
