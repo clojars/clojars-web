@@ -4,6 +4,7 @@
    [clojars.db :as db]
    [clojars.hcaptcha :as hcaptcha]
    [clojars.log :as log]
+   [clojars.models.email-validation :as email-validation-m]
    [clojars.models.permission :as permission-m]
    [clojars.models.user :as user-m]
    [clojure.string :as str]
@@ -17,9 +18,9 @@
    [:password (pred/max-length 256) "Password must be 256 or fewer characters"]])
 
 (defn user-validations
-  ([db]
-   (user-validations db nil))
-  ([db existing-username]
+  ([db email-validation]
+   (user-validations db email-validation nil))
+  ([db email-validation existing-username]
    (let [existing-email-fn (if existing-username
                              #(let [existing-user (user-m/find-user-by-user-or-email db %)]
                                 (or (nil? existing-user)
@@ -28,6 +29,7 @@
      [[:email pred/present? "Email can't be blank"]
       [:email pred/email-address? "Email is not valid"]
       [:email (pred/max-length 256) "Email must be 256 or fewer characters"]
+      [:email #(email-validation-m/allowed-email? email-validation %) "Email must not be disposable"]
       [:email existing-email-fn "A user already exists with this email"]
       [:username (pred/matches #"[a-z0-9_-]+")
        (str "Username must consist only of lowercase "
@@ -39,13 +41,13 @@
   [[:captcha (partial hcaptcha/valid-response? hcaptcha) "Captcha response is invalid."]])
 
 (defn new-user-validations
-  [db hcaptcha confirm]
+  [db email-validation hcaptcha confirm]
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (db/reserved-names %)
                                 (user-m/find-user db %)
                                 (seq (permission-m/group-activenames db %))))
             "Username is already taken"]]
-          (user-validations db)
+          (user-validations db email-validation)
           (password-validations confirm)
           (captcha-validations hcaptcha)))
 

@@ -9,6 +9,10 @@ Blance = "Blance"
 edn = "edn"
 juxt = "juxt"
 
+[type.conf]
+extend-glob = ["*.conf"]
+check-file = false
+
 [type.gpg]
 extend-glob = ["*.gpg"]
 check-file = false

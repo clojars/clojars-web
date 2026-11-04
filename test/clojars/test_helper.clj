@@ -14,6 +14,7 @@
    [clojars.models.group-verification :as group-verification-m]
    [clojars.models.permission :as permission-m]
    [clojars.oauth.service :as oauth-service]
+   [clojars.remote-service :as remote-service]
    [clojars.s3 :as s3]
    [clojars.search :as search]
    [clojars.stats :as stats]
@@ -140,12 +141,13 @@
     ;; properly
     (binding [system (component/start
                       (assoc (system/new-system (test-config))
-                             :repo-bucket (s3/mock-s3-client)
+                             :email-validation (remote-service/new-mock-remote-service)
                              :error-reporter (quiet-reporter)
+                             :github (oauth-service/new-mock-oauth-service "GitHub" {})
                              :index-factory memory-index
                              :mailer (email/mock-mailer)
-                             :stats (no-stats)
-                             :github (oauth-service/new-mock-oauth-service "GitHub" {})))]
+                             :repo-bucket (s3/mock-s3-client)
+                             :stats (no-stats)))]
       (let [db (get-in system [:db :spec])]
         (try
           (setup/clear-database! db)

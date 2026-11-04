@@ -98,7 +98,7 @@
     (str/lower-case (str/trim email))))
 
 (defn update-profile
-  [db event-emitter account
+  [db email-validation event-emitter account
    {:keys [email current-password password confirm] :as params}
    details]
   (let [email (normalize-email email)]
@@ -109,7 +109,7 @@
                                     :username account
                                     :password password}
                                    (concat
-                                    (uv/user-validations db account)
+                                    (uv/user-validations db email-validation account)
                                     (uv/current-password-validations db account)
                                     (when-not (str/blank? password)
                                       (uv/password-validations confirm))))]

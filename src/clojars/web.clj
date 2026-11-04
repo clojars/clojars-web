@@ -57,7 +57,7 @@
         page))))
 
 (defn- main-routes
-  [{:as _system :keys [db event-emitter hcaptcha mailer search stats]}]
+  [{:as _system :keys [db email-validation event-emitter hcaptcha mailer search stats]}]
   (let [db (:spec db)]
     (routes
      (GET "/" _
@@ -90,7 +90,7 @@
      (artifact/routes db stats)
      ;; user routes must go after artifact routes
      ;; since they both catch /:identifier
-     (user/routes db event-emitter hcaptcha mailer)
+     (user/routes db email-validation event-emitter hcaptcha mailer)
      (verify/routes db event-emitter)
      (token/routes db event-emitter)
      (api/routes db stats)
@@ -151,6 +151,7 @@
 (defn clojars-app
   [{:as system
     :keys [db
+           email-validation
            error-reporter
            event-emitter
            hcaptcha
@@ -189,7 +190,7 @@
      (-> (main-routes system)
          (friend/authenticate
           {:workflows [(auth/interactive-form-with-mfa-workflow db event-emitter)
-                       (registration/workflow db hcaptcha event-emitter)
+                       (registration/workflow db hcaptcha email-validation event-emitter)
                        (github/workflow github http-client db event-emitter)
                        (gitlab/workflow gitlab http-client db event-emitter)]})
          (wrap-reject-invalid-params)
