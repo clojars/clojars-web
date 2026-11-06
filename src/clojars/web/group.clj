@@ -4,8 +4,8 @@
    [clojars.models.group-verification :as group-verification-m]
    [clojars.models.jar :as jar-m]
    [clojars.models.permission :as permission-m]
-   [clojars.web.common :refer [audit-table form-table html-doc jar-link user-link error-list verified-group-badge-small]]
-   [clojars.web.safe-hiccup :refer [form-to]]
+   [clojars.web.common :refer [audit-table form-table form-to html-doc jar-link
+                               user-link error-list verified-group-badge-small]]
    [clojars.web.structured-data :as structured-data]
    [hiccup.element :refer [unordered-list]]
    [hiccup.form :refer [text-field hidden-field select-options]]))

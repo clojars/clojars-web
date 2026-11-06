@@ -14,8 +14,8 @@
    [clojars.web.helpers :as helpers]
    [clojars.web.structured-data :as structured-data]
    [clojure.set :as set]
-   [hiccup.core]
    [hiccup.element :refer [link-to]]
+   [hiccup2.core :as h]
    [ring.util.codec :refer [url-encode]])
   (:import
    (java.net
@@ -449,15 +449,15 @@
         [:tspan {:fill clojars-color} "clojars.org"]]])))
 
 (defn make-latest-version-svg [db group-id artifact-id]
-  (let [jar (jar-m/find-jar db group-id artifact-id)]
-    (hiccup.core/html
-     "<?xml version=\"1.0\" standalone=\"no\"?>"
-     "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
- \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">"
-     (svg-template (jar-name jar) (:version jar)))))
+  (when-some [jar (jar-m/find-jar db group-id artifact-id)]
+    (str
+     (h/html
+      (h/raw "<?xml version=\"1.0\" standalone=\"no\"?>")
+      (h/raw "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">")
+      (svg-template (jar-name jar) (:version jar))))))
 
 (defn make-latest-version-json
   "Return the latest version of a JAR as JSON"
   [db group-id artifact-id]
-  (let [jar (jar-m/find-jar db group-id artifact-id)]
+  (when-some [jar (jar-m/find-jar db group-id artifact-id)]
     (json/generate-string (select-keys jar [:version]))))

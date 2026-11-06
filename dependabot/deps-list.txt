@@ -56,7 +56,7 @@ duct/duct 0.8.2  (EPL-1.0)
 duct/hikaricp-component 0.1.2  (EPL-1.0)
 environ/environ 1.1.0  (EPL-1.0)
 fipp/fipp 0.6.29  (EPL-1.0)
-hiccup/hiccup 1.0.5 
+hiccup/hiccup 2.0.0  (EPL-1.0)
 instaparse/instaparse 1.4.0  (EPL-1.0)
 io.airlift/aircompressor 0.27  (Apache-2.0)
 io.nayuki/qrcodegen 1.8.0  (MIT)

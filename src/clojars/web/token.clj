@@ -1,8 +1,7 @@
 (ns clojars.web.token
   (:require
    [clojars.auth :as auth]
-   [clojars.web.common :refer [flash format-timestamp form-table html-doc error-list]]
-   [clojars.web.safe-hiccup :refer [form-to]]
+   [clojars.web.common :refer [flash format-timestamp form-table form-to html-doc error-list]]
    [clojure.string :as str]
    [hiccup.form :refer [check-box drop-down label text-field submit-button]]))
 

@@ -3,14 +3,15 @@
    [clojars.maven :as maven]
    [clojars.models.audit :as audit-m]
    [clojars.web.helpers :as helpers]
-   [clojars.web.safe-hiccup :refer [form-to html5 raw]]
    [clojars.web.structured-data :as structured-data]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [hiccup.core :refer [html]]
    [hiccup.element :refer [link-to unordered-list image]]
-   [hiccup.page :refer [include-css include-js]]
+   [hiccup.form :as form]
+   [hiccup.page :refer [doctype include-css include-js]]
+   [hiccup2.core :as h]
+   [ring.middleware.anti-forgery :as ring-af]
    [ring.util.codec :refer [url-encode]])
   (:import
    (java.text
@@ -21,7 +22,7 @@
 (defn when-ie [& contents]
   (str
    "<!--[if lt IE 9]>"
-   (html contents)
+   (h/html contents)
    "<![endif]-->"))
 
 (defn footer
@@ -89,6 +90,24 @@
                        [:img {:src "/images/bendyworks-logo.svg" :alt "Bendyworks Inc." :width "150"}])]]]]
     [:footer.row]))
 
+(defmacro html5
+  "Create a HTML5 document with the supplied contents."
+  [options & contents]
+  (if-not (map? options)
+    `(html5 {} ~options ~@contents)
+    (if (options :xml?)
+      `(let [options# ~options]
+         (str
+          (h/html {:mode :xml}
+                  (h/raw (xml-declaration (options# :encoding "UTF-8")))
+                  (h/raw (doctype :html5))
+                  (xhtml-tag (options# :lang) ~@contents))))
+      `(let [options# ~options]
+         (str
+          (h/html {:mode :html}
+                  (h/raw (doctype :html5))
+                  [:html {:lang (options# :lang)} ~@contents]))))))
+
 (defn html-doc [title ctx & body]
   (html5 {:lang "en"}
          [:head
@@ -110,7 +129,7 @@
                ;; (then the default colors were removed)
                ;; more info: http://getbootstrap.com/css/#grid
                ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-          (raw (when-ie (include-js "/js/html5.js")))
+          (h/raw (when-ie (include-js "/js/html5.js")))
           (include-js "/js/jquery-3.6.0.min.js")
           (include-js "/js/coordinates.js")
           (for [path (:extra-js ctx)]
@@ -189,7 +208,7 @@
                ;; (then the default colors were removed)
                ;; more info: http://getbootstrap.com/css/#grid
                ["reset.css" "vendor/bootstrap/bootstrap.css" "screen.css"])
-          (raw (when-ie (include-js "/js/html5.js")))]
+          (h/raw (when-ie (include-js "/js/html5.js")))]
          [:body.container-fluid
           [:div.hero.row
            [:header
@@ -257,7 +276,7 @@
      (unordered-list errors)]))
 
 (defn tag [s]
-  (raw (html [:span.tag s])))
+  (h/raw (h/html [:span.tag s])))
 
 (defn jar-url [jar]
   (if (= (:group_name jar) (:jar_name jar))
@@ -319,7 +338,7 @@
 
 (defn jar-notice [group-id artifact-id]
   (if-let [notice (jar-notice-for group-id artifact-id)]
-    [:div#notice.info (raw notice)]
+    [:div#notice.info (h/raw notice)]
     (when (and
            (not (maven/can-shadow-maven? group-id artifact-id))
            (maven/exists-on-central? group-id artifact-id))
@@ -358,8 +377,8 @@
   (partial format-date* #(SimpleDateFormat. "yyyy-MM-dd HH:mm")))
 
 (defn page-nav [current-page total-pages & {:keys [base-path] :or {base-path "/projects?page="}}]
-  (let [previous-text (raw "&#8592; Previous")
-        next-text (raw "Next &#8594;")
+  (let [previous-text (h/raw "&#8592; Previous")
+        next-text (h/raw "Next &#8594;")
         page-range 3
         page-url base-path
         current-page (-> current-page (max 1) (min total-pages))
@@ -413,7 +432,7 @@
 (defn- linkify
   [s]
   (when s
-    (raw (str/replace s #"(https://[^ )]+)" "<a href='$1'>$1</a>"))))
+    (h/raw (str/replace s #"(https://[^ )]+)" "<a href='$1'>$1</a>"))))
 
 ;; handles link-to throwing an exception when given a non-url
 (defn safe-link-to [url text]
@@ -447,6 +466,20 @@
        [:td (linkify (:message audit))]
        [:td (:created audit)]])]])
 
+(defmacro form-to
+  "Create a form that points to a particular method and route.
+e.g. (form-to [:put \"/post\"]
+...)"
+  [method-action & body]
+  `(let [[method# action#] ~method-action]
+     (if (contains? #{:head :get} method#)
+       (form/form-to [method# action#] ~@body)
+       (form/form-to [method# action#]
+                     (conj
+                      (form/hidden-field "__anti-forgery-token"
+                                         ring-af/*anti-forgery-token*)
+                      ~@body)))))
+
 (defn form-table
   [method-action label-input-pairs extra-inputs]
   (form-to
@@ -471,3 +504,4 @@
                                     param-name)
              :status 400}))
     s))
+

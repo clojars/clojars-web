@@ -24,12 +24,12 @@
    [clojars.web.browse :refer [browse]]
    [clojars.web.common :as common :refer [html-doc]]
    [clojars.web.dashboard :refer [dashboard index-page]]
-   [clojars.web.safe-hiccup :refer [raw]]
    [clojars.web.search :as search]
    [clojure.java.io :as io]
    [co.deps.ring-etag-middleware :refer [wrap-file-etag]]
    [compojure.core :refer [ANY context GET PUT routes]]
    [compojure.route :refer [not-found]]
+   [hiccup2.core :as h]
    [malli.core :as m]
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.defaults :as ring-defaults]
@@ -80,11 +80,11 @@
      (GET "/security" []
           (try-account
            #(html-doc "Security" {:account %}
-                      (raw (slurp (io/resource "security.html"))))))
+                      (h/raw (slurp (io/resource "security.html"))))))
      (GET "/dmca" []
           (try-account
            #(html-doc "DMCA" {:account %}
-                      (raw (slurp (io/resource "dmca.html"))))))
+                      (h/raw (slurp (io/resource "dmca.html"))))))
      (session/routes db event-emitter)
      (group/routes db event-emitter)
      (artifact/routes db stats)

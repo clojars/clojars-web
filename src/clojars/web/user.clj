@@ -12,9 +12,8 @@
    [clojars.models.user :as user-m]
    [clojars.notifications.common :as notif-common]
    [clojars.user-validations :as uv]
-   [clojars.web.common :refer [html-doc error-list form-table jar-link
+   [clojars.web.common :refer [html-doc error-list form-table form-to jar-link
                                flash group-link verified-group-badge-small]]
-   [clojars.web.safe-hiccup :refer [form-to]]
    [clojure.string :as str]
    [hiccup.element :refer [unordered-list]]
    [hiccup.form :refer [label text-field
