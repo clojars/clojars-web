@@ -88,7 +88,7 @@ org.apache.commons/commons-email 1.6.0
   X com.sun.mail/jakarta.mail 1.6.7 :use-top
 org.postgresql/postgresql 42.7.14
   . org.checkerframework/checker-qual 3.55.1
-com.github.seancorfield/honeysql 2.7.1368
+com.github.seancorfield/honeysql 2.8.85
 aero/aero 1.1.6
 org.ow2.asm/asm 9.11.1
 commons-collections/commons-collections 3.2.2
