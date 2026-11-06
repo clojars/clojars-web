@@ -3,6 +3,9 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** Unreleased
++ [[https://github.com/clojars/clojars-web/pull/951][Detect compromised passwords via Have I Been Pwned]]. Passwords that appear in the HIBP Pwned Passwords database are rejected on registration, password change, and password reset. Logging in with a compromised password disables it, logs out the account's other sessions, emails the user, and requires a password reset before they can log in again. ([[https://github.com/danielcompton][Daniel Compton]])
+
 ** 2026-October
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-10-07.2344][2026-10-07.2344]] 
 + [[https://github.com/clojars/clojars-web/commit/59f209cc27af1bb71ae0c66b4e44b9bd2637a801][Clarify that verification repos must be public]] ([[https://github.com/danielcompton][Daniel Compton]])

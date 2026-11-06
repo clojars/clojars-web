@@ -6,10 +6,13 @@
    [cemerick.friend.workflows :as workflows]
    [clojars.db :as db]
    [clojars.event :as event]
+   [clojars.hibp :as hibp]
    [clojars.log :as log]
    [clojars.models.deploy-token :as deploy-token-m]
    [clojars.models.permission :as permission-m]
+   [clojars.models.session :as session-m]
    [clojars.models.user :as user-m]
+   [clojars.routes.common :as routes-common]
    [clojars.time :as time]
    [clojars.util :as util]
    [clojure.string :as str]
@@ -41,14 +44,6 @@
     (f)
     (friend/throw-unauthorized friend/*identity*
                                {:cemerick.friend/required-roles group})))
-
-(defn- verify-password
-  [db username password]
-  (when-not (str/blank? password)
-    (let [user (user-m/find-user db username)]
-      (when (and (not (str/blank? (:password user)))
-                 (creds/bcrypt-verify password (:password user)))
-        user))))
 
 (defn valid-totp-token?
   [otp {:as _user :keys [otp_secret_key]}]
@@ -94,24 +89,67 @@
       (response/redirect "/login/verify-email"))
     (make-auth event-emitter user)))
 
+(def pwned-password-login-message
+  (str "Your password has appeared in a data breach, so we have disabled it. "
+       "Please reset your password to log in."))
+
+(def password-disabled-message
+  "Your password has been disabled. Please reset your password to log in.")
+
+(defn- redirect-to-forgot-password
+  "Redirects to the forgot password page with `username` prefilled."
+  [username message]
+  (assoc (response/redirect
+          (str "/forgot-password?" (codec/form-encode {:email-or-username username})))
+         :flash message))
+
+(defn- reject-pwned-password
+  "Clears the password of a user who logged in with a known-compromised
+  password, logs out all of their sessions, and sends them to reset it."
+  [db event-emitter request username]
+  (log/info {:status :failed
+             :reason :password-pwned})
+  (user-m/clear-password! db username)
+  (session-m/delete-sessions-for-user! db username)
+  (event/emit event-emitter :password-pwned
+              (merge {:username username}
+                     (routes-common/request-details request)))
+  ;; Drop this browser's session too, or the flash middleware writes it back.
+  (-> (redirect-to-forgot-password username pwned-password-login-message)
+      (assoc :session nil)))
+
 (defn- verify-password-step
-  [db event-emitter {:as _request :keys [form-params params session]}]
+  [db event-emitter hibp {:as request :keys [form-params params session]}]
   (let [username (get-param :username form-params params)
-        password (get-param :password form-params params)]
+        password (get-param :password form-params params)
+        user     (user-m/find-user db username)]
     (log/with-context {:tag      :authentication
                        :username username
                        :type     :password}
-      (if-some [{:as user :keys [otp_active]} (verify-password db username password)]
-        (if otp_active
-          (do
-            (log/info {:status :pending-mfa})
-            (-> (response/redirect "/login/mfa")
-                (assoc :session (assoc session ::pending-mfa-username username))))
-          (maybe-complete-login event-emitter user))
+      (cond
+        (and user (not (user-m/has-password? user)))
+        (do
+          (log/info {:status :failed
+                     :reason :password-disabled})
+          (redirect-to-forgot-password username password-disabled-message))
+
+        (not (user-m/password-matches? user password))
         (do
           (log/info {:status :failed
                      :reason :password-incorrect})
-          (response/redirect (str "/login?" (codec/form-encode {:login_failed "Y" :username username}))))))))
+          (response/redirect (str "/login?" (codec/form-encode {:login_failed "Y" :username username}))))
+
+        (hibp/pwned? hibp password)
+        (reject-pwned-password db event-emitter request (:user user))
+
+        (:otp_active user)
+        (do
+          (log/info {:status :pending-mfa})
+          (-> (response/redirect "/login/mfa")
+              (assoc :session (assoc session ::pending-mfa-username username))))
+
+        :else
+        (maybe-complete-login event-emitter user)))))
 
 (defn- verify-mfa-step
   [db event-emitter {:as _request :keys [form-params params session]}]
@@ -140,12 +178,12 @@
   (some? (::pending-email-verification-username session)))
 
 (defn interactive-form-with-mfa-workflow
-  [db event-emitter]
+  [db event-emitter hibp]
   (fn [{:as request :keys [request-method]}]
     (when (= :post request-method)
       (let [path (req/path-info request)]
         (case path
-          "/login"     (verify-password-step db event-emitter request)
+          "/login"     (verify-password-step db event-emitter hibp request)
           "/login/mfa" (verify-mfa-step db event-emitter request)
           ;; else
           nil)))))

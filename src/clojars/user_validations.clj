@@ -1,8 +1,8 @@
 (ns clojars.user-validations
   (:require
-   [cemerick.friend.credentials :as creds]
    [clojars.db :as db]
    [clojars.hcaptcha :as hcaptcha]
+   [clojars.hibp :as hibp]
    [clojars.log :as log]
    [clojars.models.permission :as permission-m]
    [clojars.models.user :as user-m]
@@ -10,11 +10,16 @@
    [valip.core :as valip]
    [valip.predicates :as pred]))
 
+(def pwned-password-message
+  (str "This password has appeared in a data breach and can't be used. "
+       "Please choose a different password."))
+
 (defn password-validations
-  [confirm]
+  [hibp confirm]
   [[:password (pred/min-length 12) "Password must be 12 characters or longer"]
    [:password #(= % confirm) "Password and confirm password must match"]
-   [:password (pred/max-length 256) "Password must be 256 or fewer characters"]])
+   [:password (pred/max-length 256) "Password must be 256 or fewer characters"]
+   [:password #(not (hibp/pwned? hibp %)) pwned-password-message]])
 
 (defn user-validations
   ([db]
@@ -39,33 +44,33 @@
   [[:captcha (partial hcaptcha/valid-response? hcaptcha) "Captcha response is invalid."]])
 
 (defn new-user-validations
-  [db hcaptcha confirm]
+  [db hcaptcha hibp confirm]
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (db/reserved-names %)
                                 (user-m/find-user db %)
                                 (seq (permission-m/group-activenames db %))))
             "Username is already taken"]]
           (user-validations db)
-          (password-validations confirm)
+          (password-validations hibp confirm)
           (captcha-validations hcaptcha)))
 
 (defn reset-password-validations
-  [db confirm]
+  [db hibp confirm]
   (concat
    [[:reset-code pred/present? "Reset code can't be blank."]
     [:reset-code #(or (str/blank? %) (user-m/find-user-by-password-reset-code db %)) "The reset code does not exist or it has expired."]]
-   (password-validations confirm)))
+   (password-validations hibp confirm)))
 
-(defn- correct-password?
-  [db username current-password]
-  (let [user (user-m/find-user db username)]
-    (when (and user (not (str/blank? current-password)))
-      (creds/bcrypt-verify current-password (:password user)))))
+(def no-password-message
+  "Your account doesn't have a password. Set a password via forgot password first.")
 
 (defn current-password-validations
   [db username]
-  [[:current-password pred/present? "Current password can't be blank"]
-   [:current-password #(correct-password? db username %) "Current password is incorrect"]])
+  (let [user (user-m/find-user db username)]
+    (if (user-m/has-password? user)
+      [[:current-password pred/present? "Current password can't be blank"]
+       [:current-password #(user-m/password-matches? user %) "Current password is incorrect"]]
+      [[:current-password (constantly false) no-password-message]])))
 
 (defn- wrap-exceptions
   "Wraps validation predicates in a try/catch to reject invalid UTF8 strings."

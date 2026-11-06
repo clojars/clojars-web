@@ -1,6 +1,5 @@
 (ns clojars.routes.user
   (:require
-   [cemerick.friend.credentials :as creds]
    [clojars.auth :as auth]
    [clojars.event :as event]
    [clojars.hcaptcha :as hcaptcha]
@@ -8,6 +7,7 @@
    [clojars.log :as log]
    [clojars.models.user :as user-m]
    [clojars.routes.common :as common]
+   [clojars.user-validations :as uv]
    [clojars.web.login :as view-login]
    [clojars.web.user :as view]
    [compojure.core :as compojure :refer [DELETE GET POST PUT]]
@@ -37,7 +37,14 @@
         (assoc (redirect "/mfa")
                :flash "Two-factor auth already enabled."))
 
-      (creds/bcrypt-verify password (:password user))
+      (not (user-m/has-password? user))
+      (do
+        (log/info {:status :failed
+                   :reason :no-password})
+        (assoc (redirect "/mfa")
+               :flash uv/no-password-message))
+
+      (user-m/password-matches? user password)
       (do
         (user-m/set-otp-secret-key! db account)
         (log/info {:status :success})
@@ -98,7 +105,14 @@
         (assoc (redirect "/mfa")
                :flash "Two-factor auth already disabled."))
 
-      (creds/bcrypt-verify password (:password user))
+      (not (user-m/has-password? user))
+      (do
+        (log/info {:status :failed
+                   :reason :no-password})
+        (assoc (redirect "/mfa")
+               :flash uv/no-password-message))
+
+      (user-m/password-matches? user password)
       (do
         (user-m/disable-otp! db account)
         (log/info {:status :success})
@@ -117,14 +131,14 @@
         (assoc (redirect "/mfa")
                :flash "Password incorrect.")))))
 
-(defn routes [db event-emitter hcaptcha mailer]
+(defn routes [db event-emitter hcaptcha hibp mailer]
   (compojure/routes
    (GET "/profile" {:keys [flash]}
         (auth/with-account
           #(view/profile-form % (user-m/find-user db %) flash)))
    (POST "/profile" {:as request :keys [params]}
          (auth/with-account
-           #(view/update-profile db event-emitter % params (common/request-details request))))
+           #(view/update-profile db event-emitter hibp % params (common/request-details request))))
 
    (GET "/mfa" {:keys [flash]}
         (auth/with-account
@@ -151,8 +165,8 @@
         (http-utils/with-extra-csp-srcs hcaptcha/hcaptcha-csp
           (view/register-form hcaptcha params flash)))
 
-   (GET "/forgot-password" _
-        (view/forgot-password-form))
+   (GET "/forgot-password" {:keys [flash params]}
+        (view/forgot-password-form (:email-or-username params) flash))
    (POST "/forgot-password" {:as request :keys [params]}
          (view/forgot-password db mailer params (common/request-details request)))
 
@@ -160,7 +174,7 @@
         (view/reset-password-form db reset-code))
 
    (POST "/password-resets/:reset-code" {:as request {:keys [reset-code password confirm]} :params}
-         (view/reset-password db event-emitter reset-code {:password password :confirm confirm} (common/request-details request)))
+         (view/reset-password db event-emitter hibp reset-code {:password password :confirm confirm} (common/request-details request)))
 
    (GET "/email-verification/:code" [code]
         (if-let [user (user-m/find-user-by-email-verification-code db code)]

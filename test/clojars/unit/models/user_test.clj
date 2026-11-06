@@ -142,3 +142,18 @@
       (time/with-now (time/days-from 2)
         (is (nil? (user-m/find-user-by-email-verification-code help/*db* code)))))))
 
+(deftest password-matches
+  (user-m/add-user help/*db* "test@example.com" "testuser" "password1234")
+  (user-m/add-user help/*db* "cleared@example.com" "cleared" "password1234")
+  (user-m/clear-password! help/*db* "cleared")
+  (let [user (user-m/find-user help/*db* "testuser")
+        cleared (user-m/find-user help/*db* "cleared")]
+    (is (user-m/password-matches? user "password1234"))
+    (are [user password] (not (user-m/password-matches? user password))
+      user    "wrong-password"
+      user    ""
+      user    " "
+      user    nil
+      cleared "password1234"
+      cleared ""
+      nil     "password1234")))
