@@ -3,18 +3,30 @@
   to ease testing."
   (:require
    [cheshire.core :as json]
-   [clojars.http-client :as http]))
+   [clojars.http-client :as http]
+   [clojars.log :as log]))
 
 (defprotocol RemoteService
   (-remote-call [self request-info]))
 
-;; TODO: (toby) logging
 (defrecord HttpRemoteService []
   RemoteService
   (-remote-call [_self request-info]
-    (-> (http/request request-info)
-        :body
-        (json/parse-string true))))
+    (log/with-context {:tag :http-request
+                       :request request-info}
+      (let [response (http/request request-info)]
+        (if (>= (:status response) 400)
+          (do
+            (log/error {:status :failed
+                        :response response})
+            (throw (ex-info "HTTP request failed"
+                            {:request request-info
+                             :response response})))
+          (do
+            (log/info {:status :success})
+            (-> response
+                :body
+                (json/parse-string true))))))))
 
 (def ^:private ^:dynamic *mock-calls* nil)
 (def ^:private ^:dynamic *mock-responders* nil)

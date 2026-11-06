@@ -12,6 +12,19 @@
 (use-fixtures :each
   help/with-clean-database)
 
+(defn user-validations
+  ([]
+   (user-validations nil))
+  ([existing-username]
+   (uv/user-validations help/*db* (remote-service/new-mock-remote-service) existing-username)))
+
+(defn new-user-validations
+  []
+  (uv/new-user-validations help/*db*
+                           (remote-service/new-mock-remote-service)
+                           (hcaptcha/new-mock-hcaptcha)
+                           "password1234a"))
+
 (deftest test-password-validations
   (is (nil? (uv/validate {:password "abcdefghijkl"} (uv/password-validations "abcdefghijkl"))))
   (is (match?
@@ -29,17 +42,17 @@
 (deftest test-user-validations
   (is (nil? (uv/validate {:email "foo@example.com"
                           :username "auser"}
-                         (uv/user-validations help/*db*))))
+                         (user-validations))))
   (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")
   (is (match?
        {:email ["A user already exists with this email"]}
        (uv/validate {:email "foo@example.com"
                      :username "auser"}
-                    (uv/user-validations help/*db*))))
+                    (user-validations))))
   (is (nil?
        (uv/validate {:email "foo@example.com"
                      :username "auser"}
-                    (uv/user-validations help/*db* "auser"))))
+                    (user-validations "auser"))))
   (is (match?
        {:email ["Email can't be blank"
                 "Email is not valid"]
@@ -47,79 +60,83 @@
                    "Username can't be blank"]}
        (uv/validate {:email ""
                      :username ""}
-                    (uv/user-validations help/*db*))))
+                    (user-validations))))
   (is (match?
        {:email ["Email is not valid"]
         :username ["Username must consist only of lowercase letters, numbers, hyphens and underscores."]}
        (uv/validate {:email "foo@@"
                      :username "a User"}
-                    (uv/user-validations help/*db*))))
+                    (user-validations))))
   (is (match?
        {:email ["Email must be 256 or fewer characters"]}
        (uv/validate {:email (format "foo@%s.com" (apply str (repeat 254 "a")))
                      :username "auser2"}
-                    (uv/user-validations help/*db*))))
+                    (user-validations))))
+  (is (match?
+       {:email ["Email must not be disposable"]}
+       (uv/validate {:email "foo@0-mail.com"
+                     :username "auser2"}
+                    (user-validations))))
   ;; Tests that we protect against fuzzing on the registration form
   (is (match?
        {:email ["Invalid input"]}
-       ;; This is valid UT, but postgres does not allow null bytes in strings,
+       ;; This is valid UTF, but postgres does not allow null bytes in strings,
        ;; so will throw
        (uv/validate {:email (String. (byte-array [0x00]))
                      :username "auser2"}
-                    (uv/user-validations help/*db*)))))
+                    (user-validations)))))
 
 (deftest test-new-user-validations
   (remote-service/with-mocking
-    (let [hcaptcha-service (hcaptcha/new-mock-hcaptcha)]
-      (remote-service/set-responder '-validate-hcaptcha-response
-                                    (fn [request-info]
-                                      {:success (= "valid" (get-in request-info [:form-params :response]))}))
-      (is (nil?
-           (uv/validate {:email "foo@example.com"
-                         :password "password1234a"
-                         :username "auser"
-                         :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
-      (is (match?
-           {:captcha ["Captcha response is invalid."]}
-           (uv/validate {:email "foo@example.com"
-                         :password "password1234a"
-                         :username "auser"
-                         :captcha "invalid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
-      (is (match?
-           {:password ["Password can't be blank"
-                       "Password must be 12 characters or longer"
-                       "Password and confirm password must match"]}
-           (uv/validate {:email "foo@example.com"
-                         :password ""
-                         :username "auser"
-                         :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
-      (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")
-      (is (match?
-           {:username ["Username is already taken"]
-            :email ["A user already exists with this email"]}
-           (uv/validate {:email "foo@example.com"
-                         :password "password1234a"
-                         :username "auser"
-                         :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
-      (is (match?
-           {:username ["Username is already taken"]}
-           (uv/validate {:email "foo2@example.com"
-                         :password "password1234a"
-                         :username "admin"
-                         :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
-      (permission-m/add-group help/*db* "auser" "agroup")
-      (is (match?
-           {:username ["Username is already taken"]}
-           (uv/validate {:email "foo2@example.com"
-                         :password "password1234a"
-                         :username "agroup"
-                         :captcha "valid"}
-                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a")))))))
+    (remote-service/set-responder '-validate-hcaptcha-response
+                                  (fn [request-info]
+                                    {:success (= "valid" (get-in request-info [:form-params :response]))}))
+    (is (nil?
+         (uv/validate {:email "foo@example.com"
+                       :password "password1234a"
+                       :username "auser"
+                       :captcha "valid"}
+                      (new-user-validations))))
+    (is (match?
+         {:captcha ["Captcha response is invalid."]}
+         (uv/validate {:email "foo@example.com"
+                       :password "password1234a"
+                       :username "auser"
+                       :captcha "invalid"}
+                      (new-user-validations))))
+    (is (match?
+         {:password ["Password can't be blank"
+                     "Password must be 12 characters or longer"
+                     "Password and confirm password must match"]}
+         (uv/validate {:email "foo@example.com"
+                       :password ""
+                       :username "auser"
+                       :captcha "valid"}
+                      (new-user-validations))))
+    (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")
+    (is (match?
+         {:username ["Username is already taken"]
+          :email ["A user already exists with this email"]}
+         (uv/validate {:email "foo@example.com"
+                       :password "password1234a"
+                       :username "auser"
+                       :captcha "valid"}
+                      (new-user-validations))))
+    (is (match?
+         {:username ["Username is already taken"]}
+         (uv/validate {:email "foo2@example.com"
+                       :password "password1234a"
+                       :username "admin"
+                       :captcha "valid"}
+                      (new-user-validations))))
+    (permission-m/add-group help/*db* "auser" "agroup")
+    (is (match?
+         {:username ["Username is already taken"]}
+         (uv/validate {:email "foo2@example.com"
+                       :password "password1234a"
+                       :username "agroup"
+                       :captcha "valid"}
+                      (new-user-validations))))))
 
 (deftest test-reset-password-validations
   (user-m/add-user help/*db* "foo@example.com" "auser" "password1234a")

@@ -11,7 +11,8 @@
 (def ^:private redacted-keys
   #{:confirm
     :current-password
-    :password})
+    :password
+    "Authorization"})
 
 (defprotocol Redact
   (redact [v]))

@@ -117,14 +117,14 @@
         (assoc (redirect "/mfa")
                :flash "Password incorrect.")))))
 
-(defn routes [db event-emitter hcaptcha mailer]
+(defn routes [db email-validation event-emitter hcaptcha mailer]
   (compojure/routes
    (GET "/profile" {:keys [flash]}
         (auth/with-account
           #(view/profile-form % (user-m/find-user db %) flash)))
    (POST "/profile" {:as request :keys [params]}
          (auth/with-account
-           #(view/update-profile db event-emitter % params (common/request-details request))))
+           #(view/update-profile db email-validation event-emitter % params (common/request-details request))))
 
    (GET "/mfa" {:keys [flash]}
         (auth/with-account

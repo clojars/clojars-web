@@ -10,8 +10,8 @@
    [clojars.web.user :refer [register-form normalize-email]]
    [ring.util.response :as response]))
 
-(defn register
-  [db hcaptcha event-emitter {:keys [confirm email h-captcha-response password username]} session]
+(defn- register
+  [db hcaptcha email-validation event-emitter {:keys [confirm email h-captcha-response password username]} session]
   (let [email (normalize-email email)]
     (log/with-context {:email email
                        :username username
@@ -20,7 +20,7 @@
                                     :email    email
                                     :password password
                                     :username username}
-                                   (uv/new-user-validations db hcaptcha confirm))]
+                                   (uv/new-user-validations db email-validation hcaptcha confirm))]
         (do
           (log/info {:status :validation-failed})
           (http-utils/with-extra-csp-srcs
@@ -38,8 +38,9 @@
               (assoc :session (assoc session
                                      ::auth/pending-email-verification-username username))))))))
 
-(defn workflow [db hcaptcha event-emitter]
+(defn workflow
+  [db hcaptcha email-validation event-emitter]
   (fn [{:keys [uri request-method params session]}]
     (when (and (= "/register" uri)
                (= :post request-method))
-      (register db hcaptcha event-emitter params session))))
+      (register db hcaptcha email-validation event-emitter params session))))
