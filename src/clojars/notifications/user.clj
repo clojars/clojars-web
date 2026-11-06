@@ -3,7 +3,9 @@
    [clojars.config :as config]
    [clojars.models.user :as user-m]
    [clojars.notifications :as notifications]
-   [clojars.notifications.common :as common]))
+   [clojars.notifications.common :as common]
+   [clojure.pprint :as pprint]
+   [clojure.string :as str]))
 
 (defmethod notifications/notification :mfa-activated
   [_type {:keys [mailer] {email :email username :user} :user} data]
@@ -92,3 +94,22 @@
   [_type {:as ctx :keys [user]} _data]
   (when (user-m/verify-email-send-allowed? user)
     (send-email-verification-email ctx user :resend)))
+
+(defmethod notifications/notification :users-merged
+  [_type
+   {:keys [mailer] {email :email username :user} :user}
+   {:as _data :keys [other-usernames]}]
+  (let [user-count (pprint/cl-format nil "~R" (inc (count other-usernames)))
+        subject (format "Your %s Clojars accounts that share this email address have been merged"
+                        user-count)
+        msg
+        [(format
+          "Due to lax validation a few years ago, Clojars allowed you to create multiple user accounts sharing the same email. In order to clean that up, we have merged your %s user accounts into one."
+          user-count)
+         (format "We have merged the following accounts into your '%s' account:\n%s"
+                 username
+                 (str/join "\n" (map #(format "- %s" %) other-usernames)))
+         (format "All activity and groups from those users have been assigned to the '%s' account, and you can log in via any of those usernames." username)
+         "Please reply to this email if you have any questions."
+         (common/account-footer username)]]
+    (notifications/send mailer email subject msg)))

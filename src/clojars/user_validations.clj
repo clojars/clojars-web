@@ -21,10 +21,10 @@
    (user-validations db nil))
   ([db existing-username]
    (let [existing-email-fn (if existing-username
-                             #(let [existing-user (user-m/find-user-by-user-or-email db %)]
+                             #(let [existing-user (user-m/find-user-by-email|username|merged-username db %)]
                                 (or (nil? existing-user)
                                     (= existing-username (:user existing-user))))
-                             #(nil? (user-m/find-user-by-user-or-email db %)))]
+                             #(nil? (user-m/find-user-by-email|username|merged-username db %)))]
      [[:email pred/present? "Email can't be blank"]
       [:email pred/email-address? "Email is not valid"]
       [:email (pred/max-length 256) "Email must be 256 or fewer characters"]
@@ -42,7 +42,7 @@
   [db hcaptcha confirm]
   (concat [[:password pred/present? "Password can't be blank"]
            [:username #(not (or (db/reserved-names %)
-                                (user-m/find-user db %)
+                                (user-m/find-user-by-username|merged-username db %)
                                 (seq (permission-m/group-activenames db %))))
             "Username is already taken"]]
           (user-validations db)

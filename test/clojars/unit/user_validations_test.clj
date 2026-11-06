@@ -112,6 +112,15 @@
                          :username "admin"
                          :captcha "valid"}
                         (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
+      (user-m/append-merged-usernames help/*db* "auser" ["mergeduser"])
+      (is (match?
+           {:username ["Username is already taken"]}
+           (uv/validate {:email "foo2@example.com"
+                         :password "password1234a"
+                         :username "mergeduser"
+                         :captcha "valid"}
+                        (uv/new-user-validations help/*db*  hcaptcha-service "password1234a"))))
+
       (permission-m/add-group help/*db* "auser" "agroup")
       (is (match?
            {:username ["Username is already taken"]}

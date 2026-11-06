@@ -6,7 +6,7 @@ jobs:
         environment:
           - DB_PORT: 5432
           - CLOJARS_ENVIRONMENT: test
-      - image: postgres:12.1
+      - image: postgres:18.4
         environment:
           - POSTGRES_USER=clojars
           - POSTGRES_PASSWORD=clojars
