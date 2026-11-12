@@ -45,7 +45,7 @@
 (defn- verify-password
   [db username password]
   (when-not (str/blank? password)
-    (let [user (user-m/find-user db username)]
+    (let [user (user-m/find-user-by-username|merged-username db username)]
       (when (and (not (str/blank? (:password user)))
                  (creds/bcrypt-verify password (:password user)))
         user))))
@@ -96,13 +96,14 @@
 
 (defn- verify-password-step
   [db event-emitter {:as _request :keys [form-params params session]}]
-  (let [username (get-param :username form-params params)
+  (let [provided-username (get-param :username form-params params)
         password (get-param :password form-params params)]
     (log/with-context {:tag      :authentication
-                       :username username
+                       :username provided-username
                        :type     :password}
-      (if-some [{:as user :keys [otp_active]} (verify-password db username password)]
-        (if otp_active
+      (if-some [{:as user otp-active? :otp_active username :user}
+                (verify-password db provided-username password)]
+        (if otp-active?
           (do
             (log/info {:status :pending-mfa})
             (-> (response/redirect "/login/mfa")
@@ -111,7 +112,7 @@
         (do
           (log/info {:status :failed
                      :reason :password-incorrect})
-          (response/redirect (str "/login?" (codec/form-encode {:login_failed "Y" :username username}))))))))
+          (response/redirect (str "/login?" (codec/form-encode {:login_failed "Y" :username provided-username}))))))))
 
 (defn- verify-mfa-step
   [db event-emitter {:as _request :keys [form-params params session]}]
@@ -190,7 +191,7 @@
                        :type :token}
       (let [password-hash (when password
                             (deploy-token-m/hash-deploy-token password))
-            username (:user (user-m/find-user-by-user-or-email db username-or-email))]
+            username (:user (user-m/find-user-by-email|username|merged-username db username-or-email))]
         (if-let [token (and username
                             password
                             (->> (deploy-token-m/find-user-tokens-by-username db username)

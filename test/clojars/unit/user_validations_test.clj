@@ -129,6 +129,14 @@
                        :username "admin"
                        :captcha "valid"}
                       (new-user-validations))))
+    (user-m/append-merged-usernames help/*db* "auser" ["mergeduser"])
+    (is (match?
+         {:username ["Username is already taken"]}
+         (uv/validate {:email "foo2@example.com"
+                       :password "password1234a"
+                       :username "mergeduser"
+                       :captcha "valid"}
+                      (new-user-validations))))
     (permission-m/add-group help/*db* "auser" "agroup")
     (is (match?
          {:username ["Username is already taken"]}

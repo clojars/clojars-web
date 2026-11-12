@@ -3,6 +3,7 @@
    [clojars.admin :as admin]
    [clojars.config :refer [config]]
    [clojars.db :as db]
+   [clojars.email :as email]
    [clojars.models.audit :as audit-m]
    [clojars.models.deploy-token :as deploy-token-m]
    [clojars.models.group-verification :as group-verification-m]
@@ -18,8 +19,8 @@
    [matcher-combinators.test]))
 
 (def ^:dynamic *search-removals* nil)
-
 (def ^:dynamic *s3-client* nil)
+(def ^:dynamic *user* nil)
 
 ;; Note: these tests exercise the s3 client end-to-end, and require s3mock to
 ;; running. See docker-compose.yml
@@ -32,6 +33,7 @@
     (binding [*search-removals* (atom #{})
               *s3-client* s3-client
               admin/*db* help/*db*
+              admin/*event-emitter* (:event-emitter help/system)
               admin/*search* (reify search/Search
                                (index! [_ _])
                                (search [_ _ _])
@@ -41,8 +43,8 @@
                                  (swap! *search-removals* conj (format "%s/%s" group# artifact#))))
               admin/*storage* (storage/multi-storage
                                (storage/fs-storage (:repo config))
-                               (storage/s3-storage s3-client))]
-      (user-m/add-user admin/*db* "testuser@example.com" "testuser" "password1234")
+                               (storage/s3-storage s3-client))
+              *user* (user-m/add-user help/*db* "testuser@example.com" "testuser" "password1234")]
       (help/add-verified-group "testuser" "org.ham")
       (jar-m/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "1" :description "delete me"})
       (jar-m/add-jar admin/*db* "testuser" {:group "org.ham" :name "biscuit" :version "2" :description ""})
@@ -59,6 +61,7 @@
 
 (use-fixtures :each
   help/default-fixture
+  help/run-test-app
   help/with-clean-database
   with-repo-setup)
 
@@ -191,7 +194,7 @@
   (user-m/enable-otp! admin/*db* "testuser")
   (user-m/set-otp-secret-key! admin/*db* "testuser")
   (user-m/set-password-reset-code! admin/*db* "testuser")
-  (deploy-token-m/add-deploy-token admin/*db* "testuser" "token" nil nil false (db/get-time))
+  (deploy-token-m/add-deploy-token admin/*db* (:id *user*) "token" nil nil false (db/get-time))
 
   ;; And: a shared default group with a jar
   (permission-m/add-admin admin/*db* "org.clojars.testuser" permission-m/SCOPE-ALL "otheruser" "testuser")
@@ -249,3 +252,16 @@
   (is (thrown-with-msg?
        Exception #"User does-not-exist not found!"
         (admin/soft-delete-user! "does-not-exist"))))
+
+(deftest merge-users!
+  ;; Note: user merging is already tested in clojars.unit.models.user-test. This
+  ;; just checks that the admin wrapper triggers an email
+  (user-m/add-user admin/*db* "testuser2@example.com" "testuser2" "password1234")
+  (email/expect-mock-emails 1)
+  (admin/merge-users! "testuser" ["testuser2"])
+  (email/wait-for-mock-emails)
+  (let [[to subject body] (first @email/mock-emails)]
+    (is (= "testuser@example.com" to))
+    (is (= "Your two Clojars accounts that share this email address have been merged" subject))
+    (is (re-find #"'testuser'" body))
+    (is (re-find #"- testuser2" body))))
