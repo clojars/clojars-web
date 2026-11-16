@@ -90,6 +90,8 @@
   com.fasterxml.jackson.dataformat/jackson-dataformat-smile {:mvn/version "2.22.4"}
   ;; Addresses CVE-2019-10086, CVE-2014-0114, CVE-2025-48734
   commons-beanutils/commons-beanutils {:mvn/version "1.11.0"}
+  ;; Addresses CVE-2026-124077, CVE-2026-119078
+  commons-codec/commons-codec {:mvn/version "1.23.0"}
   ;; Addresses CVE-2015-6420
   ;; Excluded form antq checking as it wants to upgrade to 20040616, which is actually a downgrade
   commons-collections/commons-collections ^:antq/exclude {:mvn/version "3.2.2"}
