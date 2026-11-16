@@ -58,11 +58,11 @@
       (is (= 422 (:status res))))))
 
 (deftest test-github-token-breach-reporting-works
-  (let [_user (user-m/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
+  (let [{user-id :id} (user-m/add-user help/*db* "ham@biscuit.co" "ham" "biscuit")
         app (help/app)]
     (with-redefs [http/get (constantly {:body github-response})]
       (testing "when token is enabled"
-        (let [token (deploy-token-m/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
+        (let [token (deploy-token-m/add-deploy-token help/*db* user-id "a token" nil nil false nil)
               token-str (:token token)
               res (app (build-breach-request token-str))
               db-token (find-token "ham" "a token")
@@ -83,7 +83,7 @@
                                          @email/mock-emails)))
 
       (testing "when token is disabled"
-        (let [token (deploy-token-m/add-deploy-token help/*db* "ham" "another token" nil nil false nil)
+        (let [token (deploy-token-m/add-deploy-token help/*db* user-id "another token" nil nil false nil)
               token-str (:token token)
               db-token (find-token "ham" "another token")
               _ (deploy-token-m/disable-deploy-token help/*db* (:id db-token))
@@ -105,7 +105,7 @@
                                          @email/mock-emails)))
 
       (testing "with existing and non-existent tokens"
-        (let [token (deploy-token-m/add-deploy-token help/*db* "ham" "a token" nil nil false nil)
+        (let [token (deploy-token-m/add-deploy-token help/*db* user-id "a token" nil nil false nil)
               token-str (:token token)
               res (app (build-breach-request token-str "non-existent-token"))
               db-token (find-token "ham" "a token")]

@@ -52,6 +52,7 @@
 (deftest bad-registration-info-should-show-error
   (-> (session (help/app))
       (register-as "fixture" "fixture@example.org" "password1234"))
+  (user-m/append-merged-usernames help/*db* "fixture" ["mergeduser"])
   (-> (session (help/app))
       (visit "/")
       (follow "register")
@@ -146,6 +147,15 @@
       (within [:div.error :ul :li]
         (has (text? "Username is already taken")))
 
+      (fill-in "Username" "mergeduser")
+      (fill-in "Password" "password1234")
+      (fill-in "Confirm password" "password1234")
+      (fill-in-captcha)
+      (press "Register")
+      (has (status? 200))
+      (within [:div.error :ul :li]
+        (has (text? "Username is already taken")))
+
       (fill-in "Username" "fixture2")
       (fill-in "Password" "password1234")
       (fill-in "Confirm password" "password1234")
@@ -162,6 +172,15 @@
       (has (status? 200))
       (within [:div.error :ul :li]
         (has (text? "Captcha response is invalid.")))))
+
+(deftest user-can-log-in-with-merged-username
+  (register-as (session (help/app)) "dantheman" "test@example.org" "password1234")
+  (user-m/append-merged-usernames help/*db* "dantheman" ["mergeduser"])
+  (-> (session (help/app))
+      (login-as "mergeduser" "password1234")
+      (follow-redirect)
+      (within [:div.light-article :> :h1]
+        (has (text? "Dashboard (dantheman)")))))
 
 (deftest user-can-update-info
   ;; Changing both email and password: both update immediately.

@@ -24,11 +24,11 @@
   [db groupname scope username added-by admin?]
   {:pre [(some? scope)]}
   (sql/insert! db :permissions
-               {:group_name groupname
-                :scope      scope
+               {:group_name    groupname
+                :scope         scope
                 db/user-column username
-                :added_by   added-by
-                :admin      (boolean admin?)}))
+                :added_by      added-by
+                :admin         (boolean admin?)}))
 
 (defn add-member
   [db groupname scope username added-by]
@@ -56,6 +56,16 @@
                        [:= :user username]
                        [:not [:is :inactive true]]]
                :order-by :group_name})))
+
+(defn find-memberships-for-users
+  [db usernames]
+  (db/q db
+        {:select :*
+         :from :permissions
+         :where [:and
+                 [:in :user usernames]
+                 [:not [:is :inactive true]]]
+         :order-by :group_name}))
 
 (defn- with-scoping
   [scope where]

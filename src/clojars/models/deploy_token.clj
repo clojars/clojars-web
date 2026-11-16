@@ -4,7 +4,6 @@
    [buddy.core.hash :as buddy.hash]
    [cemerick.friend.credentials :as creds]
    [clojars.db :as db]
-   [clojars.models.user :as user-m]
    [clojars.util :refer [filter-some]]
    [next.jdbc.sql :as sql]
    [next.jdbc.types :as jdbc.types]))
@@ -54,10 +53,9 @@
   (boolean (and v (re-find #"^CLOJARS_[0-9a-f]{60}$" v))))
 
 (defn add-deploy-token
-  [db username token-name group-name jar-name single-use? expires-at]
-  (let [user (user-m/find-user db username)
-        token (generate-deploy-token)
-        record {:user_id (:id user)
+  [db user-id token-name group-name jar-name single-use? expires-at]
+  (let [token (generate-deploy-token)
+        record {:user_id user-id
                 :name token-name
                 :token token
                 :token_hash (hash-deploy-token token)
@@ -70,6 +68,13 @@
     (sql/insert! db :deploy_tokens
                  (update record :token db/bcrypt))
     record))
+
+(defn reassign-token
+  "Reassigns a token to a different user. Should only be used when merging users."
+  [db token-id user-id]
+  (sql/update! db :deploy_tokens
+               {:user_id user-id}
+               {:id token-id}))
 
 (defn find-deploy-tokens-for-user
   [db user-id]

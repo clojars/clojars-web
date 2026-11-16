@@ -46,7 +46,8 @@
             single-use? (boolean single_use)
             [group-name jar-name] (parse-scope scope)
             expires-at (calculate-expires-at expires_in)
-            token-record (deploy-token-m/add-deploy-token db account name group-name jar-name
+            user (user-m/find-user db account)
+            token-record (deploy-token-m/add-deploy-token db (:id user) name group-name jar-name
                                                           single-use? expires-at)]
         (event/emit event-emitter :deploy-token-created
                     (merge {:username     account

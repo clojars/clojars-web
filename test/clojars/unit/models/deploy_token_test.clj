@@ -17,9 +17,10 @@
         groupname "a-group"
         jarname "a-jar"
         tokenname "test-token"
-        _ (user-m/add-user help/*db* "email@example.com" username "a-password")
-        {:keys [token]} (deploy-token-m/add-deploy-token help/*db*
-                                                         username tokenname groupname jarname false nil)
+        {user-id :id} (user-m/add-user help/*db* "email@example.com" username "a-password")
+        {:keys [token]} (deploy-token-m/add-deploy-token
+                         help/*db*
+                         user-id tokenname groupname jarname false nil)
 
         {:keys [expires_at group_name jar_name single_use token_hash]}
         (deploy-token-m/find-token-by-value help/*db* token)]
@@ -33,7 +34,7 @@
     (let [expires-at-time (db/get-time)
           {:keys [token]} (deploy-token-m/add-deploy-token
                            help/*db*
-                           username tokenname groupname jarname true expires-at-time)
+                           user-id tokenname groupname jarname true expires-at-time)
           {:keys [expires_at single_use]} (deploy-token-m/find-token-by-value help/*db* token)]
       (is (= expires-at-time expires_at))
       (is (= "yes" single_use)))))

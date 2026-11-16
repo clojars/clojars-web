@@ -117,7 +117,7 @@
           (log/info {:status :failed
                      :reason :validation-failed})
           (profile-form account params nil (apply concat (vals errors))))
-        (let [old-email (:email (user-m/find-user-by-user-or-email db account))
+        (let [old-email (:email (user-m/find-user-by-username|merged-username db account))
               email-changed? (not= old-email email)
               password-changed? (seq password)]
           (user-m/update-user db account email password)
@@ -222,7 +222,7 @@
 
 (defn forgot-password [db mailer {:keys [email-or-username]} details]
   (log/with-context {:email-or-username email-or-username}
-    (if-let [user (user-m/find-user-by-user-or-email db email-or-username)]
+    (if-let [user (user-m/find-user-by-email|username|merged-username db email-or-username)]
       (send-forgot-password-email db mailer user details)
       (log/info {:tag :password-reset-user-not-found})))
   (html-doc "Forgot password?" {}
