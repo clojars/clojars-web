@@ -90,6 +90,8 @@
   com.fasterxml.jackson.dataformat/jackson-dataformat-smile {:mvn/version "2.22.4"}
   ;; Addresses CVE-2019-10086, CVE-2014-0114, CVE-2025-48734
   commons-beanutils/commons-beanutils {:mvn/version "1.11.0"}
+  ;; Addresses CVE-2026-124077, CVE-2026-119078
+  commons-codec/commons-codec {:mvn/version "1.23.0"}
   ;; Addresses CVE-2015-6420
   ;; Excluded form antq checking as it wants to upgrade to 20040616, which is actually a downgrade
   commons-collections/commons-collections ^:antq/exclude {:mvn/version "3.2.2"}
@@ -97,9 +99,11 @@
   ;; Override bouncycastle brought in by buddy-core to address CVE-2025-8916,
   ;; CVE-2026-5588, CVE-2026-12802, CVE-2026-71891, CVE-2026-18036,
   ;; CVE-2026-18040, CVE-2026-17508, CVE-2026-71889, CVE-2026-71888,
-  ;; CVE-2026-71892
-  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.86"}
-  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.86"}
+  ;; CVE-2026-71892, CVE-2026-103617, CVE-2026-103616, CVE-2026-103614,
+  ;; CVE-2026-103613, CVE-2026-103612, CVE-2026-103611, CVE-2026-103606,
+  ;; CVE-2026-103615, CVE-2026-103610
+  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.87"}
+  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.87"}
   ;; Override plexus-utils brought in by maven-model & maven-repository-metadata to address CVE-2025-67030
   org.codehaus.plexus/plexus-utils {:mvn/version "3.6.1"}
   ;; Addresses CVE-2015-0886

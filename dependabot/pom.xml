@@ -23,6 +23,11 @@
       <version>1.12.5</version>
     </dependency>
     <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.23.0</version>
+    </dependency>
+    <dependency>
       <groupId>com.cognitect.aws</groupId>
       <artifactId>api</artifactId>
       <version>0.8.774</version>
@@ -116,7 +121,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk18on</artifactId>
-      <version>1.86</version>
+      <version>1.87</version>
     </dependency>
     <dependency>
       <groupId>com.stuartsierra</groupId>
@@ -166,7 +171,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
-      <version>1.86</version>
+      <version>1.87</version>
     </dependency>
     <dependency>
       <groupId>duct</groupId>
