@@ -3,6 +3,9 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** Unreleased
++ [[https://github.com/clojars/clojars-web/pull/951][Detect compromised passwords via Have I Been Pwned]]. Passwords that appear in the HIBP Pwned Passwords database are rejected on registration, password change, and password reset. Logging in with a compromised password disables it, logs out the account's other sessions, emails the user, and requires a password reset before they can log in again. ([[https://github.com/danielcompton][Daniel Compton]])
+
 ** 2026-November
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-11-06.2395][2026-11-06.2395]]
 + [[https://github.com/clojars/clojars-web/pull/990][Upgrade to hiccup2]]. This allows us to remove our safe-hiccup implementation, as hiccup2 provides that safety. ([[https://github.com/tobias][Toby Crawley]])

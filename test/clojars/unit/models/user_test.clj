@@ -269,3 +269,16 @@
          (sort-by (juxt :group_name :scope)
                   (permission-m/find-memberships-for-users
                    help/*db* [username1 username2]))))))
+
+(deftest password-matches
+  (user-m/add-user help/*db* "test@example.com" "testuser" "password1234")
+  (user-m/add-user help/*db* "cleared@example.com" "cleared" "password1234")
+  (user-m/clear-password! help/*db* "cleared")
+  (let [user (user-m/find-user help/*db* "testuser")
+        cleared (user-m/find-user help/*db* "cleared")]
+    (is (user-m/password-matches? user "password1234"))
+    (are [user password] (not (user-m/password-matches? user password))
+      user    "wrong-password"
+      user    ""
+      cleared "password1234"
+      nil     "password1234")))

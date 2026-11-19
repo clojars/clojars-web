@@ -11,7 +11,7 @@
    [ring.util.response :as response]))
 
 (defn- register
-  [db hcaptcha email-validation event-emitter {:keys [confirm email h-captcha-response password username]} session]
+  [db hcaptcha email-validation hibp event-emitter {:keys [confirm email h-captcha-response password username]} session]
   (let [email (normalize-email email)]
     (log/with-context {:email email
                        :username username
@@ -20,7 +20,7 @@
                                     :email    email
                                     :password password
                                     :username username}
-                                   (uv/new-user-validations db email-validation hcaptcha confirm))]
+                                   (uv/new-user-validations db email-validation hcaptcha hibp confirm))]
         (do
           (log/info {:status :validation-failed})
           (http-utils/with-extra-csp-srcs
@@ -39,8 +39,8 @@
                                      ::auth/pending-email-verification-username username))))))))
 
 (defn workflow
-  [db hcaptcha email-validation event-emitter]
+  [db hcaptcha email-validation hibp event-emitter]
   (fn [{:keys [uri request-method params session]}]
     (when (and (= "/register" uri)
                (= :post request-method))
-      (register db hcaptcha email-validation event-emitter params session))))
+      (register db hcaptcha email-validation hibp event-emitter params session))))
