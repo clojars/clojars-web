@@ -2,6 +2,7 @@
   (:require
    [cheshire.core :as json]
    [clojars.auth :as auth :refer [with-account]]
+   [clojars.credential-scan :as credential-scan]
    [clojars.errors :refer [report-error]]
    [clojars.event :as event]
    [clojars.file-utils :as fu]
@@ -158,6 +159,10 @@
                                                  :details "Group '<%= group %>' isn't verified, so can't contain new projects. See https://bit.ly/3MuKGXO"}
    :group-requires-mfa                          {:title   "Deploy group requires MFA"
                                                  :details "The group '<%= group %>' requires you to have two-factor auth enabled to deploy. See https://bit.ly/45qrtA8"}
+   :file-contains-deploy-token                  {:title   "Credential found in artifact"
+                                                 :details "<%= location %> contains a Clojars deploy token. If the token was active, it has been disabled and its owner emailed. Remove it, create a new token, and deploy again"}
+   :file-contains-password                      {:title   "Credential found in artifact"
+                                                 :details "<%= location %> contains a password. Remove it and deploy again. If it was committed or shared anywhere, change it"}
    :file-invalid-checksum                       {:title   "Invalid checksum"
                                                  :details "invalid <%= checksum-type %> checksum for <%= filename %>"}
    :file-missing-checksum                       {:title   "File missing checksum"
@@ -434,6 +439,33 @@
                         :filename       (.getName f)
                         :signature-type signature-type})))))
 
+(defn- revoke-leaked-token
+  [db event-emitter location {:keys [group name version]} token]
+  (when-some [{:as db-token :keys [id disabled user_id]}
+              (deploy-token-m/find-token-by-value db token)]
+    (when-not disabled
+      (deploy-token-m/disable-deploy-token db id))
+    (event/emit event-emitter :token-found-in-deploy
+                {:user-id         user_id
+                 :token-name      (:name db-token)
+                 :token-disabled? disabled
+                 :location        location
+                 :group           group
+                 :artifact        name
+                 :version         version})))
+
+(defn- assert-no-credentials
+  [db event-emitter metadata artifacts]
+  (doseq [^File f artifacts]
+    (when-some [{:keys [entry credential-type tokens]} (credential-scan/scan-artifact f)]
+      (let [location (if entry
+                       (format "%s in %s" entry (.getName f))
+                       (.getName f))]
+        (run! (partial revoke-leaked-token db event-emitter location metadata) tokens)
+        (throw-invalid (keyword (str "file-contains-" (name credential-type)))
+                       {:filename (.getName f)
+                        :location location})))))
+
 (defn- validate-jar-name+version
   [name version]
   ;; We're on purpose *at least* as restrictive as the recommendations on
@@ -450,7 +482,7 @@
   ;; compatible for everyone let's lock it down.
   (validate-regex version maven/version-regex :version-invalid))
 
-(defn validate-deploy [db dir pom module {:keys [group name version]}]
+(defn validate-deploy [db event-emitter dir pom module {:as metadata :keys [group name version]}]
   (validate-jar-name+version name version)
   (when module
     (validate-module module group name version))
@@ -460,6 +492,7 @@
 
   (let [artifacts (find-artifacts dir)]
     (validate-checksums artifacts)
+    (assert-no-credentials db event-emitter metadata artifacts)
     (let [files-sans-metadata (remove (partial match-file-name "maven-metadata.xml") artifacts)]
       (assert-signatures "GPG" ".asc" #{".sig"} files-sans-metadata)
       (assert-signatures "SSH" ".sig" #{".asc"} files-sans-metadata))))
@@ -536,7 +569,7 @@
         (fu/create-checksum-file md-file :md5)
         (fu/create-checksum-file md-file :sha1)
 
-        (validate-deploy db dir pom module posted-metadata)
+        (validate-deploy db event-emitter dir pom module posted-metadata)
         (run! #(storage/write-artifact
                 storage
                 (fu/subpath (.getAbsolutePath dir) (.getAbsolutePath ^File %)) %)
