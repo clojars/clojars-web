@@ -45,3 +45,18 @@
       "This token has been disabled to prevent malicious use.")
     (common/account-footer username)]))
 
+(defmethod notifications/notification :token-found-in-deploy
+  [_type
+   {:keys [mailer] {email :email username :user} :user}
+   {:keys [token-disabled? token-name location group artifact version]}]
+  (notifications/send
+   mailer email "Deploy token found in a deployment"
+   ["Hello,"
+    (format
+     "Your deploy token named '%s' was found in %s, which was being deployed to Clojars as %s/%s %s. We rejected the deployment, so the token was not published."
+     token-name location group artifact version)
+    (if token-disabled?
+      "The token was already disabled, so we took no further action."
+      "This token has been disabled to prevent malicious use.")
+    "If the file is in source control or was shared anywhere else, the token may be exposed there too. Keep tokens out of build files, for example by reading them from environment variables. To create a new token, visit https://clojars.org/tokens"
+    (common/account-footer username)]))
