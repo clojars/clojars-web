@@ -35,6 +35,9 @@
     Files)
    (java.nio.file.attribute
     FileAttribute)
+   (java.util.zip
+    ZipEntry
+    ZipOutputStream)
    (org.apache.commons.io
     FileUtils)
    (org.apache.lucene.store
@@ -49,6 +52,18 @@
 (def tmp-dir (io/file (System/getProperty "java.io.tmpdir")))
 (def local-repo (io/file tmp-dir "clojars" "test" "local-repo"))
 (def local-repo2 (io/file tmp-dir "clojars" "test" "local-repo2"))
+
+(defn jar-with
+  "Writes a temporary jar containing `entries`, a map of entry name to content."
+  ^File [entries]
+  (let [f (doto (File/createTempFile "test-helper" ".jar")
+            (.deleteOnExit))]
+    (with-open [out (ZipOutputStream. (io/output-stream f))]
+      (doseq [[^String entry-name ^String content] entries]
+        (.putNextEntry out (ZipEntry. entry-name))
+        (.write out (.getBytes content "UTF-8"))
+        (.closeEntry out)))
+    f))
 
 (defn test-config []
   (config/config :test))
