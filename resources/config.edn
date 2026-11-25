@@ -6,18 +6,19 @@
  :db                  {:dbtype   "postgresql"
                        :dbname   "clojars"
                        :host     #profile {:production #ssm-parameter "/clojars/production/db_host"
-                                           :default    "localhost"}
-                       :port     #profile {:default    #or [#env DB_PORT 55432]
-                                           :test       #or [#env DB_PORT 55433]
-                                           :production 5432}
+                                           :test       #or [#env TEST_DB_HOST "localhost"]
+                                           :default    #or [#env DEV_DB_HOST "localhost"]}
+                       :port     #profile {:production 5432
+                                           :test       #or [#env TEST_DB_PORT 55433]
+                                           :default    #or [#env DEV_DB_PORT 55432]}
                        :user     #profile {:production #ssm-parameter "/clojars/production/db_user"
                                            :default    "clojars"}
                        :password #profile {:production #ssm-parameter "/clojars/production/db_password"
                                            :default    "clojars"}}
  :deletion-backup-dir #profile {:production "/home/clojars/repo-deleted"
                                 :default    "data/test/repo-backup"}
- :dev-event-queue-url #profile {:test    "http://localhost:9324/000000000000/clojars-events-test"
-                                :default "http://localhost:9324/000000000000/clojars-events"}
+ :dev-event-queue-url #profile {:test    #join ["http://" #or [#env ELASTICMQ_HOST "localhost"] ":9324/000000000000/clojars-events-test"]
+                                :default #join ["http://" #or [#env ELASTICMQ_HOST "localhost"] ":9324/000000000000/clojars-events"]}
  :email-validation   #profile {:production {:user-check-api-key #ssm-parameter "/clojars/production/user_check_key"
                                             :user-check-api-url "https://api.usercheck.com"}
                                :default {:user-check-api-key nil
@@ -28,7 +29,7 @@
                                 :default    {:credentials          {:access-key-id     "fake-access-key"
                                                                     :secret-access-key "fake-secret-key"}
                                              :endpoint             {:protocol "http"
-                                                                    :hostname "localhost"
+                                                                    :hostname #or [#env ELASTICMQ_HOST "localhost"]
                                                                     :port     9324}
                                              :region               "us-east-1"
                                              :queue-url            #ref [:dev-event-queue-url]
@@ -61,7 +62,7 @@
                                              :password #ssm-parameter "/clojars/production/ses_password"}
                                 :default    {:from     "contact@clojars.org"
                                              ;; mailcatcher via docker-compose
-                                             :hostname "localhost"
+                                             :hostname #or [#env MAILCATCHER_HOST "localhost"]
                                              :port     1025
                                              :tls?     false}}
  :nrepl-port          7991
