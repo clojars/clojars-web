@@ -179,6 +179,13 @@
    tx
    ["alter table users add constraint users_email_unique unique (email)"]))
 
+(defn- change-users-email-to-citext
+  [tx]
+  (db/do-commands
+   tx
+   ["create extension if not exists citext"
+    "alter table users alter column email type citext"]))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -200,7 +207,8 @@
    #'add-sessions-table
    #'add-email-verification-to-users
    #'add-merged-usernames-to-users
-   #'add-unique-constraint-to-users-email])
+   #'add-unique-constraint-to-users-email
+   #'change-users-email-to-citext])
 
 (defn migrate [db]
   (db/do-commands db
