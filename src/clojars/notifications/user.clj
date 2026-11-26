@@ -112,13 +112,9 @@
    {:keys [mailer] {email :email username :user} :user}
    {:as _data :keys [other-usernames]}]
   (let [user-count (pprint/cl-format nil "~R" (inc (count other-usernames)))
-        subject (format "Your %s Clojars accounts that share this email address have been merged"
-                        user-count)
+        subject (format "Your %s Clojars accounts have been merged" user-count)
         msg
-        [(format
-          "Due to lax validation a few years ago, Clojars allowed you to create multiple user accounts sharing the same email. In order to clean that up, we have merged your %s user accounts into one."
-          user-count)
-         (format "We have merged the following accounts into your '%s' account:\n%s"
+        [(format "We have merged the following accounts into your '%s' account:\n%s"
                  username
                  (str/join "\n" (map #(format "- %s" %) other-usernames)))
          (format "All activity and groups from those users have been assigned to the '%s' account, and you can log in via any of those usernames." username)

@@ -291,7 +291,8 @@
                              {:credentials {:access-key-id     "fake-access-key"
                                             :secret-access-key "fake-secret-key"}
                               :endpoint {:protocol "http"
-                                         :hostname "localhost"
+                                         :hostname (or (System/getenv "S3MOCK_HOST")
+                                                       "localhost")
                                          :port     9090}
                               :region "us-east-1"})]
     (aws/invoke (:s3 client) {:op      :CreateBucket

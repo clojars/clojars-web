@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: clojure:temurin-25-tools-deps-trixie
         environment:
-          - DB_PORT: 5432
+          - TEST_DB_PORT: 5432
           - CLOJARS_ENVIRONMENT: test
       - image: postgres:18.4
         environment:
@@ -28,7 +28,6 @@ jobs:
           keys:
             - clojars-v1-{{ checksum "deps.edn" }}
             - clojars-v1-
-      - run: make migrate-db
       - run: make check-dependabot
       - run: make lint
       - run: make test

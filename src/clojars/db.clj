@@ -13,7 +13,9 @@
     SecureRandom)
    (java.sql
     Array
-    Timestamp)))
+    Timestamp)
+   (org.postgresql.util
+    PGobject)))
 
 (set! *warn-on-reflection* true)
 
@@ -84,7 +86,14 @@
 (extend-protocol jdbc.result-set/ReadableColumn
   Array
   (read-column-by-label [^Array v _]    (vec (.getArray v)))
-  (read-column-by-index [^Array v _ _]  (vec (.getArray v))))
+  (read-column-by-index [^Array v _ _]  (vec (.getArray v)))
+
+  ;; citext columns (e.g. users.email) come back as PGobjects
+  PGobject
+  (read-column-by-label [^PGobject v _]
+    (if (= "citext" (.getType v)) (.getValue v) v))
+  (read-column-by-index [^PGobject v _ _]
+    (if (= "citext" (.getType v)) (.getValue v) v)))
 
 ;; From https://cljdoc.org/d/com.github.seancorfield/next.jdbc/1.3.894/doc/migration-from-clojure-java-jdbc
 (defn do-commands

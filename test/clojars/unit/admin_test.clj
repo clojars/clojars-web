@@ -262,6 +262,6 @@
   (email/wait-for-mock-emails)
   (let [[to subject body] (first @email/mock-emails)]
     (is (= "testuser@example.com" to))
-    (is (= "Your two Clojars accounts that share this email address have been merged" subject))
+    (is (= "Your two Clojars accounts have been merged" subject))
     (is (re-find #"'testuser'" body))
     (is (re-find #"- testuser2" body))))
