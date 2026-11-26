@@ -173,6 +173,12 @@
    ["alter table users add merged_usernames text[]"
     "CREATE INDEX users_merged_usernames_idx ON users USING gin (merged_usernames)"]))
 
+(defn- add-unique-constraint-to-users-email
+  [tx]
+  (db/do-commands
+   tx
+   ["alter table users add constraint users_email_unique unique (email)"]))
+
 (def migrations
   [#'initial-schema
    #'add-deploy-tokens-table
@@ -193,7 +199,8 @@
    #'enable-send-deploy-emails-for-existing-users
    #'add-sessions-table
    #'add-email-verification-to-users
-   #'add-merged-usernames-to-users])
+   #'add-merged-usernames-to-users
+   #'add-unique-constraint-to-users-email])
 
 (defn migrate [db]
   (db/do-commands db
