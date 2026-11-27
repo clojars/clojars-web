@@ -1,3 +1,21 @@
+.DEFAULT_GOAL := help
+
+.PHONY: help
+help:
+	@echo "Available tasks:"
+	@echo "  antq            Check for outdated dependencies"
+	@echo "  check           Check for reflection warnings"
+	@echo "  lint            Run linter"
+	@echo "  migrate-db      Run database migrations"
+	@echo "  nvd-check       Check dependencies for CVEs"
+	@echo "  prep-deps       Prepare dependencies"
+	@echo "  repl            Start a development REPL"
+	@echo "  setup-dev-repo  Set up local dev repository"
+	@echo "  tag-release     Tag a release"
+	@echo "  test            Run tests"
+	@echo "  typos           Check for typos"
+	@echo "  uberjar         Build an uberjar"
+
 .PHONY: antq
 antq:
 	./bin/antq
