@@ -9,7 +9,7 @@ if [[ -z "${NVD_API_TOKEN}" ]]; then
 fi
 
 if [[ -z "${ANALYZER_OSSINDEX_PASSWORD}" ]]; then
-    echo "ANALYZER_OSSINDEX_USER and ANALYZER_OSSINDEX_PASSWORD not set! See https://ossindex.sonatype.org/doc/auth-required"
+    echo "ANALYZER_OSSINDEX_USER and ANALYZER_OSSINDEX_PASSWORD not set! See https://help.sonatype.com/en/using-guide-personal-access-tokens-with-oss-index-api-integrations.html"
     exit 1
 fi
 

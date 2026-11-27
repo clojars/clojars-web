@@ -1,0 +1,132 @@
+name: NVD Dependency Check
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Daily at 08:00 UTC
+  workflow_dispatch:
+
+jobs:
+  nvd-check:
+    name: Check dependencies for CVEs
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - name: Set up Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3  # v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Clojure
+        uses: DeLaGuardo/setup-clojure@6d46099eae24853c33c0482f2bb54edf4f1a4c74  # 13
+        with:
+          cli: latest
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('deps.edn') }}
+          restore-keys: ${{ runner.os }}-m2-
+
+      - name: Run NVD Check
+        id: nvd
+        env:
+          NVD_API_TOKEN: ${{ secrets.NVD_API_TOKEN }}
+          ANALYZER_OSSINDEX_USER: ${{ secrets.ANALYZER_OSSINDEX_USER }}
+          ANALYZER_OSSINDEX_PASSWORD: ${{ secrets.ANALYZER_OSSINDEX_PASSWORD }}
+        run: |
+          set +e
+          ./bin/nvd-check 2>&1 | tee nvd-output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          set -e
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          exit 0  # always succeed so artifact upload and Slack notify always run
+
+      - name: Upload NVD Report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: nvd-report
+          path: |
+            target/nvd/
+            nvd-output.txt
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Parse Vulnerabilities
+        if: always()
+        id: parse
+        run: |
+          REPORT="target/nvd/dependency-check-report.json"
+
+          if [[ ! -f "$REPORT" ]]; then
+            echo "has_vulns=false" >> "$GITHUB_OUTPUT"
+            echo "vuln_count=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          VULN_COUNT=$(jq '[.dependencies[] | select(.vulnerabilities != null) | .vulnerabilities[]] | length' "$REPORT")
+          echo "vuln_count=$VULN_COUNT" >> "$GITHUB_OUTPUT"
+
+          if [[ "$VULN_COUNT" -gt 0 ]]; then
+            echo "has_vulns=true" >> "$GITHUB_OUTPUT"
+            # Build a summary (capped to avoid Slack block limits)
+            jq -r '
+              [.dependencies[]
+               | select(.vulnerabilities != null)
+               | .fileName as $file
+               | .vulnerabilities[]
+               | "• *\(.name)* [\(.severity // "UNKNOWN")] in `\($file)`\n  \(.description | if length > 150 then .[0:150] + "…" else . end)"]
+              | join("\n\n")
+            ' "$REPORT" > vuln-summary.txt
+          else
+            echo "has_vulns=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Notify Slack
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          HAS_VULNS: ${{ steps.parse.outputs.has_vulns }}
+          VULN_COUNT: ${{ steps.parse.outputs.vuln_count }}
+          NVD_EXIT_CODE: ${{ steps.nvd.outputs.exit_code }}
+        run: |
+          if [[ "$HAS_VULNS" == "true" ]]; then
+            COLOR="#cc0000"
+            HEADER="⚠️ *NVD Dependency Check* — $VULN_COUNT $([ "$VULN_COUNT" -eq 1 ] && echo 'vulnerability' || echo 'vulnerabilities') found"
+            BODY=$(cat vuln-summary.txt)
+            # Truncate if too long for Slack (block text limit is 3000 chars)
+            if [[ ${#BODY} -gt 2800 ]]; then
+              BODY="${BODY:0:2800}…\n_(output truncated — see run for full report)_"
+            fi
+            MESSAGE="$HEADER\n\n*Details:*\n$BODY\n\n<$RUN_URL|View run>"
+          elif [[ "$NVD_EXIT_CODE" != "0" ]]; then
+            COLOR="#ffaa00"
+            MESSAGE="⚠️ *NVD Dependency Check* — check failed to complete (exit code $NVD_EXIT_CODE)\n\n<$RUN_URL|View run>"
+          else
+            COLOR="#36a64f"
+            MESSAGE="✅ *NVD Dependency Check* — no vulnerabilities found\n\n<$RUN_URL|View run>"
+          fi
+
+          curl --fail -s -X POST \
+            -H 'Content-type: application/json' \
+            --data "$(jq -n --arg color "$COLOR" --arg text "$MESSAGE" '{
+              attachments: [{
+                color: $color,
+                blocks: [{
+                  type: "section",
+                  text: { type: "mrkdwn", text: $text }
+                }]
+              }]
+            }')" \
+            "$SLACK_WEBHOOK_URL"
+
+      - name: Fail job if vulnerabilities found
+        if: steps.nvd.outputs.exit_code != '0'
+        run: |
+          echo "nvd-check exited with code ${{ steps.nvd.outputs.exit_code }} — see the uploaded report artifact for details."
+          exit 1
