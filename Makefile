@@ -46,10 +46,3 @@ typos:
 uberjar:
 	clojure -T:build uberjar
 
-.PHONY: sync-dependabot
-sync-dependabot:
-	./bin/sync-dependabot
-
-.PHONY: check-dependabot
-check-dependabot:
-	./bin/check-dependabot
