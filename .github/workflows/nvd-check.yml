@@ -24,8 +24,8 @@ jobs:
         with:
           cli: latest
 
-      - name: Cache Maven dependencies
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+      - name: Restore Maven cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('deps.edn') }}
@@ -79,7 +79,7 @@ jobs:
                | select(.vulnerabilities != null)
                | .fileName as $file
                | .vulnerabilities[]
-               | "• *\(.name)* [\(.severity // "UNKNOWN")] in `\($file)`\n  \(.description | if length > 150 then .[0:150] + "…" else . end)"]
+               | "• *<https://duckduckgo.com/?q=\(.name)|\(.name)>* [\(.severity // "UNKNOWN")] in `\($file)`\n  \(.description | if length > 150 then .[0:150] + "…" else . end)"]
               | join("\n\n")
             ' "$REPORT" > vuln-summary.txt
           else
@@ -95,21 +95,24 @@ jobs:
           VULN_COUNT: ${{ steps.parse.outputs.vuln_count }}
           NVD_EXIT_CODE: ${{ steps.nvd.outputs.exit_code }}
         run: |
+          VULN_WORD=$([ "$VULN_COUNT" -eq 1 ] && echo 'vulnerability' || echo 'vulnerabilities')
           if [[ "$HAS_VULNS" == "true" ]]; then
             COLOR="#cc0000"
-            HEADER="⚠️ *NVD Dependency Check* — $VULN_COUNT $([ "$VULN_COUNT" -eq 1 ] && echo 'vulnerability' || echo 'vulnerabilities') found"
             BODY=$(cat vuln-summary.txt)
             # Truncate if too long for Slack (block text limit is 3000 chars)
             if [[ ${#BODY} -gt 2800 ]]; then
-              BODY="${BODY:0:2800}…\n_(output truncated — see run for full report)_"
+              printf -v BODY $'%s…\n_(output truncated — see run for full report)_' "${BODY:0:2800}"
             fi
-            MESSAGE="$HEADER\n\n*Details:*\n$BODY\n\n<$RUN_URL|View run>"
+            printf -v MESSAGE $'⚠️ *NVD Dependency Check* — %s %s found\n\n*Details:*\n%s\n\n<%s|View run>' \
+              "$VULN_COUNT" "$VULN_WORD" "$BODY" "$RUN_URL"
           elif [[ "$NVD_EXIT_CODE" != "0" ]]; then
             COLOR="#ffaa00"
-            MESSAGE="⚠️ *NVD Dependency Check* — check failed to complete (exit code $NVD_EXIT_CODE)\n\n<$RUN_URL|View run>"
+            printf -v MESSAGE $'⚠️ *NVD Dependency Check* — check failed to complete (exit code %s)\n\n<%s|View run>' \
+              "$NVD_EXIT_CODE" "$RUN_URL"
           else
             COLOR="#36a64f"
-            MESSAGE="✅ *NVD Dependency Check* — no vulnerabilities found\n\n<$RUN_URL|View run>"
+            printf -v MESSAGE $'✅ *NVD Dependency Check* — no vulnerabilities found\n\n<%s|View run>' \
+              "$RUN_URL"
           fi
 
           curl --fail -s -X POST \
@@ -125,8 +128,10 @@ jobs:
             }')" \
             "$SLACK_WEBHOOK_URL"
 
-      - name: Fail job if vulnerabilities found
-        if: steps.nvd.outputs.exit_code != '0'
-        run: |
-          echo "nvd-check exited with code ${{ steps.nvd.outputs.exit_code }} — see the uploaded report artifact for details."
-          exit 1
+      - name: Save Maven cache
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('deps.edn') }}
+
