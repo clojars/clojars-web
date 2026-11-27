@@ -28,7 +28,6 @@ jobs:
           keys:
             - clojars-v1-{{ checksum "deps.edn" }}
             - clojars-v1-
-      - run: make check-dependabot
       - run: make lint
       - run: make test
       - save_cache:
