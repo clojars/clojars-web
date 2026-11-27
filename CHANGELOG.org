@@ -3,6 +3,9 @@
 Newest items at the top. Note that updates before 2022-August were copied from
 [[https://groups.google.com/g/clojars-maintainers][announcements on the Clojars Maintainer's mailing list]] with little editing.
 
+** Unreleased
++ [[https://github.com/clojars/clojars-web/issues/754][Reject deploys that contain credentials]]. Deploys are now rejected if the POM, or a build file in the jar (such as the =project.clj= for Leiningen packages, etc), contains a Clojars deploy token or a literal password. ([[https://github.com/danielcompton][Daniel Compton]])
+
 ** 2026-November
 *** [[https://github.com/clojars/clojars-web/releases/tag/2026-11-06.2395][2026-11-06.2395]]
 + [[https://github.com/clojars/clojars-web/pull/990][Upgrade to hiccup2]]. This allows us to remove our safe-hiccup implementation, as hiccup2 provides that safety. ([[https://github.com/tobias][Toby Crawley]])

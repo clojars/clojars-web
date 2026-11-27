@@ -653,6 +653,35 @@
                        :message "the POM file does not include a license. See https://bit.ly/3PQunZU"
                        :tag "pom-file-missing-license"})))
 
+(deftest deploy-rejects-jar-containing-a-credential
+  (-> (session (help/app))
+      (register-as "dantheman" "test@example.org" "password1234"))
+  (let [token (create-deploy-token (session (help/app)) "dantheman" "password1234" "testing")
+        _ (email/expect-mock-emails 1)
+        jar (help/jar-with
+             {"META-INF/leiningen/org.clojars.dantheman/test/project.clj"
+              (format "(defproject org.clojars.dantheman/test \"0.0.1\" :deploy-repositories [[\"clojars\" {:password \"%s\"}]])" token)})]
+    (is (thrown-with-msg?
+         DeploymentException
+         #"status=403,.*detail='META-INF/leiningen/org.clojars.dantheman/test/project.clj in test-0.0.1.jar contains a Clojars deploy token. If the token was active, it has been disabled"
+         (deploy
+          {:coordinates '[org.clojars.dantheman/test "0.0.1"]
+           :jar-file jar
+           :pom-file (io/file (io/resource "test-0.0.1/test.pom"))
+           :password token})))
+    (is (nil? (jar-m/find-jar help/*db* "org.clojars.dantheman" "test" "0.0.1")))
+    (help/match-audit {:username "dantheman"}
+                      {:user "dantheman"
+                       :jar_name "test"
+                       :version "0.0.1"
+                       :tag "file-contains-deploy-token"})
+    (is (:disabled (first (deploy-token-m/find-user-tokens-by-username help/*db* "dantheman"))))
+    (is (true? (email/wait-for-mock-emails)))
+    (let [[to subject message] (last @email/mock-emails)]
+      (is (= "test@example.org" to))
+      (is (= "Deploy token found in a deployment" subject))
+      (is (re-find #"org.clojars.dantheman/test 0.0.1" message)))))
+
 (deftest user-can-deploy-new-version-in-same-session
   (-> (session (help/app))
       (register-as "dantheman" "test@example.org" "password1234"))
