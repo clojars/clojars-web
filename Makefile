@@ -5,6 +5,7 @@ help:
 	@echo "Available tasks:"
 	@echo "  antq            Check for outdated dependencies"
 	@echo "  check           Check for reflection warnings"
+	@echo "  deps-tree       Print the dependency tree"
 	@echo "  lint            Run linter"
 	@echo "  migrate-db      Run database migrations"
 	@echo "  nvd-check       Check dependencies for CVEs"
@@ -23,6 +24,10 @@ antq:
 .PHONY: check
 check:
 	clojure -M:check
+
+.PHONY: deps-tree
+dep-tree:
+	clojure -X:deps tree
 
 .PHONY: lint
 lint:
